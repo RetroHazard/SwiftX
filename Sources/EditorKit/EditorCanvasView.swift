@@ -27,11 +27,14 @@ public final class EditorCanvasView: NSView {
     public var canUndo: Bool { !shapes.isEmpty }
     public var canRedo: Bool { !redoShapes.isEmpty }
 
+    /// Logical (point) size of the canvas; SwiftUI layout must honor this.
+    public let canvasSize: NSSize
+
     public init(image: CGImage) {
         self.baseImage = image
         let scale = NSScreen.main?.backingScaleFactor ?? 2
-        let size = NSSize(width: CGFloat(image.width) / scale, height: CGFloat(image.height) / scale)
-        super.init(frame: NSRect(origin: .zero, size: size))
+        self.canvasSize = NSSize(width: CGFloat(image.width) / scale, height: CGFloat(image.height) / scale)
+        super.init(frame: NSRect(origin: .zero, size: canvasSize))
     }
 
     @available(*, unavailable)
@@ -39,6 +42,8 @@ public final class EditorCanvasView: NSView {
 
     public override var isFlipped: Bool { true }
     public override var acceptsFirstResponder: Bool { true }
+    // without this, the representable collapses to zero inside a SwiftUI ScrollView
+    public override var intrinsicContentSize: NSSize { canvasSize }
 
     // MARK: - Effect variants (blur/pixelate draw regions from these)
 
