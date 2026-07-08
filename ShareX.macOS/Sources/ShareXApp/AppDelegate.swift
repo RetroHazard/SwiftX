@@ -6,6 +6,7 @@ import AppKit
 import SwiftUI
 import SharedKit
 import UploadKit
+import UserNotifications
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -27,6 +28,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem = item
 
         setupHotkeys()
+        Notifier.setup()
+
+        if CommandLine.arguments.contains("--notify-test") {
+            UNUserNotificationCenter.current().getNotificationSettings { settings in
+                NSLog("Notification settings: authorizationStatus=%ld alertSetting=%ld",
+                      settings.authorizationStatus.rawValue, settings.alertSetting.rawValue)
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                Notifier.notify(title: "ShareX test", body: "Notifications are working.")
+            }
+        }
     }
 
     private func setupHotkeys() {
