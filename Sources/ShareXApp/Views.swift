@@ -4,19 +4,131 @@
 
 import SwiftUI
 import ApplicationServices
+import HistoryKit
 import SharedKit
 import UploadKit
 
 struct MainWindowView: View {
+    @State private var items: [HistoryItem] = []
+    @State private var search = ""
+
     var body: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "camera.viewfinder")
-                .font(.system(size: 48))
-                .foregroundStyle(.secondary)
-            Text("Task queue will appear here (Phase 4)")
-                .foregroundStyle(.secondary)
+        VStack(spacing: 0) {
+            TextField("Search history", text: $search)
+                .textFieldStyle(.roundedBorder)
+                .padding(8)
+            if items.isEmpty {
+                VStack(spacing: 12) {
+                    Image(systemName: "camera.viewfinder")
+                        .font(.system(size: 48))
+                        .foregroundStyle(.secondary)
+                    Text(search.isEmpty ? "Captures will appear here" : "No matches")
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                List(items) { item in
+                    HistoryRow(item: item)
+                        .contextMenu { contextMenu(for: item) }
+                }
+                .listStyle(.inset)
+            }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onAppear(perform: reload)
+        .onChange(of: search) { reload() }
+        .onReceive(NotificationCenter.default.publisher(for: HistoryStore.changedNotification)) { _ in
+            reload()
+        }
+    }
+
+    private func reload() {
+        items = HistoryStore.shared.recent(limit: 200, search: search)
+    }
+
+    @ViewBuilder
+    private func contextMenu(for item: HistoryItem) -> some View {
+        if !item.url.isEmpty {
+            Button("Copy URL") { copyString(item.url) }
+            Button("Open URL") {
+                if let url = URL(string: item.url) { NSWorkspace.shared.open(url) }
+            }
+        }
+        if FileManager.default.fileExists(atPath: item.filePath) {
+            Button("Show in Finder") {
+                NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: item.filePath)])
+            }
+            Button("Copy File Path") { copyString(item.filePath) }
+        }
+    }
+
+    private func copyString(_ string: String) {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(string, forType: .string)
+    }
+}
+
+struct HistoryRow: View {
+    let item: HistoryItem
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Group {
+                if let thumbnail = ThumbnailLoader.thumbnail(for: item.filePath) {
+                    Image(nsImage: thumbnail)
+                        .resizable()
+                        .scaledToFill()
+                } else {
+                    Image(systemName: "photo")
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .frame(width: 64, height: 48)
+            .clipShape(RoundedRectangle(cornerRadius: 4))
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(item.fileName)
+                    .lineLimit(1)
+                Text(item.date.formatted(date: .abbreviated, time: .shortened))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                if !item.url.isEmpty {
+                    Text(item.url)
+                        .font(.caption)
+                        .foregroundStyle(.blue)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                }
+            }
+            Spacer()
+            if !item.host.isEmpty, item.host != "File" {
+                Text(item.host)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 2)
+    }
+}
+
+/// Downsampled thumbnails via ImageIO with a small cache - avoids decoding
+/// full-size screenshots for every list row.
+enum ThumbnailLoader {
+    private static let cache = NSCache<NSString, NSImage>()
+
+    static func thumbnail(for path: String, maxPixel: CGFloat = 128) -> NSImage? {
+        if let cached = cache.object(forKey: path as NSString) { return cached }
+        guard FileManager.default.fileExists(atPath: path),
+              let source = CGImageSourceCreateWithURL(URL(fileURLWithPath: path) as CFURL, nil) else { return nil }
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceThumbnailMaxPixelSize: maxPixel,
+            kCGImageSourceCreateThumbnailWithTransform: true
+        ]
+        guard let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else { return nil }
+        let image = NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
+        cache.setObject(image, forKey: path as NSString)
+        return image
     }
 }
 
