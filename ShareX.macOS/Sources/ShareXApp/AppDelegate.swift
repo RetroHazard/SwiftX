@@ -6,6 +6,7 @@ import AppKit
 import SwiftUI
 import SharedKit
 
+@MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
     private var mainWindow: NSWindow?
@@ -28,13 +29,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func buildMenu() -> NSMenu {
         let menu = NSMenu()
 
-        // Capture stubs fill in as Phase 1 lands
-        let captureRegion = NSMenuItem(title: "Capture Region (Phase 1)", action: nil, keyEquivalent: "")
-        captureRegion.isEnabled = false
-        menu.addItem(captureRegion)
-        let captureScreen = NSMenuItem(title: "Capture Full Screen (Phase 1)", action: nil, keyEquivalent: "")
-        captureScreen.isEnabled = false
-        menu.addItem(captureScreen)
+        menu.addItem(NSMenuItem(title: "Capture Region", action: #selector(captureRegion), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: "Capture Full Screen", action: #selector(captureFullScreen), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: "Capture Active Window", action: #selector(captureActiveWindow), keyEquivalent: ""))
 
         menu.addItem(.separator())
         menu.addItem(NSMenuItem(title: "Main Window…", action: #selector(showMainWindow), keyEquivalent: ""))
@@ -45,6 +42,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         menu.items.forEach { $0.target = $0.action != nil ? self : nil }
         return menu
+    }
+
+    @objc private func captureRegion() {
+        CaptureCoordinator.shared.captureRegion()
+    }
+
+    @objc private func captureFullScreen() {
+        CaptureCoordinator.shared.captureFullScreen()
+    }
+
+    @objc private func captureActiveWindow() {
+        CaptureCoordinator.shared.captureActiveWindow()
     }
 
     @objc private func showMainWindow() {

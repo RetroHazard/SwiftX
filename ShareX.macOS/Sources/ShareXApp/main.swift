@@ -3,15 +3,39 @@
 // Licensed under GPL v3 - see /LICENSE.txt
 
 import AppKit
+import CaptureKit
 import SharedKit
+
+// Headless capture check for development: sharex --capture-selftest
+if CommandLine.arguments.contains("--capture-selftest") {
+    let semaphore = DispatchSemaphore(value: 0)
+    Task {
+        do {
+            let image = try await ScreenCapture.captureDisplay()
+            let url = FileManager.default.temporaryDirectory.appendingPathComponent("sharex-selftest.png")
+            try ImageWriter.writePNG(image, to: url)
+            print("selftest ok: \(image.width)x\(image.height) -> \(url.path)")
+        } catch {
+            print("selftest failed: \(error.localizedDescription)")
+        }
+        semaphore.signal()
+    }
+    semaphore.wait()
+    exit(0)
+}
 
 SingleInstance.acquireOrExit()
 
-let app = NSApplication.shared
-let delegate = AppDelegate()
-app.delegate = delegate
-app.setActivationPolicy(.accessory) // menu bar app, no Dock icon
-app.run()
+// main.swift top-level runs on the main thread; script mode just isn't annotated
+MainActor.assumeIsolated {
+    let app = NSApplication.shared
+    let delegate = AppDelegate()
+    app.delegate = delegate
+    app.setActivationPolicy(.accessory) // menu bar app, no Dock icon
+    withExtendedLifetime(delegate) { // NSApplication.delegate is unowned(unsafe)
+        app.run()
+    }
+}
 
 enum SingleInstance {
     private static var lockFileDescriptor: Int32 = -1
