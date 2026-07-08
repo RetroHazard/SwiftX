@@ -1,0 +1,26 @@
+name: macOS Swift
+
+on:
+  push:
+    paths:
+      - "ShareX.macOS/**"
+      - ".github/workflows/macos-swift.yml"
+  pull_request:
+    paths:
+      - "ShareX.macOS/**"
+      - ".github/workflows/macos-swift.yml"
+
+jobs:
+  build-and-test:
+    runs-on: macos-15
+    defaults:
+      run:
+        working-directory: ShareX.macOS
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: swift build
+      - name: Test
+        run: swift test
+      - name: Bundle app
+        run: ./Scripts/make-app.sh
