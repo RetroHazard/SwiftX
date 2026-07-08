@@ -41,7 +41,7 @@ final class CaptureCoordinator {
     private func run(processName: String? = nil, _ operation: () async throws -> CGImage) async {
         do {
             let image = try await operation()
-            AfterCapturePipeline.run(image: image, processName: processName)
+            await AfterCapturePipeline.run(image: image, processName: processName)
         } catch {
             presentError(error)
         }

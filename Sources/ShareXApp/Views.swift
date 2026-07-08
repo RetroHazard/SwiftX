@@ -238,6 +238,7 @@ struct SettingsView: View {
     @State private var task = TaskSettings.load()
 
     private static let afterCaptureToggles: [(AfterCaptureTasks, String)] = [
+        (.annotateImage, "Annotate image (editor)"),
         (.copyImageToClipboard, "Copy image to clipboard"),
         (.saveImageToFile, "Save image to file"),
         (.saveImageToFileWithDialog, "Save image with dialog"),
