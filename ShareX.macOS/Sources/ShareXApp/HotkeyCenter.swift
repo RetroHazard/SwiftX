@@ -85,7 +85,7 @@ enum HotkeyDispatcher {
             CaptureCoordinator.shared.captureFullScreen()
         case .activeWindow:
             CaptureCoordinator.shared.captureActiveWindow()
-        case .openMainWindow:
+        case .openMainWindow, .openHistory, .openImageHistory:
             (NSApp.delegate as? AppDelegate)?.showMainWindow()
         case .openScreenshotsFolder:
             NSWorkspace.shared.open(ApplicationConfig.load().screenshotsFolder)

@@ -4,12 +4,13 @@
 
 import AppKit
 import CaptureKit
+import HistoryKit
 import SharedKit
 import UploadKit
 
 @MainActor
 enum UploadCoordinator {
-    static func uploadImage(_ image: CGImage, fileName: String) {
+    static func uploadImage(_ image: CGImage, fileName: String, filePath: String? = nil) {
         guard let data = ImageWriter.pngData(image) else {
             Notifier.notify(title: "Upload failed", body: "Could not encode the image.")
             return
@@ -22,9 +23,11 @@ enum UploadCoordinator {
         Task {
             do {
                 let result: UploadResult
+                let hostName: String
                 switch settings.imageDestination {
                 case "AmazonS3":
                     result = try await AmazonS3Uploader.upload(file: file, settings: config.amazonS3)
+                    hostName = "Amazon S3"
                 case "CustomImageUploader":
                     guard let item = CustomUploaderStore.load(named: config.activeCustomUploader) else {
                         await MainActor.run {
@@ -33,11 +36,20 @@ enum UploadCoordinator {
                         return
                     }
                     result = try await CustomUploaderService.upload(file: file, with: item)
+                    hostName = item.displayName
                 default:
                     await MainActor.run {
                         Notifier.notify(title: "Upload", body: "Destination \"\(settings.imageDestination)\" is not implemented yet.")
                     }
                     return
+                }
+                if let filePath {
+                    await MainActor.run {
+                        HistoryStore.shared.updateUploadURLs(
+                            filePath: filePath, host: hostName, url: result.url,
+                            thumbnailURL: result.thumbnailURL, deletionURL: result.deletionURL
+                        )
+                    }
                 }
                 try await afterUpload(result, settings: settings)
             } catch {

@@ -58,8 +58,11 @@ Statuses: **Ported** · **Partial** (works, known gaps) · **Planned** (phase no
 
 | Feature | Status |
 |---|---|
-| SQLite history + JSON/XML import from Windows | Planned (4) |
-| Task list / thumbnail views, history + image history viewers | Planned (4) |
+| SQLite history (Windows-compatible History.db schema) | Ported — a Windows History.db opens directly |
+| JSON/XML history import from Windows | Planned (4/11) |
+| Main window: searchable history list, thumbnails, context actions | Ported — search by name/URL/host |
+| Thumbnail grid view, date/tag filters, favorites, stats | Planned (4) |
+| Live task queue with upload progress rows | Planned (4) |
 
 ## Phase 5 — Annotation editor
 
