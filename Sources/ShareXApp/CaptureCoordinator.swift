@@ -59,7 +59,7 @@ final class CaptureCoordinator {
         )
         do {
             try ImageWriter.writePNG(image, to: url)
-            NSLog("ShareX saved %@", url.path)
+            Notifier.captureSaved(url)
         } catch {
             presentError(error)
         }

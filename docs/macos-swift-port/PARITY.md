@@ -34,8 +34,10 @@ Statuses: **Ported** · **Partial** (works, known gaps) · **Planned** (phase no
 |---|---|
 | After-capture tasks (21) | Planned (2) |
 | After-upload tasks (6) | Planned (2) |
-| Global hotkeys, all HotkeyType actions (65+) | Planned (2) |
-| Notifications, sounds, Actions (external commands) | Planned (2) |
+| Global hotkey engine (Carbon), defaults ⌃⇧3/4/5, DisableHotkeys toggle | Ported — recorder UI planned, edit JSON for now |
+| HotkeyType vocabulary (C#-compatible raw values) | Ported — 7 actions implemented, rest dispatch as stubs |
+| Capture notifications | Partial — banner on save; sounds/click actions planned |
+| Actions (external commands) | Planned (2) |
 
 ## Phase 3 — Upload engine & core destinations
 

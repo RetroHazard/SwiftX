@@ -116,14 +116,35 @@ public struct HotkeySettings: SettingsFile {
 }
 
 public struct HotkeyConfig: Codable, Equatable {
+    /// HotkeyType raw value; stored as a string so unknown/future values still load.
     public var taskType: String
+    public var key: String?
+    public var modifiers: [String]
 
-    public init(taskType: String) {
+    public init(taskType: String, key: String? = nil, modifiers: [String] = []) {
         self.taskType = taskType
+        self.key = key
+        self.modifiers = modifiers
     }
+
+    public init(_ type: HotkeyType, key: String, modifiers: [String]) {
+        self.init(taskType: type.rawValue, key: key, modifiers: modifiers)
+    }
+
+    public var type: HotkeyType? { HotkeyType(rawValue: taskType) }
+    public var combo: KeyCombo? { key.map { KeyCombo(key: $0, modifiers: modifiers) } }
 
     enum CodingKeys: String, CodingKey {
         case taskType = "TaskType"
+        case key = "Key"
+        case modifiers = "Modifiers"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        taskType = try c.decodeIfPresent(String.self, forKey: .taskType) ?? HotkeyType.none.rawValue
+        key = try c.decodeIfPresent(String.self, forKey: .key)
+        modifiers = try c.decodeIfPresent([String].self, forKey: .modifiers) ?? []
     }
 }
 
