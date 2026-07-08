@@ -84,6 +84,10 @@ public struct TaskSettings: SettingsFile {
     public var nameFormatPatternActiveWindow = "%pn_%y-%mo-%d_%h-%mi-%s"
     public var afterCaptureJob: AfterCaptureTasks = [.copyImageToClipboard, .saveImageToFile]
     public var afterUploadJob: AfterUploadTasks = [.copyURLToClipboard]
+    /// C# ImageDestination enum name; string keeps unknown values loadable.
+    public var imageDestination = "CustomImageUploader"
+    /// C# UrlShortenerType enum name.
+    public var urlShortenerDestination = "ISGD"
 
     public init() {}
 
@@ -92,6 +96,8 @@ public struct TaskSettings: SettingsFile {
         case nameFormatPatternActiveWindow = "NameFormatPatternActiveWindow"
         case afterCaptureJob = "AfterCaptureJob"
         case afterUploadJob = "AfterUploadJob"
+        case imageDestination = "ImageDestination"
+        case urlShortenerDestination = "URLShortenerDestination"
     }
 
     public init(from decoder: Decoder) throws {
@@ -100,6 +106,8 @@ public struct TaskSettings: SettingsFile {
         nameFormatPatternActiveWindow = try c.decodeIfPresent(String.self, forKey: .nameFormatPatternActiveWindow) ?? "%pn_%y-%mo-%d_%h-%mi-%s"
         afterCaptureJob = try c.decodeIfPresent(AfterCaptureTasks.self, forKey: .afterCaptureJob) ?? [.copyImageToClipboard, .saveImageToFile]
         afterUploadJob = try c.decodeIfPresent(AfterUploadTasks.self, forKey: .afterUploadJob) ?? [.copyURLToClipboard]
+        imageDestination = try c.decodeIfPresent(String.self, forKey: .imageDestination) ?? "CustomImageUploader"
+        urlShortenerDestination = try c.decodeIfPresent(String.self, forKey: .urlShortenerDestination) ?? "ISGD"
     }
 }
 
@@ -157,18 +165,52 @@ public struct HotkeyConfig: Codable, Equatable {
 public struct UploadersConfig: SettingsFile {
     public static let fileName = "UploadersConfig.json"
 
-    /// File name of the active .sxcu in CustomUploaders/. Hand-ported OAuth
-    /// destinations join this as enum-style destinations later in Phase 3.
+    /// File name of the active .sxcu in CustomUploaders/.
     public var activeCustomUploader = ""
+    public var amazonS3 = AmazonS3Settings()
 
     public init() {}
 
     enum CodingKeys: String, CodingKey {
         case activeCustomUploader = "ActiveCustomUploader"
+        case amazonS3 = "AmazonS3Settings"
     }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         activeCustomUploader = try c.decodeIfPresent(String.self, forKey: .activeCustomUploader) ?? ""
+        amazonS3 = try c.decodeIfPresent(AmazonS3Settings.self, forKey: .amazonS3) ?? AmazonS3Settings()
+    }
+}
+
+/// Field names match the C# AmazonS3Settings JSON shape.
+public struct AmazonS3Settings: Codable, Equatable {
+    public var accessKeyID = ""
+    public var secretAccessKey = ""
+    public var region = "us-east-1"
+    public var bucket = ""
+    public var objectPrefix = "ShareX/%y/%mo"
+    /// Custom endpoint host for S3-compatible services (empty = AWS).
+    public var endpoint = ""
+
+    public init() {}
+
+    enum CodingKeys: String, CodingKey {
+        case accessKeyID = "AccessKeyID"
+        case secretAccessKey = "SecretAccessKey"
+        case region = "Region"
+        case bucket = "Bucket"
+        case objectPrefix = "ObjectPrefix"
+        case endpoint = "Endpoint"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        accessKeyID = try c.decodeIfPresent(String.self, forKey: .accessKeyID) ?? ""
+        secretAccessKey = try c.decodeIfPresent(String.self, forKey: .secretAccessKey) ?? ""
+        region = try c.decodeIfPresent(String.self, forKey: .region) ?? "us-east-1"
+        bucket = try c.decodeIfPresent(String.self, forKey: .bucket) ?? ""
+        objectPrefix = try c.decodeIfPresent(String.self, forKey: .objectPrefix) ?? "ShareX/%y/%mo"
+        endpoint = try c.decodeIfPresent(String.self, forKey: .endpoint) ?? ""
     }
 }
