@@ -69,3 +69,8 @@ codesign --force --options runtime --sign "${IDENTITY:--}" "$APP"
 echo "Signed as: ${IDENTITY:-ad-hoc}"
 
 echo "Built $APP"
+
+if pgrep -xq ShareX; then
+    echo "warning: a ShareX instance is still running and will NOT pick up this build."
+    echo "         restart it with: pkill -x ShareX && open $APP"
+fi
