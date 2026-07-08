@@ -41,25 +41,7 @@ final class CaptureCoordinator {
     private func run(processName: String? = nil, _ operation: () async throws -> CGImage) async {
         do {
             let image = try await operation()
-            finish(image, processName: processName)
-        } catch {
-            presentError(error)
-        }
-    }
-
-    private func finish(_ image: CGImage, processName: String?) {
-        ImageWriter.copyToClipboard(image)
-
-        let url = SavePath.screenshotURL(
-            config: ApplicationConfig.load(),
-            task: TaskSettings.load(),
-            processName: processName,
-            width: image.width,
-            height: image.height
-        )
-        do {
-            try ImageWriter.writePNG(image, to: url)
-            Notifier.captureSaved(url)
+            AfterCapturePipeline.run(image: image, processName: processName)
         } catch {
             presentError(error)
         }
