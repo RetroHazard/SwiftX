@@ -5,6 +5,7 @@
 import SwiftUI
 import ApplicationServices
 import SharedKit
+import UploadKit
 
 struct MainWindowView: View {
     var body: some View {
@@ -29,8 +30,20 @@ struct SettingsView: View {
         (.saveImageToFileWithDialog, "Save image with dialog"),
         (.pinToScreen, "Pin to screen"),
         (.copyFilePathToClipboard, "Copy file path to clipboard"),
-        (.showInExplorer, "Show in Finder")
+        (.showInExplorer, "Show in Finder"),
+        (.uploadImageToHost, "Upload image to host")
     ]
+
+    private func uploaderBinding() -> Binding<String> {
+        Binding(
+            get: { UploadersConfig.load().activeCustomUploader },
+            set: { name in
+                var config = UploadersConfig.load()
+                config.activeCustomUploader = name
+                try? config.save()
+            }
+        )
+    }
 
     private func afterCaptureBinding(_ flag: AfterCaptureTasks) -> Binding<Bool> {
         Binding(
@@ -54,6 +67,20 @@ struct SettingsView: View {
             Section("After capture") {
                 ForEach(Self.afterCaptureToggles, id: \.1) { flag, label in
                     Toggle(label, isOn: afterCaptureBinding(flag))
+                }
+            }
+            Section("Upload destination") {
+                let uploaders = CustomUploaderStore.list()
+                if uploaders.isEmpty {
+                    Text("No custom uploaders imported. Use “Import Custom Uploader…” in the ShareX menu — any community .sxcu file works.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Picker("Custom uploader", selection: uploaderBinding()) {
+                        ForEach(uploaders, id: \.self) { name in
+                            Text(name).tag(name)
+                        }
+                    }
                 }
             }
             Section("Hotkeys") {

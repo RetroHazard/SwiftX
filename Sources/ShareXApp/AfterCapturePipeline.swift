@@ -14,7 +14,7 @@ import SharedKit
 enum AfterCapturePipeline {
     static let implemented: AfterCaptureTasks = [
         .copyImageToClipboard, .pinToScreen, .saveImageToFile, .saveImageToFileWithDialog,
-        .copyFilePathToClipboard, .copyFolderPathToClipboard, .showInExplorer
+        .copyFilePathToClipboard, .copyFolderPathToClipboard, .showInExplorer, .uploadImageToHost
     ]
 
     static func run(image: CGImage, processName: String? = nil, windowTitle: String? = nil) {
@@ -73,6 +73,12 @@ enum AfterCapturePipeline {
             if tasks.contains(.showInExplorer) {
                 NSWorkspace.shared.activateFileViewerSelecting([savedURL])
             }
+        }
+
+        if tasks.contains(.uploadImageToHost) {
+            let fileName = savedURL?.lastPathComponent
+                ?? SavePath.screenshotURL(config: config, task: settings, processName: processName).lastPathComponent
+            UploadCoordinator.uploadImage(image, fileName: fileName)
         }
 
         let pending = tasks.subtracting(implemented)
