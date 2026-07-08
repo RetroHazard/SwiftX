@@ -8,24 +8,75 @@ import HistoryKit
 import SharedKit
 import UploadKit
 
+enum TimeRange: String, CaseIterable {
+    case any = "Any time"
+    case today = "Today"
+    case week = "Last 7 days"
+    case month = "Last 30 days"
+
+    var startDate: Date? {
+        let calendar = Calendar.current
+        switch self {
+        case .any: return nil
+        case .today: return calendar.startOfDay(for: Date())
+        case .week: return calendar.date(byAdding: .day, value: -7, to: Date())
+        case .month: return calendar.date(byAdding: .day, value: -30, to: Date())
+        }
+    }
+}
+
 struct MainWindowView: View {
     @State private var items: [HistoryItem] = []
     @State private var search = ""
+    @State private var timeRange: TimeRange = .any
+    @State private var favoritesOnly = false
+    @State private var viewMode = ApplicationConfig.load().taskViewMode
 
     var body: some View {
         VStack(spacing: 0) {
-            TextField("Search history", text: $search)
-                .textFieldStyle(.roundedBorder)
-                .padding(8)
+            HStack(spacing: 8) {
+                TextField("Search history", text: $search)
+                    .textFieldStyle(.roundedBorder)
+                Picker("", selection: $timeRange) {
+                    ForEach(TimeRange.allCases, id: \.self) { range in
+                        Text(range.rawValue).tag(range)
+                    }
+                }
+                .fixedSize()
+                Toggle(isOn: $favoritesOnly) {
+                    Image(systemName: favoritesOnly ? "star.fill" : "star")
+                }
+                .toggleStyle(.button)
+                .help("Show favorites only")
+                Picker("", selection: $viewMode) {
+                    Image(systemName: "list.bullet").tag("ListView")
+                    Image(systemName: "square.grid.2x2").tag("ThumbnailView")
+                }
+                .pickerStyle(.segmented)
+                .fixedSize()
+            }
+            .padding(8)
+
             if items.isEmpty {
                 VStack(spacing: 12) {
                     Image(systemName: "camera.viewfinder")
                         .font(.system(size: 48))
                         .foregroundStyle(.secondary)
-                    Text(search.isEmpty ? "Captures will appear here" : "No matches")
+                    Text(search.isEmpty && !favoritesOnly && timeRange == .any
+                         ? "Captures will appear here" : "No matches")
                         .foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if viewMode == "ThumbnailView" {
+                ScrollView {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 160), spacing: 12)], spacing: 12) {
+                        ForEach(items) { item in
+                            HistoryGridCell(item: item)
+                                .contextMenu { contextMenu(for: item) }
+                        }
+                    }
+                    .padding(12)
+                }
             } else {
                 List(items) { item in
                     HistoryRow(item: item)
@@ -36,17 +87,31 @@ struct MainWindowView: View {
         }
         .onAppear(perform: reload)
         .onChange(of: search) { reload() }
+        .onChange(of: timeRange) { reload() }
+        .onChange(of: favoritesOnly) { reload() }
+        .onChange(of: viewMode) {
+            var config = ApplicationConfig.load()
+            config.taskViewMode = viewMode
+            try? config.save()
+        }
         .onReceive(NotificationCenter.default.publisher(for: HistoryStore.changedNotification)) { _ in
             reload()
         }
     }
 
     private func reload() {
-        items = HistoryStore.shared.recent(limit: 200, search: search)
+        items = HistoryStore.shared.recent(
+            limit: 200, search: search,
+            favoritesOnly: favoritesOnly, from: timeRange.startDate
+        )
     }
 
     @ViewBuilder
     private func contextMenu(for item: HistoryItem) -> some View {
+        Button(item.isFavorite ? "Remove Favorite" : "Add Favorite") {
+            HistoryStore.shared.setFavorite(id: item.id, !item.isFavorite)
+        }
+        Divider()
         if !item.url.isEmpty {
             Button("Copy URL") { copyString(item.url) }
             Button("Open URL") {
@@ -65,6 +130,41 @@ struct MainWindowView: View {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.setString(string, forType: .string)
+    }
+}
+
+struct HistoryGridCell: View {
+    let item: HistoryItem
+
+    var body: some View {
+        VStack(spacing: 4) {
+            ZStack(alignment: .topTrailing) {
+                Group {
+                    if let thumbnail = ThumbnailLoader.thumbnail(for: item.filePath, maxPixel: 320) {
+                        Image(nsImage: thumbnail)
+                            .resizable()
+                            .scaledToFill()
+                    } else {
+                        Image(systemName: "photo")
+                            .font(.system(size: 32))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .frame(width: 160, height: 110)
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+
+                if item.isFavorite {
+                    Image(systemName: "star.fill")
+                        .foregroundStyle(.yellow)
+                        .shadow(radius: 2)
+                        .padding(4)
+                }
+            }
+            Text(item.fileName)
+                .font(.caption)
+                .lineLimit(1)
+                .truncationMode(.middle)
+        }
     }
 }
 
@@ -117,7 +217,8 @@ enum ThumbnailLoader {
     private static let cache = NSCache<NSString, NSImage>()
 
     static func thumbnail(for path: String, maxPixel: CGFloat = 128) -> NSImage? {
-        if let cached = cache.object(forKey: path as NSString) { return cached }
+        let cacheKey = "\(path)#\(Int(maxPixel))" as NSString
+        if let cached = cache.object(forKey: cacheKey) { return cached }
         guard FileManager.default.fileExists(atPath: path),
               let source = CGImageSourceCreateWithURL(URL(fileURLWithPath: path) as CFURL, nil) else { return nil }
         let options: [CFString: Any] = [
@@ -127,7 +228,7 @@ enum ThumbnailLoader {
         ]
         guard let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else { return nil }
         let image = NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
-        cache.setObject(image, forKey: path as NSString)
+        cache.setObject(image, forKey: cacheKey)
         return image
     }
 }

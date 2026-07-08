@@ -24,6 +24,9 @@ public struct HistoryItem: Identifiable, Equatable {
     public var tags: [String: String] = [:]
 
     public init() {}
+
+    /// Same convention as Windows ShareX: favorite = presence of a "Favorite" tag.
+    public var isFavorite: Bool { tags["Favorite"] != nil }
 }
 
 // ponytail: everything runs on the main actor - appends are single-row and reads
@@ -108,14 +111,52 @@ public final class HistoryStore {
         }
     }
 
+    /// Sets or clears the "Favorite" tag on a row (read-modify-write of the Tags JSON).
+    public func setFavorite(id: Int64, _ favorite: Bool) {
+        guard let item = recent(limit: 1, matchingId: id).first else { return }
+        var tags = item.tags
+        if favorite {
+            tags["Favorite"] = "true"
+        } else {
+            tags.removeValue(forKey: "Favorite")
+        }
+        let tagsJSON = (try? JSONSerialization.data(withJSONObject: tags)).flatMap { String(data: $0, encoding: .utf8) } ?? "{}"
+
+        var statement: OpaquePointer?
+        guard sqlite3_prepare_v2(db, "UPDATE History SET Tags = ? WHERE Id = ?;", -1, &statement, nil) == SQLITE_OK else { return }
+        defer { sqlite3_finalize(statement) }
+        sqlite3_bind_text(statement, 1, tagsJSON, -1, SQLITE_TRANSIENT)
+        sqlite3_bind_int64(statement, 2, id)
+        if sqlite3_step(statement) == SQLITE_DONE {
+            NotificationCenter.default.post(name: Self.changedNotification, object: nil)
+        }
+    }
+
     // MARK: - Reads
 
-    public func recent(limit: Int = 200, search: String = "") -> [HistoryItem] {
+    public func recent(limit: Int = 200, search: String = "", favoritesOnly: Bool = false,
+                       from: Date? = nil, matchingId: Int64? = nil) -> [HistoryItem] {
         var statement: OpaquePointer?
-        var sql = "SELECT Id, FileName, FilePath, DateTime, Type, Host, URL, ThumbnailURL, DeletionURL, ShortenedURL, Tags FROM History"
+        var conditions: [String] = []
         let trimmed = search.trimmingCharacters(in: .whitespaces)
         if !trimmed.isEmpty {
-            sql += " WHERE FileName LIKE ? OR URL LIKE ? OR Host LIKE ?"
+            conditions.append("(FileName LIKE ? OR URL LIKE ? OR Host LIKE ?)")
+        }
+        if favoritesOnly {
+            conditions.append("Tags LIKE '%\"Favorite\"%'")
+        }
+        if from != nil {
+            // our rows use UTC ISO-8601, which sorts lexicographically; imported
+            // C# rows without timezone suffix may sort slightly off - acceptable
+            conditions.append("DateTime >= ?")
+        }
+        if matchingId != nil {
+            conditions.append("Id = ?")
+        }
+
+        var sql = "SELECT Id, FileName, FilePath, DateTime, Type, Host, URL, ThumbnailURL, DeletionURL, ShortenedURL, Tags FROM History"
+        if !conditions.isEmpty {
+            sql += " WHERE " + conditions.joined(separator: " AND ")
         }
         sql += " ORDER BY Id DESC LIMIT ?;"
 
@@ -129,6 +170,14 @@ public final class HistoryStore {
                 sqlite3_bind_text(statement, bindIndex, pattern, -1, SQLITE_TRANSIENT)
                 bindIndex += 1
             }
+        }
+        if let from {
+            sqlite3_bind_text(statement, bindIndex, HistoryDate.string(from: from), -1, SQLITE_TRANSIENT)
+            bindIndex += 1
+        }
+        if let matchingId {
+            sqlite3_bind_int64(statement, bindIndex, matchingId)
+            bindIndex += 1
         }
         sqlite3_bind_int(statement, bindIndex, Int32(limit))
 
