@@ -34,6 +34,41 @@ struct SettingsView: View {
         (.uploadImageToHost, "Upload image to host")
     ]
 
+    private func destinationBinding() -> Binding<String> {
+        Binding(
+            get: { task.imageDestination },
+            set: { value in
+                task.imageDestination = value
+                try? task.save()
+            }
+        )
+    }
+
+    private func s3Binding(_ keyPath: WritableKeyPath<AmazonS3Settings, String>) -> Binding<String> {
+        Binding(
+            get: { UploadersConfig.load().amazonS3[keyPath: keyPath] },
+            set: { value in
+                var config = UploadersConfig.load()
+                config.amazonS3[keyPath: keyPath] = value
+                try? config.save()
+            }
+        )
+    }
+
+    private func afterUploadBinding(_ flag: AfterUploadTasks) -> Binding<Bool> {
+        Binding(
+            get: { task.afterUploadJob.contains(flag) },
+            set: { enabled in
+                if enabled {
+                    task.afterUploadJob.insert(flag)
+                } else {
+                    task.afterUploadJob.remove(flag)
+                }
+                try? task.save()
+            }
+        )
+    }
+
     private func uploaderBinding() -> Binding<String> {
         Binding(
             get: { UploadersConfig.load().activeCustomUploader },
@@ -70,18 +105,34 @@ struct SettingsView: View {
                 }
             }
             Section("Upload destination") {
-                let uploaders = CustomUploaderStore.list()
-                if uploaders.isEmpty {
-                    Text("No custom uploaders imported. Use “Import Custom Uploader…” in the ShareX menu — any community .sxcu file works.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                } else {
-                    Picker("Custom uploader", selection: uploaderBinding()) {
-                        ForEach(uploaders, id: \.self) { name in
-                            Text(name).tag(name)
+                Picker("Destination", selection: destinationBinding()) {
+                    Text("Custom uploader").tag("CustomImageUploader")
+                    Text("Amazon S3").tag("AmazonS3")
+                }
+
+                if task.imageDestination == "CustomImageUploader" {
+                    let uploaders = CustomUploaderStore.list()
+                    if uploaders.isEmpty {
+                        Text("No custom uploaders imported. Use “Import Custom Uploader…” in the ShareX menu — any community .sxcu file works.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        Picker("Custom uploader", selection: uploaderBinding()) {
+                            ForEach(uploaders, id: \.self) { name in
+                                Text(name).tag(name)
+                            }
                         }
                     }
+                } else if task.imageDestination == "AmazonS3" {
+                    TextField("Access key ID", text: s3Binding(\.accessKeyID))
+                    SecureField("Secret access key", text: s3Binding(\.secretAccessKey))
+                    TextField("Region", text: s3Binding(\.region))
+                    TextField("Bucket", text: s3Binding(\.bucket))
+                    TextField("Object prefix", text: s3Binding(\.objectPrefix))
+                    TextField("Custom endpoint (optional, for S3-compatible hosts)", text: s3Binding(\.endpoint))
                 }
+
+                Toggle("Shorten URL after upload (is.gd)", isOn: afterUploadBinding(.useURLShortener))
             }
             Section("Hotkeys") {
                 ForEach(HotkeySettings.load().hotkeys, id: \.taskType) { hotkey in
