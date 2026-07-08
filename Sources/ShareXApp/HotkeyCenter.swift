@@ -1,0 +1,100 @@
+// ShareX - A program that allows you to take screenshots and share any file type
+// Copyright (c) 2007-2026 ShareX Team
+// Licensed under GPL v3 - see /LICENSE.txt
+//
+// Global hotkeys via Carbon RegisterEventHotKey - still the supported API for
+// system-wide shortcuts, and the only one that needs no TCC permission.
+
+import AppKit
+import Carbon.HIToolbox
+import SharedKit
+
+@MainActor
+final class HotkeyCenter {
+    static let shared = HotkeyCenter()
+
+    /// DisableHotkeys toggles this; hotkeys marked alwaysEnabled bypass it.
+    var isEnabled = true
+
+    private struct Registration {
+        let action: () -> Void
+        let alwaysEnabled: Bool
+        let ref: EventHotKeyRef
+    }
+
+    private var registrations: [UInt32: Registration] = [:]
+    private var nextID: UInt32 = 1
+    private var handlerInstalled = false
+
+    @discardableResult
+    func register(_ combo: KeyCombo, alwaysEnabled: Bool = false, action: @escaping () -> Void) -> Bool {
+        installHandlerIfNeeded()
+        guard let keyCode = combo.carbonKeyCode else { return false }
+
+        var ref: EventHotKeyRef?
+        let hotKeyID = EventHotKeyID(signature: OSType(0x5348_5258) /* 'SHRX' */, id: nextID)
+        let status = RegisterEventHotKey(keyCode, combo.carbonModifiers, hotKeyID,
+                                         GetApplicationEventTarget(), 0, &ref)
+        guard status == noErr, let ref else { return false }
+
+        registrations[nextID] = Registration(action: action, alwaysEnabled: alwaysEnabled, ref: ref)
+        nextID += 1
+        return true
+    }
+
+    func unregisterAll() {
+        registrations.values.forEach { UnregisterEventHotKey($0.ref) }
+        registrations.removeAll()
+    }
+
+    fileprivate func fire(id: UInt32) {
+        guard let registration = registrations[id] else { return }
+        guard isEnabled || registration.alwaysEnabled else { return }
+        registration.action()
+    }
+
+    private func installHandlerIfNeeded() {
+        guard !handlerInstalled else { return }
+        handlerInstalled = true
+        var eventType = EventTypeSpec(eventClass: OSType(kEventClassKeyboard),
+                                      eventKind: UInt32(kEventHotKeyPressed))
+        // C callback: no captures allowed; Carbon delivers on the main thread
+        InstallEventHandler(GetApplicationEventTarget(), { _, event, _ in
+            guard let event else { return noErr }
+            var hotKeyID = EventHotKeyID()
+            GetEventParameter(event, EventParamName(kEventParamDirectObject),
+                              EventParamType(typeEventHotKeyID), nil,
+                              MemoryLayout<EventHotKeyID>.size, nil, &hotKeyID)
+            MainActor.assumeIsolated {
+                HotkeyCenter.shared.fire(id: hotKeyID.id)
+            }
+            return noErr
+        }, 1, &eventType, nil, nil)
+    }
+}
+
+/// Maps hotkey actions to implementations. Unimplemented types log and no-op
+/// until their phase lands.
+@MainActor
+enum HotkeyDispatcher {
+    static func execute(_ type: HotkeyType) {
+        switch type {
+        case .rectangleRegion:
+            CaptureCoordinator.shared.captureRegion()
+        case .printScreen:
+            CaptureCoordinator.shared.captureFullScreen()
+        case .activeWindow:
+            CaptureCoordinator.shared.captureActiveWindow()
+        case .openMainWindow:
+            (NSApp.delegate as? AppDelegate)?.showMainWindow()
+        case .openScreenshotsFolder:
+            NSWorkspace.shared.open(ApplicationConfig.load().screenshotsFolder)
+        case .disableHotkeys:
+            HotkeyCenter.shared.isEnabled.toggle()
+        case .exitShareX:
+            NSApp.terminate(nil)
+        default:
+            NSLog("HotkeyType %@ is not implemented yet", type.rawValue)
+        }
+    }
+}

@@ -24,6 +24,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         item.button?.image = NSImage(systemSymbolName: "camera.viewfinder", accessibilityDescription: "ShareX")
         item.menu = buildMenu()
         statusItem = item
+
+        setupHotkeys()
+    }
+
+    private func setupHotkeys() {
+        var settings = HotkeySettings.load()
+        if settings.hotkeys.isEmpty {
+            settings.hotkeys = [
+                HotkeyConfig(.printScreen, key: "3", modifiers: ["control", "shift"]),
+                HotkeyConfig(.rectangleRegion, key: "4", modifiers: ["control", "shift"]),
+                HotkeyConfig(.activeWindow, key: "5", modifiers: ["control", "shift"])
+            ]
+            try? settings.save()
+        }
+        for config in settings.hotkeys {
+            guard let combo = config.combo, let type = config.type, type != .none else { continue }
+            let registered = HotkeyCenter.shared.register(combo, alwaysEnabled: type == .disableHotkeys) {
+                HotkeyDispatcher.execute(type)
+            }
+            if !registered {
+                NSLog("Could not register hotkey %@ for %@ (conflict or unknown key)",
+                      combo.displayString, config.taskType)
+            }
+        }
     }
 
     private func buildMenu() -> NSMenu {
@@ -56,7 +80,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         CaptureCoordinator.shared.captureActiveWindow()
     }
 
-    @objc private func showMainWindow() {
+    @objc func showMainWindow() {
         if mainWindow == nil {
             mainWindow = makeWindow(title: "ShareX", size: NSSize(width: 640, height: 420), view: AnyView(MainWindowView()))
         }

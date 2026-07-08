@@ -27,6 +27,17 @@ struct SettingsView: View {
             Section("Permissions") {
                 PermissionsView()
             }
+            Section("Hotkeys") {
+                ForEach(HotkeySettings.load().hotkeys, id: \.taskType) { hotkey in
+                    LabeledContent(hotkey.taskType) {
+                        Text(hotkey.combo?.displayString ?? "—")
+                            .font(.body.monospaced())
+                    }
+                }
+                Text("Edit \(HotkeySettings.fileURL.path) and relaunch to change. Recorder UI is planned.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
             Section("Paths") {
                 LabeledContent("Screenshots folder") {
                     HStack {
