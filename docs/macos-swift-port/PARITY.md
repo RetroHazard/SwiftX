@@ -69,10 +69,13 @@ Statuses: **Ported** · **Partial** (works, known gaps) · **Planned** (phase no
 
 | Feature | Status |
 |---|---|
-| Shapes: rect, ellipse, line, arrow, freehand, smart eraser, image, emoji, cursor | Planned (5) |
-| Text, speech balloon, step numbers | Planned (5) |
-| Effect regions: blur, pixelate, highlight, magnify, spotlight; crop/cut-out | Planned (5) |
-| Undo/redo, style options, canvas expand, zoom/pan | Planned (5) |
+| Shapes: rectangle, ellipse, line, arrow, freehand | Ported |
+| Text (inline entry), step numbers (auto-increment) | Ported |
+| Effect regions: blur, pixelate, highlight | Ported |
+| Undo/redo, color/width controls, AnnotateImage pipeline flag (Cancel aborts task) | Ported |
+| Shape selection/move/resize | Planned (5 follow-up) — undo covers mistakes for now |
+| Smart eraser, image/emoji/cursor stamps, speech balloon, magnify, spotlight, crop/cut-out | Planned (5 follow-up) |
+| Canvas expand, zoom/pan, border/fill/shadow style options | Planned (5 follow-up) |
 
 ## Phase 6 — Image effects
 
