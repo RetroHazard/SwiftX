@@ -89,6 +89,10 @@ enum HotkeyDispatcher {
             (NSApp.delegate as? AppDelegate)?.showMainWindow()
         case .openScreenshotsFolder:
             NSWorkspace.shared.open(ApplicationConfig.load().screenshotsFolder)
+        case .pinToScreenFromClipboard:
+            PinnedWindows.pinFromClipboard()
+        case .pinToScreenCloseAll:
+            PinnedWindows.closeAll()
         case .disableHotkeys:
             HotkeyCenter.shared.isEnabled.toggle()
         case .exitShareX:

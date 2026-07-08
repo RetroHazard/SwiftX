@@ -32,8 +32,9 @@ Statuses: **Ported** · **Partial** (works, known gaps) · **Planned** (phase no
 
 | Feature | Status |
 |---|---|
-| After-capture tasks (21) | Planned (2) |
-| After-upload tasks (6) | Planned (2) |
+| After-capture pipeline (C#-compatible flag serialization) | Ported — 7 of 22 flags implemented: clipboard, save, save-dialog, pin, file/folder path copy, show in Finder; rest dispatch as stubs |
+| Pin to screen (from capture, from clipboard, close all) | Partial — drag to move, double-click to close; resize/opacity options planned (8) |
+| After-upload tasks (6) | Planned (3) — flags model ready |
 | Global hotkey engine (Carbon), defaults ⌃⇧3/4/5, DisableHotkeys toggle | Ported — recorder UI planned, edit JSON for now |
 | HotkeyType vocabulary (C#-compatible raw values) | Ported — 7 actions implemented, rest dispatch as stubs |
 | Capture notifications | Partial — banner on save; sounds/click actions planned |

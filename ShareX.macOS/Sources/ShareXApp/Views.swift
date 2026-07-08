@@ -21,11 +21,40 @@ struct MainWindowView: View {
 
 struct SettingsView: View {
     @State private var config = ApplicationConfig.load()
+    @State private var task = TaskSettings.load()
+
+    private static let afterCaptureToggles: [(AfterCaptureTasks, String)] = [
+        (.copyImageToClipboard, "Copy image to clipboard"),
+        (.saveImageToFile, "Save image to file"),
+        (.saveImageToFileWithDialog, "Save image with dialog"),
+        (.pinToScreen, "Pin to screen"),
+        (.copyFilePathToClipboard, "Copy file path to clipboard"),
+        (.showInExplorer, "Show in Finder")
+    ]
+
+    private func afterCaptureBinding(_ flag: AfterCaptureTasks) -> Binding<Bool> {
+        Binding(
+            get: { task.afterCaptureJob.contains(flag) },
+            set: { enabled in
+                if enabled {
+                    task.afterCaptureJob.insert(flag)
+                } else {
+                    task.afterCaptureJob.remove(flag)
+                }
+                try? task.save()
+            }
+        )
+    }
 
     var body: some View {
         Form {
             Section("Permissions") {
                 PermissionsView()
+            }
+            Section("After capture") {
+                ForEach(Self.afterCaptureToggles, id: \.1) { flag, label in
+                    Toggle(label, isOn: afterCaptureBinding(flag))
+                }
             }
             Section("Hotkeys") {
                 ForEach(HotkeySettings.load().hotkeys, id: \.taskType) { hotkey in

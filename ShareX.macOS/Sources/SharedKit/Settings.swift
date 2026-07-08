@@ -82,18 +82,24 @@ public struct TaskSettings: SettingsFile {
 
     public var nameFormatPattern = "%y-%mo-%d_%h-%mi-%s"
     public var nameFormatPatternActiveWindow = "%pn_%y-%mo-%d_%h-%mi-%s"
+    public var afterCaptureJob: AfterCaptureTasks = [.copyImageToClipboard, .saveImageToFile]
+    public var afterUploadJob: AfterUploadTasks = [.copyURLToClipboard]
 
     public init() {}
 
     enum CodingKeys: String, CodingKey {
         case nameFormatPattern = "NameFormatPattern"
         case nameFormatPatternActiveWindow = "NameFormatPatternActiveWindow"
+        case afterCaptureJob = "AfterCaptureJob"
+        case afterUploadJob = "AfterUploadJob"
     }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         nameFormatPattern = try c.decodeIfPresent(String.self, forKey: .nameFormatPattern) ?? "%y-%mo-%d_%h-%mi-%s"
         nameFormatPatternActiveWindow = try c.decodeIfPresent(String.self, forKey: .nameFormatPatternActiveWindow) ?? "%pn_%y-%mo-%d_%h-%mi-%s"
+        afterCaptureJob = try c.decodeIfPresent(AfterCaptureTasks.self, forKey: .afterCaptureJob) ?? [.copyImageToClipboard, .saveImageToFile]
+        afterUploadJob = try c.decodeIfPresent(AfterUploadTasks.self, forKey: .afterUploadJob) ?? [.copyURLToClipboard]
     }
 }
 
