@@ -60,8 +60,12 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 </plist>
 PLIST
 
-# Ad-hoc signature keeps the TCC permission identity stable between rebuilds.
+# Sign with a real identity when available: TCC anchors grants to the cert chain,
+# so permissions survive rebuilds. Ad-hoc fallback pins to the binary's CDHash,
+# which invalidates grants on EVERY rebuild (tccutil reset + re-grant needed).
 # Developer ID signing + notarization lands in Phase 11.
-codesign --force --sign - "$APP"
+IDENTITY=$(security find-identity -v -p codesigning 2>/dev/null | awk -F'"' '/Apple Development|Developer ID Application/ {print $2; exit}')
+codesign --force --options runtime --sign "${IDENTITY:--}" "$APP"
+echo "Signed as: ${IDENTITY:-ad-hoc}"
 
 echo "Built $APP"
