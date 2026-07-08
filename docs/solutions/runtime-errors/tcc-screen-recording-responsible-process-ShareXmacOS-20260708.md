@@ -41,16 +41,20 @@ open /path/to/ShareX.app   # prompt now says "ShareX", grant sticks to the app
 ```
 Running `ShareX.app/Contents/MacOS/ShareX` directly from a shell inherits the terminal's TCC identity ("responsible process").
 
-2. **Ad-hoc codesign the bundle in the build script** so the grant survives rebuilds:
+2. **Codesign the bundle with a certificate identity** (Apple Development or Developer ID) so the grant survives rebuilds:
 ```bash
-codesign --force --sign - "$APP"
+IDENTITY=$(security find-identity -v -p codesigning | awk -F'"' '/Apple Development|Developer ID Application/ {print $2; exit}')
+codesign --force --options runtime --sign "${IDENTITY:--}" "$APP"
 ```
-TCC keys grants to the code signature; an unsigned or differently-hashed binary re-prompts (or silently fails) after every build.
+**Ad-hoc signing (`--sign -`) is NOT enough:** TCC then pins the grant to the binary's CDHash, which changes on every rebuild — System Settings shows the toggle ON while capture silently fails. Recovery from that state:
+```bash
+tccutil reset ScreenCapture com.getsharex.sharex-macos   # then relaunch and re-grant
+```
 
 Also note: a freshly granted Screen Recording permission only takes effect at **process start** — quit and relaunch the app once after granting.
 
 ## Why This Works
-TCC (Transparency, Consent, and Control) resolves the "responsible process" for a permission request: for a process exec'd from a shell, that's the terminal application. LaunchServices (`open`, Finder, Dock) makes the app its own responsible process. Grants are stored against the bundle ID + code signing identity, so a stable (even ad-hoc) signature keeps the grant valid across rebuilds.
+TCC (Transparency, Consent, and Control) resolves the "responsible process" for a permission request: for a process exec'd from a shell, that's the terminal application. LaunchServices (`open`, Finder, Dock) makes the app its own responsible process. Grants are stored against the bundle ID + the signature's *designated requirement*: certificate-based signatures produce a requirement anchored to the cert chain (stable across rebuilds), while ad-hoc signatures produce one anchored to the specific binary hash (invalidated by any rebuild).
 
 ## Prevention
 - Never judge TCC-gated features from terminal-spawned runs; always test via `open` on the bundle.
@@ -58,5 +62,6 @@ TCC (Transparency, Consent, and Control) resolves the "responsible process" for 
 - Build a permission-status UI early (`CGPreflightScreenCaptureAccess()`, `AXIsProcessTrusted()`) — silent TCC failures are otherwise indistinguishable from bugs.
 
 ## Related Issues
+- Promoted to Required Reading: [critical-patterns.md](../patterns/critical-patterns.md) (Pattern 1)
 - See also: [swift-test-no-xctest-command-line-tools-ShareXmacOS-20260708.md](../developer-experience/swift-test-no-xctest-command-line-tools-ShareXmacOS-20260708.md)
 - See also: [spm-only-macos-app-bundle-pattern-ShareXmacOS-20260708.md](../best-practices/spm-only-macos-app-bundle-pattern-ShareXmacOS-20260708.md)
