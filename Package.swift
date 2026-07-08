@@ -19,9 +19,13 @@ let package = Package(
         .target(
             name: "CaptureKit"
         ),
+        .target(
+            name: "UploadKit",
+            dependencies: ["SharedKit"]
+        ),
         .executableTarget(
             name: "ShareXApp",
-            dependencies: ["SharedKit", "CaptureKit"]
+            dependencies: ["SharedKit", "CaptureKit", "UploadKit"]
         ),
         .testTarget(
             name: "SharedKitTests",
@@ -30,6 +34,10 @@ let package = Package(
         .testTarget(
             name: "CaptureKitTests",
             dependencies: ["CaptureKit"]
+        ),
+        .testTarget(
+            name: "UploadKitTests",
+            dependencies: ["UploadKit"]
         )
     ]
 )

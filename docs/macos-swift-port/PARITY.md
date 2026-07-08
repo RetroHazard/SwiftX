@@ -44,11 +44,13 @@ Statuses: **Ported** · **Partial** (works, known gaps) · **Planned** (phase no
 
 | Feature | Status |
 |---|---|
-| Upload core (multipart, chunked, progress, retry, secondary fallback) | Planned (3) |
+| Upload core — multipart, form-urlencoded, JSON/XML body, binary | Ported |
+| Upload core — chunked/resumable, progress UI, retry, secondary fallback | Planned (3) |
+| Custom uploader engine (.sxcu) — syntax parser (json/regex/base64/random/select/filename/header/response), import, destination picker | Ported — `{xml:…}` function and legacy `$var$` syntax unsupported; interactive select takes first option |
 | OAuth1 + OAuth2 infrastructure | Planned (3) |
-| Custom uploader engine (.sxcu full syntax) | Planned (3) |
-| Imgur, Dropbox, Google Drive, OneDrive, Amazon S3, FTP/FTPS/SFTP, Pastebin, GitHub Gist, Email (SMTP) | Planned (3) |
+| Imgur, Dropbox, Google Drive, OneDrive, Amazon S3, FTP/FTPS/SFTP, Pastebin, GitHub Gist, Email (SMTP) | Planned (3) — many work today via community .sxcu files |
 | URL shorteners: is.gd, v.gd, TinyURL, bit.ly | Planned (3) |
+| After-upload: copy URL to clipboard, open URL | Ported |
 
 ## Phase 4 — History & main window
 

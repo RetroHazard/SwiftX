@@ -157,12 +157,18 @@ public struct HotkeyConfig: Codable, Equatable {
 public struct UploadersConfig: SettingsFile {
     public static let fileName = "UploadersConfig.json"
 
-    // Populated in Phase 3 when the upload engine lands
+    /// File name of the active .sxcu in CustomUploaders/. Hand-ported OAuth
+    /// destinations join this as enum-style destinations later in Phase 3.
+    public var activeCustomUploader = ""
+
     public init() {}
-    public init(from decoder: Decoder) throws {}
-    public func encode(to encoder: Encoder) throws {
-        _ = encoder.container(keyedBy: CodingKeys.self)
+
+    enum CodingKeys: String, CodingKey {
+        case activeCustomUploader = "ActiveCustomUploader"
     }
 
-    enum CodingKeys: CodingKey {}
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        activeCustomUploader = try c.decodeIfPresent(String.self, forKey: .activeCustomUploader) ?? ""
+    }
 }

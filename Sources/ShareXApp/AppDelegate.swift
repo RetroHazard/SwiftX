@@ -5,6 +5,7 @@
 import AppKit
 import SwiftUI
 import SharedKit
+import UploadKit
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -58,6 +59,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(NSMenuItem(title: "Capture Active Window", action: #selector(captureActiveWindow), keyEquivalent: ""))
 
         menu.addItem(.separator())
+        menu.addItem(NSMenuItem(title: "Import Custom Uploader…", action: #selector(importCustomUploader), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Main Window…", action: #selector(showMainWindow), keyEquivalent: ""))
         let settings = NSMenuItem(title: "Settings…", action: #selector(showSettingsWindow), keyEquivalent: ",")
         menu.addItem(settings)
@@ -78,6 +80,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func captureActiveWindow() {
         CaptureCoordinator.shared.captureActiveWindow()
+    }
+
+    @objc private func importCustomUploader() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.json, .init(filenameExtension: "sxcu") ?? .json]
+        panel.allowsMultipleSelection = false
+        NSApp.activate(ignoringOtherApps: true)
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        do {
+            let name = try CustomUploaderStore.importFile(from: url)
+            var config = UploadersConfig.load()
+            if config.activeCustomUploader.isEmpty {
+                config.activeCustomUploader = name
+                try config.save()
+            }
+            Notifier.notify(title: "Custom uploader imported", body: name)
+        } catch {
+            let alert = NSAlert()
+            alert.messageText = "Import failed"
+            alert.informativeText = error.localizedDescription
+            alert.runModal()
+        }
     }
 
     @objc func showMainWindow() {
