@@ -1,0 +1,131 @@
+// ShareX - A program that allows you to take screenshots and share any file type
+// Copyright (c) 2007-2026 ShareX Team
+// Licensed under GPL v3 - see /LICENSE.txt
+
+import AppKit
+import ScreenCaptureKit
+
+public enum ScreenCaptureError: LocalizedError {
+    case noDisplay
+    case noWindow
+    case cropFailed
+
+    public var errorDescription: String? {
+        switch self {
+        case .noDisplay: return "No display found for the capture area."
+        case .noWindow: return "No capturable window found for the frontmost app."
+        case .cropFailed: return "Failed to crop the captured image."
+        }
+    }
+}
+
+public enum ScreenCapture {
+    /// Captures a full display. Defaults to the display containing the mouse cursor.
+    public static func captureDisplay(screen: NSScreen? = nil, showsCursor: Bool = true) async throws -> CGImage {
+        let target = screen
+            ?? NSScreen.screens.first { $0.frame.contains(NSEvent.mouseLocation) }
+            ?? NSScreen.main
+        guard let target else { throw ScreenCaptureError.noDisplay }
+        let content = try await shareableContent()
+        return try await captureImage(of: try scDisplay(for: target, in: content),
+                                      scale: target.backingScaleFactor,
+                                      showsCursor: showsCursor)
+    }
+
+    /// Captures a region given in Cocoa global coordinates (bottom-left origin, y-up).
+    /// The region is clamped to the display where it (mostly) lives.
+    /// ponytail: selections spanning multiple displays capture only the primary intersecting display - stitch later if anyone asks
+    public static func captureRegion(cocoaRect: CGRect, showsCursor: Bool = false) async throws -> CGImage {
+        guard let screen = NSScreen.screens
+            .filter({ $0.frame.intersects(cocoaRect) })
+            .max(by: { $0.frame.intersection(cocoaRect).area < $1.frame.intersection(cocoaRect).area })
+        else { throw ScreenCaptureError.noDisplay }
+
+        let clamped = cocoaRect.intersection(screen.frame)
+        let content = try await shareableContent()
+        let scale = screen.backingScaleFactor
+        let full = try await captureImage(of: try scDisplay(for: screen, in: content), scale: scale, showsCursor: showsCursor)
+        let pixelRect = ScreenCoordinates.displayLocalPixelRect(of: clamped, in: screen.frame, scale: scale)
+        guard let cropped = full.cropping(to: pixelRect.integral) else { throw ScreenCaptureError.cropFailed }
+        return cropped
+    }
+
+    /// Captures the largest on-screen window of the frontmost application.
+    /// Sample the frontmost app BEFORE presenting any ShareX UI.
+    public static func captureFrontmostWindow(processID: pid_t? = nil) async throws -> CGImage {
+        let pid = processID ?? NSWorkspace.shared.frontmostApplication?.processIdentifier
+        guard let pid else { throw ScreenCaptureError.noWindow }
+
+        let content = try await shareableContent()
+        let window = content.windows
+            .filter { $0.owningApplication?.processID == pid && $0.isOnScreen && $0.windowLayer == 0 }
+            .max { $0.frame.area < $1.frame.area }
+        guard let window else { throw ScreenCaptureError.noWindow }
+
+        // window.frame is in CG global points (top-left origin)
+        let scale = NSScreen.screens
+            .first { ScreenCoordinates.cgFromCocoa($0.frame).intersects(window.frame) }?
+            .backingScaleFactor ?? 2
+
+        let configuration = SCStreamConfiguration()
+        configuration.width = Int(window.frame.width * scale)
+        configuration.height = Int(window.frame.height * scale)
+        configuration.showsCursor = false
+        configuration.captureResolution = .best
+        return try await SCScreenshotManager.captureImage(
+            contentFilter: SCContentFilter(desktopIndependentWindow: window),
+            configuration: configuration
+        )
+    }
+
+    // MARK: - Internals
+
+    private static func shareableContent() async throws -> SCShareableContent {
+        try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
+    }
+
+    private static func scDisplay(for screen: NSScreen, in content: SCShareableContent) throws -> SCDisplay {
+        let id = (screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.uint32Value
+        guard let display = content.displays.first(where: { $0.displayID == id }) else {
+            throw ScreenCaptureError.noDisplay
+        }
+        return display
+    }
+
+    private static func captureImage(of display: SCDisplay, scale: CGFloat, showsCursor: Bool) async throws -> CGImage {
+        let configuration = SCStreamConfiguration()
+        configuration.width = Int(CGFloat(display.width) * scale)
+        configuration.height = Int(CGFloat(display.height) * scale)
+        configuration.showsCursor = showsCursor
+        configuration.captureResolution = .best
+        return try await SCScreenshotManager.captureImage(
+            contentFilter: SCContentFilter(display: display, excludingWindows: []),
+            configuration: configuration
+        )
+    }
+}
+
+public enum ScreenCoordinates {
+    /// Cocoa global (bottom-left origin, y-up) -> CoreGraphics global (top-left origin, y-down).
+    public static func cgFromCocoa(_ rect: CGRect, primaryHeight: CGFloat) -> CGRect {
+        CGRect(x: rect.minX, y: primaryHeight - rect.maxY, width: rect.width, height: rect.height)
+    }
+
+    public static func cgFromCocoa(_ rect: CGRect) -> CGRect {
+        cgFromCocoa(rect, primaryHeight: NSScreen.screens.first?.frame.maxY ?? 0)
+    }
+
+    /// Cocoa-global rect -> pixel rect local to a screen (top-left origin), for cropping captured images.
+    public static func displayLocalPixelRect(of rect: CGRect, in screenFrame: CGRect, scale: CGFloat) -> CGRect {
+        CGRect(
+            x: (rect.minX - screenFrame.minX) * scale,
+            y: (screenFrame.maxY - rect.maxY) * scale,
+            width: rect.width * scale,
+            height: rect.height * scale
+        )
+    }
+}
+
+extension CGRect {
+    var area: CGFloat { width * height }
+}
