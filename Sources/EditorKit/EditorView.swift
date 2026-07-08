@@ -25,6 +25,11 @@ public struct EditorView: View {
         self.onComplete = onComplete
     }
 
+    private var canvasPointSize: NSSize {
+        let scale = NSScreen.main?.backingScaleFactor ?? 2
+        return NSSize(width: CGFloat(image.width) / scale, height: CGFloat(image.height) / scale)
+    }
+
     public var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 12) {
@@ -71,6 +76,7 @@ public struct EditorView: View {
 
             ScrollView([.horizontal, .vertical]) {
                 CanvasRepresentable(image: image, state: state)
+                    .frame(width: canvasPointSize.width, height: canvasPointSize.height)
             }
 
             Divider()
