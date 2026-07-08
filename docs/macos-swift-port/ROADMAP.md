@@ -4,7 +4,7 @@ Feature-parity roadmap for a ground-up native macOS client written in Swift.
 Grounded in an inventory of the current codebase (1,202 C# files, 13 projects).
 Executed phase-by-phase across sessions; each phase ends runnable and testable.
 
-**Targets:** macOS 13+ (ScreenCaptureKit baseline), Swift 5.10+, SwiftUI + AppKit
+**Targets:** macOS 14+ (SCScreenshotManager baseline), Swift 5.10+, SwiftUI + AppKit
 where SwiftUI falls short (region overlay, editor canvas). Distribution outside
 the Mac App Store (Developer ID + notarization) — sandboxing is incompatible
 with global hotkeys, screen recording of arbitrary apps, and watch folders.

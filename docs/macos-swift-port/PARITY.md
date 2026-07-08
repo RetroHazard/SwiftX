@@ -19,9 +19,13 @@ Statuses: **Ported** · **Partial** (works, known gaps) · **Planned** (phase no
 
 | Feature | Status |
 |---|---|
-| Fullscreen / monitor / active window / window-picker capture | Planned (1) |
-| Region select overlay (rect/ellipse/freehand, magnifier, crosshair, snapping, fixed size, snap sizes, last region, ruler, color picker modes) | Planned (1) |
-| Save to file + subfolder patterns, clipboard copy, PNG/JPEG/WebP/TIFF | Planned (1) |
+| Fullscreen (display under cursor) / active window capture | Ported |
+| Monitor picker / window picker capture | Planned (1) |
+| Region select overlay — rectangle, dimming, crosshair, size label, multi-display, Esc cancel | Ported |
+| Region overlay extras — ellipse/freehand, magnifier, window/control snapping, fixed size, snap sizes, last region, ruler, color picker modes | Planned (1–8) |
+| Save to file + subfolder patterns (name parser), clipboard copy | Ported |
+| JPEG/WebP/TIFF encoders + quality settings | Planned (1) |
+| Cross-display region selection (stitching) | Planned — clamps to dominant display for now |
 | Transparent/shadow window capture | N/A — ScreenCaptureKit window capture includes native shadows |
 
 ## Phase 2 — Task pipeline, hotkeys
