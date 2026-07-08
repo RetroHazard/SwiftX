@@ -47,6 +47,105 @@ struct EditorKitTests {
         #expect(!canvas.canRedo)
     }
 
+    @Test func hitTestingFindsTopmostShape() {
+        let canvas = EditorCanvasView(image: makeImage())
+        let w = canvas.bounds.width, h = canvas.bounds.height
+
+        var bottom = AnnotationShape(tool: .rectangle)
+        bottom.rect = CGRect(x: 0, y: 0, width: w * 0.8, height: h * 0.8)
+        canvas.addShape(bottom)
+
+        var top = AnnotationShape(tool: .ellipse)
+        top.rect = CGRect(x: w * 0.1, y: h * 0.1, width: w * 0.3, height: h * 0.3)
+        canvas.addShape(top)
+
+        // point inside both -> topmost (ellipse, added last) wins
+        let inside = CGPoint(x: w * 0.2, y: h * 0.2)
+        #expect(canvas.shapeIndex(at: inside) == 1)
+        // point only inside the rectangle
+        #expect(canvas.shapeIndex(at: CGPoint(x: w * 0.7, y: h * 0.7)) == 0)
+        // point outside everything
+        #expect(canvas.shapeIndex(at: CGPoint(x: w * 0.95, y: h * 0.95)) == nil)
+    }
+
+    @Test func lineHitTestUsesSegmentDistance() {
+        let canvas = EditorCanvasView(image: makeImage())
+        let w = canvas.bounds.width, h = canvas.bounds.height
+        var line = AnnotationShape(tool: .line)
+        line.points = [CGPoint(x: 0, y: 0), CGPoint(x: w, y: h)]
+        canvas.addShape(line)
+
+        #expect(canvas.shapeIndex(at: CGPoint(x: w * 0.5, y: h * 0.5)) == 0) // on the line
+        #expect(canvas.shapeIndex(at: CGPoint(x: w * 0.8, y: h * 0.2)) == nil) // far off it
+    }
+
+    @Test func moveTranslatesRectAndPoints() {
+        let canvas = EditorCanvasView(image: makeImage())
+        var arrow = AnnotationShape(tool: .arrow)
+        arrow.points = [CGPoint(x: 10, y: 10), CGPoint(x: 30, y: 20)]
+        let moved = canvas.translated(arrow, by: CGPoint(x: 5, y: -3))
+        #expect(moved.points == [CGPoint(x: 15, y: 7), CGPoint(x: 35, y: 17)])
+
+        var rect = AnnotationShape(tool: .rectangle)
+        rect.rect = CGRect(x: 10, y: 10, width: 20, height: 20)
+        let movedRect = canvas.translated(rect, by: CGPoint(x: -5, y: 5))
+        #expect(movedRect.rect == CGRect(x: 5, y: 15, width: 20, height: 20))
+    }
+
+    @Test func resizeFromCornerAnchorsOpposite() {
+        let canvas = EditorCanvasView(image: makeImage())
+        var shape = AnnotationShape(tool: .rectangle)
+        shape.rect = CGRect(x: 10, y: 10, width: 20, height: 20)
+        // handle 0 = top-left; anchor = bottom-right (30,30); drag to (0,0)
+        let resized = canvas.resized(shape, handle: 0, to: CGPoint(x: 0, y: 0))
+        #expect(resized.rect == CGRect(x: 0, y: 0, width: 30, height: 30))
+
+        // line endpoint drag
+        var line = AnnotationShape(tool: .line)
+        line.points = [CGPoint(x: 0, y: 0), CGPoint(x: 10, y: 10)]
+        let stretched = canvas.resized(line, handle: 1, to: CGPoint(x: 50, y: 5))
+        #expect(stretched.points[1] == CGPoint(x: 50, y: 5))
+        #expect(stretched.points[0] == CGPoint(x: 0, y: 0))
+    }
+
+    @Test func deleteSelectedShapeIsUndoable() {
+        let canvas = EditorCanvasView(image: makeImage())
+        var shape = AnnotationShape(tool: .rectangle)
+        shape.rect = CGRect(x: 1, y: 1, width: 5, height: 5)
+        canvas.addShape(shape)
+        #expect(canvas.selectedShapeID == shape.id) // auto-selected after draw
+
+        canvas.deleteSelectedShape()
+        #expect(canvas.shapes.isEmpty)
+        #expect(canvas.selectedShapeID == nil)
+
+        canvas.undo()
+        #expect(canvas.shapes.count == 1)
+    }
+
+    @Test func colorChangeAppliesToSelectionAndIsUndoable() {
+        let canvas = EditorCanvasView(image: makeImage())
+        var shape = AnnotationShape(tool: .rectangle)
+        shape.color = .systemRed
+        canvas.addShape(shape)
+
+        canvas.setColor(.systemBlue)
+        #expect(canvas.shapes[0].color == .systemBlue)
+
+        // repeated set with the same color must not add history entries
+        let undoDepth = 2 // add + recolor
+        canvas.setColor(.systemBlue)
+        canvas.undo()
+        #expect(canvas.shapes[0].color == .systemRed)
+        _ = undoDepth
+
+        // without selection, color only changes the tool default
+        canvas.selectShape(id: nil)
+        canvas.setColor(.systemGreen)
+        #expect(canvas.shapes[0].color == .systemRed)
+        #expect(canvas.currentColor == .systemGreen)
+    }
+
     @Test func renderWithoutShapesMatchesBase() {
         let canvas = EditorCanvasView(image: makeImage())
         let rendered = canvas.renderFinalImage()!
