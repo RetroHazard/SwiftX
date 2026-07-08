@@ -8,20 +8,28 @@
 
 import AppKit
 import CaptureKit
+import EditorKit
 import HistoryKit
 import SharedKit
 
 @MainActor
 enum AfterCapturePipeline {
     static let implemented: AfterCaptureTasks = [
-        .copyImageToClipboard, .pinToScreen, .saveImageToFile, .saveImageToFileWithDialog,
+        .annotateImage, .copyImageToClipboard, .pinToScreen, .saveImageToFile, .saveImageToFileWithDialog,
         .copyFilePathToClipboard, .copyFolderPathToClipboard, .showInExplorer, .uploadImageToHost
     ]
 
-    static func run(image: CGImage, processName: String? = nil, windowTitle: String? = nil) {
+    static func run(image capturedImage: CGImage, processName: String? = nil, windowTitle: String? = nil) async {
         let settings = TaskSettings.load()
         let config = ApplicationConfig.load()
         let tasks = settings.afterCaptureJob
+
+        var image = capturedImage
+        if tasks.contains(.annotateImage) {
+            // C# behavior: the task waits for the editor; Cancel aborts the whole task
+            guard let edited = await ImageEditorPresenter.present(image: image) else { return }
+            image = edited
+        }
 
         if tasks.contains(.copyImageToClipboard) {
             ImageWriter.copyToClipboard(image)
