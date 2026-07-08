@@ -53,6 +53,8 @@ public struct ApplicationConfig: SettingsFile {
     public var useCustomScreenshotsPath = false
     public var customScreenshotsPath = ""
     public var saveImageSubFolderPattern = "%y-%mo"
+    /// C# TaskViewMode enum name: "ListView" or "ThumbnailView".
+    public var taskViewMode = "ListView"
 
     public var screenshotsFolder: URL {
         if useCustomScreenshotsPath, !customScreenshotsPath.isEmpty {
@@ -67,6 +69,7 @@ public struct ApplicationConfig: SettingsFile {
         case useCustomScreenshotsPath = "UseCustomScreenshotsPath"
         case customScreenshotsPath = "CustomScreenshotsPath"
         case saveImageSubFolderPattern = "SaveImageSubFolderPattern"
+        case taskViewMode = "TaskViewMode"
     }
 
     public init(from decoder: Decoder) throws {
@@ -74,6 +77,7 @@ public struct ApplicationConfig: SettingsFile {
         useCustomScreenshotsPath = try c.decodeIfPresent(Bool.self, forKey: .useCustomScreenshotsPath) ?? false
         customScreenshotsPath = try c.decodeIfPresent(String.self, forKey: .customScreenshotsPath) ?? ""
         saveImageSubFolderPattern = try c.decodeIfPresent(String.self, forKey: .saveImageSubFolderPattern) ?? "%y-%mo"
+        taskViewMode = try c.decodeIfPresent(String.self, forKey: .taskViewMode) ?? "ListView"
     }
 }
 

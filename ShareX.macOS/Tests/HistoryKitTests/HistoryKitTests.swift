@@ -82,6 +82,45 @@ struct HistoryKitTests {
         }
     }
 
+    @Test func favoriteRoundTrip() {
+        withStore { store in
+            let item = store.append(makeItem(fileName: "a.png"))
+            #expect(!item.isFavorite)
+
+            store.setFavorite(id: item.id, true)
+            let favorited = store.recent()[0]
+            #expect(favorited.isFavorite)
+            #expect(favorited.tags["WindowTitle"] == "Safari") // other tags preserved
+
+            store.setFavorite(id: item.id, false)
+            #expect(!store.recent()[0].isFavorite)
+        }
+    }
+
+    @Test func favoritesOnlyFilter() {
+        withStore { store in
+            let a = store.append(makeItem(fileName: "a.png"))
+            store.append(makeItem(fileName: "b.png"))
+            store.setFavorite(id: a.id, true)
+
+            let favorites = store.recent(favoritesOnly: true)
+            #expect(favorites.map(\.fileName) == ["a.png"])
+        }
+    }
+
+    @Test func dateRangeFilter() {
+        withStore { store in
+            var old = makeItem(fileName: "old.png")
+            old.date = Date(timeIntervalSinceNow: -86400 * 10)
+            store.append(old)
+            store.append(makeItem(fileName: "new.png"))
+
+            let recent = store.recent(from: Date(timeIntervalSinceNow: -86400 * 7))
+            #expect(recent.map(\.fileName) == ["new.png"])
+            #expect(store.recent().count == 2)
+        }
+    }
+
     @Test func parsesCSharpRoundTripDates() {
         // C# DateTime.ToString("o") without timezone (Unspecified kind)
         #expect(HistoryDate.date(from: "2015-08-30T12:36:00.0000000") != nil)
