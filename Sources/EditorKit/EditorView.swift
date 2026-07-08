@@ -114,8 +114,9 @@ private struct CanvasRepresentable: NSViewRepresentable {
 
     func updateNSView(_ canvas: EditorCanvasView, context: Context) {
         canvas.currentTool = state.tool
-        canvas.currentColor = NSColor(state.color)
-        canvas.currentLineWidth = state.lineWidth
+        // setters apply to the current selection when one exists
+        canvas.setColor(NSColor(state.color))
+        canvas.setLineWidth(state.lineWidth)
     }
 }
 

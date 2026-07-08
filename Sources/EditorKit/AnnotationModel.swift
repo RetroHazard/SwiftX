@@ -9,6 +9,8 @@
 import AppKit
 
 public enum AnnotationTool: String, CaseIterable, Identifiable {
+    /// Selection/manipulation mode - never stored on a shape.
+    case select
     case rectangle
     case ellipse
     case line
@@ -24,6 +26,7 @@ public enum AnnotationTool: String, CaseIterable, Identifiable {
 
     public var symbolName: String {
         switch self {
+        case .select: return "cursorarrow"
         case .rectangle: return "rectangle"
         case .ellipse: return "circle"
         case .line: return "line.diagonal"
@@ -39,6 +42,7 @@ public enum AnnotationTool: String, CaseIterable, Identifiable {
 
     public var displayName: String {
         switch self {
+        case .select: return "Select"
         case .rectangle: return "Rectangle"
         case .ellipse: return "Ellipse"
         case .line: return "Line"
@@ -59,7 +63,7 @@ public enum AnnotationTool: String, CaseIterable, Identifiable {
 }
 
 public struct AnnotationShape: Identifiable {
-    public let id = UUID()
+    public var id = UUID()
     public var tool: AnnotationTool
     /// Normalized rect in canvas coordinates (top-left origin).
     public var rect: CGRect = .zero
