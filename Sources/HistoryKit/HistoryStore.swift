@@ -1,0 +1,213 @@
+// ShareX - A program that allows you to take screenshots and share any file type
+// Copyright (c) 2007-2026 ShareX Team
+// Licensed under GPL v3 - see /LICENSE.txt
+//
+// SQLite history store. Table name, columns, ISO-8601 date strings and
+// JSON-encoded Tags mirror ShareX.HistoryLib/HistoryManagerSQLite.cs, so a
+// History.db from Windows ShareX opens unchanged.
+
+import Foundation
+import SQLite3
+import SharedKit
+
+public struct HistoryItem: Identifiable, Equatable {
+    public var id: Int64 = 0
+    public var fileName = ""
+    public var filePath = ""
+    public var date = Date()
+    public var type = "Image"
+    public var host = ""
+    public var url = ""
+    public var thumbnailURL = ""
+    public var deletionURL = ""
+    public var shortenedURL = ""
+    public var tags: [String: String] = [:]
+
+    public init() {}
+}
+
+// ponytail: everything runs on the main actor - appends are single-row and reads
+// are LIMITed; move to an actor with a background queue if lists ever feel slow
+@MainActor
+public final class HistoryStore {
+    public static let shared = HistoryStore(url: SettingsPaths.root.appendingPathComponent("History.db"))
+    public static let changedNotification = Notification.Name("ShareXHistoryChanged")
+
+    private var db: OpaquePointer?
+    private let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
+
+    public init(url: URL) {
+        try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        guard sqlite3_open(url.path, &db) == SQLITE_OK else {
+            NSLog("HistoryStore: cannot open %@", url.path)
+            db = nil
+            return
+        }
+        execute("""
+        CREATE TABLE IF NOT EXISTS History (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            FileName TEXT,
+            FilePath TEXT,
+            DateTime TEXT,
+            Type TEXT,
+            Host TEXT,
+            URL TEXT,
+            ThumbnailURL TEXT,
+            DeletionURL TEXT,
+            ShortenedURL TEXT,
+            Tags TEXT
+        );
+        """)
+    }
+
+    deinit {
+        sqlite3_close(db)
+    }
+
+    // MARK: - Writes
+
+    @discardableResult
+    public func append(_ item: HistoryItem) -> HistoryItem {
+        var statement: OpaquePointer?
+        let sql = """
+        INSERT INTO History (FileName, FilePath, DateTime, Type, Host, URL, ThumbnailURL, DeletionURL, ShortenedURL, Tags)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        """
+        guard sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK else { return item }
+        defer { sqlite3_finalize(statement) }
+
+        let tagsJSON = (try? JSONSerialization.data(withJSONObject: item.tags)).flatMap { String(data: $0, encoding: .utf8) } ?? "{}"
+        let values = [item.fileName, item.filePath, HistoryDate.string(from: item.date), item.type,
+                      item.host, item.url, item.thumbnailURL, item.deletionURL, item.shortenedURL, tagsJSON]
+        for (index, value) in values.enumerated() {
+            sqlite3_bind_text(statement, Int32(index + 1), value, -1, SQLITE_TRANSIENT)
+        }
+        guard sqlite3_step(statement) == SQLITE_DONE else { return item }
+
+        var inserted = item
+        inserted.id = sqlite3_last_insert_rowid(db)
+        NotificationCenter.default.post(name: Self.changedNotification, object: nil)
+        return inserted
+    }
+
+    /// After an upload completes, fill in the URLs on the newest row for that file.
+    public func updateUploadURLs(filePath: String, host: String, url: String,
+                                 thumbnailURL: String = "", deletionURL: String = "", shortenedURL: String = "") {
+        var statement: OpaquePointer?
+        let sql = """
+        UPDATE History SET Host = ?, URL = ?, ThumbnailURL = ?, DeletionURL = ?, ShortenedURL = ?
+        WHERE Id = (SELECT Id FROM History WHERE FilePath = ? ORDER BY Id DESC LIMIT 1);
+        """
+        guard sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK else { return }
+        defer { sqlite3_finalize(statement) }
+        for (index, value) in [host, url, thumbnailURL, deletionURL, shortenedURL, filePath].enumerated() {
+            sqlite3_bind_text(statement, Int32(index + 1), value, -1, SQLITE_TRANSIENT)
+        }
+        if sqlite3_step(statement) == SQLITE_DONE, sqlite3_changes(db) > 0 {
+            NotificationCenter.default.post(name: Self.changedNotification, object: nil)
+        }
+    }
+
+    // MARK: - Reads
+
+    public func recent(limit: Int = 200, search: String = "") -> [HistoryItem] {
+        var statement: OpaquePointer?
+        var sql = "SELECT Id, FileName, FilePath, DateTime, Type, Host, URL, ThumbnailURL, DeletionURL, ShortenedURL, Tags FROM History"
+        let trimmed = search.trimmingCharacters(in: .whitespaces)
+        if !trimmed.isEmpty {
+            sql += " WHERE FileName LIKE ? OR URL LIKE ? OR Host LIKE ?"
+        }
+        sql += " ORDER BY Id DESC LIMIT ?;"
+
+        guard sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK else { return [] }
+        defer { sqlite3_finalize(statement) }
+
+        var bindIndex: Int32 = 1
+        if !trimmed.isEmpty {
+            let pattern = "%\(trimmed)%"
+            for _ in 0..<3 {
+                sqlite3_bind_text(statement, bindIndex, pattern, -1, SQLITE_TRANSIENT)
+                bindIndex += 1
+            }
+        }
+        sqlite3_bind_int(statement, bindIndex, Int32(limit))
+
+        var items: [HistoryItem] = []
+        while sqlite3_step(statement) == SQLITE_ROW {
+            var item = HistoryItem()
+            item.id = sqlite3_column_int64(statement, 0)
+            item.fileName = column(statement, 1)
+            item.filePath = column(statement, 2)
+            item.date = HistoryDate.date(from: column(statement, 3)) ?? .distantPast
+            item.type = column(statement, 4)
+            item.host = column(statement, 5)
+            item.url = column(statement, 6)
+            item.thumbnailURL = column(statement, 7)
+            item.deletionURL = column(statement, 8)
+            item.shortenedURL = column(statement, 9)
+            if let data = column(statement, 10).data(using: .utf8),
+               let tags = try? JSONSerialization.jsonObject(with: data) as? [String: String] {
+                item.tags = tags
+            }
+            items.append(item)
+        }
+        return items
+    }
+
+    public func count() -> Int {
+        var statement: OpaquePointer?
+        guard sqlite3_prepare_v2(db, "SELECT COUNT(*) FROM History;", -1, &statement, nil) == SQLITE_OK else { return 0 }
+        defer { sqlite3_finalize(statement) }
+        return sqlite3_step(statement) == SQLITE_ROW ? Int(sqlite3_column_int64(statement, 0)) : 0
+    }
+
+    // MARK: - Internals
+
+    private func execute(_ sql: String) {
+        var errorMessage: UnsafeMutablePointer<CChar>?
+        if sqlite3_exec(db, sql, nil, nil, &errorMessage) != SQLITE_OK, let errorMessage {
+            NSLog("HistoryStore: %@", String(cString: errorMessage))
+            sqlite3_free(errorMessage)
+        }
+    }
+
+    private func column(_ statement: OpaquePointer?, _ index: Int32) -> String {
+        guard let text = sqlite3_column_text(statement, index) else { return "" }
+        return String(cString: text)
+    }
+}
+
+/// C# writes DateTime.ToString("o"); parse tolerantly, write ISO-8601 with
+/// fractional seconds so both sides can read each other's rows.
+enum HistoryDate {
+    private static let writer: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
+
+    private static let readers: [DateFormatter] = [
+        "yyyy-MM-dd'T'HH:mm:ss.SSSSSSSXXXXX", // C# "o" with offset
+        "yyyy-MM-dd'T'HH:mm:ss.SSSSSSS",      // C# "o" unspecified kind
+        "yyyy-MM-dd'T'HH:mm:ss.SSSXXXXX",
+        "yyyy-MM-dd'T'HH:mm:ssXXXXX",
+        "yyyy-MM-dd'T'HH:mm:ss"
+    ].map { format in
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = format
+        return formatter
+    }
+
+    static func string(from date: Date) -> String {
+        writer.string(from: date)
+    }
+
+    static func date(from string: String) -> Date? {
+        if let date = writer.date(from: string) { return date }
+        for reader in readers {
+            if let date = reader.date(from: string) { return date }
+        }
+        return nil
+    }
+}

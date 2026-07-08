@@ -8,6 +8,7 @@
 
 import AppKit
 import CaptureKit
+import HistoryKit
 import SharedKit
 
 @MainActor
@@ -64,6 +65,13 @@ enum AfterCapturePipeline {
         }
 
         if let savedURL {
+            var historyItem = HistoryItem()
+            historyItem.fileName = savedURL.lastPathComponent
+            historyItem.filePath = savedURL.path
+            historyItem.type = "Image"
+            historyItem.host = "File"
+            HistoryStore.shared.append(historyItem)
+
             if tasks.contains(.copyFilePathToClipboard) {
                 copyString(savedURL.path)
             }
@@ -78,7 +86,7 @@ enum AfterCapturePipeline {
         if tasks.contains(.uploadImageToHost) {
             let fileName = savedURL?.lastPathComponent
                 ?? SavePath.screenshotURL(config: config, task: settings, processName: processName).lastPathComponent
-            UploadCoordinator.uploadImage(image, fileName: fileName)
+            UploadCoordinator.uploadImage(image, fileName: fileName, filePath: savedURL?.path)
         }
 
         let pending = tasks.subtracting(implemented)
