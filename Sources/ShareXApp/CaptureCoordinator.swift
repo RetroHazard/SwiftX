@@ -38,10 +38,27 @@ final class CaptureCoordinator {
         }
     }
 
-    private func run(processName: String? = nil, _ operation: () async throws -> CGImage) async {
+    /// Captures one display picked from the menu.
+    func captureScreen(_ screen: NSScreen) {
+        Task {
+            await run { try await ScreenCapture.captureDisplay(screen: screen) }
+        }
+    }
+
+    /// Captures one window picked from the menu.
+    func captureWindow(_ window: CapturableWindow) {
+        Task {
+            await run(processName: window.ownerName, windowTitle: window.title) {
+                try await ScreenCapture.captureWindow(windowID: window.id)
+            }
+        }
+    }
+
+    private func run(processName: String? = nil, windowTitle: String? = nil,
+                     _ operation: () async throws -> CGImage) async {
         do {
             let image = try await operation()
-            await AfterCapturePipeline.run(image: image, processName: processName)
+            await AfterCapturePipeline.run(image: image, processName: processName, windowTitle: windowTitle)
         } catch {
             presentError(error)
         }
