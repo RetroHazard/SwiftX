@@ -92,6 +92,8 @@ public struct TaskSettings: SettingsFile {
     public var imageDestination = "CustomImageUploader"
     /// C# UrlShortenerType enum name.
     public var urlShortenerDestination = "ISGD"
+    /// C# URLSharingServices enum name.
+    public var urlSharingServiceDestination = "Email"
     public var screenRecordFPS = 30
     public var gifFPS = 15
     /// "H264" or "HEVC" (macOS-only key; C# keeps codec inside FFmpegOptions).
@@ -106,6 +108,7 @@ public struct TaskSettings: SettingsFile {
         case afterUploadJob = "AfterUploadJob"
         case imageDestination = "ImageDestination"
         case urlShortenerDestination = "URLShortenerDestination"
+        case urlSharingServiceDestination = "URLSharingServiceDestination"
         case screenRecordFPS = "ScreenRecordFPS"
         case gifFPS = "GIFFPS"
         case screenRecordCodec = "ScreenRecordCodec"
@@ -119,6 +122,7 @@ public struct TaskSettings: SettingsFile {
         afterUploadJob = try c.decodeIfPresent(AfterUploadTasks.self, forKey: .afterUploadJob) ?? [.copyURLToClipboard]
         imageDestination = try c.decodeIfPresent(String.self, forKey: .imageDestination) ?? "CustomImageUploader"
         urlShortenerDestination = try c.decodeIfPresent(String.self, forKey: .urlShortenerDestination) ?? "ISGD"
+        urlSharingServiceDestination = try c.decodeIfPresent(String.self, forKey: .urlSharingServiceDestination) ?? "Email"
         screenRecordFPS = try c.decodeIfPresent(Int.self, forKey: .screenRecordFPS) ?? 30
         gifFPS = try c.decodeIfPresent(Int.self, forKey: .gifFPS) ?? 15
         screenRecordCodec = try c.decodeIfPresent(String.self, forKey: .screenRecordCodec) ?? "H264"
@@ -183,17 +187,88 @@ public struct UploadersConfig: SettingsFile {
     public var activeCustomUploader = ""
     public var amazonS3 = AmazonS3Settings()
 
+    // URL shorteners. Flat key names match the C# UploadersConfig, except
+    // bit.ly: C# stores an OAuth2Info from an app-key flow we can't reuse,
+    // so we store a user-generated personal access token instead.
+    public var bitlyAccessToken = ""
+    public var bitlyDomain = ""
+    public var polrAPIHostname = ""
+    public var polrAPIKey = ""
+    public var polrIsSecret = false
+    public var polrUseAPIv1 = false
+    public var yourlsAPIURL = ""
+    public var yourlsSignature = ""
+    public var yourlsUsername = ""
+    public var yourlsPassword = ""
+    public var kutt = KuttSettings()
+    public var zeroWidthShortenerURL = ""
+    public var zeroWidthShortenerToken = ""
+
     public init() {}
 
     enum CodingKeys: String, CodingKey {
         case activeCustomUploader = "ActiveCustomUploader"
         case amazonS3 = "AmazonS3Settings"
+        case bitlyAccessToken = "BitlyAccessToken"
+        case bitlyDomain = "BitlyDomain"
+        case polrAPIHostname = "PolrAPIHostname"
+        case polrAPIKey = "PolrAPIKey"
+        case polrIsSecret = "PolrIsSecret"
+        case polrUseAPIv1 = "PolrUseAPIv1"
+        case yourlsAPIURL = "YourlsAPIURL"
+        case yourlsSignature = "YourlsSignature"
+        case yourlsUsername = "YourlsUsername"
+        case yourlsPassword = "YourlsPassword"
+        case kutt = "KuttSettings"
+        case zeroWidthShortenerURL = "ZeroWidthShortenerURL"
+        case zeroWidthShortenerToken = "ZeroWidthShortenerToken"
     }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         activeCustomUploader = try c.decodeIfPresent(String.self, forKey: .activeCustomUploader) ?? ""
         amazonS3 = try c.decodeIfPresent(AmazonS3Settings.self, forKey: .amazonS3) ?? AmazonS3Settings()
+        bitlyAccessToken = try c.decodeIfPresent(String.self, forKey: .bitlyAccessToken) ?? ""
+        bitlyDomain = try c.decodeIfPresent(String.self, forKey: .bitlyDomain) ?? ""
+        polrAPIHostname = try c.decodeIfPresent(String.self, forKey: .polrAPIHostname) ?? ""
+        polrAPIKey = try c.decodeIfPresent(String.self, forKey: .polrAPIKey) ?? ""
+        polrIsSecret = try c.decodeIfPresent(Bool.self, forKey: .polrIsSecret) ?? false
+        polrUseAPIv1 = try c.decodeIfPresent(Bool.self, forKey: .polrUseAPIv1) ?? false
+        yourlsAPIURL = try c.decodeIfPresent(String.self, forKey: .yourlsAPIURL) ?? ""
+        yourlsSignature = try c.decodeIfPresent(String.self, forKey: .yourlsSignature) ?? ""
+        yourlsUsername = try c.decodeIfPresent(String.self, forKey: .yourlsUsername) ?? ""
+        yourlsPassword = try c.decodeIfPresent(String.self, forKey: .yourlsPassword) ?? ""
+        kutt = try c.decodeIfPresent(KuttSettings.self, forKey: .kutt) ?? KuttSettings()
+        zeroWidthShortenerURL = try c.decodeIfPresent(String.self, forKey: .zeroWidthShortenerURL) ?? ""
+        zeroWidthShortenerToken = try c.decodeIfPresent(String.self, forKey: .zeroWidthShortenerToken) ?? ""
+    }
+}
+
+/// Field names match the C# KuttSettings JSON shape.
+public struct KuttSettings: Codable, Equatable {
+    public var host = "https://kutt.it"
+    public var apiKey = ""
+    public var password = ""
+    public var reuse = false
+    public var domain = ""
+
+    public init() {}
+
+    enum CodingKeys: String, CodingKey {
+        case host = "Host"
+        case apiKey = "APIKey"
+        case password = "Password"
+        case reuse = "Reuse"
+        case domain = "Domain"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        host = try c.decodeIfPresent(String.self, forKey: .host) ?? "https://kutt.it"
+        apiKey = try c.decodeIfPresent(String.self, forKey: .apiKey) ?? ""
+        password = try c.decodeIfPresent(String.self, forKey: .password) ?? ""
+        reuse = try c.decodeIfPresent(Bool.self, forKey: .reuse) ?? false
+        domain = try c.decodeIfPresent(String.self, forKey: .domain) ?? ""
     }
 }
 
