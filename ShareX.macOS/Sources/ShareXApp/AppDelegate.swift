@@ -13,6 +13,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
     private var mainWindow: NSWindow?
     private var settingsWindow: NSWindow?
+    private var recordItem: NSMenuItem?
+    private var recordGIFItem: NSMenuItem?
+    private var abortRecordingItem: NSMenuItem?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSAppleEventManager.shared().setEventHandler(
@@ -29,6 +32,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         setupHotkeys()
         Notifier.setup()
+        RecordingCoordinator.shared.onStateChange = { [weak self] in self?.updateRecordingUI() }
 
         if CommandLine.arguments.contains("--notify-test") {
             UNUserNotificationCenter.current().getNotificationSettings { settings in
@@ -71,6 +75,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(NSMenuItem(title: "Capture Active Window", action: #selector(captureActiveWindow), keyEquivalent: ""))
 
         menu.addItem(.separator())
+        let record = NSMenuItem(title: "Record Screen (Region)…", action: #selector(toggleRecording), keyEquivalent: "")
+        let recordGIF = NSMenuItem(title: "Record GIF (Region)…", action: #selector(toggleGIFRecording), keyEquivalent: "")
+        let abort = NSMenuItem(title: "Abort Recording", action: #selector(abortRecording), keyEquivalent: "")
+        abort.isHidden = true
+        recordItem = record
+        recordGIFItem = recordGIF
+        abortRecordingItem = abort
+        menu.addItem(record)
+        menu.addItem(recordGIF)
+        menu.addItem(abort)
+
+        menu.addItem(.separator())
         menu.addItem(NSMenuItem(title: "Import Custom Uploader…", action: #selector(importCustomUploader), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Main Window…", action: #selector(showMainWindow), keyEquivalent: ""))
         let settings = NSMenuItem(title: "Settings…", action: #selector(showSettingsWindow), keyEquivalent: ",")
@@ -92,6 +108,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func captureActiveWindow() {
         CaptureCoordinator.shared.captureActiveWindow()
+    }
+
+    @objc private func toggleRecording() {
+        RecordingCoordinator.shared.toggleRegion(gif: false)
+    }
+
+    @objc private func toggleGIFRecording() {
+        RecordingCoordinator.shared.toggleRegion(gif: true)
+    }
+
+    @objc private func abortRecording() {
+        RecordingCoordinator.shared.abort()
+    }
+
+    private func updateRecordingUI() {
+        let recording = RecordingCoordinator.shared.isRecording
+        recordItem?.title = recording ? "Stop Recording" : "Record Screen (Region)…"
+        recordGIFItem?.isHidden = recording
+        abortRecordingItem?.isHidden = !recording
+        statusItem?.button?.image = NSImage(
+            systemSymbolName: recording ? "record.circle" : "camera.viewfinder",
+            accessibilityDescription: "ShareX"
+        )
+        statusItem?.button?.contentTintColor = recording ? .systemRed : nil
     }
 
     @objc private func importCustomUploader() {

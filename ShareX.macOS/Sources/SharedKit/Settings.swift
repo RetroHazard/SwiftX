@@ -92,6 +92,10 @@ public struct TaskSettings: SettingsFile {
     public var imageDestination = "CustomImageUploader"
     /// C# UrlShortenerType enum name.
     public var urlShortenerDestination = "ISGD"
+    public var screenRecordFPS = 30
+    public var gifFPS = 15
+    /// "H264" or "HEVC" (macOS-only key; C# keeps codec inside FFmpegOptions).
+    public var screenRecordCodec = "H264"
 
     public init() {}
 
@@ -102,6 +106,9 @@ public struct TaskSettings: SettingsFile {
         case afterUploadJob = "AfterUploadJob"
         case imageDestination = "ImageDestination"
         case urlShortenerDestination = "URLShortenerDestination"
+        case screenRecordFPS = "ScreenRecordFPS"
+        case gifFPS = "GIFFPS"
+        case screenRecordCodec = "ScreenRecordCodec"
     }
 
     public init(from decoder: Decoder) throws {
@@ -112,6 +119,9 @@ public struct TaskSettings: SettingsFile {
         afterUploadJob = try c.decodeIfPresent(AfterUploadTasks.self, forKey: .afterUploadJob) ?? [.copyURLToClipboard]
         imageDestination = try c.decodeIfPresent(String.self, forKey: .imageDestination) ?? "CustomImageUploader"
         urlShortenerDestination = try c.decodeIfPresent(String.self, forKey: .urlShortenerDestination) ?? "ISGD"
+        screenRecordFPS = try c.decodeIfPresent(Int.self, forKey: .screenRecordFPS) ?? 30
+        gifFPS = try c.decodeIfPresent(Int.self, forKey: .gifFPS) ?? 15
+        screenRecordCodec = try c.decodeIfPresent(String.self, forKey: .screenRecordCodec) ?? "H264"
     }
 }
 
