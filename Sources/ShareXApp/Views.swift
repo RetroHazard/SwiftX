@@ -316,6 +316,18 @@ struct SettingsView: View {
         )
     }
 
+    /// Text entry can produce anything; clamp to the valid range on commit.
+    private func clampedBinding(_ keyPath: WritableKeyPath<TaskSettings, Int>,
+                                _ range: ClosedRange<Int>) -> Binding<Int> {
+        Binding(
+            get: { task[keyPath: keyPath] },
+            set: { value in
+                task[keyPath: keyPath] = min(max(value, range.lowerBound), range.upperBound)
+                try? task.save()
+            }
+        )
+    }
+
     private func taskBinding<T>(_ keyPath: WritableKeyPath<TaskSettings, T>) -> Binding<T> {
         Binding(
             get: { task[keyPath: keyPath] },
@@ -343,9 +355,15 @@ struct SettingsView: View {
     var body: some View {
         NavigationSplitView {
             List(SettingsPane.allCases, selection: $pane) { pane in
+                // explicit tag: List's implicit selection value is the String id,
+                // which never matches our SettingsPane? binding
                 Label(pane.rawValue, systemImage: pane.icon)
+                    .tag(pane)
             }
             .navigationSplitViewColumnWidth(min: 150, ideal: 170)
+            // the toggle floats misaligned in a hand-made NSWindow's title bar;
+            // a fixed settings sidebar doesn't need collapsing anyway
+            .toolbar(removing: .sidebarToggle)
         } detail: {
             Form {
                 switch pane ?? .general {
@@ -403,10 +421,10 @@ struct SettingsView: View {
                 Text("HEVC (smaller files)").tag("HEVC")
                 Text("WebM / VP9 (requires ffmpeg)").tag("VP9")
             }
-            Stepper("Video frame rate: \(task.screenRecordFPS) fps",
-                    value: taskBinding(\.screenRecordFPS), in: 1...60)
-            Stepper("GIF frame rate: \(task.gifFPS) fps",
-                    value: taskBinding(\.gifFPS), in: 1...30)
+            TextField("Video frame rate (1–60 fps)",
+                      value: clampedBinding(\.screenRecordFPS, 1...60), format: .number)
+            TextField("GIF frame rate (1–30 fps)",
+                      value: clampedBinding(\.gifFPS, 1...30), format: .number)
         }
         Section("External tools") {
             FFmpegStatusView()
