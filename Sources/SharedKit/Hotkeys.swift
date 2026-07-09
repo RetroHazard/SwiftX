@@ -110,6 +110,11 @@ public struct KeyCombo: Codable, Equatable {
         Self.keyCodes[key.lowercased()]
     }
 
+    /// Inverse lookup for the hotkey recorder (NSEvent.keyCode uses the same codes).
+    public static func keyName(forCarbonKeyCode code: UInt32) -> String? {
+        keyCodes.first { $0.value == code }?.key
+    }
+
     /// Carbon modifier mask (cmdKey/shiftKey/optionKey/controlKey).
     public var carbonModifiers: UInt32 {
         modifiers.reduce(0) { mask, name in
