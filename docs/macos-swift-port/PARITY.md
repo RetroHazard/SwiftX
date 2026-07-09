@@ -74,7 +74,9 @@ Statuses: **Ported** · **Partial** (works, known gaps) · **Planned** (phase no
 | Effect regions: blur, pixelate, highlight | Ported |
 | Undo/redo, color/width controls, AnnotateImage pipeline flag (Cancel aborts task) | Ported |
 | Shape selection, move, resize handles, Delete, double-click text re-edit, recolor selection | Ported — Screenshot.app-style manipulation |
-| Smart eraser, image/emoji/cursor stamps, speech balloon, magnify, spotlight, crop/cut-out | Planned (5 follow-up) |
+| Speech balloon (draggable tail, inline text) | Ported |
+| Crop (undoable, shapes translate, canvas resizes) | Ported |
+| Smart eraser, image/emoji/cursor stamps, magnify, spotlight, cut-out | Planned (5 follow-up) |
 | Canvas expand, zoom/pan, border/fill/shadow style options | Planned (5 follow-up) |
 
 ## Phase 6 — Image effects
