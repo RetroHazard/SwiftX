@@ -264,13 +264,17 @@ struct SettingsView: View {
     private static let afterCaptureToggles: [(AfterCaptureTasks, String)] = [
         (.annotateImage, "Annotate image (editor)"),
         (.copyImageToClipboard, "Copy image to clipboard"),
+        (.pinToScreen, "Pin to screen"),
+        (.sendImageToPrinter, "Send image to printer"),
         (.saveImageToFile, "Save image to file"),
         (.saveImageToFileWithDialog, "Save image with dialog"),
         (.saveThumbnailImageToFile, "Save thumbnail image to file"),
-        (.pinToScreen, "Pin to screen"),
+        (.copyFileToClipboard, "Copy file to clipboard"),
         (.copyFilePathToClipboard, "Copy file path to clipboard"),
+        (.copyFolderPathToClipboard, "Copy folder path to clipboard"),
         (.showInExplorer, "Show in Finder"),
-        (.uploadImageToHost, "Upload image to host")
+        (.uploadImageToHost, "Upload image to host"),
+        (.deleteFile, "Delete file locally (moves to Trash)")
     ]
 
     private func destinationBinding() -> Binding<String> {

@@ -15,9 +15,10 @@ import SharedKit
 @MainActor
 enum AfterCapturePipeline {
     static let implemented: AfterCaptureTasks = [
-        .annotateImage, .copyImageToClipboard, .pinToScreen, .saveImageToFile, .saveImageToFileWithDialog,
-        .saveThumbnailImageToFile, .copyFilePathToClipboard, .copyFolderPathToClipboard, .showInExplorer,
-        .uploadImageToHost
+        .annotateImage, .copyImageToClipboard, .pinToScreen, .sendImageToPrinter,
+        .saveImageToFile, .saveImageToFileWithDialog, .saveThumbnailImageToFile,
+        .copyFileToClipboard, .copyFilePathToClipboard, .copyFolderPathToClipboard,
+        .showInExplorer, .uploadImageToHost, .deleteFile
     ]
 
     static func run(image capturedImage: CGImage, processName: String? = nil, windowTitle: String? = nil) async {
@@ -108,6 +109,12 @@ enum AfterCapturePipeline {
             historyItem.host = "File"
             HistoryStore.shared.append(historyItem)
 
+            if tasks.contains(.copyFileToClipboard) {
+                // file reference, not pixels: pasting in Finder/Slack attaches the file
+                let pasteboard = NSPasteboard.general
+                pasteboard.clearContents()
+                pasteboard.writeObjects([savedURL as NSURL])
+            }
             if tasks.contains(.copyFilePathToClipboard) {
                 copyString(savedURL.path)
             }
@@ -131,10 +138,34 @@ enum AfterCapturePipeline {
             }
         }
 
+        if tasks.contains(.sendImageToPrinter) {
+            printImage(image)
+        }
+
+        // last: the upload path has already read the file's bytes by now.
+        // Trash instead of C#'s permanent delete - recoverable mistakes only.
+        if tasks.contains(.deleteFile), let savedURL {
+            try? FileManager.default.trashItem(at: savedURL, resultingItemURL: nil)
+        }
+
         let pending = tasks.subtracting(implemented)
         if !pending.isEmpty {
             NSLog("AfterCaptureTasks not implemented yet: %@", pending.nameString)
         }
+    }
+
+    private static func printImage(_ image: CGImage) {
+        let nsImage = NSImage(cgImage: image, size: .zero)
+        let view = NSImageView(frame: NSRect(origin: .zero, size: nsImage.size))
+        view.image = nsImage
+        view.imageScaling = .scaleProportionallyDown
+        let info = NSPrintInfo.shared
+        info.horizontalPagination = .fit
+        info.verticalPagination = .fit
+        info.isHorizontallyCentered = true
+        info.isVerticallyCentered = true
+        NSApp.activate(ignoringOtherApps: true)
+        NSPrintOperation(view: view, printInfo: info).run()
     }
 
     private static func copyString(_ string: String) {
