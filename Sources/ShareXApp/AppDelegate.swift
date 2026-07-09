@@ -165,7 +165,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func showSettingsWindow() {
         if settingsWindow == nil {
-            settingsWindow = makeWindow(title: "ShareX Settings", size: NSSize(width: 520, height: 400), view: AnyView(SettingsView()))
+            settingsWindow = makeWindow(title: "ShareX Settings", size: NSSize(width: 700, height: 460), view: AnyView(SettingsView()))
         }
         present(settingsWindow)
     }
