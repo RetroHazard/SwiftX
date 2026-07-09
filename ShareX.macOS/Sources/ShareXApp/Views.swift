@@ -479,6 +479,8 @@ struct SettingsView: View {
             }
         }
         Section("After upload") {
+            Toggle("Copy URL to clipboard", isOn: afterUploadBinding(.copyURLToClipboard))
+            Toggle("Open URL in browser", isOn: afterUploadBinding(.openURL))
             Toggle("Shorten URL after upload", isOn: afterUploadBinding(.useURLShortener))
             Picker("URL shortener", selection: taskBinding(\.urlShortenerDestination)) {
                 ForEach(URLShortenerType.allCases, id: \.rawValue) { type in

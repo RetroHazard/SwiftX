@@ -107,7 +107,7 @@ enum UploadCoordinator {
             }
         }
 
-        if tasks.contains(.copyURLToClipboard) {
+        if tasks.contains(.copyURLToClipboard), !finalURL.isEmpty {
             let pasteboard = NSPasteboard.general
             pasteboard.clearContents()
             pasteboard.setString(finalURL, forType: .string)
