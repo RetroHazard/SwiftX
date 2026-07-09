@@ -127,6 +127,11 @@ public enum ScreenCoordinates {
         cgFromCocoa(rect, primaryHeight: NSScreen.screens.first?.frame.maxY ?? 0)
     }
 
+    /// CG global -> Cocoa global. The flip is its own inverse.
+    public static func cocoaFromCG(_ rect: CGRect) -> CGRect {
+        cgFromCocoa(rect)
+    }
+
     /// Cocoa-global rect -> pixel rect local to a screen (top-left origin), for cropping captured images.
     public static func displayLocalPixelRect(of rect: CGRect, in screenFrame: CGRect, scale: CGFloat) -> CGRect {
         CGRect(

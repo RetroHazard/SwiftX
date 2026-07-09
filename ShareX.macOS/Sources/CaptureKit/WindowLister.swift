@@ -14,6 +14,8 @@ public struct CapturableWindow: Sendable {
     public let id: CGWindowID
     public let ownerName: String
     public let title: String
+    /// CG global coordinates (top-left origin, y-down).
+    public let frame: CGRect
 
     public var menuTitle: String {
         title.isEmpty || title == ownerName ? ownerName : "\(ownerName) — \(title)"
@@ -33,11 +35,13 @@ public enum WindowLister {
                   let id = info[kCGWindowNumber] as? Int,
                   let owner = info[kCGWindowOwnerName] as? String, !owner.isEmpty,
                   (info[kCGWindowOwnerPID] as? pid_t) != excludingPID,
-                  let bounds = info[kCGWindowBounds] as? [String: CGFloat],
-                  bounds["Width", default: 0] >= 50, bounds["Height", default: 0] >= 50
+                  let boundsDict = info[kCGWindowBounds] as? NSDictionary,
+                  let bounds = CGRect(dictionaryRepresentation: boundsDict),
+                  bounds.width >= 50, bounds.height >= 50
             else { return nil }
             return CapturableWindow(id: CGWindowID(id), ownerName: owner,
-                                    title: info[kCGWindowName] as? String ?? "")
+                                    title: info[kCGWindowName] as? String ?? "",
+                                    frame: bounds)
         }
     }
 }
