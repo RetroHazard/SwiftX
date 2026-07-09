@@ -113,6 +113,9 @@ public struct TaskSettings: SettingsFile {
     /// Only save the thumbnail when the image is larger than the thumbnail box.
     public var thumbnailCheckSize = false
 
+    /// Actions: external programs run on the captured file (C# ExternalPrograms).
+    public var externalPrograms: [ExternalProgramSettings] = []
+
     public init() {}
 
     enum CodingKeys: String, CodingKey {
@@ -134,6 +137,7 @@ public struct TaskSettings: SettingsFile {
         case thumbnailHeight = "ThumbnailHeight"
         case thumbnailName = "ThumbnailName"
         case thumbnailCheckSize = "ThumbnailCheckSize"
+        case externalPrograms = "ExternalPrograms"
     }
 
     public init(from decoder: Decoder) throws {
@@ -156,6 +160,7 @@ public struct TaskSettings: SettingsFile {
         thumbnailHeight = try c.decodeIfPresent(Int.self, forKey: .thumbnailHeight) ?? 0
         thumbnailName = try c.decodeIfPresent(String.self, forKey: .thumbnailName) ?? "-thumbnail"
         thumbnailCheckSize = try c.decodeIfPresent(Bool.self, forKey: .thumbnailCheckSize) ?? false
+        externalPrograms = try c.decodeIfPresent([ExternalProgramSettings].self, forKey: .externalPrograms) ?? []
     }
 }
 

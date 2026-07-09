@@ -17,7 +17,7 @@ enum AfterCapturePipeline {
     static let implemented: AfterCaptureTasks = [
         .annotateImage, .copyImageToClipboard, .pinToScreen, .sendImageToPrinter,
         .saveImageToFile, .saveImageToFileWithDialog, .saveThumbnailImageToFile,
-        .copyFileToClipboard, .copyFilePathToClipboard, .copyFolderPathToClipboard,
+        .performActions, .copyFileToClipboard, .copyFilePathToClipboard, .copyFolderPathToClipboard,
         .showInExplorer, .uploadImageToHost, .deleteFile
     ]
 
@@ -98,6 +98,16 @@ enum AfterCapturePipeline {
                 try ImageWriter.write(thumb, to: url, format: format, jpegQuality: settings.imageJPEGQuality)
             } catch {
                 presentError(error)
+            }
+        }
+
+        // actions run before anything references the file, so the pipeline
+        // continues with the action's output (C# order: actions precede upload)
+        if tasks.contains(.performActions), let inputURL = savedURL {
+            do {
+                savedURL = try await ExternalProgramRunner.runAll(settings.externalPrograms, on: inputURL)
+            } catch {
+                Notifier.notify(title: "Action failed", body: error.localizedDescription)
             }
         }
 
