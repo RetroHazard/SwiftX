@@ -19,12 +19,13 @@ Statuses: **Ported** · **Partial** (works, known gaps) · **Planned** (phase no
 
 | Feature | Status |
 |---|---|
-| Fullscreen (display under cursor) / active window capture | Ported |
-| Monitor picker / window picker capture | Planned (1) |
+| Fullscreen (display under cursor) / active window capture | Ported — ActiveMonitor hotkey maps here too |
+| Monitor picker / window picker capture | Ported — status-menu submenus populate on open |
 | Region select overlay — rectangle, dimming, crosshair, size label, multi-display, Esc cancel | Ported |
-| Region overlay extras — ellipse/freehand, magnifier, window/control snapping, fixed size, snap sizes, last region, ruler, color picker modes | Planned (1–8) |
+| Region overlay — window snapping (hover highlight, click captures), last region (menu + hotkey) | Ported |
+| Region overlay extras — ellipse/freehand, magnifier, fixed size, snap sizes, ruler, color picker modes | Planned (1 follow-up / 8 for ruler & color picker) |
 | Save to file + subfolder patterns (name parser), clipboard copy | Ported |
-| JPEG/WebP/TIFF encoders + quality settings | Planned (1) |
+| JPEG/GIF/BMP/TIFF encoders + quality, auto-JPEG for large captures | Ported — C# EImageFormat set; WebP is not a C# image format either |
 | Cross-display region selection (stitching) | Planned — clamps to dominant display for now |
 | Transparent/shadow window capture | N/A — ScreenCaptureKit window capture includes native shadows |
 
@@ -32,13 +33,13 @@ Statuses: **Ported** · **Partial** (works, known gaps) · **Planned** (phase no
 
 | Feature | Status |
 |---|---|
-| After-capture pipeline (C#-compatible flag serialization) | Ported — 7 of 22 flags implemented: clipboard, save, save-dialog, pin, file/folder path copy, show in Finder; rest dispatch as stubs |
+| After-capture pipeline (C#-compatible flag serialization) | Ported — 14 of 22 flags: annotate, image/file/paths to clipboard, pin, print, save, save-dialog, thumbnail, actions, show in Finder, upload, delete (Trash); remaining 8 wait on their phases (quick task menu, after-capture/before-upload windows, beautify, effects, analyze, QR, OCR) |
 | Pin to screen (from capture, from clipboard, close all) | Partial — drag to move, double-click to close; resize/opacity options planned (8) |
 | After-upload tasks (6) | Planned (3) — flags model ready |
-| Global hotkey engine (Carbon), defaults ⌃⇧3/4/5, DisableHotkeys toggle | Ported — recorder UI planned, edit JSON for now |
-| HotkeyType vocabulary (C#-compatible raw values) | Ported — 7 actions implemented, rest dispatch as stubs |
-| Capture notifications | Partial — banner on save; sounds/click actions planned |
-| Actions (external commands) | Planned (2) |
+| Global hotkey engine (Carbon), defaults ⌃⇧3/4/5, DisableHotkeys toggle | Ported — recorder UI in Settings, live re-registration |
+| HotkeyType vocabulary (C#-compatible raw values) | Ported — capture/record/pin/window actions implemented, rest dispatch as stubs |
+| Capture notifications | Ported — banner + optional sound (C# PlaySound keys); click reveals file or opens URL |
+| Actions (external commands) | Ported — C# ExternalProgram JSON, $input/$output placeholders, output-extension chaining, Settings pane |
 
 ## Phase 3 — Upload engine & core destinations
 
