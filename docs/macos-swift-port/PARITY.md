@@ -94,7 +94,8 @@ Statuses: **Ported** · **Partial** (works, known gaps) · **Planned** (phase no
 | H.264/HEVC recording (region/window/screen, audio, pause) | Partial — SCStream → AVAssetWriter MP4; region/window/screen + hotkey toggles + menu bar; audio and pause planned (7 follow-up) |
 | GIF recording | Ported — ImageIO encoder, real per-frame delays, region/window/screen |
 | Recording through task pipeline (save, history, notify, path copy, upload) | Ported — uploads reuse the image destination |
-| VP8/VP9/WebP/APNG via ffmpeg, custom ffmpeg args | Planned (7 follow-up) |
+| WebM/VP9 via ffmpeg | Ported — detects Homebrew/MacPorts ffmpeg, records H.264 then transcodes; Settings shows install status + one-click Homebrew install; falls back to H.264 when ffmpeg is missing |
+| VP8/WebP/APNG, custom ffmpeg args | Planned (7 follow-up) |
 | gdigrab/ddagrab/screen-capture-recorder sources | N/A — replaced by ScreenCaptureKit / avfoundation |
 
 ## Phase 8 — Tools

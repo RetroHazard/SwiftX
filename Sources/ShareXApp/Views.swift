@@ -4,6 +4,7 @@
 
 import SwiftUI
 import ApplicationServices
+import CaptureKit
 import HistoryKit
 import SharedKit
 import UploadKit
@@ -332,14 +333,13 @@ struct SettingsView: View {
                 Picker("Video codec", selection: taskBinding(\.screenRecordCodec)) {
                     Text("H.264 (most compatible)").tag("H264")
                     Text("HEVC (smaller files)").tag("HEVC")
+                    Text("WebM / VP9 (requires ffmpeg)").tag("VP9")
                 }
                 Stepper("Video frame rate: \(task.screenRecordFPS) fps",
                         value: taskBinding(\.screenRecordFPS), in: 1...60)
                 Stepper("GIF frame rate: \(task.gifFPS) fps",
                         value: taskBinding(\.gifFPS), in: 1...30)
-                Text("WebM/VP9 export requires ffmpeg and is planned.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                FFmpegStatusView()
             }
             Section("Upload destination") {
                 Picker("Destination", selection: destinationBinding()) {
@@ -414,6 +414,52 @@ struct SettingsView: View {
             config.useCustomScreenshotsPath = true
             config.customScreenshotsPath = url.path
             try? config.save()
+        }
+    }
+}
+
+/// ffmpeg availability, styled after the TCC permission rows. ffmpeg is only
+/// needed for formats VideoToolbox can't encode (WebM/VP9 today).
+struct FFmpegStatusView: View {
+    @State private var ffmpegPath = FFmpeg.installedPath
+    private let refresh = Timer.publish(every: 2, on: .main, in: .common).autoconnect()
+
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading) {
+                Label(ffmpegPath != nil ? "ffmpeg installed" : "ffmpeg not installed",
+                      systemImage: ffmpegPath != nil ? "checkmark.circle.fill" : "xmark.circle.fill")
+                    .foregroundStyle(ffmpegPath != nil ? .green : .red)
+                Text(ffmpegPath ?? "Required for WebM/VP9 export. Without it, VP9 recordings fall back to H.264.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+            if ffmpegPath == nil {
+                if FFmpeg.homebrewPath != nil {
+                    Button("Install via Homebrew") { installViaHomebrew() }
+                } else {
+                    Button("Get Homebrew") {
+                        NSWorkspace.shared.open(URL(string: "https://brew.sh")!)
+                    }
+                }
+            }
+        }
+        .onReceive(refresh) { _ in ffmpegPath = FFmpeg.installedPath }
+    }
+
+    /// Runs the install in Terminal via a .command file: progress stays
+    /// visible and no Apple-events automation permission is needed.
+    private func installViaHomebrew() {
+        guard let brew = FFmpeg.homebrewPath else { return }
+        let script = "#!/bin/zsh\n\(brew) install ffmpeg\n"
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("sharex-install-ffmpeg.command")
+        do {
+            try script.write(to: url, atomically: true, encoding: .utf8)
+            try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: url.path)
+            NSWorkspace.shared.open(url)
+        } catch {
+            NSLog("Could not launch ffmpeg install: %@", error.localizedDescription)
         }
     }
 }
