@@ -116,6 +116,9 @@ public struct TaskSettings: SettingsFile {
     /// Actions: external programs run on the captured file (C# ExternalPrograms).
     public var externalPrograms: [ExternalProgramSettings] = []
 
+    public var playSoundAfterCapture = true
+    public var playSoundAfterUpload = true
+
     public init() {}
 
     enum CodingKeys: String, CodingKey {
@@ -138,6 +141,8 @@ public struct TaskSettings: SettingsFile {
         case thumbnailName = "ThumbnailName"
         case thumbnailCheckSize = "ThumbnailCheckSize"
         case externalPrograms = "ExternalPrograms"
+        case playSoundAfterCapture = "PlaySoundAfterCapture"
+        case playSoundAfterUpload = "PlaySoundAfterUpload"
     }
 
     public init(from decoder: Decoder) throws {
@@ -161,6 +166,8 @@ public struct TaskSettings: SettingsFile {
         thumbnailName = try c.decodeIfPresent(String.self, forKey: .thumbnailName) ?? "-thumbnail"
         thumbnailCheckSize = try c.decodeIfPresent(Bool.self, forKey: .thumbnailCheckSize) ?? false
         externalPrograms = try c.decodeIfPresent([ExternalProgramSettings].self, forKey: .externalPrograms) ?? []
+        playSoundAfterCapture = try c.decodeIfPresent(Bool.self, forKey: .playSoundAfterCapture) ?? true
+        playSoundAfterUpload = try c.decodeIfPresent(Bool.self, forKey: .playSoundAfterUpload) ?? true
     }
 }
 
