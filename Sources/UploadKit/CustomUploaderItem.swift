@@ -138,4 +138,24 @@ public enum CustomUploaderStore {
         guard !name.isEmpty else { return }
         try FileManager.default.removeItem(at: directory.appendingPathComponent(name))
     }
+
+    /// Renames an uploader's file to match a new display name; returns the
+    /// file name actually used (unique-ified on collision).
+    public static func rename(_ fileName: String, toBaseName baseName: String, in directory: URL = directory) throws -> String {
+        let sanitized = baseName
+            .replacingOccurrences(of: "/", with: "-")
+            .replacingOccurrences(of: ":", with: "-")
+            .trimmingCharacters(in: .whitespaces)
+        guard !sanitized.isEmpty, sanitized + ".sxcu" != fileName else { return fileName }
+        let existing = Set(list(in: directory)).subtracting([fileName])
+        var target = sanitized + ".sxcu"
+        var counter = 2
+        while existing.contains(target) {
+            target = "\(sanitized) \(counter).sxcu"
+            counter += 1
+        }
+        try FileManager.default.moveItem(at: directory.appendingPathComponent(fileName),
+                                         to: directory.appendingPathComponent(target))
+        return target
+    }
 }
