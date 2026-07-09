@@ -6,6 +6,7 @@ import AppKit
 import CaptureKit
 import HistoryKit
 import SharedKit
+import UniformTypeIdentifiers
 import UploadKit
 
 @MainActor
@@ -15,10 +16,24 @@ enum UploadCoordinator {
             Notifier.notify(title: "Upload failed", body: "Could not encode the image.")
             return
         }
+        upload(UploadFile(data: data, fileName: fileName, mimeType: "image/png"), filePath: filePath)
+    }
 
+    /// Uploads an existing file (recordings, GIFs) through the image destination.
+    /// ponytail: reuses ImageDestination for all file types; a separate
+    /// FileDestination setting can come with the destination long tail (Phase 9).
+    static func uploadFile(at url: URL) {
+        guard let data = try? Data(contentsOf: url) else {
+            Notifier.notify(title: "Upload failed", body: "Could not read \(url.lastPathComponent).")
+            return
+        }
+        let mime = UTType(filenameExtension: url.pathExtension)?.preferredMIMEType ?? "application/octet-stream"
+        upload(UploadFile(data: data, fileName: url.lastPathComponent, mimeType: mime), filePath: url.path)
+    }
+
+    private static func upload(_ file: UploadFile, filePath: String?) {
         let config = UploadersConfig.load()
         let settings = TaskSettings.load()
-        let file = UploadFile(data: data, fileName: fileName, mimeType: "image/png")
 
         Task {
             do {

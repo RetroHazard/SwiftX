@@ -85,6 +85,22 @@ enum HotkeyDispatcher {
             CaptureCoordinator.shared.captureFullScreen()
         case .activeWindow:
             CaptureCoordinator.shared.captureActiveWindow()
+        case .screenRecorder, .screenRecorderCustomRegion:
+            RecordingCoordinator.shared.toggleRegion(gif: false)
+        case .startScreenRecorder:
+            RecordingCoordinator.shared.toggleDisplay(gif: false)
+        case .screenRecorderActiveWindow:
+            RecordingCoordinator.shared.toggleActiveWindow(gif: false)
+        case .screenRecorderGIF, .screenRecorderGIFCustomRegion:
+            RecordingCoordinator.shared.toggleRegion(gif: true)
+        case .startScreenRecorderGIF:
+            RecordingCoordinator.shared.toggleDisplay(gif: true)
+        case .screenRecorderGIFActiveWindow:
+            RecordingCoordinator.shared.toggleActiveWindow(gif: true)
+        case .stopScreenRecording:
+            RecordingCoordinator.shared.stop()
+        case .abortScreenRecording:
+            RecordingCoordinator.shared.abort()
         case .openMainWindow, .openHistory, .openImageHistory:
             (NSApp.delegate as? AppDelegate)?.showMainWindow()
         case .openScreenshotsFolder:
