@@ -3,8 +3,10 @@
 // Licensed under GPL v3 - see /LICENSE.txt
 //
 // Region selection overlay: one borderless window per display with dimming,
-// crosshair, selection rectangle and size label. Esc or a zero-size click cancels.
-// ponytail: rectangle selection only; ellipse/freehand/window-snap/magnifier layer on in later Phase 1 iterations
+// crosshair, selection rectangle and size label. Hovering highlights the
+// window under the cursor; a plain click captures it (drag overrides).
+// Esc cancels.
+// ponytail: ellipse/freehand shapes and a magnifier layer on if anyone asks
 
 import AppKit
 
@@ -17,11 +19,15 @@ public final class RegionSelectController {
 
     /// Shows the overlay on all displays; returns the selection in Cocoa global coordinates, or nil if cancelled.
     public func selectRegion() async -> CGRect? {
-        await withCheckedContinuation { continuation in
+        // snapshot before our overlays exist; windows won't move while dimmed
+        let snapCandidates = WindowLister.onScreenWindows(excludingPID: ProcessInfo.processInfo.processIdentifier)
+            .map { SnapWindow(rect: ScreenCoordinates.cocoaFromCG($0.frame), name: $0.ownerName) }
+
+        return await withCheckedContinuation { continuation in
             self.continuation = continuation
             NSApp.activate(ignoringOtherApps: true)
             for screen in NSScreen.screens {
-                let window = OverlayWindow(screen: screen) { [weak self] rect in
+                let window = OverlayWindow(screen: screen, snapCandidates: snapCandidates) { [weak self] rect in
                     self?.finish(rect)
                 }
                 window.makeKeyAndOrderFront(nil)
@@ -40,8 +46,14 @@ public final class RegionSelectController {
     }
 }
 
+/// A snappable window: Cocoa global rect, front-to-back order preserved.
+struct SnapWindow {
+    let rect: NSRect
+    let name: String
+}
+
 private final class OverlayWindow: NSWindow {
-    init(screen: NSScreen, onFinish: @escaping (CGRect?) -> Void) {
+    init(screen: NSScreen, snapCandidates: [SnapWindow], onFinish: @escaping (CGRect?) -> Void) {
         super.init(contentRect: screen.frame, styleMask: .borderless, backing: .buffered, defer: false)
         level = .screenSaver
         backgroundColor = .clear
@@ -50,7 +62,12 @@ private final class OverlayWindow: NSWindow {
         ignoresMouseEvents = false
         acceptsMouseMovedEvents = true
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-        let view = RegionSelectView(frame: NSRect(origin: .zero, size: screen.frame.size), onFinish: onFinish)
+        // window rects arrive in Cocoa global coordinates; make them view-local
+        let local = snapCandidates
+            .filter { $0.rect.intersects(screen.frame) }
+            .map { SnapWindow(rect: $0.rect.offsetBy(dx: -screen.frame.minX, dy: -screen.frame.minY), name: $0.name) }
+        let view = RegionSelectView(frame: NSRect(origin: .zero, size: screen.frame.size),
+                                    snapCandidates: local, onFinish: onFinish)
         contentView = view
         makeFirstResponder(view)
     }
@@ -60,12 +77,18 @@ private final class OverlayWindow: NSWindow {
 
 private final class RegionSelectView: NSView {
     private let onFinish: (CGRect?) -> Void
+    private let snapCandidates: [SnapWindow]
     private var dragStart: NSPoint?
     private var selection: NSRect = .zero
     private var mouseLocation: NSPoint = .zero
+    private var hovered: SnapWindow?
 
-    init(frame: NSRect, onFinish: @escaping (CGRect?) -> Void) {
+    /// Drags smaller than this act as a click (window snap), not a region.
+    private static let dragThreshold: CGFloat = 5
+
+    init(frame: NSRect, snapCandidates: [SnapWindow], onFinish: @escaping (CGRect?) -> Void) {
         self.onFinish = onFinish
+        self.snapCandidates = snapCandidates
         super.init(frame: frame)
     }
 
@@ -92,6 +115,7 @@ private final class RegionSelectView: NSView {
 
     override func mouseDown(with event: NSEvent) {
         dragStart = convert(event.locationInWindow, from: nil)
+        updateHover(to: dragStart!)
         selection = .zero
     }
 
@@ -108,11 +132,15 @@ private final class RegionSelectView: NSView {
     }
 
     override func mouseUp(with event: NSEvent) {
-        guard dragStart != nil, selection.width >= 1, selection.height >= 1, let window else {
-            onFinish(nil) // plain click cancels; window-under-cursor selection comes with window snapping
-            return
+        defer { dragStart = nil }
+        guard let window else { return onFinish(nil) }
+        if selection.width >= Self.dragThreshold, selection.height >= Self.dragThreshold {
+            onFinish(window.convertToScreen(selection))
+        } else if let hovered {
+            onFinish(window.convertToScreen(hovered.rect))
+        } else {
+            onFinish(nil) // plain click on bare desktop cancels
         }
-        onFinish(window.convertToScreen(selection))
     }
 
     override func keyDown(with event: NSEvent) {
@@ -122,7 +150,13 @@ private final class RegionSelectView: NSView {
     }
 
     override func mouseMoved(with event: NSEvent) {
-        mouseLocation = convert(event.locationInWindow, from: nil)
+        updateHover(to: convert(event.locationInWindow, from: nil))
+    }
+
+    private func updateHover(to point: NSPoint) {
+        mouseLocation = point
+        // candidates are front-to-back: first hit is the visible window
+        hovered = snapCandidates.first { $0.rect.contains(point) }
         needsDisplay = true
     }
 
@@ -135,20 +169,26 @@ private final class RegionSelectView: NSView {
         bounds.fill()
 
         if selection.width >= 1 {
-            // punch a clear hole where the selection is
-            context.setBlendMode(.clear)
-            context.fill(selection)
-            context.setBlendMode(.normal)
-
-            NSColor.white.setStroke()
-            let border = NSBezierPath(rect: selection.insetBy(dx: -0.5, dy: -0.5))
-            border.lineWidth = 1
-            border.stroke()
-
-            drawSizeLabel()
+            punchHole(selection, in: context)
+            drawLabel("\(Int(selection.width)) × \(Int(selection.height))", above: selection)
+        } else if let hovered {
+            punchHole(hovered.rect, in: context)
+            drawLabel(hovered.name, above: hovered.rect.intersection(bounds))
+            drawCrosshair()
         } else {
             drawCrosshair()
         }
+    }
+
+    private func punchHole(_ rect: NSRect, in context: CGContext) {
+        context.setBlendMode(.clear)
+        context.fill(rect)
+        context.setBlendMode(.normal)
+
+        NSColor.white.setStroke()
+        let border = NSBezierPath(rect: rect.insetBy(dx: -0.5, dy: -0.5))
+        border.lineWidth = 1
+        border.stroke()
     }
 
     private func drawCrosshair() {
@@ -162,17 +202,16 @@ private final class RegionSelectView: NSView {
         path.stroke()
     }
 
-    private func drawSizeLabel() {
-        let text = "\(Int(selection.width)) × \(Int(selection.height))"
+    private func drawLabel(_ text: String, above rect: NSRect) {
         let attributes: [NSAttributedString.Key: Any] = [
             .font: NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .medium),
             .foregroundColor: NSColor.white
         ]
         let size = text.size(withAttributes: attributes)
         let padding: CGFloat = 4
-        var origin = NSPoint(x: selection.minX, y: selection.maxY + padding)
+        var origin = NSPoint(x: max(rect.minX, 0), y: rect.maxY + padding)
         if origin.y + size.height > bounds.height {
-            origin.y = selection.maxY - size.height - padding
+            origin.y = rect.maxY - size.height - padding
         }
         let background = NSRect(x: origin.x - padding, y: origin.y - 2,
                                 width: size.width + padding * 2, height: size.height + 4)
