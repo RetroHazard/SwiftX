@@ -32,51 +32,63 @@ enum UploadCoordinator {
         upload(UploadFile(data: data, fileName: url.lastPathComponent, mimeType: mime), filePath: url.path)
     }
 
+    enum RoutingError: LocalizedError {
+        case noCustomUploader
+        case notImplemented(String)
+
+        var errorDescription: String? {
+            switch self {
+            case .noCustomUploader:
+                return "No custom uploader configured. Import a .sxcu from the ShareX menu."
+            case .notImplemented(let destination):
+                return "Destination \"\(destination)\" is not implemented yet."
+            }
+        }
+    }
+
+    private static func route(_ file: UploadFile, settings: TaskSettings,
+                              config: UploadersConfig) async throws -> (UploadResult, String) {
+        switch settings.imageDestination {
+        case "AmazonS3":
+            return (try await AmazonS3Uploader.upload(file: file, settings: config.amazonS3), "Amazon S3")
+        case "BackblazeB2":
+            return (try await BackblazeB2Uploader.upload(file: file, config: config), "Backblaze B2")
+        case "AzureStorage":
+            return (try await AzureStorageUploader.upload(file: file, config: config), "Azure Storage")
+        case "OwnCloud":
+            return (try await OwnCloudUploader.upload(file: file, config: config), "ownCloud / Nextcloud")
+        case "Seafile":
+            return (try await SeafileUploader.upload(file: file, config: config), "Seafile")
+        case "Pushbullet":
+            return (try await PushbulletUploader.upload(file: file, config: config), "Pushbullet")
+        case "CustomImageUploader":
+            guard let item = CustomUploaderStore.load(named: config.activeCustomUploader) else {
+                throw RoutingError.noCustomUploader
+            }
+            return (try await CustomUploaderService.upload(file: file, with: item), item.displayName)
+        default:
+            guard let destination = SimpleHostDestination(rawValue: settings.imageDestination) else {
+                throw RoutingError.notImplemented(settings.imageDestination)
+            }
+            return (try await SimpleHostUploader.upload(file: file, destination: destination, config: config),
+                    destination.displayName)
+        }
+    }
+
     private static func upload(_ file: UploadFile, filePath: String?, isRetry: Bool = false) {
         let config = UploadersConfig.load()
         let settings = TaskSettings.load()
+        let entryID = UploadTaskCenter.shared.begin(fileName: file.fileName, host: settings.imageDestination)
+        let reporter = UploadProgressReporter { sent, expected in
+            Task { @MainActor in
+                UploadTaskCenter.shared.progress(entryID, sent: sent, expected: expected)
+            }
+        }
 
         Task {
             do {
-                let result: UploadResult
-                let hostName: String
-                switch settings.imageDestination {
-                case "AmazonS3":
-                    result = try await AmazonS3Uploader.upload(file: file, settings: config.amazonS3)
-                    hostName = "Amazon S3"
-                case "BackblazeB2":
-                    result = try await BackblazeB2Uploader.upload(file: file, config: config)
-                    hostName = "Backblaze B2"
-                case "AzureStorage":
-                    result = try await AzureStorageUploader.upload(file: file, config: config)
-                    hostName = "Azure Storage"
-                case "OwnCloud":
-                    result = try await OwnCloudUploader.upload(file: file, config: config)
-                    hostName = "ownCloud / Nextcloud"
-                case "Seafile":
-                    result = try await SeafileUploader.upload(file: file, config: config)
-                    hostName = "Seafile"
-                case "Pushbullet":
-                    result = try await PushbulletUploader.upload(file: file, config: config)
-                    hostName = "Pushbullet"
-                case "CustomImageUploader":
-                    guard let item = CustomUploaderStore.load(named: config.activeCustomUploader) else {
-                        await MainActor.run {
-                            Notifier.notify(title: "Upload", body: "No custom uploader configured. Import a .sxcu from the ShareX menu.")
-                        }
-                        return
-                    }
-                    result = try await CustomUploaderService.upload(file: file, with: item)
-                    hostName = item.displayName
-                default:
-                    guard let destination = SimpleHostDestination(rawValue: settings.imageDestination) else {
-                        await MainActor.run {
-                            Notifier.notify(title: "Upload", body: "Destination \"\(settings.imageDestination)\" is not implemented yet.")
-                        }
-                        return
-                    }
-                    result = try await SimpleHostUploader.upload(file: file, destination: destination, config: config)
-                    hostName = destination.displayName
+                let (result, hostName) = try await UploadProgressReporter.$current.withValue(reporter) {
+                    try await route(file, settings: settings, config: config)
                 }
                 if let filePath {
                     await MainActor.run {
@@ -86,12 +98,18 @@ enum UploadCoordinator {
                         )
                     }
                 }
+                await MainActor.run {
+                    UploadTaskCenter.shared.finish(entryID, state: .completed(url: result.url))
+                }
                 try await afterUpload(result, settings: settings)
             } catch {
-                // config-missing paths return early above, so anything here is
-                // a real transport/host failure worth one more attempt
-                if !isRetry, ApplicationConfig.load().retryUpload {
+                // misconfiguration won't fix itself in one second; only
+                // transport/host failures earn the retry
+                if !isRetry, ApplicationConfig.load().retryUpload, !(error is RoutingError) {
                     NSLog("Upload failed (%@); retrying once", error.localizedDescription)
+                    await MainActor.run {
+                        UploadTaskCenter.shared.finish(entryID, state: .retrying)
+                    }
                     try? await Task.sleep(for: .seconds(1))
                     await MainActor.run {
                         upload(file, filePath: filePath, isRetry: true)
@@ -99,6 +117,7 @@ enum UploadCoordinator {
                     return
                 }
                 await MainActor.run {
+                    UploadTaskCenter.shared.finish(entryID, state: .failed(message: error.localizedDescription))
                     Notifier.notify(title: "Upload failed", body: error.localizedDescription)
                 }
             }

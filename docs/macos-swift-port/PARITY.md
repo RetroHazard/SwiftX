@@ -46,8 +46,9 @@ Statuses: **Ported** · **Partial** (works, known gaps) · **Planned** (phase no
 | Feature | Status |
 |---|---|
 | Upload core — multipart, form-urlencoded, JSON/XML body, binary | Ported |
-| Upload core — chunked/resumable, progress UI, retry, secondary fallback | Planned (3) |
-| Custom uploader engine (.sxcu) — syntax parser (json/regex/base64/random/select/filename/header/response), import, destination picker | Ported — `{xml:…}` function and legacy `$var$` syntax unsupported; interactive select takes first option |
+| Upload core — progress UI, retry | Ported — live rows in main window (bar, retry state, URL/error); RetryUpload retries once |
+| Upload core — chunked/resumable, secondary fallback | Planned — chunked only serves the benched OAuth hosts; fallback needs multi-destination config |
+| Custom uploader engine (.sxcu) — syntax parser (json/xml/regex/base64/random/select/filename/header/response), import, destination picker | Ported — legacy pre-13.7.1 `$var$` files migrate at load; interactive select takes first option |
 | Custom uploader editor (create/edit/duplicate/delete in settings) | Ported — Settings → Custom Uploader pane; edits write Windows-compatible .sxcu files |
 | OAuth1 + OAuth2 infrastructure | Planned (3) |
 | Amazon S3 (+ S3-compatible via custom endpoint) — SigV4, prefix patterns | Ported |
@@ -65,7 +66,7 @@ Statuses: **Ported** · **Partial** (works, known gaps) · **Planned** (phase no
 | Main window: searchable history list, thumbnails, context actions | Ported — search by name/URL/host |
 | Thumbnail grid view (persisted TaskViewMode), time-range filter, favorites (Windows-compatible "Favorite" tag) | Ported |
 | Tag filters (window title/process), stats | Planned (4) |
-| Live task queue with upload progress rows | Planned (7) — deferred until recording makes progress worth watching |
+| Live task queue with upload progress rows | Ported — upload rows above the history list (progress bar, retry state, URL/error) |
 
 ## Phase 5 — Annotation editor
 
