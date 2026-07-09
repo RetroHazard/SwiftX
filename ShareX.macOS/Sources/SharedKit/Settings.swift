@@ -99,6 +99,20 @@ public struct TaskSettings: SettingsFile {
     /// "H264" or "HEVC" (macOS-only key; C# keeps codec inside FFmpegOptions).
     public var screenRecordCodec = "H264"
 
+    // Image output. Key names and defaults match C# TaskSettingsImage.
+    /// C# EImageFormat enum name: PNG/JPEG/GIF/BMP/TIFF.
+    public var imageFormat = "PNG"
+    public var imageJPEGQuality = 90
+    /// Captures larger than ImageAutoUseJPEGSize save as JPEG regardless of format.
+    public var imageAutoUseJPEG = true
+    public var imageAutoUseJPEGSize = 2048
+    public var thumbnailWidth = 200
+    public var thumbnailHeight = 0
+    /// Appended to the file name (before the extension).
+    public var thumbnailName = "-thumbnail"
+    /// Only save the thumbnail when the image is larger than the thumbnail box.
+    public var thumbnailCheckSize = false
+
     public init() {}
 
     enum CodingKeys: String, CodingKey {
@@ -112,6 +126,14 @@ public struct TaskSettings: SettingsFile {
         case screenRecordFPS = "ScreenRecordFPS"
         case gifFPS = "GIFFPS"
         case screenRecordCodec = "ScreenRecordCodec"
+        case imageFormat = "ImageFormat"
+        case imageJPEGQuality = "ImageJPEGQuality"
+        case imageAutoUseJPEG = "ImageAutoUseJPEG"
+        case imageAutoUseJPEGSize = "ImageAutoUseJPEGSize"
+        case thumbnailWidth = "ThumbnailWidth"
+        case thumbnailHeight = "ThumbnailHeight"
+        case thumbnailName = "ThumbnailName"
+        case thumbnailCheckSize = "ThumbnailCheckSize"
     }
 
     public init(from decoder: Decoder) throws {
@@ -126,6 +148,14 @@ public struct TaskSettings: SettingsFile {
         screenRecordFPS = try c.decodeIfPresent(Int.self, forKey: .screenRecordFPS) ?? 30
         gifFPS = try c.decodeIfPresent(Int.self, forKey: .gifFPS) ?? 15
         screenRecordCodec = try c.decodeIfPresent(String.self, forKey: .screenRecordCodec) ?? "H264"
+        imageFormat = try c.decodeIfPresent(String.self, forKey: .imageFormat) ?? "PNG"
+        imageJPEGQuality = try c.decodeIfPresent(Int.self, forKey: .imageJPEGQuality) ?? 90
+        imageAutoUseJPEG = try c.decodeIfPresent(Bool.self, forKey: .imageAutoUseJPEG) ?? true
+        imageAutoUseJPEGSize = try c.decodeIfPresent(Int.self, forKey: .imageAutoUseJPEGSize) ?? 2048
+        thumbnailWidth = try c.decodeIfPresent(Int.self, forKey: .thumbnailWidth) ?? 200
+        thumbnailHeight = try c.decodeIfPresent(Int.self, forKey: .thumbnailHeight) ?? 0
+        thumbnailName = try c.decodeIfPresent(String.self, forKey: .thumbnailName) ?? "-thumbnail"
+        thumbnailCheckSize = try c.decodeIfPresent(Bool.self, forKey: .thumbnailCheckSize) ?? false
     }
 }
 

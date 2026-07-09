@@ -266,6 +266,7 @@ struct SettingsView: View {
         (.copyImageToClipboard, "Copy image to clipboard"),
         (.saveImageToFile, "Save image to file"),
         (.saveImageToFileWithDialog, "Save image with dialog"),
+        (.saveThumbnailImageToFile, "Save thumbnail image to file"),
         (.pinToScreen, "Pin to screen"),
         (.copyFilePathToClipboard, "Copy file path to clipboard"),
         (.showInExplorer, "Show in Finder"),
@@ -417,6 +418,32 @@ struct SettingsView: View {
             ForEach(Self.afterCaptureToggles, id: \.1) { flag, label in
                 Toggle(label, isOn: afterCaptureBinding(flag))
             }
+        }
+        Section("Image format") {
+            Picker("Format", selection: taskBinding(\.imageFormat)) {
+                ForEach(ImageFileFormat.allCases, id: \.rawValue) { format in
+                    Text(format.rawValue).tag(format.rawValue)
+                }
+            }
+            if task.imageFormat == "JPEG" {
+                TextField("JPEG quality (1–100)",
+                          value: clampedBinding(\.imageJPEGQuality, 1...100), format: .number)
+            }
+            Toggle("Use JPEG for large captures", isOn: taskBinding(\.imageAutoUseJPEG))
+            if task.imageAutoUseJPEG {
+                TextField("JPEG when width or height exceeds (px)",
+                          value: clampedBinding(\.imageAutoUseJPEGSize, 64...16384), format: .number)
+            }
+        }
+        Section("Thumbnail") {
+            TextField("Thumbnail width (0 = derive from height)",
+                      value: clampedBinding(\.thumbnailWidth, 0...4096), format: .number)
+            TextField("Thumbnail height (0 = derive from width)",
+                      value: clampedBinding(\.thumbnailHeight, 0...4096), format: .number)
+            Toggle("Only if image is larger than the thumbnail", isOn: taskBinding(\.thumbnailCheckSize))
+            Text("Saved next to the screenshot as “name\(task.thumbnailName)” when “Save thumbnail image to file” is on.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
     }
 

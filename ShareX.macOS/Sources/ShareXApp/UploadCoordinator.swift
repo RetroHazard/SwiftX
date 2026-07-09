@@ -11,12 +11,13 @@ import UploadKit
 
 @MainActor
 enum UploadCoordinator {
-    static func uploadImage(_ image: CGImage, fileName: String, filePath: String? = nil) {
-        guard let data = ImageWriter.pngData(image) else {
+    static func uploadImage(_ image: CGImage, fileName: String, filePath: String? = nil,
+                            format: ImageFileFormat = .png, jpegQuality: Int = 90) {
+        guard let data = ImageWriter.data(image, format: format, jpegQuality: jpegQuality) else {
             Notifier.notify(title: "Upload failed", body: "Could not encode the image.")
             return
         }
-        upload(UploadFile(data: data, fileName: fileName, mimeType: "image/png"), filePath: filePath)
+        upload(UploadFile(data: data, fileName: fileName, mimeType: format.mimeType), filePath: filePath)
     }
 
     /// Uploads an existing file (recordings, GIFs) through the image destination.
