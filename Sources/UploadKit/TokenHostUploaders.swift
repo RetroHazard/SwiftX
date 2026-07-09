@@ -14,7 +14,7 @@ func basicAuthHeader(_ user: String, _ password: String) -> String {
 }
 
 func checkedSend(_ request: URLRequest, step: String) async throws -> (Data, HTTPURLResponse) {
-    let (data, response) = try await URLSession.shared.data(for: request)
+    let (data, response) = try await UploadHTTP.data(for: request)
     let http = response as? HTTPURLResponse
     let status = http?.statusCode ?? 0
     guard (200..<300).contains(status), let http else {
