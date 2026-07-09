@@ -495,6 +495,10 @@ struct SettingsView: View {
                     Text(destination.displayName).tag(destination.rawValue)
                 }
             }
+            Toggle("Retry once when an upload fails", isOn: Binding(
+                get: { config.retryUpload },
+                set: { config.retryUpload = $0; try? config.save() }
+            ))
             simpleHostFields
             cloudHostFields
 
