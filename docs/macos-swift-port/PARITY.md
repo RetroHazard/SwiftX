@@ -47,6 +47,7 @@ Statuses: **Ported** · **Partial** (works, known gaps) · **Planned** (phase no
 | Upload core — multipart, form-urlencoded, JSON/XML body, binary | Ported |
 | Upload core — chunked/resumable, progress UI, retry, secondary fallback | Planned (3) |
 | Custom uploader engine (.sxcu) — syntax parser (json/regex/base64/random/select/filename/header/response), import, destination picker | Ported — `{xml:…}` function and legacy `$var$` syntax unsupported; interactive select takes first option |
+| Custom uploader editor (create/edit/duplicate/delete in settings) | Ported — Settings → Custom Uploader pane; edits write Windows-compatible .sxcu files |
 | OAuth1 + OAuth2 infrastructure | Planned (3) |
 | Amazon S3 (+ S3-compatible via custom endpoint) — SigV4, prefix patterns | Ported |
 | Imgur, Dropbox, Google Drive, OneDrive, FTP/FTPS/SFTP, Pastebin, GitHub Gist, Email (SMTP) | Planned (3) — many work today via community .sxcu files |

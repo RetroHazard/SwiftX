@@ -25,7 +25,7 @@ public struct CustomUploaderItem: Codable, Equatable {
     public var deletionURL: String = ""
     public var errorMessage: String = ""
 
-    public enum BodyType: String, Codable {
+    public enum BodyType: String, Codable, CaseIterable {
         case none = "None"
         case multipartFormData = "MultipartFormData"
         case formURLEncoded = "FormURLEncoded"
@@ -87,12 +87,12 @@ public enum CustomUploaderStore {
         SettingsPaths.root.appendingPathComponent("CustomUploaders", isDirectory: true)
     }
 
-    public static func list() -> [String] {
+    public static func list(in directory: URL = directory) -> [String] {
         let names = (try? FileManager.default.contentsOfDirectory(atPath: directory.path)) ?? []
         return names.filter { $0.hasSuffix(".sxcu") || $0.hasSuffix(".json") }.sorted()
     }
 
-    public static func load(named name: String) -> CustomUploaderItem? {
+    public static func load(named name: String, in directory: URL = directory) -> CustomUploaderItem? {
         guard !name.isEmpty,
               let data = try? Data(contentsOf: directory.appendingPathComponent(name)) else { return nil }
         return try? JSONDecoder().decode(CustomUploaderItem.self, from: data)
@@ -107,5 +107,35 @@ public enum CustomUploaderStore {
         let destination = directory.appendingPathComponent(source.lastPathComponent)
         try data.write(to: destination, options: .atomic)
         return source.lastPathComponent
+    }
+
+    /// Writes an uploader back to its .sxcu file (Windows-compatible JSON).
+    public static func save(_ item: CustomUploaderItem, as fileName: String, in directory: URL = directory) throws {
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        try encoder.encode(item).write(to: directory.appendingPathComponent(fileName), options: .atomic)
+    }
+
+    /// Creates a new .sxcu with a unique file name and returns that name.
+    @discardableResult
+    public static func create(named baseName: String, from template: CustomUploaderItem = CustomUploaderItem(),
+                              in directory: URL = directory) throws -> String {
+        let existing = Set(list(in: directory))
+        var fileName = baseName + ".sxcu"
+        var counter = 2
+        while existing.contains(fileName) {
+            fileName = "\(baseName) \(counter).sxcu"
+            counter += 1
+        }
+        var item = template
+        if item.name.isEmpty { item.name = baseName }
+        try save(item, as: fileName, in: directory)
+        return fileName
+    }
+
+    public static func delete(named name: String, in directory: URL = directory) throws {
+        guard !name.isEmpty else { return }
+        try FileManager.default.removeItem(at: directory.appendingPathComponent(name))
     }
 }
