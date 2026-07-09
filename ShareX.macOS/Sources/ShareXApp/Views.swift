@@ -238,6 +238,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
     case general = "General"
     case capture = "Capture"
     case recording = "Recording"
+    case actions = "Actions"
     case destinations = "Destinations"
     case customUploader = "Custom Uploader"
     case hotkeys = "Hotkeys"
@@ -249,6 +250,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .general: "gearshape"
         case .capture: "camera.viewfinder"
         case .recording: "record.circle"
+        case .actions: "terminal"
         case .destinations: "square.and.arrow.up"
         case .customUploader: "wrench.and.screwdriver"
         case .hotkeys: "keyboard"
@@ -269,6 +271,7 @@ struct SettingsView: View {
         (.saveImageToFile, "Save image to file"),
         (.saveImageToFileWithDialog, "Save image with dialog"),
         (.saveThumbnailImageToFile, "Save thumbnail image to file"),
+        (.performActions, "Perform actions (external programs)"),
         (.copyFileToClipboard, "Copy file to clipboard"),
         (.copyFilePathToClipboard, "Copy file path to clipboard"),
         (.copyFolderPathToClipboard, "Copy folder path to clipboard"),
@@ -381,6 +384,7 @@ struct SettingsView: View {
                 case .general: generalPane
                 case .capture: capturePane
                 case .recording: recordingPane
+                case .actions: ActionsSettingsView()
                 case .destinations: destinationsPane
                 case .customUploader: CustomUploaderEditorView()
                 case .hotkeys: hotkeysPane
