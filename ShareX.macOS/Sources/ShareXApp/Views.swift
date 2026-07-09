@@ -294,6 +294,16 @@ struct SettingsView: View {
         )
     }
 
+    private func taskBinding<T>(_ keyPath: WritableKeyPath<TaskSettings, T>) -> Binding<T> {
+        Binding(
+            get: { task[keyPath: keyPath] },
+            set: { value in
+                task[keyPath: keyPath] = value
+                try? task.save()
+            }
+        )
+    }
+
     private func afterCaptureBinding(_ flag: AfterCaptureTasks) -> Binding<Bool> {
         Binding(
             get: { task.afterCaptureJob.contains(flag) },
@@ -317,6 +327,19 @@ struct SettingsView: View {
                 ForEach(Self.afterCaptureToggles, id: \.1) { flag, label in
                     Toggle(label, isOn: afterCaptureBinding(flag))
                 }
+            }
+            Section("Recording") {
+                Picker("Video codec", selection: taskBinding(\.screenRecordCodec)) {
+                    Text("H.264 (most compatible)").tag("H264")
+                    Text("HEVC (smaller files)").tag("HEVC")
+                }
+                Stepper("Video frame rate: \(task.screenRecordFPS) fps",
+                        value: taskBinding(\.screenRecordFPS), in: 1...60)
+                Stepper("GIF frame rate: \(task.gifFPS) fps",
+                        value: taskBinding(\.gifFPS), in: 1...30)
+                Text("WebM/VP9 export requires ffmpeg and is planned.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
             Section("Upload destination") {
                 Picker("Destination", selection: destinationBinding()) {
