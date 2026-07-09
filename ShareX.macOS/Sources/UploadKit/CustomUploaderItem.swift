@@ -78,6 +78,68 @@ public struct CustomUploaderItem: Codable, Equatable {
         if !name.isEmpty { return name }
         return URL(string: requestURL)?.host ?? requestURL
     }
+
+    // MARK: - Legacy syntax migration (C# CheckBackwardCompatibility)
+
+    /// Files written before ShareX 13.7.1 use `$function$` delimiters.
+    /// Converts them to the modern `{function}` form, escaping literal braces.
+    /// Files without a Version are left alone (hand-written modern files).
+    public mutating func migrateLegacySyntaxIfNeeded() {
+        guard !version.isEmpty, Self.compareVersion(version, "13.7.1") <= 0 else { return }
+
+        requestURL = Self.migrateOldSyntax(requestURL)
+        parameters = parameters.mapValues(Self.migrateOldSyntax)
+        headers = headers.mapValues(Self.migrateOldSyntax)
+        arguments = arguments.mapValues(Self.migrateOldSyntax)
+        // C# only substitutes the two known variables inside Data
+        data = data
+            .replacingOccurrences(of: "$input$", with: "{input}", options: .caseInsensitive)
+            .replacingOccurrences(of: "$filename$", with: "{filename}", options: .caseInsensitive)
+        url = Self.migrateOldSyntax(url)
+        thumbnailURL = Self.migrateOldSyntax(thumbnailURL)
+        deletionURL = Self.migrateOldSyntax(deletionURL)
+        errorMessage = Self.migrateOldSyntax(errorMessage)
+    }
+
+    /// Port of C# CustomUploaderItem.MigrateOldSyntax: `$` toggles between
+    /// `{` and `}`, `\x` escape pairs are dropped, literal braces get escaped.
+    static func migrateOldSyntax(_ input: String) -> String {
+        guard !input.isEmpty else { return input }
+        var result = ""
+        var open = true
+        var skipNext = false
+        for character in input {
+            if skipNext {
+                skipNext = false
+                continue
+            }
+            switch character {
+            case "$":
+                result.append(open ? "{" : "}")
+                open.toggle()
+            case "\\":
+                skipNext = true
+            case "{", "}":
+                result.append("\\")
+                result.append(character)
+            default:
+                result.append(character)
+            }
+        }
+        return result
+    }
+
+    /// Numeric dotted-version comparison ("13.7.0" < "13.7.1" < "14.0").
+    static func compareVersion(_ lhs: String, _ rhs: String) -> Int {
+        let a = lhs.split(separator: ".").map { Int($0) ?? 0 }
+        let b = rhs.split(separator: ".").map { Int($0) ?? 0 }
+        for i in 0..<max(a.count, b.count) {
+            let x = i < a.count ? a[i] : 0
+            let y = i < b.count ? b[i] : 0
+            if x != y { return x < y ? -1 : 1 }
+        }
+        return 0
+    }
 }
 
 /// .sxcu files live in Application Support/ShareX/CustomUploaders/,
@@ -94,8 +156,10 @@ public enum CustomUploaderStore {
 
     public static func load(named name: String, in directory: URL = directory) -> CustomUploaderItem? {
         guard !name.isEmpty,
-              let data = try? Data(contentsOf: directory.appendingPathComponent(name)) else { return nil }
-        return try? JSONDecoder().decode(CustomUploaderItem.self, from: data)
+              let data = try? Data(contentsOf: directory.appendingPathComponent(name)),
+              var item = try? JSONDecoder().decode(CustomUploaderItem.self, from: data) else { return nil }
+        item.migrateLegacySyntaxIfNeeded()
+        return item
     }
 
     /// Copies a .sxcu file into the store, validating it decodes. Returns the stored file name.

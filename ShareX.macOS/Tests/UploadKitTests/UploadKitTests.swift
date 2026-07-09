@@ -81,6 +81,53 @@ struct SyntaxParserTests {
     @Test func selectTakesFirstOptionHeadlessly() throws {
         #expect(try CustomUploaderSyntaxParser().parse("{select:public|private}") == "public")
     }
+
+    @Test func xmlOverResponse() throws {
+        let response = SyntaxResponse(
+            statusCode: 200,
+            text: "<files><file url=\"https://img.example/a.png\"><name>a.png</name></file></files>",
+            url: ""
+        )
+        let parser = CustomUploaderSyntaxParser(response: response)
+        #expect(try parser.parse("{xml:/files/file/name}") == "a.png")
+        #expect(try parser.parse("{xml://file/@url}") == "https://img.example/a.png")
+        #expect(try parser.parse("{xml:/files/missing}") == "")
+    }
+
+    @Test func legacySyntaxMigrates() {
+        // $ pairs become braces, literal braces get escaped, \x escapes drop
+        #expect(CustomUploaderItem.migrateOldSyntax("$json:url$") == "{json:url}")
+        #expect(CustomUploaderItem.migrateOldSyntax("a{b}c") == "a\\{b\\}c")
+        #expect(CustomUploaderItem.migrateOldSyntax("pre $regex:x$ post") == "pre {regex:x} post")
+
+        var item = CustomUploaderItem()
+        item.version = "13.0.0"
+        item.url = "$json:data.link$"
+        item.data = "text=$input$&name=$FILENAME$"
+        item.migrateLegacySyntaxIfNeeded()
+        #expect(item.url == "{json:data.link}")
+        #expect(item.data == "text={input}&name={filename}")
+
+        // modern files are untouched
+        var modern = CustomUploaderItem()
+        modern.version = "14.1.0"
+        modern.url = "$json:data.link$" // pathological but must not be rewritten
+        modern.migrateLegacySyntaxIfNeeded()
+        #expect(modern.url == "$json:data.link$")
+
+        // no version: leave alone (hand-written modern files)
+        var unversioned = CustomUploaderItem()
+        unversioned.url = "{json:url}"
+        unversioned.migrateLegacySyntaxIfNeeded()
+        #expect(unversioned.url == "{json:url}")
+    }
+
+    @Test func versionComparison() {
+        #expect(CustomUploaderItem.compareVersion("13.7.0", "13.7.1") < 0)
+        #expect(CustomUploaderItem.compareVersion("13.7.1", "13.7.1") == 0)
+        #expect(CustomUploaderItem.compareVersion("14.0", "13.7.1") > 0)
+        #expect(CustomUploaderItem.compareVersion("13.7.1.1", "13.7.1") > 0)
+    }
 }
 
 struct CustomUploaderItemTests {
