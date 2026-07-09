@@ -43,6 +43,21 @@ enum UploadCoordinator {
                 case "AmazonS3":
                     result = try await AmazonS3Uploader.upload(file: file, settings: config.amazonS3)
                     hostName = "Amazon S3"
+                case "BackblazeB2":
+                    result = try await BackblazeB2Uploader.upload(file: file, config: config)
+                    hostName = "Backblaze B2"
+                case "AzureStorage":
+                    result = try await AzureStorageUploader.upload(file: file, config: config)
+                    hostName = "Azure Storage"
+                case "OwnCloud":
+                    result = try await OwnCloudUploader.upload(file: file, config: config)
+                    hostName = "ownCloud / Nextcloud"
+                case "Seafile":
+                    result = try await SeafileUploader.upload(file: file, config: config)
+                    hostName = "Seafile"
+                case "Pushbullet":
+                    result = try await PushbulletUploader.upload(file: file, config: config)
+                    hostName = "Pushbullet"
                 case "CustomImageUploader":
                     guard let item = CustomUploaderStore.load(named: config.activeCustomUploader) else {
                         await MainActor.run {

@@ -215,6 +215,32 @@ public struct UploadersConfig: SettingsFile {
     public var streamableUsername = ""
     public var streamablePassword = ""
 
+    // Cloud storage + self-hosted destinations. Key names match the C# UploadersConfig,
+    // except PushbulletAPIKey: C# nests an encrypted key we couldn't import anyway.
+    public var b2ApplicationKeyId = ""
+    public var b2ApplicationKey = ""
+    public var b2BucketName = ""
+    public var b2UploadPath = "ShareX/%y/%mo"
+    public var b2UseCustomUrl = false
+    public var b2CustomUrl = ""
+    public var azureStorageAccountName = ""
+    public var azureStorageAccountAccessKey = ""
+    public var azureStorageContainer = ""
+    public var azureStorageEnvironment = "blob.core.windows.net"
+    public var azureStorageCustomDomain = ""
+    public var azureStorageUploadPath = ""
+    public var azureStorageCacheControl = ""
+    public var ownCloudHost = ""
+    public var ownCloudUsername = ""
+    public var ownCloudPassword = ""
+    public var ownCloudPath = "/"
+    public var ownCloudCreateShare = true
+    public var seafileAPIURL = ""
+    public var seafileAuthToken = ""
+    public var seafileRepoID = ""
+    public var seafilePath = "/"
+    public var pushbulletAPIKey = ""
+
     public init() {}
 
     enum CodingKeys: String, CodingKey {
@@ -242,6 +268,29 @@ public struct UploadersConfig: SettingsFile {
         case cheveretoDirectURL = "CheveretoDirectURL"
         case streamableUsername = "StreamableUsername"
         case streamablePassword = "StreamablePassword"
+        case b2ApplicationKeyId = "B2ApplicationKeyId"
+        case b2ApplicationKey = "B2ApplicationKey"
+        case b2BucketName = "B2BucketName"
+        case b2UploadPath = "B2UploadPath"
+        case b2UseCustomUrl = "B2UseCustomUrl"
+        case b2CustomUrl = "B2CustomUrl"
+        case azureStorageAccountName = "AzureStorageAccountName"
+        case azureStorageAccountAccessKey = "AzureStorageAccountAccessKey"
+        case azureStorageContainer = "AzureStorageContainer"
+        case azureStorageEnvironment = "AzureStorageEnvironment"
+        case azureStorageCustomDomain = "AzureStorageCustomDomain"
+        case azureStorageUploadPath = "AzureStorageUploadPath"
+        case azureStorageCacheControl = "AzureStorageCacheControl"
+        case ownCloudHost = "OwnCloudHost"
+        case ownCloudUsername = "OwnCloudUsername"
+        case ownCloudPassword = "OwnCloudPassword"
+        case ownCloudPath = "OwnCloudPath"
+        case ownCloudCreateShare = "OwnCloudCreateShare"
+        case seafileAPIURL = "SeafileAPIURL"
+        case seafileAuthToken = "SeafileAuthToken"
+        case seafileRepoID = "SeafileRepoID"
+        case seafilePath = "SeafilePath"
+        case pushbulletAPIKey = "PushbulletAPIKey"
     }
 
     public init(from decoder: Decoder) throws {
@@ -270,6 +319,29 @@ public struct UploadersConfig: SettingsFile {
         cheveretoDirectURL = try c.decodeIfPresent(Bool.self, forKey: .cheveretoDirectURL) ?? true
         streamableUsername = try c.decodeIfPresent(String.self, forKey: .streamableUsername) ?? ""
         streamablePassword = try c.decodeIfPresent(String.self, forKey: .streamablePassword) ?? ""
+        b2ApplicationKeyId = try c.decodeIfPresent(String.self, forKey: .b2ApplicationKeyId) ?? ""
+        b2ApplicationKey = try c.decodeIfPresent(String.self, forKey: .b2ApplicationKey) ?? ""
+        b2BucketName = try c.decodeIfPresent(String.self, forKey: .b2BucketName) ?? ""
+        b2UploadPath = try c.decodeIfPresent(String.self, forKey: .b2UploadPath) ?? "ShareX/%y/%mo"
+        b2UseCustomUrl = try c.decodeIfPresent(Bool.self, forKey: .b2UseCustomUrl) ?? false
+        b2CustomUrl = try c.decodeIfPresent(String.self, forKey: .b2CustomUrl) ?? ""
+        azureStorageAccountName = try c.decodeIfPresent(String.self, forKey: .azureStorageAccountName) ?? ""
+        azureStorageAccountAccessKey = try c.decodeIfPresent(String.self, forKey: .azureStorageAccountAccessKey) ?? ""
+        azureStorageContainer = try c.decodeIfPresent(String.self, forKey: .azureStorageContainer) ?? ""
+        azureStorageEnvironment = try c.decodeIfPresent(String.self, forKey: .azureStorageEnvironment) ?? "blob.core.windows.net"
+        azureStorageCustomDomain = try c.decodeIfPresent(String.self, forKey: .azureStorageCustomDomain) ?? ""
+        azureStorageUploadPath = try c.decodeIfPresent(String.self, forKey: .azureStorageUploadPath) ?? ""
+        azureStorageCacheControl = try c.decodeIfPresent(String.self, forKey: .azureStorageCacheControl) ?? ""
+        ownCloudHost = try c.decodeIfPresent(String.self, forKey: .ownCloudHost) ?? ""
+        ownCloudUsername = try c.decodeIfPresent(String.self, forKey: .ownCloudUsername) ?? ""
+        ownCloudPassword = try c.decodeIfPresent(String.self, forKey: .ownCloudPassword) ?? ""
+        ownCloudPath = try c.decodeIfPresent(String.self, forKey: .ownCloudPath) ?? "/"
+        ownCloudCreateShare = try c.decodeIfPresent(Bool.self, forKey: .ownCloudCreateShare) ?? true
+        seafileAPIURL = try c.decodeIfPresent(String.self, forKey: .seafileAPIURL) ?? ""
+        seafileAuthToken = try c.decodeIfPresent(String.self, forKey: .seafileAuthToken) ?? ""
+        seafileRepoID = try c.decodeIfPresent(String.self, forKey: .seafileRepoID) ?? ""
+        seafilePath = try c.decodeIfPresent(String.self, forKey: .seafilePath) ?? "/"
+        pushbulletAPIKey = try c.decodeIfPresent(String.self, forKey: .pushbulletAPIKey) ?? ""
     }
 }
 
