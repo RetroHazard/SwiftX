@@ -441,11 +441,17 @@ struct SettingsView: View {
             Picker("Destination", selection: destinationBinding()) {
                 Text("Custom uploader").tag("CustomImageUploader")
                 Text("Amazon S3").tag("AmazonS3")
+                Text("Backblaze B2").tag("BackblazeB2")
+                Text("Azure Storage").tag("AzureStorage")
+                Text("ownCloud / Nextcloud").tag("OwnCloud")
+                Text("Seafile").tag("Seafile")
+                Text("Pushbullet").tag("Pushbullet")
                 ForEach(SimpleHostDestination.allCases, id: \.rawValue) { destination in
                     Text(destination.displayName).tag(destination.rawValue)
                 }
             }
             simpleHostFields
+            cloudHostFields
 
             if task.imageDestination == "CustomImageUploader" {
                 let uploaders = CustomUploaderStore.list()
@@ -484,6 +490,44 @@ struct SettingsView: View {
                     Text(service.displayName).tag(service.rawValue)
                 }
             }
+        }
+    }
+
+    /// Credential fields for the cloud storage and token-auth destinations.
+    @ViewBuilder
+    private var cloudHostFields: some View {
+        switch task.imageDestination {
+        case "BackblazeB2":
+            TextField("B2 application key ID", text: uploadersBinding(\.b2ApplicationKeyId))
+            SecureField("B2 application key", text: uploadersBinding(\.b2ApplicationKey))
+            TextField("B2 bucket", text: uploadersBinding(\.b2BucketName))
+            TextField("Upload path (name patterns allowed)", text: uploadersBinding(\.b2UploadPath))
+            Toggle("Use custom URL", isOn: uploadersBinding(\.b2UseCustomUrl))
+            TextField("Custom URL (e.g. https://cdn.example.com)", text: uploadersBinding(\.b2CustomUrl))
+        case "AzureStorage":
+            TextField("Azure account name", text: uploadersBinding(\.azureStorageAccountName))
+            SecureField("Azure access key", text: uploadersBinding(\.azureStorageAccountAccessKey))
+            TextField("Container", text: uploadersBinding(\.azureStorageContainer))
+            TextField("Environment", text: uploadersBinding(\.azureStorageEnvironment))
+            TextField("Custom domain (optional)", text: uploadersBinding(\.azureStorageCustomDomain))
+            TextField("Upload path (name patterns allowed)", text: uploadersBinding(\.azureStorageUploadPath))
+        case "OwnCloud":
+            TextField("Server URL (https://cloud.example.com)", text: uploadersBinding(\.ownCloudHost))
+            TextField("Username", text: uploadersBinding(\.ownCloudUsername))
+            SecureField("Password (use an app password)", text: uploadersBinding(\.ownCloudPassword))
+            TextField("Remote folder", text: uploadersBinding(\.ownCloudPath))
+        case "Seafile":
+            TextField("Seafile API URL (https://seafile.example.com/api2)", text: uploadersBinding(\.seafileAPIURL))
+            SecureField("Auth token", text: uploadersBinding(\.seafileAuthToken))
+            TextField("Library (repo) ID", text: uploadersBinding(\.seafileRepoID))
+            TextField("Remote folder", text: uploadersBinding(\.seafilePath))
+        case "Pushbullet":
+            SecureField("Pushbullet access token", text: uploadersBinding(\.pushbulletAPIKey))
+            Text("Pushes the file to all devices on the account.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        default:
+            EmptyView()
         }
     }
 

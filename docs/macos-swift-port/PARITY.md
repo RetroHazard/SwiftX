@@ -115,7 +115,9 @@ Statuses: **Ported** · **Partial** (works, known gaps) · **Planned** (phase no
 | Feature | Status |
 |---|---|
 | Uguu, Pomf clones (configurable URL), vgy.me, s-ul, LobFile, Puush, Chevereto, Streamable | Ported — shared multipart engine; Streamable returns the page URL without transcode polling |
-| Box, Backblaze B2, Azure, GCS, YouTube, Nextcloud/ownCloud, Seafile, MediaFire, Pushbullet, Plik, Lambda, ImageShack, Flickr, Photobucket, remaining text hosts | Planned (9) |
+| Backblaze B2 (native API, stale-URL retry), Azure Storage (SharedKey), ownCloud/Nextcloud (WebDAV + OCS share), Seafile (upload-link + share-link), Pushbullet (pushes to all devices) | Ported |
+| Box, GCS, YouTube, Dropbox-family, Flickr, Photobucket | Benched — need OAuth1/OAuth2 app credentials; revisit if per-user client keys become acceptable |
+| MediaFire (session signing), Plik (session protocol), ImageShack (login flow), Lambda (canonical domain down), remaining text hosts | Planned (9 follow-up) |
 | transfer.sh | Dead — public instance offline, verified 2026-07 |
 | Shorteners: bit.ly (personal access token), Polr, Kutt, YOURLS, Zero Width, vurl.com | Ported — settings UI per service; bit.ly uses a user token instead of C#'s app-key OAuth flow |
 | URL sharing services (Email/mailto, Facebook, Reddit, Pinterest, Tumblr, LinkedIn, VK, Google Lens, Bing VS) | Ported — ShareURL flag opens the share page in the browser; Pushbullet + custom sharing land with their destinations |
