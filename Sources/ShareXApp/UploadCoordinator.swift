@@ -96,8 +96,14 @@ enum UploadCoordinator {
         if tasks.contains(.openURL), let url = URL(string: finalURL) {
             NSWorkspace.shared.open(url)
         }
+        if tasks.contains(.shareURL) {
+            let service = URLSharingService(rawValue: settings.urlSharingServiceDestination) ?? .email
+            if let url = service.shareURL(for: finalURL) {
+                NSWorkspace.shared.open(url)
+            }
+        }
 
-        let pending = tasks.subtracting([.copyURLToClipboard, .openURL, .useURLShortener])
+        let pending = tasks.subtracting([.copyURLToClipboard, .openURL, .useURLShortener, .shareURL])
         if !pending.isEmpty {
             NSLog("AfterUploadTasks not implemented yet: %@", pending.nameString)
         }
