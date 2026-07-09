@@ -14,7 +14,7 @@ public enum AzureStorageUploader {
 
     public static func upload(file: UploadFile, config: UploadersConfig) async throws -> UploadResult {
         let request = try buildRequest(file: file, config: config, date: Date())
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await UploadHTTP.data(for: request)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         guard (200..<300).contains(status) else {
             let body = String(data: data, encoding: .utf8) ?? ""

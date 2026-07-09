@@ -193,7 +193,7 @@ public enum CustomUploaderService {
 
     public static func upload(file: UploadFile, with item: CustomUploaderItem) async throws -> UploadResult {
         let request = try buildRequest(item: item, file: file)
-        let (data, urlResponse) = try await URLSession.shared.data(for: request)
+        let (data, urlResponse) = try await UploadHTTP.data(for: request)
         let http = urlResponse as? HTTPURLResponse
         var headers: [String: String] = [:]
         for (key, value) in http?.allHeaderFields ?? [:] {

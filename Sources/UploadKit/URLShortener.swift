@@ -183,7 +183,7 @@ public enum URLShortener {
     public static func shorten(_ longURL: String, type: URLShortenerType,
                                config: UploadersConfig = UploadersConfig.load()) async throws -> String {
         let request = try request(for: longURL, type: type, config: config)
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await UploadHTTP.data(for: request)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         guard (200..<300).contains(status) else {
             let text = String(data: data, encoding: .utf8) ?? ""
