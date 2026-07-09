@@ -12,6 +12,7 @@ on:
 
 jobs:
   build-and-test:
+    if: github.repository == 'getsharex/ShareX'
     runs-on: macos-15
     defaults:
       run:
