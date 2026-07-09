@@ -234,9 +234,30 @@ enum ThumbnailLoader {
     }
 }
 
+enum SettingsPane: String, CaseIterable, Identifiable {
+    case general = "General"
+    case capture = "Capture"
+    case recording = "Recording"
+    case destinations = "Destinations"
+    case hotkeys = "Hotkeys"
+
+    var id: String { rawValue }
+
+    var icon: String {
+        switch self {
+        case .general: "gearshape"
+        case .capture: "camera.viewfinder"
+        case .recording: "record.circle"
+        case .destinations: "square.and.arrow.up"
+        case .hotkeys: "keyboard"
+        }
+    }
+}
+
 struct SettingsView: View {
     @State private var config = ApplicationConfig.load()
     @State private var task = TaskSettings.load()
+    @State private var pane: SettingsPane? = .general
 
     private static let afterCaptureToggles: [(AfterCaptureTasks, String)] = [
         (.annotateImage, "Annotate image (editor)"),
@@ -320,88 +341,126 @@ struct SettingsView: View {
     }
 
     var body: some View {
-        Form {
-            Section("Permissions") {
-                PermissionsView()
+        NavigationSplitView {
+            List(SettingsPane.allCases, selection: $pane) { pane in
+                Label(pane.rawValue, systemImage: pane.icon)
             }
-            Section("After capture") {
-                ForEach(Self.afterCaptureToggles, id: \.1) { flag, label in
-                    Toggle(label, isOn: afterCaptureBinding(flag))
+            .navigationSplitViewColumnWidth(min: 150, ideal: 170)
+        } detail: {
+            Form {
+                switch pane ?? .general {
+                case .general: generalPane
+                case .capture: capturePane
+                case .recording: recordingPane
+                case .destinations: destinationsPane
+                case .hotkeys: hotkeysPane
                 }
             }
-            Section("Recording") {
-                Picker("Video codec", selection: taskBinding(\.screenRecordCodec)) {
-                    Text("H.264 (most compatible)").tag("H264")
-                    Text("HEVC (smaller files)").tag("HEVC")
-                    Text("WebM / VP9 (requires ffmpeg)").tag("VP9")
-                }
-                Stepper("Video frame rate: \(task.screenRecordFPS) fps",
-                        value: taskBinding(\.screenRecordFPS), in: 1...60)
-                Stepper("GIF frame rate: \(task.gifFPS) fps",
-                        value: taskBinding(\.gifFPS), in: 1...30)
-                FFmpegStatusView()
-            }
-            Section("Upload destination") {
-                Picker("Destination", selection: destinationBinding()) {
-                    Text("Custom uploader").tag("CustomImageUploader")
-                    Text("Amazon S3").tag("AmazonS3")
-                }
+            .formStyle(.grouped)
+            .navigationTitle((pane ?? .general).rawValue)
+        }
+        .frame(minWidth: 640, minHeight: 420)
+    }
 
-                if task.imageDestination == "CustomImageUploader" {
-                    let uploaders = CustomUploaderStore.list()
-                    if uploaders.isEmpty {
-                        Text("No custom uploaders imported. Use “Import Custom Uploader…” in the ShareX menu — any community .sxcu file works.")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    } else {
-                        Picker("Custom uploader", selection: uploaderBinding()) {
-                            ForEach(uploaders, id: \.self) { name in
-                                Text(name).tag(name)
-                            }
-                        }
-                    }
-                } else if task.imageDestination == "AmazonS3" {
-                    TextField("Access key ID", text: s3Binding(\.accessKeyID))
-                    SecureField("Secret access key", text: s3Binding(\.secretAccessKey))
-                    TextField("Region", text: s3Binding(\.region))
-                    TextField("Bucket", text: s3Binding(\.bucket))
-                    TextField("Object prefix", text: s3Binding(\.objectPrefix))
-                    TextField("Custom endpoint (optional, for S3-compatible hosts)", text: s3Binding(\.endpoint))
-                }
-
-                Toggle("Shorten URL after upload (is.gd)", isOn: afterUploadBinding(.useURLShortener))
-            }
-            Section("Hotkeys") {
-                ForEach(HotkeySettings.load().hotkeys, id: \.taskType) { hotkey in
-                    LabeledContent(hotkey.taskType) {
-                        Text(hotkey.combo?.displayString ?? "—")
-                            .font(.body.monospaced())
-                    }
-                }
-                Text("Edit \(HotkeySettings.fileURL.path) and relaunch to change. Recorder UI is planned.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            Section("Paths") {
-                LabeledContent("Screenshots folder") {
-                    HStack {
-                        Text(config.screenshotsFolder.path)
-                            .truncationMode(.middle)
-                            .lineLimit(1)
-                        Button("Choose…") { chooseFolder() }
-                        if config.useCustomScreenshotsPath {
-                            Button("Reset") {
-                                config.useCustomScreenshotsPath = false
-                                config.customScreenshotsPath = ""
-                                try? config.save()
-                            }
+    @ViewBuilder
+    private var generalPane: some View {
+        Section("Permissions") {
+            PermissionsView()
+        }
+        Section("Paths") {
+            LabeledContent("Screenshots folder") {
+                HStack {
+                    Text(config.screenshotsFolder.path)
+                        .truncationMode(.middle)
+                        .lineLimit(1)
+                    Button("Choose…") { chooseFolder() }
+                    if config.useCustomScreenshotsPath {
+                        Button("Reset") {
+                            config.useCustomScreenshotsPath = false
+                            config.customScreenshotsPath = ""
+                            try? config.save()
                         }
                     }
                 }
             }
         }
-        .formStyle(.grouped)
-        .frame(minWidth: 500, minHeight: 380)
+    }
+
+    @ViewBuilder
+    private var capturePane: some View {
+        Section("After capture") {
+            ForEach(Self.afterCaptureToggles, id: \.1) { flag, label in
+                Toggle(label, isOn: afterCaptureBinding(flag))
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var recordingPane: some View {
+        Section("Video") {
+            Picker("Video codec", selection: taskBinding(\.screenRecordCodec)) {
+                Text("H.264 (most compatible)").tag("H264")
+                Text("HEVC (smaller files)").tag("HEVC")
+                Text("WebM / VP9 (requires ffmpeg)").tag("VP9")
+            }
+            Stepper("Video frame rate: \(task.screenRecordFPS) fps",
+                    value: taskBinding(\.screenRecordFPS), in: 1...60)
+            Stepper("GIF frame rate: \(task.gifFPS) fps",
+                    value: taskBinding(\.gifFPS), in: 1...30)
+        }
+        Section("External tools") {
+            FFmpegStatusView()
+        }
+    }
+
+    @ViewBuilder
+    private var destinationsPane: some View {
+        Section("Upload destination") {
+            Picker("Destination", selection: destinationBinding()) {
+                Text("Custom uploader").tag("CustomImageUploader")
+                Text("Amazon S3").tag("AmazonS3")
+            }
+
+            if task.imageDestination == "CustomImageUploader" {
+                let uploaders = CustomUploaderStore.list()
+                if uploaders.isEmpty {
+                    Text("No custom uploaders imported. Use “Import Custom Uploader…” in the ShareX menu — any community .sxcu file works.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Picker("Custom uploader", selection: uploaderBinding()) {
+                        ForEach(uploaders, id: \.self) { name in
+                            Text(name).tag(name)
+                        }
+                    }
+                }
+            } else if task.imageDestination == "AmazonS3" {
+                TextField("Access key ID", text: s3Binding(\.accessKeyID))
+                SecureField("Secret access key", text: s3Binding(\.secretAccessKey))
+                TextField("Region", text: s3Binding(\.region))
+                TextField("Bucket", text: s3Binding(\.bucket))
+                TextField("Object prefix", text: s3Binding(\.objectPrefix))
+                TextField("Custom endpoint (optional, for S3-compatible hosts)", text: s3Binding(\.endpoint))
+            }
+        }
+        Section("After upload") {
+            Toggle("Shorten URL after upload (is.gd)", isOn: afterUploadBinding(.useURLShortener))
+        }
+    }
+
+    @ViewBuilder
+    private var hotkeysPane: some View {
+        Section("Hotkeys") {
+            ForEach(HotkeySettings.load().hotkeys, id: \.taskType) { hotkey in
+                LabeledContent(hotkey.taskType) {
+                    Text(hotkey.combo?.displayString ?? "—")
+                        .font(.body.monospaced())
+                }
+            }
+            Text("Edit \(HotkeySettings.fileURL.path) and relaunch to change. Recorder UI is planned.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
     }
 
     private func chooseFolder() {
