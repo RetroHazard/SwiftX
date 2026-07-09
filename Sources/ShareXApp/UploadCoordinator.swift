@@ -32,7 +32,7 @@ enum UploadCoordinator {
         upload(UploadFile(data: data, fileName: url.lastPathComponent, mimeType: mime), filePath: url.path)
     }
 
-    private static func upload(_ file: UploadFile, filePath: String?) {
+    private static func upload(_ file: UploadFile, filePath: String?, isRetry: Bool = false) {
         let config = UploadersConfig.load()
         let settings = TaskSettings.load()
 
@@ -88,6 +88,16 @@ enum UploadCoordinator {
                 }
                 try await afterUpload(result, settings: settings)
             } catch {
+                // config-missing paths return early above, so anything here is
+                // a real transport/host failure worth one more attempt
+                if !isRetry, ApplicationConfig.load().retryUpload {
+                    NSLog("Upload failed (%@); retrying once", error.localizedDescription)
+                    try? await Task.sleep(for: .seconds(1))
+                    await MainActor.run {
+                        upload(file, filePath: filePath, isRetry: true)
+                    }
+                    return
+                }
                 await MainActor.run {
                     Notifier.notify(title: "Upload failed", body: error.localizedDescription)
                 }
