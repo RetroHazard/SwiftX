@@ -281,11 +281,15 @@ struct SettingsView: View {
     }
 
     private func s3Binding(_ keyPath: WritableKeyPath<AmazonS3Settings, String>) -> Binding<String> {
+        uploadersBinding((\UploadersConfig.amazonS3).appending(path: keyPath))
+    }
+
+    private func uploadersBinding(_ keyPath: WritableKeyPath<UploadersConfig, String>) -> Binding<String> {
         Binding(
-            get: { UploadersConfig.load().amazonS3[keyPath: keyPath] },
+            get: { UploadersConfig.load()[keyPath: keyPath] },
             set: { value in
                 var config = UploadersConfig.load()
-                config.amazonS3[keyPath: keyPath] = value
+                config[keyPath: keyPath] = value
                 try? config.save()
             }
         )
@@ -462,7 +466,47 @@ struct SettingsView: View {
             }
         }
         Section("After upload") {
-            Toggle("Shorten URL after upload (is.gd)", isOn: afterUploadBinding(.useURLShortener))
+            Toggle("Shorten URL after upload", isOn: afterUploadBinding(.useURLShortener))
+            Picker("URL shortener", selection: taskBinding(\.urlShortenerDestination)) {
+                ForEach(URLShortenerType.allCases, id: \.rawValue) { type in
+                    Text(type.displayName).tag(type.rawValue)
+                }
+            }
+            shortenerFields
+
+            Toggle("Share URL after upload (opens browser)", isOn: afterUploadBinding(.shareURL))
+            Picker("Sharing service", selection: taskBinding(\.urlSharingServiceDestination)) {
+                ForEach(URLSharingService.allCases, id: \.rawValue) { service in
+                    Text(service.displayName).tag(service.rawValue)
+                }
+            }
+        }
+    }
+
+    /// Credential fields for the selected shortener; keyless services need none.
+    @ViewBuilder
+    private var shortenerFields: some View {
+        switch URLShortenerType(rawValue: task.urlShortenerDestination) {
+        case .bitly:
+            SecureField("bit.ly access token", text: uploadersBinding(\.bitlyAccessToken))
+            TextField("bit.ly custom domain (optional)", text: uploadersBinding(\.bitlyDomain))
+            Text("Generate a token at bitly.com → Settings → Developer settings → API.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        case .polr:
+            TextField("Polr API URL (https://yoursite/api/v2/action/shorten)", text: uploadersBinding(\.polrAPIHostname))
+            SecureField("Polr API key", text: uploadersBinding(\.polrAPIKey))
+        case .kutt:
+            TextField("Kutt host", text: uploadersBinding(\.kutt.host))
+            SecureField("Kutt API key", text: uploadersBinding(\.kutt.apiKey))
+        case .yourls:
+            TextField("YOURLS API URL (https://yoursite/yourls-api.php)", text: uploadersBinding(\.yourlsAPIURL))
+            SecureField("YOURLS signature", text: uploadersBinding(\.yourlsSignature))
+        case .zws:
+            TextField("ZWS API URL (empty = api.zws.im)", text: uploadersBinding(\.zeroWidthShortenerURL))
+            SecureField("ZWS token (optional)", text: uploadersBinding(\.zeroWidthShortenerToken))
+        default:
+            EmptyView()
         }
     }
 

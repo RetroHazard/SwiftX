@@ -51,7 +51,7 @@ Statuses: **Ported** · **Partial** (works, known gaps) · **Planned** (phase no
 | Amazon S3 (+ S3-compatible via custom endpoint) — SigV4, prefix patterns | Ported |
 | Imgur, Dropbox, Google Drive, OneDrive, FTP/FTPS/SFTP, Pastebin, GitHub Gist, Email (SMTP) | Planned (3) — many work today via community .sxcu files |
 | URL shorteners: is.gd, v.gd, TinyURL (keyless) | Ported — wired to UseURLShortener flag |
-| URL shorteners requiring keys: bit.ly, Polr, Kutt, YOURLS | Planned (9) |
+| URL shorteners requiring keys: bit.ly, Polr, Kutt, YOURLS | Ported (9) — see Phase 9 |
 | After-upload: copy URL to clipboard, open URL | Ported |
 
 ## Phase 4 — History & main window
@@ -115,8 +115,9 @@ Statuses: **Ported** · **Partial** (works, known gaps) · **Planned** (phase no
 | Feature | Status |
 |---|---|
 | Box, Backblaze B2, Azure, GCS, YouTube, Streamable, Nextcloud/ownCloud, Seafile, MediaFire, Puush, Pushbullet, transfer.sh, Pomf, Plik, s-ul, Uguu, Lambda, LobFile, vgy.me, Chevereto, ImageShack, Flickr, Photobucket, remaining text hosts | Planned (9) |
-| Remaining shorteners: Polr, Kutt, YOURLS, Firebase, qr.net, 2.gp, vurl, zws | Planned (9) |
-| URL sharing services (Facebook, Reddit, Pinterest, Tumblr, LinkedIn, VK, Google Lens, Bing VS, …) | Planned (9) |
+| Shorteners: bit.ly (personal access token), Polr, Kutt, YOURLS, Zero Width, vurl.com | Ported — settings UI per service; bit.ly uses a user token instead of C#'s app-key OAuth flow |
+| URL sharing services (Email/mailto, Facebook, Reddit, Pinterest, Tumblr, LinkedIn, VK, Google Lens, Bing VS) | Ported — ShareURL flag opens the share page in the browser; Pushbullet + custom sharing land with their destinations |
+| Firebase Dynamic Links (Google shutdown 2025), qr.net, 2.gp, turl.ca, nl.cm | Dead — API endpoints verified gone 2026-07 |
 | Copy, StumbleUpon, Delicious, DropIO, Slexy | Dead — verify & drop |
 
 ## Phase 10 — Automation & integration
