@@ -16,7 +16,8 @@ import SharedKit
 enum AfterCapturePipeline {
     static let implemented: AfterCaptureTasks = [
         .annotateImage, .copyImageToClipboard, .pinToScreen, .saveImageToFile, .saveImageToFileWithDialog,
-        .copyFilePathToClipboard, .copyFolderPathToClipboard, .showInExplorer, .uploadImageToHost
+        .saveThumbnailImageToFile, .copyFilePathToClipboard, .copyFolderPathToClipboard, .showInExplorer,
+        .uploadImageToHost
     ]
 
     static func run(image capturedImage: CGImage, processName: String? = nil, windowTitle: String? = nil) async {
@@ -39,16 +40,22 @@ enum AfterCapturePipeline {
             PinnedWindows.pin(image)
         }
 
+        let format = ImageWriter.effectiveFormat(
+            named: settings.imageFormat,
+            autoUseJPEG: settings.imageAutoUseJPEG, autoUseJPEGSize: settings.imageAutoUseJPEGSize,
+            width: image.width, height: image.height
+        )
         var savedURL: URL?
 
         if tasks.contains(.saveImageToFile) {
             let url = SavePath.screenshotURL(
                 config: config, task: settings,
                 windowTitle: windowTitle, processName: processName,
-                width: image.width, height: image.height
+                width: image.width, height: image.height,
+                fileExtension: format.fileExtension
             )
             do {
-                try ImageWriter.writePNG(image, to: url)
+                try ImageWriter.write(image, to: url, format: format, jpegQuality: settings.imageJPEGQuality)
                 savedURL = url
                 Notifier.captureSaved(url)
             } catch {
@@ -60,15 +67,36 @@ enum AfterCapturePipeline {
             let panel = NSSavePanel()
             panel.directoryURL = config.screenshotsFolder
             panel.nameFieldStringValue = savedURL?.lastPathComponent
-                ?? SavePath.screenshotURL(config: config, task: settings, processName: processName).lastPathComponent
+                ?? SavePath.screenshotURL(config: config, task: settings, processName: processName,
+                                          fileExtension: format.fileExtension).lastPathComponent
             NSApp.activate(ignoringOtherApps: true)
             if panel.runModal() == .OK, let url = panel.url {
                 do {
-                    try ImageWriter.writePNG(image, to: url)
+                    try ImageWriter.write(image, to: url, format: format, jpegQuality: settings.imageJPEGQuality)
                     savedURL = url
                 } catch {
                     presentError(error)
                 }
+            }
+        }
+
+        if tasks.contains(.saveThumbnailImageToFile),
+           let thumb = ImageWriter.thumbnail(image, width: settings.thumbnailWidth,
+                                             height: settings.thumbnailHeight,
+                                             onlyIfLarger: settings.thumbnailCheckSize) {
+            let base = savedURL ?? SavePath.screenshotURL(
+                config: config, task: settings,
+                windowTitle: windowTitle, processName: processName,
+                width: image.width, height: image.height,
+                fileExtension: format.fileExtension
+            )
+            let name = base.deletingPathExtension().lastPathComponent + settings.thumbnailName
+            let url = base.deletingLastPathComponent()
+                .appendingPathComponent(name).appendingPathExtension(format.fileExtension)
+            do {
+                try ImageWriter.write(thumb, to: url, format: format, jpegQuality: settings.imageJPEGQuality)
+            } catch {
+                presentError(error)
             }
         }
 
@@ -92,9 +120,15 @@ enum AfterCapturePipeline {
         }
 
         if tasks.contains(.uploadImageToHost) {
-            let fileName = savedURL?.lastPathComponent
-                ?? SavePath.screenshotURL(config: config, task: settings, processName: processName).lastPathComponent
-            UploadCoordinator.uploadImage(image, fileName: fileName, filePath: savedURL?.path)
+            if let savedURL {
+                // reuse the encoded file so bytes, name and MIME type all agree
+                UploadCoordinator.uploadFile(at: savedURL)
+            } else {
+                let fileName = SavePath.screenshotURL(config: config, task: settings, processName: processName,
+                                                      fileExtension: format.fileExtension).lastPathComponent
+                UploadCoordinator.uploadImage(image, fileName: fileName,
+                                              format: format, jpegQuality: settings.imageJPEGQuality)
+            }
         }
 
         let pending = tasks.subtracting(implemented)

@@ -67,4 +67,53 @@ struct ImageWriterTests {
         try ImageWriter.writePNG(makeImage(), to: url)
         #expect(FileManager.default.fileExists(atPath: url.path))
     }
+
+    @Test(arguments: ImageFileFormat.allCases)
+    func everyFormatEncodesAndDecodes(format: ImageFileFormat) throws {
+        let data = try #require(ImageWriter.data(makeImage(), format: format))
+        let source = try #require(CGImageSourceCreateWithData(data as CFData, nil))
+        let decoded = try #require(CGImageSourceCreateImageAtIndex(source, 0, nil))
+        #expect(decoded.width == 4)
+        #expect(decoded.height == 4)
+    }
+
+    @Test func jpegQualityChangesOutputSize() throws {
+        let image = makeImage(width: 256, height: 256)
+        let low = try #require(ImageWriter.data(image, format: .jpeg, jpegQuality: 10))
+        let high = try #require(ImageWriter.data(image, format: .jpeg, jpegQuality: 100))
+        #expect(low.count < high.count)
+    }
+
+    @Test func effectiveFormatHonorsAutoJPEG() {
+        #expect(ImageWriter.effectiveFormat(named: "PNG", autoUseJPEG: true, autoUseJPEGSize: 2048,
+                                            width: 3000, height: 100) == .jpeg)
+        #expect(ImageWriter.effectiveFormat(named: "PNG", autoUseJPEG: false, autoUseJPEGSize: 2048,
+                                            width: 3000, height: 100) == .png)
+        #expect(ImageWriter.effectiveFormat(named: "PNG", autoUseJPEG: true, autoUseJPEGSize: 2048,
+                                            width: 2048, height: 2048) == .png)
+        // unknown names (future C# values) fall back to PNG
+        #expect(ImageWriter.effectiveFormat(named: "WEBP", autoUseJPEG: false, autoUseJPEGSize: 2048,
+                                            width: 10, height: 10) == .png)
+    }
+
+    @Test func thumbnailScalesProportionally() throws {
+        let image = makeImage(width: 400, height: 200)
+        // width-only box (the C# default 200×0) derives height from aspect
+        let thumb = try #require(ImageWriter.thumbnail(image, width: 200, height: 0))
+        #expect(thumb.width == 200)
+        #expect(thumb.height == 100)
+        // both dimensions: fit inside the box, aspect kept
+        let boxed = try #require(ImageWriter.thumbnail(image, width: 100, height: 100))
+        #expect(boxed.width == 100)
+        #expect(boxed.height == 50)
+    }
+
+    @Test func thumbnailRespectsOnlyIfLarger() throws {
+        let small = makeImage(width: 100, height: 50)
+        #expect(ImageWriter.thumbnail(small, width: 200, height: 0, onlyIfLarger: true) == nil)
+        // default keeps C# ThumbnailCheckSize=false behavior: return as-is
+        let asIs = try #require(ImageWriter.thumbnail(small, width: 200, height: 0))
+        #expect(asIs.width == 100)
+        #expect(ImageWriter.thumbnail(small, width: 0, height: 0) == nil)
+    }
 }
