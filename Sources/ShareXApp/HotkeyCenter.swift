@@ -73,6 +73,25 @@ final class HotkeyCenter {
     }
 }
 
+/// (Re)registers every configured hotkey; the settings recorder calls this
+/// after edits so changes apply without a relaunch.
+@MainActor
+enum HotkeyRegistrar {
+    static func applyAll() {
+        HotkeyCenter.shared.unregisterAll()
+        for config in HotkeySettings.load().hotkeys {
+            guard let combo = config.combo, let type = config.type, type != .none else { continue }
+            let registered = HotkeyCenter.shared.register(combo, alwaysEnabled: type == .disableHotkeys) {
+                HotkeyDispatcher.execute(type)
+            }
+            if !registered {
+                NSLog("Could not register hotkey %@ for %@ (conflict or unknown key)",
+                      combo.displayString, config.taskType)
+            }
+        }
+    }
+}
+
 /// Maps hotkey actions to implementations. Unimplemented types log and no-op
 /// until their phase lands.
 @MainActor
