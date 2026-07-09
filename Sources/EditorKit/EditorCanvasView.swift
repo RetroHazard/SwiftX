@@ -12,15 +12,24 @@ import CoreImage
 
 @MainActor
 public final class EditorCanvasView: NSView {
-    public let baseImage: CGImage
+    public private(set) var baseImage: CGImage
     public var currentTool: AnnotationTool = .rectangle
     public private(set) var currentColor: NSColor = .systemRed
     public private(set) var currentLineWidth: CGFloat = 3
     public var onHistoryChanged: (() -> Void)?
+    /// Fired when crop changes the canvas dimensions (SwiftUI must re-frame).
+    public var onCanvasSizeChanged: ((NSSize) -> Void)?
+
+    /// Crop mutates the base image, so history snapshots carry both.
+    /// CGImages are immutable - snapshots hold references, not copies.
+    struct Snapshot {
+        let image: CGImage
+        let shapes: [AnnotationShape]
+    }
 
     private(set) var shapes: [AnnotationShape] = []
-    private var undoStack: [[AnnotationShape]] = []
-    private var redoStack: [[AnnotationShape]] = []
+    private var undoStack: [Snapshot] = []
+    private var redoStack: [Snapshot] = []
     public private(set) var selectedShapeID: UUID?
 
     private enum DragMode {
@@ -41,12 +50,13 @@ public final class EditorCanvasView: NSView {
     public var canRedo: Bool { !redoStack.isEmpty }
 
     /// Logical (point) size of the canvas; SwiftUI layout must honor this.
-    public let canvasSize: NSSize
+    public private(set) var canvasSize: NSSize
+    private let displayScale: CGFloat
 
     public init(image: CGImage) {
         self.baseImage = image
-        let scale = NSScreen.main?.backingScaleFactor ?? 2
-        self.canvasSize = NSSize(width: CGFloat(image.width) / scale, height: CGFloat(image.height) / scale)
+        self.displayScale = NSScreen.main?.backingScaleFactor ?? 2
+        self.canvasSize = NSSize(width: CGFloat(image.width) / displayScale, height: CGFloat(image.height) / displayScale)
         super.init(frame: NSRect(origin: .zero, size: canvasSize))
     }
 
@@ -58,48 +68,74 @@ public final class EditorCanvasView: NSView {
     // without this, the representable collapses to zero inside a SwiftUI ScrollView
     public override var intrinsicContentSize: NSSize { canvasSize }
 
-    // MARK: - Effect variants (blur/pixelate draw regions from these)
+    // MARK: - Effect variants (blur/pixelate draw regions from these; reset on crop/undo)
 
-    private lazy var blurredBase: CGImage? = {
+    private var cachedBlurredBase: CGImage??
+    private var cachedPixelatedBase: CGImage??
+
+    private var blurredBase: CGImage? {
+        if let cached = cachedBlurredBase { return cached }
         let input = CIImage(cgImage: baseImage)
-        guard let filter = CIFilter(name: "CIGaussianBlur", parameters: [
+        var result: CGImage?
+        if let filter = CIFilter(name: "CIGaussianBlur", parameters: [
             kCIInputImageKey: input.clampedToExtent(),
             kCIInputRadiusKey: 12.0
-        ]), let output = filter.outputImage?.cropped(to: input.extent) else { return nil }
-        return CIContext().createCGImage(output, from: output.extent)
-    }()
+        ]), let output = filter.outputImage?.cropped(to: input.extent) {
+            result = CIContext().createCGImage(output, from: output.extent)
+        }
+        cachedBlurredBase = .some(result)
+        return result
+    }
 
-    private lazy var pixelatedBase: CGImage? = {
+    private var pixelatedBase: CGImage? {
+        if let cached = cachedPixelatedBase { return cached }
         let input = CIImage(cgImage: baseImage)
-        guard let filter = CIFilter(name: "CIPixellate", parameters: [
+        var result: CGImage?
+        if let filter = CIFilter(name: "CIPixellate", parameters: [
             kCIInputImageKey: input.clampedToExtent(),
             kCIInputScaleKey: max(8.0, Double(baseImage.width) / 80.0),
             kCIInputCenterKey: CIVector(x: 0, y: 0)
-        ]), let output = filter.outputImage?.cropped(to: input.extent) else { return nil }
-        return CIContext().createCGImage(output, from: output.extent)
-    }()
+        ]), let output = filter.outputImage?.cropped(to: input.extent) {
+            result = CIContext().createCGImage(output, from: output.extent)
+        }
+        cachedPixelatedBase = .some(result)
+        return result
+    }
+
+    private func setBaseImage(_ image: CGImage) {
+        baseImage = image
+        cachedBlurredBase = nil
+        cachedPixelatedBase = nil
+        canvasSize = NSSize(width: CGFloat(image.width) / displayScale, height: CGFloat(image.height) / displayScale)
+        invalidateIntrinsicContentSize()
+        onCanvasSizeChanged?(canvasSize)
+    }
 
     // MARK: - History (whole-array snapshots: moves/resizes mutate, not append)
 
     private func pushHistory() {
-        undoStack.append(shapes)
+        undoStack.append(Snapshot(image: baseImage, shapes: shapes))
         redoStack.removeAll()
         onHistoryChanged?()
     }
 
     public func undo() {
         guard let previous = undoStack.popLast() else { return }
-        redoStack.append(shapes)
-        shapes = previous
-        clampSelection()
-        needsDisplay = true
-        onHistoryChanged?()
+        redoStack.append(Snapshot(image: baseImage, shapes: shapes))
+        restore(previous)
     }
 
     public func redo() {
         guard let next = redoStack.popLast() else { return }
-        undoStack.append(shapes)
-        shapes = next
+        undoStack.append(Snapshot(image: baseImage, shapes: shapes))
+        restore(next)
+    }
+
+    private func restore(_ snapshot: Snapshot) {
+        if snapshot.image !== baseImage {
+            setBaseImage(snapshot.image)
+        }
+        shapes = snapshot.shapes
         clampSelection()
         needsDisplay = true
         onHistoryChanged?()
@@ -212,13 +248,22 @@ public final class EditorCanvasView: NSView {
         return CGRect(origin: shape.rect.origin, size: size)
     }
 
-    /// Handle positions: corners for rect-based shapes, endpoints for line/arrow.
+    /// Handle positions: corners for rect-based shapes, endpoints for line/arrow,
+    /// corners + tail tip (index 4) for speech balloons.
     private func handlePoints(for shape: AnnotationShape) -> [CGPoint] {
         switch shape.tool {
         case .line, .arrow:
             return shape.points.count >= 2 ? [shape.points[0], shape.points[1]] : []
         case .freehand, .text:
             return [] // move-only
+        case .speechBalloon:
+            let r = shape.rect
+            var handles = [CGPoint(x: r.minX, y: r.minY), CGPoint(x: r.maxX, y: r.minY),
+                           CGPoint(x: r.minX, y: r.maxY), CGPoint(x: r.maxX, y: r.maxY)]
+            if let tail = shape.points.first {
+                handles.append(tail)
+            }
+            return handles
         default:
             let r = shape.rect
             return [CGPoint(x: r.minX, y: r.minY), CGPoint(x: r.maxX, y: r.minY),
@@ -237,15 +282,22 @@ public final class EditorCanvasView: NSView {
         window?.makeFirstResponder(self)
         let point = convert(event.locationInWindow, from: nil)
 
-        // double-click a text shape re-opens it for editing, regardless of tool
-        if event.clickCount == 2, let index = shapeIndex(at: point), shapes[index].tool == .text {
+        // double-click a text shape or balloon re-opens it for editing, regardless of tool
+        if event.clickCount == 2, let index = shapeIndex(at: point) {
             let shape = shapes[index]
-            pushHistory()
-            shapes.remove(at: index)
-            selectedShapeID = nil
-            needsDisplay = true
-            beginTextEntry(at: shape.rect.origin, prefilled: shape.text, color: shape.color)
-            return
+            if shape.tool == .text {
+                pushHistory()
+                shapes.remove(at: index)
+                selectedShapeID = nil
+                needsDisplay = true
+                beginTextEntry(at: shape.rect.origin, prefilled: shape.text, color: shape.color)
+                return
+            }
+            if shape.tool == .speechBalloon {
+                beginTextEntry(at: CGPoint(x: shape.rect.minX + 8, y: shape.rect.minY + 8),
+                               prefilled: shape.text, color: shape.color, target: shape.id)
+                return
+            }
         }
 
         // grabbing a handle of the selected shape resizes it, regardless of tool
@@ -330,7 +382,7 @@ public final class EditorCanvasView: NSView {
             dragOriginalShape = nil
             dragSnapshot = nil
         }
-        guard case .draw = dragMode, let shape = draft else { return }
+        guard case .draw = dragMode, var shape = draft else { return }
         draft = nil
         let point = convert(event.locationInWindow, from: nil)
         let dragDistance = hypot(point.x - dragStart.x, point.y - dragStart.y)
@@ -338,7 +390,42 @@ public final class EditorCanvasView: NSView {
             needsDisplay = true
             return
         }
+
+        if shape.tool == .crop {
+            applyCrop(shape.rect)
+            return
+        }
+        if shape.tool == .speechBalloon {
+            // default tail: below-left of the balloon, pointing away
+            shape.points = [CGPoint(x: shape.rect.minX + shape.rect.width * 0.25,
+                                    y: shape.rect.maxY + 30)]
+            addShape(shape)
+            beginTextEntry(at: CGPoint(x: shape.rect.minX + 8, y: shape.rect.minY + 8), target: shape.id)
+            return
+        }
         addShape(shape)
+    }
+
+    /// Crops the base image to the given canvas-point rect; shapes translate
+    /// with the image. Undoable - snapshots carry the image.
+    func applyCrop(_ rectInPoints: CGRect) {
+        let rect = rectInPoints.intersection(CGRect(origin: .zero, size: canvasSize))
+        guard rect.width >= 4, rect.height >= 4 else { return }
+        let pixelsPerPoint = CGFloat(baseImage.width) / canvasSize.width
+        let pixelRect = CGRect(
+            x: rect.minX * pixelsPerPoint,
+            y: rect.minY * pixelsPerPoint,
+            width: rect.width * pixelsPerPoint,
+            height: rect.height * pixelsPerPoint
+        ).integral
+        guard let cropped = baseImage.cropping(to: pixelRect) else { return }
+
+        pushHistory()
+        setBaseImage(cropped)
+        let delta = CGPoint(x: -rect.minX, y: -rect.minY)
+        shapes = shapes.map { translated($0, by: delta) }
+        selectedShapeID = nil
+        needsDisplay = true
     }
 
     public override func keyDown(with event: NSEvent) {
@@ -352,9 +439,9 @@ public final class EditorCanvasView: NSView {
 
     /// Click-without-drag must not create an undo step; push the snapshot on first movement.
     private func pushDragHistoryOnce() {
-        guard let snapshot = dragSnapshot else { return }
+        guard let snapshotShapes = dragSnapshot else { return }
         dragSnapshot = nil
-        undoStack.append(snapshot)
+        undoStack.append(Snapshot(image: baseImage, shapes: snapshotShapes))
         redoStack.removeAll()
         onHistoryChanged?()
     }
@@ -377,6 +464,8 @@ public final class EditorCanvasView: NSView {
         case .line, .arrow:
             guard result.points.count >= 2, handle < 2 else { return result }
             result.points[handle] = point
+        case .speechBalloon where handle == 4:
+            result.points = [point] // tail tip
         default:
             let r = shape.rect
             let anchors = [CGPoint(x: r.maxX, y: r.maxY), CGPoint(x: r.minX, y: r.maxY),
@@ -399,7 +488,12 @@ public final class EditorCanvasView: NSView {
 
     // MARK: - Text entry
 
-    private func beginTextEntry(at point: CGPoint, prefilled: String = "", color: NSColor? = nil) {
+    /// When target is set, the committed text updates that balloon instead of
+    /// creating a standalone text shape.
+    private var textEntryTarget: UUID?
+
+    private func beginTextEntry(at point: CGPoint, prefilled: String = "", color: NSColor? = nil, target: UUID? = nil) {
+        textEntryTarget = target
         let field = NSTextField(frame: NSRect(x: point.x, y: point.y, width: 240, height: 26))
         field.font = .systemFont(ofSize: 18)
         field.textColor = color ?? currentColor
@@ -419,9 +513,19 @@ public final class EditorCanvasView: NSView {
         let text = field.stringValue.trimmingCharacters(in: .whitespaces)
         let origin = field.frame.origin
         let color = field.textColor ?? currentColor
+        let target = textEntryTarget
+        textEntryTarget = nil
         field.removeFromSuperview()
-        guard !text.isEmpty else { return }
 
+        if let target, let index = shapes.firstIndex(where: { $0.id == target }) {
+            guard shapes[index].text != text else { return }
+            pushHistory()
+            shapes[index].text = text
+            needsDisplay = true
+            return
+        }
+
+        guard !text.isEmpty else { return }
         var shape = AnnotationShape(tool: .text)
         shape.text = text
         shape.rect = CGRect(origin: origin, size: .zero)
@@ -432,7 +536,8 @@ public final class EditorCanvasView: NSView {
     // MARK: - Drawing
 
     public override func draw(_ dirtyRect: NSRect) {
-        NSImage(cgImage: baseImage, size: bounds.size).draw(in: bounds)
+        // use canvasSize, not bounds: after a crop, SwiftUI relayout lags a frame
+        NSImage(cgImage: baseImage, size: canvasSize).draw(in: NSRect(origin: .zero, size: canvasSize))
         for shape in shapes {
             drawShape(shape)
         }
@@ -455,6 +560,18 @@ public final class EditorCanvasView: NSView {
         switch shape.tool {
         case .select:
             break // never stored; satisfies exhaustiveness
+        case .crop:
+            // draft-only visualization: dashed marching rectangle
+            let path = NSBezierPath(rect: shape.rect)
+            path.lineWidth = 1
+            path.setLineDash([5, 5], count: 2, phase: 0)
+            NSColor.white.setStroke()
+            path.stroke()
+            NSColor.black.withAlphaComponent(0.6).setStroke()
+            path.setLineDash([5, 5], count: 2, phase: 5)
+            path.stroke()
+        case .speechBalloon:
+            drawSpeechBalloon(shape)
         case .rectangle:
             let path = NSBezierPath(rect: shape.rect)
             path.lineWidth = shape.lineWidth
@@ -505,6 +622,63 @@ public final class EditorCanvasView: NSView {
         }
     }
 
+    private func drawSpeechBalloon(_ shape: AnnotationShape) {
+        guard shape.rect.width > 2, shape.rect.height > 2 else { return }
+        let radius = min(8, shape.rect.height / 4)
+
+        // tail first; the balloon body covers its base seam
+        if let tail = shape.points.first, !shape.rect.insetBy(dx: -2, dy: -2).contains(tail) {
+            let center = CGPoint(x: shape.rect.midX, y: shape.rect.midY)
+            let angle = atan2(tail.y - center.y, tail.x - center.x)
+            let halfWidth = min(shape.rect.width, shape.rect.height) * 0.18
+            let base1 = CGPoint(x: center.x + halfWidth * cos(angle + .pi / 2),
+                                y: center.y + halfWidth * sin(angle + .pi / 2))
+            let base2 = CGPoint(x: center.x + halfWidth * cos(angle - .pi / 2),
+                                y: center.y + halfWidth * sin(angle - .pi / 2))
+            let tailPath = NSBezierPath()
+            tailPath.move(to: base1)
+            tailPath.line(to: tail)
+            tailPath.line(to: base2)
+            tailPath.close()
+            NSColor.white.setFill()
+            tailPath.fill()
+            tailPath.lineWidth = shape.lineWidth
+            shape.color.setStroke()
+            tailPath.stroke()
+        }
+
+        let body = NSBezierPath(roundedRect: shape.rect, xRadius: radius, yRadius: radius)
+        NSColor.white.setFill()
+        body.fill()
+        body.lineWidth = shape.lineWidth
+        shape.color.setStroke()
+        body.stroke()
+
+        if !shape.text.isEmpty {
+            let paragraph = NSMutableParagraphStyle()
+            paragraph.alignment = .center
+            paragraph.lineBreakMode = .byWordWrapping
+            let attributes: [NSAttributedString.Key: Any] = [
+                .font: NSFont.systemFont(ofSize: shape.fontSize, weight: .medium),
+                .foregroundColor: NSColor.black,
+                .paragraphStyle: paragraph
+            ]
+            let inset = shape.rect.insetBy(dx: 8, dy: 6)
+            let textHeight = NSString(string: shape.text).boundingRect(
+                with: NSSize(width: inset.width, height: .greatestFiniteMagnitude),
+                options: [.usesLineFragmentOrigin],
+                attributes: attributes
+            ).height
+            let centered = NSRect(
+                x: inset.minX,
+                y: max(inset.minY, inset.midY - textHeight / 2),
+                width: inset.width,
+                height: min(inset.height, textHeight)
+            )
+            NSString(string: shape.text).draw(in: centered, withAttributes: attributes)
+        }
+    }
+
     private func drawSelectionChrome(_ shape: AnnotationShape) {
         let bounds = selectionBounds(shape)
         let outline = NSBezierPath(rect: bounds.insetBy(dx: -3, dy: -3))
@@ -526,6 +700,9 @@ public final class EditorCanvasView: NSView {
 
     private func selectionBounds(_ shape: AnnotationShape) -> CGRect {
         switch shape.tool {
+        case .speechBalloon:
+            guard let tail = shape.points.first else { return shape.rect }
+            return shape.rect.union(CGRect(origin: tail, size: .zero))
         case .line, .arrow, .freehand:
             guard let first = shape.points.first else { return shape.rect }
             var minX = first.x, minY = first.y, maxX = first.x, maxY = first.y
@@ -568,7 +745,7 @@ public final class EditorCanvasView: NSView {
 
     private func drawEffectRegion(_ rect: CGRect, from variant: CGImage?) {
         guard let variant, rect.width > 1, rect.height > 1 else { return }
-        let pixelsPerPoint = CGFloat(baseImage.width) / bounds.width
+        let pixelsPerPoint = CGFloat(baseImage.width) / canvasSize.width
         let pixelRect = CGRect(
             x: rect.minX * pixelsPerPoint,
             y: rect.minY * pixelsPerPoint,
@@ -595,7 +772,7 @@ public final class EditorCanvasView: NSView {
 
         context.translateBy(x: 0, y: CGFloat(height))
         context.scaleBy(x: 1, y: -1)
-        let pixelsPerPoint = CGFloat(width) / bounds.width
+        let pixelsPerPoint = CGFloat(width) / canvasSize.width
         context.scaleBy(x: pixelsPerPoint, y: pixelsPerPoint)
 
         let graphicsContext = NSGraphicsContext(cgContext: context, flipped: true)
@@ -603,7 +780,7 @@ public final class EditorCanvasView: NSView {
         NSGraphicsContext.current = graphicsContext
         defer { NSGraphicsContext.current = previous }
 
-        NSImage(cgImage: baseImage, size: bounds.size).draw(in: NSRect(origin: .zero, size: bounds.size))
+        NSImage(cgImage: baseImage, size: canvasSize).draw(in: NSRect(origin: .zero, size: canvasSize))
         for shape in shapes {
             drawShape(shape) // selection chrome intentionally not rendered
         }

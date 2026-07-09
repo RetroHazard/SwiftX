@@ -146,6 +146,71 @@ struct EditorKitTests {
         #expect(canvas.currentColor == .systemGreen)
     }
 
+    @Test func speechBalloonTailIsFifthHandle() {
+        let canvas = EditorCanvasView(image: makeImage())
+        var balloon = AnnotationShape(tool: .speechBalloon)
+        balloon.rect = CGRect(x: 10, y: 10, width: 30, height: 20)
+        balloon.points = [CGPoint(x: 15, y: 45)] // tail tip
+        canvas.addShape(balloon)
+
+        // handle index 4 moves the tail without touching the body
+        let resized = canvas.resized(balloon, handle: 4, to: CGPoint(x: 40, y: 5))
+        #expect(resized.points == [CGPoint(x: 40, y: 5)])
+        #expect(resized.rect == balloon.rect)
+
+        // corner handle still resizes the body
+        let bodyResized = canvas.resized(balloon, handle: 0, to: CGPoint(x: 0, y: 0))
+        #expect(bodyResized.rect == CGRect(x: 0, y: 0, width: 40, height: 30))
+    }
+
+    @Test func speechBalloonMovesTailWithBody() {
+        let canvas = EditorCanvasView(image: makeImage())
+        var balloon = AnnotationShape(tool: .speechBalloon)
+        balloon.rect = CGRect(x: 10, y: 10, width: 30, height: 20)
+        balloon.points = [CGPoint(x: 15, y: 45)]
+        let moved = canvas.translated(balloon, by: CGPoint(x: 5, y: 5))
+        #expect(moved.rect.origin == CGPoint(x: 15, y: 15))
+        #expect(moved.points == [CGPoint(x: 20, y: 50)])
+    }
+
+    @Test func cropShrinksImageAndTranslatesShapes() {
+        let canvas = EditorCanvasView(image: makeImage(width: 100, height: 100))
+        var shape = AnnotationShape(tool: .rectangle)
+        let w = canvas.canvasSize.width, h = canvas.canvasSize.height
+        shape.rect = CGRect(x: w * 0.5, y: h * 0.5, width: w * 0.2, height: h * 0.2)
+        canvas.addShape(shape)
+
+        // crop away the left/top quarter
+        canvas.applyCrop(CGRect(x: w * 0.25, y: h * 0.25, width: w * 0.75, height: h * 0.75))
+
+        #expect(canvas.baseImage.width == 75)
+        #expect(canvas.baseImage.height == 75)
+        #expect(canvas.canvasSize.width == w * 0.75)
+        // shape moved with the image content
+        #expect(abs(canvas.shapes[0].rect.minX - w * 0.25) < 0.5)
+    }
+
+    @Test func cropIsUndoable() {
+        let canvas = EditorCanvasView(image: makeImage(width: 100, height: 100))
+        let w = canvas.canvasSize.width, h = canvas.canvasSize.height
+        canvas.applyCrop(CGRect(x: 0, y: 0, width: w * 0.5, height: h * 0.5))
+        #expect(canvas.baseImage.width == 50)
+
+        canvas.undo()
+        #expect(canvas.baseImage.width == 100)
+        #expect(canvas.canvasSize.width == w)
+
+        canvas.redo()
+        #expect(canvas.baseImage.width == 50)
+    }
+
+    @Test func tinyCropIsIgnored() {
+        let canvas = EditorCanvasView(image: makeImage(width: 100, height: 100))
+        canvas.applyCrop(CGRect(x: 0, y: 0, width: 2, height: 2))
+        #expect(canvas.baseImage.width == 100)
+        #expect(!canvas.canUndo) // no history entry for a no-op
+    }
+
     @Test func renderWithoutShapesMatchesBase() {
         let canvas = EditorCanvasView(image: makeImage())
         let rendered = canvas.renderFinalImage()!
