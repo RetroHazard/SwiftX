@@ -25,6 +25,10 @@ struct CustomUploaderEditorView: View {
     @State private var argumentRows: [KVRow] = []
     @State private var activeUploader = UploadersConfig.load().activeCustomUploader
     @State private var confirmDelete = false
+    /// Name as loaded from disk; renames only happen after a real edit, so
+    /// merely focusing an imported uploader never moves its file.
+    @State private var loadedName = ""
+    @FocusState private var nameFieldFocused: Bool
 
     private static let methods = ["GET", "POST", "PUT", "PATCH", "DELETE"]
 
@@ -71,6 +75,11 @@ struct CustomUploaderEditorView: View {
         if !selected.isEmpty {
             Section("Request") {
                 TextField("Name", text: field(\.name))
+                    .focused($nameFieldFocused)
+                    .onSubmit { syncFileName() }
+                    .onChange(of: nameFieldFocused) {
+                        if !nameFieldFocused { syncFileName() }
+                    }
                 Picker("Method", selection: field(\.requestMethod)) {
                     ForEach(Self.methods, id: \.self) { Text($0).tag($0) }
                 }
@@ -168,10 +177,28 @@ struct CustomUploaderEditorView: View {
         try? CustomUploaderStore.save(draft, as: selected)
     }
 
+    /// Renames the .sxcu file to match the Name field (on Enter or focus loss).
+    private func syncFileName() {
+        guard draft.name != loadedName else { return }
+        loadedName = draft.name
+        guard !selected.isEmpty,
+              let newName = try? CustomUploaderStore.rename(selected, toBaseName: draft.name),
+              newName != selected else { return }
+        if activeUploader == selected {
+            activeUploader = newName
+            var config = UploadersConfig.load()
+            config.activeCustomUploader = newName
+            try? config.save()
+        }
+        selected = newName
+        files = CustomUploaderStore.list()
+    }
+
     private func select(_ name: String) {
         selected = name
         let item = CustomUploaderStore.load(named: name) ?? CustomUploaderItem()
         draft = item
+        loadedName = item.name
         headerRows = Self.rows(from: item.headers)
         parameterRows = Self.rows(from: item.parameters)
         argumentRows = Self.rows(from: item.arguments)
