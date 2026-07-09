@@ -81,7 +81,11 @@ enum HotkeyDispatcher {
         switch type {
         case .rectangleRegion:
             CaptureCoordinator.shared.captureRegion()
-        case .printScreen:
+        case .lastRegion:
+            CaptureCoordinator.shared.captureLastRegion()
+        case .printScreen, .activeMonitor:
+            // both capture the display under the cursor; C# PrintScreen
+            // stitches all displays, which waits on cross-display capture
             CaptureCoordinator.shared.captureFullScreen()
         case .activeWindow:
             CaptureCoordinator.shared.captureActiveWindow()
