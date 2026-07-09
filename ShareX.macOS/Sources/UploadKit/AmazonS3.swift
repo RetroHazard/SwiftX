@@ -26,7 +26,7 @@ public enum AmazonS3Error: LocalizedError {
 public enum AmazonS3Uploader {
     public static func upload(file: UploadFile, settings: AmazonS3Settings) async throws -> UploadResult {
         let request = try buildRequest(file: file, settings: settings, date: Date())
-        let (data, urlResponse) = try await URLSession.shared.data(for: request)
+        let (data, urlResponse) = try await UploadHTTP.data(for: request)
         let status = (urlResponse as? HTTPURLResponse)?.statusCode ?? 0
         guard (200..<300).contains(status) else {
             let body = String(data: data, encoding: .utf8) ?? ""

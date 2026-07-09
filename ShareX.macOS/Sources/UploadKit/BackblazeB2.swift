@@ -41,7 +41,7 @@ public enum BackblazeB2Uploader {
             do {
                 let (uploadURL, token) = try await uploadTarget(auth: auth, bucketId: bucketId)
                 let request = uploadRequest(uploadURL: uploadURL, token: token, file: file, destinationPath: path)
-                let (data, response) = try await URLSession.shared.data(for: request)
+                let (data, response) = try await UploadHTTP.data(for: request)
                 let status = (response as? HTTPURLResponse)?.statusCode ?? 0
                 guard (200..<300).contains(status) else {
                     lastError = UploadError.httpError(statusCode: status,
@@ -131,7 +131,7 @@ public enum BackblazeB2Uploader {
     }
 
     static func send<T: Decodable>(_ request: URLRequest, as type: T.Type, step: String) async throws -> T {
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await UploadHTTP.data(for: request)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         guard (200..<300).contains(status) else {
             let body = String(data: data, encoding: .utf8) ?? ""

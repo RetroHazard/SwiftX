@@ -197,7 +197,7 @@ public enum SimpleHostUploader {
     public static func upload(file: UploadFile, destination: SimpleHostDestination,
                               config: UploadersConfig) async throws -> UploadResult {
         let request = try request(file: file, destination: destination, config: config)
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await UploadHTTP.data(for: request)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         guard (200..<300).contains(status) else {
             let message = String(data: data, encoding: .utf8) ?? ""
