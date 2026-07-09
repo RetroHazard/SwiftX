@@ -65,3 +65,4 @@ TCC (Transparency, Consent, and Control) resolves the "responsible process" for 
 - Promoted to Required Reading: [critical-patterns.md](../patterns/critical-patterns.md) (Pattern 1)
 - See also: [swift-test-no-xctest-command-line-tools-ShareXmacOS-20260708.md](../developer-experience/swift-test-no-xctest-command-line-tools-ShareXmacOS-20260708.md)
 - See also: [spm-only-macos-app-bundle-pattern-ShareXmacOS-20260708.md](../best-practices/spm-only-macos-app-bundle-pattern-ShareXmacOS-20260708.md)
+- See also: [external-tool-detection-webm-transcode-ShareXmacOS-20260708.md](../best-practices/external-tool-detection-webm-transcode-ShareXmacOS-20260708.md) — .command-file pattern avoids the Automation TCC prompt
