@@ -401,6 +401,13 @@ struct SettingsView: View {
         Section("Permissions") {
             PermissionsView()
         }
+        Section("Notifications") {
+            Toggle("Play sound after capture", isOn: taskBinding(\.playSoundAfterCapture))
+            Toggle("Play sound after upload", isOn: taskBinding(\.playSoundAfterUpload))
+            Text("Clicking a capture banner reveals the file; an upload banner opens the URL.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
         Section("Paths") {
             LabeledContent("Screenshots folder") {
                 HStack {
