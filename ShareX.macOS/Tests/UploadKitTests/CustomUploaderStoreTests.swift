@@ -44,6 +44,24 @@ struct CustomUploaderStoreTests {
         }
     }
 
+    @Test func renameMovesFileAndUniquifies() throws {
+        try withTempDirectory { dir in
+            let original = try CustomUploaderStore.create(named: "New Uploader", in: dir)
+            let renamed = try CustomUploaderStore.rename(original, toBaseName: "My Host", in: dir)
+            #expect(renamed == "My Host.sxcu")
+            #expect(CustomUploaderStore.list(in: dir) == ["My Host.sxcu"])
+
+            // collision with an existing file gets a numbered suffix
+            let other = try CustomUploaderStore.create(named: "Other", in: dir)
+            #expect(try CustomUploaderStore.rename(other, toBaseName: "My Host", in: dir) == "My Host 2.sxcu")
+
+            // same name, slashes and empty names are no-ops / sanitized
+            #expect(try CustomUploaderStore.rename("My Host.sxcu", toBaseName: "My Host", in: dir) == "My Host.sxcu")
+            #expect(try CustomUploaderStore.rename("My Host.sxcu", toBaseName: "", in: dir) == "My Host.sxcu")
+            #expect(try CustomUploaderStore.rename("My Host.sxcu", toBaseName: "a/b", in: dir) == "a-b.sxcu")
+        }
+    }
+
     @Test func deleteRemovesFile() throws {
         try withTempDirectory { dir in
             let name = try CustomUploaderStore.create(named: "Temp", in: dir)
