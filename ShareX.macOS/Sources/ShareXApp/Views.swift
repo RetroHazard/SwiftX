@@ -58,6 +58,8 @@ struct MainWindowView: View {
             }
             .padding(8)
 
+            UploadTaskRows()
+
             if items.isEmpty {
                 VStack(spacing: 12) {
                     Image(systemName: "camera.viewfinder")
