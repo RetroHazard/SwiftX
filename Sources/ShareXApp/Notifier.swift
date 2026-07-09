@@ -2,7 +2,9 @@
 // Copyright (c) 2007-2026 ShareX Team
 // Licensed under GPL v3 - see /LICENSE.txt
 
+import AppKit
 import Foundation
+import SharedKit
 import UserNotifications
 
 @MainActor
@@ -32,10 +34,13 @@ enum Notifier {
     }
 
     static func captureSaved(_ url: URL) {
-        notify(title: "Screenshot captured", body: url.lastPathComponent)
+        notify(title: "Screenshot captured", body: url.lastPathComponent,
+               sound: TaskSettings.load().playSoundAfterCapture, filePath: url.path)
     }
 
-    static func notify(title: String, body: String) {
+    /// Clicking the banner opens `url` when set, otherwise reveals `filePath`.
+    static func notify(title: String, body: String, sound: Bool = false,
+                       url: String? = nil, filePath: String? = nil) {
         guard Bundle.main.bundleIdentifier != nil else {
             NSLog("%@: %@", title, body)
             return
@@ -43,6 +48,11 @@ enum Notifier {
         let content = UNMutableNotificationContent()
         content.title = title
         content.body = body
+        if sound {
+            content.sound = .default
+        }
+        if let url { content.userInfo["url"] = url }
+        if let filePath { content.userInfo["filePath"] = filePath }
         let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
 
         switch authorized {
@@ -70,5 +80,19 @@ final class NotifierDelegate: NSObject, UNUserNotificationCenterDelegate {
     func userNotificationCenter(_ center: UNUserNotificationCenter,
                                 willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
         [.banner, .sound]
+    }
+
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                didReceive response: UNNotificationResponse) async {
+        let info = response.notification.request.content.userInfo
+        let urlString = info["url"] as? String
+        let path = info["filePath"] as? String
+        await MainActor.run {
+            if let urlString, let url = URL(string: urlString) {
+                NSWorkspace.shared.open(url)
+            } else if let path, FileManager.default.fileExists(atPath: path) {
+                NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: path)])
+            }
+        }
     }
 }

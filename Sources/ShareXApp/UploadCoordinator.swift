@@ -128,6 +128,7 @@ enum UploadCoordinator {
             NSLog("AfterUploadTasks not implemented yet: %@", pending.nameString)
         }
 
-        Notifier.notify(title: "Upload complete", body: finalURL)
+        Notifier.notify(title: "Upload complete", body: finalURL,
+                        sound: settings.playSoundAfterUpload, url: finalURL)
     }
 }
