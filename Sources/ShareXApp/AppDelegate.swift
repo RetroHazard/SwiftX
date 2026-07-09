@@ -3,6 +3,7 @@
 // Licensed under GPL v3 - see /LICENSE.txt
 
 import AppKit
+import CaptureKit
 import SwiftUI
 import SharedKit
 import UploadKit
@@ -16,6 +17,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var recordItem: NSMenuItem?
     private var recordGIFItem: NSMenuItem?
     private var abortRecordingItem: NSMenuItem?
+    private let screensSubmenu = NSMenu()
+    private let windowsSubmenu = NSMenu()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSAppleEventManager.shared().setEventHandler(
@@ -85,6 +88,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(NSMenuItem(title: "Capture Full Screen", action: #selector(captureFullScreen), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Capture Active Window", action: #selector(captureActiveWindow), keyEquivalent: ""))
 
+        // pickers populate on open: displays and windows change constantly
+        screensSubmenu.delegate = self
+        windowsSubmenu.delegate = self
+        let screenPicker = NSMenuItem(title: "Capture Screen…", action: nil, keyEquivalent: "")
+        screenPicker.submenu = screensSubmenu
+        menu.addItem(screenPicker)
+        let windowPicker = NSMenuItem(title: "Capture Window…", action: nil, keyEquivalent: "")
+        windowPicker.submenu = windowsSubmenu
+        menu.addItem(windowPicker)
+
         menu.addItem(.separator())
         let record = NSMenuItem(title: "Record Screen (Region)…", action: #selector(toggleRecording), keyEquivalent: "")
         let recordGIF = NSMenuItem(title: "Record GIF (Region)…", action: #selector(toggleGIFRecording), keyEquivalent: "")
@@ -119,6 +132,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func captureActiveWindow() {
         CaptureCoordinator.shared.captureActiveWindow()
+    }
+
+    @objc private func captureScreenItem(_ sender: NSMenuItem) {
+        guard let screen = sender.representedObject as? NSScreen else { return }
+        CaptureCoordinator.shared.captureScreen(screen)
+    }
+
+    @objc private func captureWindowItem(_ sender: NSMenuItem) {
+        guard let window = sender.representedObject as? CapturableWindow else { return }
+        CaptureCoordinator.shared.captureWindow(window)
     }
 
     @objc private func toggleRecording() {
@@ -204,5 +227,33 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard let urlString = event.paramDescriptor(forKeyword: keyDirectObject)?.stringValue else { return }
         // ponytail: log only; sharex:// actions dispatch into the task pipeline from Phase 2 on
         NSLog("ShareX received URL: %@", urlString)
+    }
+}
+
+extension AppDelegate: NSMenuDelegate {
+    func menuNeedsUpdate(_ menu: NSMenu) {
+        menu.removeAllItems()
+        if menu == screensSubmenu {
+            for screen in NSScreen.screens {
+                let size = screen.frame.size
+                let title = "\(screen.localizedName) (\(Int(size.width)) × \(Int(size.height)))"
+                let item = NSMenuItem(title: title, action: #selector(captureScreenItem(_:)), keyEquivalent: "")
+                item.target = self
+                item.representedObject = screen
+                menu.addItem(item)
+            }
+        } else if menu == windowsSubmenu {
+            let windows = WindowLister.onScreenWindows(excludingPID: ProcessInfo.processInfo.processIdentifier)
+            if windows.isEmpty {
+                menu.addItem(NSMenuItem(title: "No capturable windows", action: nil, keyEquivalent: ""))
+            }
+            for window in windows {
+                let item = NSMenuItem(title: String(window.menuTitle.prefix(60)),
+                                      action: #selector(captureWindowItem(_:)), keyEquivalent: "")
+                item.target = self
+                item.representedObject = window
+                menu.addItem(item)
+            }
+        }
     }
 }

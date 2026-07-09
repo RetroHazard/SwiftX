@@ -61,7 +61,19 @@ public enum ScreenCapture {
             .filter { $0.owningApplication?.processID == pid && $0.isOnScreen && $0.windowLayer == 0 }
             .max { $0.frame.area < $1.frame.area }
         guard let window else { throw ScreenCaptureError.noWindow }
+        return try await captureImage(of: window)
+    }
 
+    /// Captures a specific window picked from the window list.
+    public static func captureWindow(windowID: CGWindowID) async throws -> CGImage {
+        let content = try await shareableContent()
+        guard let window = content.windows.first(where: { $0.windowID == windowID }) else {
+            throw ScreenCaptureError.noWindow
+        }
+        return try await captureImage(of: window)
+    }
+
+    private static func captureImage(of window: SCWindow) async throws -> CGImage {
         // window.frame is in CG global points (top-left origin)
         let scale = NSScreen.screens
             .first { ScreenCoordinates.cgFromCocoa($0.frame).intersects(window.frame) }?
