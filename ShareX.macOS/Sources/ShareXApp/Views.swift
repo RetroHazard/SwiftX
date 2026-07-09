@@ -284,7 +284,7 @@ struct SettingsView: View {
         uploadersBinding((\UploadersConfig.amazonS3).appending(path: keyPath))
     }
 
-    private func uploadersBinding(_ keyPath: WritableKeyPath<UploadersConfig, String>) -> Binding<String> {
+    private func uploadersBinding<T>(_ keyPath: WritableKeyPath<UploadersConfig, T>) -> Binding<T> {
         Binding(
             get: { UploadersConfig.load()[keyPath: keyPath] },
             set: { value in
@@ -441,7 +441,11 @@ struct SettingsView: View {
             Picker("Destination", selection: destinationBinding()) {
                 Text("Custom uploader").tag("CustomImageUploader")
                 Text("Amazon S3").tag("AmazonS3")
+                ForEach(SimpleHostDestination.allCases, id: \.rawValue) { destination in
+                    Text(destination.displayName).tag(destination.rawValue)
+                }
             }
+            simpleHostFields
 
             if task.imageDestination == "CustomImageUploader" {
                 let uploaders = CustomUploaderStore.list()
@@ -480,6 +484,37 @@ struct SettingsView: View {
                     Text(service.displayName).tag(service.rawValue)
                 }
             }
+        }
+    }
+
+    /// Credential fields for the selected simple file host; keyless hosts need none.
+    @ViewBuilder
+    private var simpleHostFields: some View {
+        switch SimpleHostDestination(rawValue: task.imageDestination) {
+        case .pomf:
+            TextField("Pomf upload URL (https://yourhost/upload.php)", text: uploadersBinding(\.pomf.uploadURL))
+            TextField("Pomf result URL (prepended to relative file names)", text: uploadersBinding(\.pomf.resultURL))
+        case .vgyme:
+            SecureField("vgy.me user key (optional, links uploads to your account)", text: uploadersBinding(\.vgymeUserKey))
+        case .sul:
+            SecureField("s-ul API key", text: uploadersBinding(\.sulAPIKey))
+        case .lobfile:
+            SecureField("LobFile API key", text: uploadersBinding(\.lithiio.userAPIKey))
+        case .puush:
+            SecureField("Puush API key (puush.me → Account → Settings)", text: uploadersBinding(\.puushAPIKey))
+        case .chevereto:
+            TextField("Chevereto upload URL (https://yoursite/api/1/upload)", text: uploadersBinding(\.chevereto.uploadURL))
+            SecureField("Chevereto API key", text: uploadersBinding(\.chevereto.apiKey))
+            Toggle("Use direct image URL", isOn: uploadersBinding(\.cheveretoDirectURL))
+        case .streamable:
+            TextField("Streamable email", text: uploadersBinding(\.streamableUsername))
+            SecureField("Streamable password", text: uploadersBinding(\.streamablePassword))
+        case .uguu:
+            Text("No configuration needed — files are temporary (up to 48 hours).")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        default:
+            EmptyView()
         }
     }
 

@@ -53,10 +53,14 @@ enum UploadCoordinator {
                     result = try await CustomUploaderService.upload(file: file, with: item)
                     hostName = item.displayName
                 default:
-                    await MainActor.run {
-                        Notifier.notify(title: "Upload", body: "Destination \"\(settings.imageDestination)\" is not implemented yet.")
+                    guard let destination = SimpleHostDestination(rawValue: settings.imageDestination) else {
+                        await MainActor.run {
+                            Notifier.notify(title: "Upload", body: "Destination \"\(settings.imageDestination)\" is not implemented yet.")
+                        }
+                        return
                     }
-                    return
+                    result = try await SimpleHostUploader.upload(file: file, destination: destination, config: config)
+                    hostName = destination.displayName
                 }
                 if let filePath {
                     await MainActor.run {
