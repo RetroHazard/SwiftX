@@ -387,7 +387,7 @@ struct SettingsView: View {
                 case .actions: ActionsSettingsView()
                 case .destinations: destinationsPane
                 case .customUploader: CustomUploaderEditorView()
-                case .hotkeys: hotkeysPane
+                case .hotkeys: HotkeysSettingsView()
                 }
             }
             .formStyle(.grouped)
@@ -633,21 +633,6 @@ struct SettingsView: View {
             SecureField("ZWS token (optional)", text: uploadersBinding(\.zeroWidthShortenerToken))
         default:
             EmptyView()
-        }
-    }
-
-    @ViewBuilder
-    private var hotkeysPane: some View {
-        Section("Hotkeys") {
-            ForEach(HotkeySettings.load().hotkeys, id: \.taskType) { hotkey in
-                LabeledContent(hotkey.taskType) {
-                    Text(hotkey.combo?.displayString ?? "—")
-                        .font(.body.monospaced())
-                }
-            }
-            Text("Edit \(HotkeySettings.fileURL.path) and relaunch to change. Recorder UI is planned.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
         }
     }
 

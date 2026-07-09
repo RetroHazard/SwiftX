@@ -69,16 +69,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             ]
             try? settings.save()
         }
-        for config in settings.hotkeys {
-            guard let combo = config.combo, let type = config.type, type != .none else { continue }
-            let registered = HotkeyCenter.shared.register(combo, alwaysEnabled: type == .disableHotkeys) {
-                HotkeyDispatcher.execute(type)
-            }
-            if !registered {
-                NSLog("Could not register hotkey %@ for %@ (conflict or unknown key)",
-                      combo.displayString, config.taskType)
-            }
-        }
+        HotkeyRegistrar.applyAll()
     }
 
     private func buildMenu() -> NSMenu {
