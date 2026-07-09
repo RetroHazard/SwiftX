@@ -17,10 +17,13 @@ public enum AnnotationTool: String, CaseIterable, Identifiable {
     case arrow
     case freehand
     case text
+    case speechBalloon
     case step
     case blur
     case pixelate
     case highlight
+    /// Crops the base image - a mode like select, never stored as a shape.
+    case crop
 
     public var id: String { rawValue }
 
@@ -33,10 +36,12 @@ public enum AnnotationTool: String, CaseIterable, Identifiable {
         case .arrow: return "arrow.up.right"
         case .freehand: return "scribble"
         case .text: return "textformat"
+        case .speechBalloon: return "bubble.left"
         case .step: return "1.circle"
         case .blur: return "drop"
         case .pixelate: return "squareshape.split.3x3"
         case .highlight: return "highlighter"
+        case .crop: return "crop"
         }
     }
 
@@ -49,10 +54,12 @@ public enum AnnotationTool: String, CaseIterable, Identifiable {
         case .arrow: return "Arrow"
         case .freehand: return "Freehand"
         case .text: return "Text"
+        case .speechBalloon: return "Speech balloon"
         case .step: return "Step number"
         case .blur: return "Blur"
         case .pixelate: return "Pixelate"
         case .highlight: return "Highlight"
+        case .crop: return "Crop"
         }
     }
 

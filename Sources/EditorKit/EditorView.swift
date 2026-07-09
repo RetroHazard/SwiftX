@@ -12,6 +12,8 @@ final class EditorState: ObservableObject {
     @Published var lineWidth: CGFloat = 3
     @Published var canUndo = false
     @Published var canRedo = false
+    /// Updated when crop shrinks the canvas; nil until the canvas exists.
+    @Published var canvasSize: NSSize?
     weak var canvas: EditorCanvasView?
 }
 
@@ -76,7 +78,8 @@ public struct EditorView: View {
 
             ScrollView([.horizontal, .vertical]) {
                 CanvasRepresentable(image: image, state: state)
-                    .frame(width: canvasPointSize.width, height: canvasPointSize.height)
+                    .frame(width: (state.canvasSize ?? canvasPointSize).width,
+                           height: (state.canvasSize ?? canvasPointSize).height)
             }
 
             Divider()
@@ -107,6 +110,9 @@ private struct CanvasRepresentable: NSViewRepresentable {
             guard let state, let canvas else { return }
             state.canUndo = canvas.canUndo
             state.canRedo = canvas.canRedo
+        }
+        canvas.onCanvasSizeChanged = { [weak state] size in
+            state?.canvasSize = size
         }
         state.canvas = canvas
         return canvas
