@@ -5,7 +5,7 @@
 // Port of ShareXSyntaxParser + ShareXCustomUploaderSyntaxParser:
 // {function:param1|param2} with backslash escaping and full nesting.
 // Interactive functions (select shows a dialog on Windows) degrade gracefully;
-// legacy pre-12.x $var$ syntax is not supported (PARITY.md).
+// legacy $var$ syntax is migrated at load time (CustomUploaderItem), as in C#.
 
 import Foundation
 
@@ -138,8 +138,12 @@ public final class CustomUploaderSyntaxParser {
                 : (try requireResponse(name).text, parameters[0])
             return JSONPath.query(jsonText: input, path: path) ?? ""
         case "xml":
-            // XPath over XML responses - rare in modern .sxcu files
-            throw SyntaxError.unsupportedFunction("xml")
+            // {xml:xpath} over the response, or {xml:input|xpath}
+            try requireParameters(name, parameters, minimum: 1)
+            let (input, xpath) = parameters.count > 1
+                ? (parameters[0], parameters[1])
+                : (try requireResponse(name).text, parameters[0])
+            return XMLPath.query(xmlText: input, xpath: xpath) ?? ""
         case "regex":
             try requireParameters(name, parameters, minimum: 1)
             return try regex(parameters)
@@ -204,6 +208,19 @@ public final class CustomUploaderSyntaxParser {
 
     static func urlEncoded(_ string: String) -> String {
         string.addingPercentEncoding(withAllowedCharacters: .alphanumerics.union(CharacterSet(charactersIn: "-._~"))) ?? string
+    }
+}
+
+/// XPath over an XML document; C# uses XPathNavigator.SelectSingleNode,
+/// XMLDocument.nodes(forXPath:) is the same engine class on macOS.
+enum XMLPath {
+    static func query(xmlText: String, xpath: String) -> String? {
+        guard !xmlText.isEmpty, !xpath.isEmpty,
+              let document = try? XMLDocument(xmlString: xmlText),
+              let node = (try? document.nodes(forXPath: xpath))?.first else {
+            return nil
+        }
+        return node.stringValue
     }
 }
 
