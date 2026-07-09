@@ -34,6 +34,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         Notifier.setup()
         RecordingCoordinator.shared.onStateChange = { [weak self] in self?.updateRecordingUI() }
 
+        // debug: upload a file through the full pipeline, then report what the
+        // after-upload tasks left on the pasteboard
+        if let flagIndex = CommandLine.arguments.firstIndex(of: "--upload-test"),
+           CommandLine.arguments.indices.contains(flagIndex + 1) {
+            let path = CommandLine.arguments[flagIndex + 1]
+            UploadCoordinator.uploadFile(at: URL(fileURLWithPath: path))
+            DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+                NSLog("upload-test pasteboard: %@", NSPasteboard.general.string(forType: .string) ?? "<empty>")
+            }
+        }
+
         if CommandLine.arguments.contains("--notify-test") {
             UNUserNotificationCenter.current().getNotificationSettings { settings in
                 NSLog("Notification settings: authorizationStatus=%ld alertSetting=%ld",
