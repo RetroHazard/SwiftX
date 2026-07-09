@@ -55,6 +55,8 @@ public struct ApplicationConfig: SettingsFile {
     public var saveImageSubFolderPattern = "%y-%mo"
     /// C# TaskViewMode enum name: "ListView" or "ThumbnailView".
     public var taskViewMode = "ListView"
+    /// One automatic retry after a failed upload (C# ApplicationSettings key).
+    public var retryUpload = true
 
     public var screenshotsFolder: URL {
         if useCustomScreenshotsPath, !customScreenshotsPath.isEmpty {
@@ -70,6 +72,7 @@ public struct ApplicationConfig: SettingsFile {
         case customScreenshotsPath = "CustomScreenshotsPath"
         case saveImageSubFolderPattern = "SaveImageSubFolderPattern"
         case taskViewMode = "TaskViewMode"
+        case retryUpload = "RetryUpload"
     }
 
     public init(from decoder: Decoder) throws {
@@ -78,6 +81,7 @@ public struct ApplicationConfig: SettingsFile {
         customScreenshotsPath = try c.decodeIfPresent(String.self, forKey: .customScreenshotsPath) ?? ""
         saveImageSubFolderPattern = try c.decodeIfPresent(String.self, forKey: .saveImageSubFolderPattern) ?? "%y-%mo"
         taskViewMode = try c.decodeIfPresent(String.self, forKey: .taskViewMode) ?? "ListView"
+        retryUpload = try c.decodeIfPresent(Bool.self, forKey: .retryUpload) ?? true
     }
 }
 
