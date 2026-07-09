@@ -204,6 +204,17 @@ public struct UploadersConfig: SettingsFile {
     public var zeroWidthShortenerURL = ""
     public var zeroWidthShortenerToken = ""
 
+    // Simple file hosts. Key names match the C# UploadersConfig.
+    public var pomf = PomfUploaderSettings()
+    public var vgymeUserKey = ""
+    public var sulAPIKey = ""
+    public var lithiio = LithiioSettings()
+    public var puushAPIKey = ""
+    public var chevereto = CheveretoSettings()
+    public var cheveretoDirectURL = true
+    public var streamableUsername = ""
+    public var streamablePassword = ""
+
     public init() {}
 
     enum CodingKeys: String, CodingKey {
@@ -222,6 +233,15 @@ public struct UploadersConfig: SettingsFile {
         case kutt = "KuttSettings"
         case zeroWidthShortenerURL = "ZeroWidthShortenerURL"
         case zeroWidthShortenerToken = "ZeroWidthShortenerToken"
+        case pomf = "PomfUploader"
+        case vgymeUserKey = "VgymeUserKey"
+        case sulAPIKey = "SulAPIKey"
+        case lithiio = "LithiioSettings"
+        case puushAPIKey = "PuushAPIKey"
+        case chevereto = "CheveretoUploader"
+        case cheveretoDirectURL = "CheveretoDirectURL"
+        case streamableUsername = "StreamableUsername"
+        case streamablePassword = "StreamablePassword"
     }
 
     public init(from decoder: Decoder) throws {
@@ -241,6 +261,70 @@ public struct UploadersConfig: SettingsFile {
         kutt = try c.decodeIfPresent(KuttSettings.self, forKey: .kutt) ?? KuttSettings()
         zeroWidthShortenerURL = try c.decodeIfPresent(String.self, forKey: .zeroWidthShortenerURL) ?? ""
         zeroWidthShortenerToken = try c.decodeIfPresent(String.self, forKey: .zeroWidthShortenerToken) ?? ""
+        pomf = try c.decodeIfPresent(PomfUploaderSettings.self, forKey: .pomf) ?? PomfUploaderSettings()
+        vgymeUserKey = try c.decodeIfPresent(String.self, forKey: .vgymeUserKey) ?? ""
+        sulAPIKey = try c.decodeIfPresent(String.self, forKey: .sulAPIKey) ?? ""
+        lithiio = try c.decodeIfPresent(LithiioSettings.self, forKey: .lithiio) ?? LithiioSettings()
+        puushAPIKey = try c.decodeIfPresent(String.self, forKey: .puushAPIKey) ?? ""
+        chevereto = try c.decodeIfPresent(CheveretoSettings.self, forKey: .chevereto) ?? CheveretoSettings()
+        cheveretoDirectURL = try c.decodeIfPresent(Bool.self, forKey: .cheveretoDirectURL) ?? true
+        streamableUsername = try c.decodeIfPresent(String.self, forKey: .streamableUsername) ?? ""
+        streamablePassword = try c.decodeIfPresent(String.self, forKey: .streamablePassword) ?? ""
+    }
+}
+
+/// Field names match the C# PomfUploader JSON shape.
+public struct PomfUploaderSettings: Codable, Equatable {
+    public var uploadURL = ""
+    /// Prepended when the API returns a relative file name.
+    public var resultURL = ""
+
+    public init() {}
+
+    enum CodingKeys: String, CodingKey {
+        case uploadURL = "UploadURL"
+        case resultURL = "ResultURL"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        uploadURL = try c.decodeIfPresent(String.self, forKey: .uploadURL) ?? ""
+        resultURL = try c.decodeIfPresent(String.self, forKey: .resultURL) ?? ""
+    }
+}
+
+/// Field names match the C# LobFileSettings JSON shape (LithiioSettings key).
+public struct LithiioSettings: Codable, Equatable {
+    public var userAPIKey = ""
+
+    public init() {}
+
+    enum CodingKeys: String, CodingKey {
+        case userAPIKey = "UserAPIKey"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        userAPIKey = try c.decodeIfPresent(String.self, forKey: .userAPIKey) ?? ""
+    }
+}
+
+/// Field names match the C# CheveretoUploader JSON shape.
+public struct CheveretoSettings: Codable, Equatable {
+    public var uploadURL = ""
+    public var apiKey = ""
+
+    public init() {}
+
+    enum CodingKeys: String, CodingKey {
+        case uploadURL = "UploadURL"
+        case apiKey = "APIKey"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        uploadURL = try c.decodeIfPresent(String.self, forKey: .uploadURL) ?? ""
+        apiKey = try c.decodeIfPresent(String.self, forKey: .apiKey) ?? ""
     }
 }
 

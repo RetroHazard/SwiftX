@@ -114,7 +114,9 @@ Statuses: **Ported** · **Partial** (works, known gaps) · **Planned** (phase no
 
 | Feature | Status |
 |---|---|
-| Box, Backblaze B2, Azure, GCS, YouTube, Streamable, Nextcloud/ownCloud, Seafile, MediaFire, Puush, Pushbullet, transfer.sh, Pomf, Plik, s-ul, Uguu, Lambda, LobFile, vgy.me, Chevereto, ImageShack, Flickr, Photobucket, remaining text hosts | Planned (9) |
+| Uguu, Pomf clones (configurable URL), vgy.me, s-ul, LobFile, Puush, Chevereto, Streamable | Ported — shared multipart engine; Streamable returns the page URL without transcode polling |
+| Box, Backblaze B2, Azure, GCS, YouTube, Nextcloud/ownCloud, Seafile, MediaFire, Pushbullet, Plik, Lambda, ImageShack, Flickr, Photobucket, remaining text hosts | Planned (9) |
+| transfer.sh | Dead — public instance offline, verified 2026-07 |
 | Shorteners: bit.ly (personal access token), Polr, Kutt, YOURLS, Zero Width, vurl.com | Ported — settings UI per service; bit.ly uses a user token instead of C#'s app-key OAuth flow |
 | URL sharing services (Email/mailto, Facebook, Reddit, Pinterest, Tumblr, LinkedIn, VK, Google Lens, Bing VS) | Ported — ShareURL flag opens the share page in the browser; Pushbullet + custom sharing land with their destinations |
 | Firebase Dynamic Links (Google shutdown 2025), qr.net, 2.gp, turl.ca, nl.cm | Dead — API endpoints verified gone 2026-07 |
