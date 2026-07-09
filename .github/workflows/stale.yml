@@ -10,6 +10,7 @@ permissions:
 
 jobs:
   stale:
+    if: github.repository == 'getsharex/ShareX'
     runs-on: ubuntu-latest
 
     steps:
