@@ -97,6 +97,31 @@ struct FFmpegArgumentTests {
         #expect(!args.contains("-row-mt")) // preset gone
     }
 
+    @Test func converterPresetsBuildValidArgumentLists() {
+        let args = FFmpeg.convertArguments(input: "in.mov", output: "out.mp4",
+                                           codec: .x264, crf: 20, bitrateKbps: 3000)
+        #expect(args == ["-y", "-i", "in.mov", "-c:v", "libx264", "-preset", "medium",
+                         "-crf", "20", "-c:a", "aac", "out.mp4"])
+
+        let hardware = FFmpeg.convertArguments(input: "in.mov", output: "out.mp4",
+                                               codec: .hevcVideoToolbox, crf: 0, bitrateKbps: 4500)
+        #expect(hardware.contains("hevc_videotoolbox"))
+        #expect(hardware.contains("4500k"))
+
+        let custom = FFmpeg.convertArguments(input: "a", output: "b", codec: .x264,
+                                             crf: 23, bitrateKbps: 0, customArgs: "-c:v libaom-av1")
+        #expect(custom == ["-y", "-i", "a", "-c:v", "libaom-av1", "b"])
+    }
+
+    @Test func converterCodecsKnowTheirContainersAndQualityMode() {
+        #expect(FFmpeg.ConvertCodec.x265.fileExtension == "mp4")
+        #expect(FFmpeg.ConvertCodec.vp9.fileExtension == "webm")
+        #expect(FFmpeg.ConvertCodec.gif.fileExtension == "gif")
+        #expect(FFmpeg.ConvertCodec.x264.usesCRF && !FFmpeg.ConvertCodec.x264.usesBitrate)
+        #expect(FFmpeg.ConvertCodec.h264VideoToolbox.usesBitrate && !FFmpeg.ConvertCodec.h264VideoToolbox.usesCRF)
+        #expect(!FFmpeg.ConvertCodec.gif.usesCRF && !FFmpeg.ConvertCodec.gif.usesBitrate)
+    }
+
     @Test func formatExtensionsMatchTheirContainers() {
         #expect(FFmpeg.TranscodeFormat.vp9.fileExtension == "webm")
         #expect(FFmpeg.TranscodeFormat.vp8.fileExtension == "webm")

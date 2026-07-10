@@ -88,14 +88,115 @@ public enum FFmpeg {
     public static func transcode(
         input: URL, output: URL, format: TranscodeFormat, customArgs: String = ""
     ) async throws {
+        try await run(arguments: transcodeArguments(
+            input: input.path, output: output.path, format: format, customArgs: customArgs
+        ))
+    }
+
+    /// Codecs the Video Converter tool offers. Mirrors C# ConverterVideoCodecs,
+    /// with VideoToolbox standing in for the nvenc/amf/qsv hardware encoders.
+    public enum ConvertCodec: String, CaseIterable, Sendable {
+        case x264 = "H.264 (x264)"
+        case x265 = "H.265 / HEVC (x265)"
+        case h264VideoToolbox = "H.264 (VideoToolbox hardware)"
+        case hevcVideoToolbox = "HEVC (VideoToolbox hardware)"
+        case vp9 = "WebM (VP9)"
+        case vp8 = "WebM (VP8)"
+        case gif = "GIF"
+        case webp = "WebP animation"
+        case apng = "APNG"
+
+        public var fileExtension: String {
+            switch self {
+            case .x264, .x265, .h264VideoToolbox, .hevcVideoToolbox: return "mp4"
+            case .vp9, .vp8: return "webm"
+            case .gif: return "gif"
+            case .webp: return "webp"
+            case .apng: return "apng"
+            }
+        }
+
+        /// CRF-style quality codecs show a quality slider; VideoToolbox is
+        /// bitrate-driven; the animation formats have fixed presets.
+        public var usesCRF: Bool {
+            switch self {
+            case .x264, .x265, .vp9, .vp8: return true
+            default: return false
+            }
+        }
+
+        public var usesBitrate: Bool {
+            self == .h264VideoToolbox || self == .hevcVideoToolbox
+        }
+
+        public var defaultCRF: Int {
+            switch self {
+            case .x264: return 23
+            case .x265: return 28
+            case .vp9: return 32
+            case .vp8: return 12
+            default: return 0
+            }
+        }
+
+        func arguments(crf: Int, bitrateKbps: Int) -> [String] {
+            switch self {
+            case .x264:
+                return ["-c:v", "libx264", "-preset", "medium", "-crf", "\(crf)", "-c:a", "aac"]
+            case .x265:
+                // hvc1 tag so QuickTime/Photos accept the file
+                return ["-c:v", "libx265", "-preset", "medium", "-crf", "\(crf)",
+                        "-tag:v", "hvc1", "-c:a", "aac"]
+            case .h264VideoToolbox:
+                return ["-c:v", "h264_videotoolbox", "-b:v", "\(bitrateKbps)k", "-c:a", "aac"]
+            case .hevcVideoToolbox:
+                return ["-c:v", "hevc_videotoolbox", "-b:v", "\(bitrateKbps)k",
+                        "-tag:v", "hvc1", "-c:a", "aac"]
+            case .vp9:
+                return ["-c:v", "libvpx-vp9", "-b:v", "0", "-crf", "\(crf)", "-row-mt", "1", "-c:a", "libopus"]
+            case .vp8:
+                return ["-c:v", "libvpx", "-b:v", "0", "-crf", "\(crf)", "-c:a", "libopus"]
+            case .gif:
+                // palettegen/paletteuse in one pass: proper 256-color palette
+                return ["-vf", "fps=15,scale=iw:ih:flags=lanczos,split[a][b];[a]palettegen[p];[b][p]paletteuse",
+                        "-loop", "0"]
+            case .webp:
+                return ["-c:v", "libwebp", "-loop", "0", "-q:v", "75", "-an"]
+            case .apng:
+                return ["-f", "apng", "-plays", "0", "-an"]
+            }
+        }
+    }
+
+    /// Non-empty custom args replace the codec preset, like the recorder.
+    static func convertArguments(
+        input: String, output: String, codec: ConvertCodec,
+        crf: Int, bitrateKbps: Int, customArgs: String = ""
+    ) -> [String] {
+        var arguments = ["-y", "-i", input]
+        let custom = customArgs.split(separator: " ").map(String.init)
+        arguments += custom.isEmpty ? codec.arguments(crf: crf, bitrateKbps: bitrateKbps) : custom
+        arguments.append(output)
+        return arguments
+    }
+
+    public static func convert(
+        input: URL, output: URL, codec: ConvertCodec,
+        crf: Int, bitrateKbps: Int, customArgs: String = ""
+    ) async throws {
+        try await run(arguments: convertArguments(
+            input: input.path, output: output.path, codec: codec,
+            crf: crf, bitrateKbps: bitrateKbps, customArgs: customArgs
+        ))
+    }
+
+    private static func run(arguments: [String]) async throws {
         guard let path = installedPath else {
             throw RecordingError.writerFailed("ffmpeg is not installed")
         }
         let process = Process()
         process.executableURL = URL(fileURLWithPath: path)
-        process.arguments = transcodeArguments(
-            input: input.path, output: output.path, format: format, customArgs: customArgs
-        )
+        process.arguments = arguments
         process.standardOutput = FileHandle.nullDevice
         process.standardError = FileHandle.nullDevice
         try process.run()
