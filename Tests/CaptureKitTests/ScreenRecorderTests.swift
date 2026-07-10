@@ -101,6 +101,23 @@ struct MovieWriterTests {
     }
 }
 
+struct PauseRetimingTests {
+    @Test func retimedShiftsPresentationTimestampBack() throws {
+        let buffer = try makeSampleBuffer(width: 8, height: 8,
+                                          pts: CMTime(seconds: 10, preferredTimescale: 600))
+        let offset = CMTime(seconds: 4, preferredTimescale: 600)
+        let shifted = ScreenRecorder.retimed(buffer, by: offset)
+        let pts = CMSampleBufferGetPresentationTimeStamp(shifted)
+        #expect(abs(pts.seconds - 6) < 0.001)
+    }
+
+    @Test func zeroOffsetReturnsOriginalBuffer() throws {
+        let buffer = try makeSampleBuffer(width: 8, height: 8,
+                                          pts: CMTime(seconds: 3, preferredTimescale: 600))
+        #expect(ScreenRecorder.retimed(buffer, by: .zero) === buffer)
+    }
+}
+
 struct GIFEncoderTests {
     @Test func writesAnimatedGIFWithRealFrameDelays() throws {
         let url = tempURL("gif")

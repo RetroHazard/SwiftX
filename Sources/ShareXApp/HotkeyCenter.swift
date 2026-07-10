@@ -122,6 +122,8 @@ enum HotkeyDispatcher {
             RecordingCoordinator.shared.toggleActiveWindow(gif: true)
         case .stopScreenRecording:
             RecordingCoordinator.shared.stop()
+        case .pauseScreenRecording:
+            RecordingCoordinator.shared.togglePause()
         case .abortScreenRecording:
             RecordingCoordinator.shared.abort()
         case .openMainWindow, .openHistory, .openImageHistory:

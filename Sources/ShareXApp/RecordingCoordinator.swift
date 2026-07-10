@@ -19,8 +19,15 @@ final class RecordingCoordinator {
     /// VP9/WebM records H.264 first, then transcodes via ffmpeg on stop.
     private var transcodeToWebM = false
     var isRecording: Bool { activeRecorder != nil }
+    var isPaused: Bool { activeRecorder?.isPaused ?? false }
     /// AppDelegate hook: refresh menu titles and the status item icon.
     var onStateChange: (() -> Void)?
+
+    func togglePause() {
+        guard let recorder = activeRecorder else { return }
+        recorder.isPaused ? recorder.resume() : recorder.pause()
+        onStateChange?()
+    }
 
     func toggleRegion(gif: Bool) {
         if isRecording { stop(); return }
