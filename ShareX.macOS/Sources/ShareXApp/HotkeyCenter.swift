@@ -142,6 +142,10 @@ enum HotkeyDispatcher {
             ToolWindows.scanQRFromRegion()
         case .hashCheck:
             ToolWindows.showHashChecker()
+        case .metadata:
+            ToolWindows.showMetadataViewer()
+        case .stripMetadata:
+            ToolWindows.stripMetadataFromFile()
         case .screenColorPicker:
             ToolWindows.pickScreenColor()
         case .pinToScreenFromClipboard:
