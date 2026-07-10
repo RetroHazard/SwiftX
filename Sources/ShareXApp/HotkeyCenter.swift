@@ -142,6 +142,10 @@ enum HotkeyDispatcher {
             ToolWindows.scanQRFromRegion()
         case .hashCheck:
             ToolWindows.showHashChecker()
+        case .videoConverter:
+            ToolWindows.showVideoConverter()
+        case .videoThumbnailer:
+            ToolWindows.showVideoThumbnailer()
         case .imageViewer:
             ToolWindows.showImageViewer()
         case .imageCombiner:

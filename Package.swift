@@ -60,7 +60,7 @@ let package = Package(
         ),
         .testTarget(
             name: "ToolsKitTests",
-            dependencies: ["ToolsKit"]
+            dependencies: ["ToolsKit", "CaptureKit"]
         )
     ]
 )
