@@ -23,7 +23,7 @@ Statuses: **Ported** · **Partial** (works, known gaps) · **Planned** (phase no
 | Monitor picker / window picker capture | Ported — status-menu submenus populate on open |
 | Region select overlay — rectangle, dimming, crosshair, size label, multi-display, Esc cancel | Ported |
 | Region overlay — window snapping (hover highlight, click captures), last region (menu + hotkey) | Ported |
-| Region overlay extras — ellipse/freehand, magnifier, fixed size, snap sizes, ruler, color picker modes | Planned (1 follow-up / 8 for ruler & color picker) |
+| Region overlay extras — ellipse/freehand, magnifier, fixed size, snap sizes | Planned (1 follow-up) — ruler and screen color picker shipped as standalone tools (Phase 8) |
 | Save to file + subfolder patterns (name parser), clipboard copy | Ported |
 | JPEG/GIF/BMP/TIFF encoders + quality, auto-JPEG for large captures | Ported — C# EImageFormat set; WebP is not a C# image format either |
 | Cross-display region selection (stitching) | Planned — clamps to dominant display for now |
@@ -33,8 +33,8 @@ Statuses: **Ported** · **Partial** (works, known gaps) · **Planned** (phase no
 
 | Feature | Status |
 |---|---|
-| After-capture pipeline (C#-compatible flag serialization) | Ported — 14 of 22 flags: annotate, image/file/paths to clipboard, pin, print, save, save-dialog, thumbnail, actions, show in Finder, upload, delete (Trash); remaining 8 wait on their phases (quick task menu, after-capture/before-upload windows, beautify, effects, analyze, QR, OCR) |
-| Pin to screen (from capture, from clipboard, close all) | Partial — drag to move, double-click to close; resize/opacity options planned (8) |
+| After-capture pipeline (C#-compatible flag serialization) | Ported — 17 of 22 flags: annotate, image/file/paths to clipboard, pin, print, save, save-dialog, thumbnail, actions, show in Finder, analyze (AI), scan QR, OCR, upload, delete (Trash); remaining 5 wait on their phases (quick task menu, after-capture/before-upload windows, beautify, effects) |
+| Pin to screen (from capture, clipboard, file, screen region, close all) | Ported — drag to move, double-click to close, scroll/± to scale, ⌘-scroll/⌘± for opacity (C# 10% steps), right-click menu (copy, save, close all) |
 | After-upload tasks (6) | Planned (3) — flags model ready |
 | Global hotkey engine (Carbon), defaults ⌃⇧3/4/5, DisableHotkeys toggle | Ported — recorder UI in Settings, live re-registration |
 | HotkeyType vocabulary (C#-compatible raw values) | Ported — capture/record/pin/window actions implemented, rest dispatch as stubs |
@@ -106,12 +106,12 @@ Statuses: **Ported** · **Partial** (works, known gaps) · **Planned** (phase no
 
 | Feature | Status |
 |---|---|
-| Color picker, screen color picker, ruler, pin to screen | Planned (8) |
-| OCR (Vision), QR generate/decode/scan | Planned (8) |
-| Hash checker, metadata viewer/stripper | Planned (8) |
-| Image viewer/combiner/splitter/thumbnailer, video converter/thumbnailer | Planned (8) |
-| Folder indexer, clipboard viewer, monitor test, window inspector | Planned (8) |
-| AI integration (OpenRouter) | Planned (8) |
+| Color picker, screen color picker, ruler, pin to screen | Ported — hex/RGB/HSB/CMYK/decimal copy formats; screen picker uses the native loupe (NSColorSampler); ruler reuses the region overlay and reports W×H/diagonal/angle; pin gained scale/opacity/menu (see Phase 2) |
+| OCR (Vision), QR generate/decode/scan | Ported — Vision auto-detects language (no language picker needed); QR via Core Image + Vision; both also run as after-capture flags (DoOCR, ScanQRCode) |
+| Hash checker, metadata viewer/stripper | Ported — CRC-32/MD5/SHA-1/256/384/512 with compare field; metadata via Image I/O instead of exiftool (strip may recompress lossy formats) |
+| Image viewer/combiner/splitter/thumbnailer, video converter/thumbnailer | Ported — combiner has orientation/alignment/spacing/wrap; converter offers x264/x265/VideoToolbox/VP8/VP9/GIF/WebP/APNG via ffmpeg (VideoToolbox stands in for nvenc/amf/qsv); thumbnailer builds timestamped contact sheets |
+| Folder indexer, clipboard viewer, monitor test, window inspector | Ported — indexer emits text + HTML (C# also has XML/JSON); inspector is read-only (macOS can't set other apps' topmost/opacity) |
+| AI integration (OpenRouter) | Ported — one OpenAI-compatible client (base URL + key + model) covers OpenAI, OpenRouter and Gemini's compat endpoint; AnalyzeImage after-capture flag wired |
 | Borderless window, window top-most, DNS changer | N/A — Windows-only |
 
 ## Phase 9 — Destination long tail
