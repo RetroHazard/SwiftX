@@ -158,6 +158,14 @@ enum HotkeyDispatcher {
             ToolWindows.showMetadataViewer()
         case .stripMetadata:
             ToolWindows.stripMetadataFromFile()
+        case .indexFolder:
+            ToolWindows.showFolderIndexer()
+        case .clipboardViewer:
+            ToolWindows.showClipboardViewer()
+        case .inspectWindow:
+            ToolWindows.showWindowInspector()
+        case .monitorTest:
+            ToolWindows.showMonitorTest()
         case .screenColorPicker:
             ToolWindows.pickScreenColor()
         case .ruler:
