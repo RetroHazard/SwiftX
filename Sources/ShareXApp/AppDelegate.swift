@@ -108,6 +108,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(abort)
 
         menu.addItem(.separator())
+        let tools = NSMenuItem(title: "Tools", action: nil, keyEquivalent: "")
+        tools.submenu = buildToolsMenu()
+        menu.addItem(tools)
+
+        menu.addItem(.separator())
         menu.addItem(NSMenuItem(title: "Import Custom Uploader…", action: #selector(importCustomUploader), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Main Window…", action: #selector(showMainWindow), keyEquivalent: ""))
         let settings = NSMenuItem(title: "Settings…", action: #selector(showSettingsWindow), keyEquivalent: ",")
@@ -117,6 +122,51 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         menu.items.forEach { $0.target = $0.action != nil ? self : nil }
         return menu
+    }
+
+    /// Mirrors the C# Tools menu; every item routes through HotkeyDispatcher
+    /// so the menu and hotkeys always agree on behavior.
+    private func buildToolsMenu() -> NSMenu {
+        let entries: [(String, HotkeyType)?] = [
+            ("Color Picker…", .colorPicker),
+            ("Screen Color Picker", .screenColorPicker),
+            ("Ruler", .ruler),
+            ("Pin Image File to Screen…", .pinToScreenFromFile),
+            nil,
+            ("Image Viewer…", .imageViewer),
+            ("Image Combiner…", .imageCombiner),
+            ("Image Splitter…", .imageSplitter),
+            ("Image Thumbnailer…", .imageThumbnailer),
+            nil,
+            ("Video Converter…", .videoConverter),
+            ("Video Thumbnailer…", .videoThumbnailer),
+            nil,
+            ("AI Image Analysis…", .analyzeImage),
+            ("OCR…", .ocr),
+            ("QR Code…", .qrCode),
+            ("Hash Checker…", .hashCheck),
+            ("Image Metadata…", .metadata),
+            ("Index Folder…", .indexFolder),
+            nil,
+            ("Clipboard Viewer…", .clipboardViewer),
+            ("Inspect Window…", .inspectWindow),
+            ("Monitor Test", .monitorTest)
+        ]
+        let toolsMenu = NSMenu()
+        for entry in entries {
+            guard let (title, type) = entry else { toolsMenu.addItem(.separator()); continue }
+            let item = NSMenuItem(title: title, action: #selector(toolMenuAction(_:)), keyEquivalent: "")
+            item.representedObject = type.rawValue
+            item.target = self
+            toolsMenu.addItem(item)
+        }
+        return toolsMenu
+    }
+
+    @objc private func toolMenuAction(_ sender: NSMenuItem) {
+        guard let raw = sender.representedObject as? String,
+              let type = HotkeyType(rawValue: raw) else { return }
+        HotkeyDispatcher.execute(type)
     }
 
     @objc private func captureRegion() {
