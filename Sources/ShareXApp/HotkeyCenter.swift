@@ -132,6 +132,8 @@ enum HotkeyDispatcher {
             NSWorkspace.shared.open(ApplicationConfig.load().screenshotsFolder)
         case .colorPicker:
             ToolWindows.showColorPicker()
+        case .ocr:
+            ToolWindows.runOCRFromRegion()
         case .screenColorPicker:
             ToolWindows.pickScreenColor()
         case .pinToScreenFromClipboard:
