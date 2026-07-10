@@ -13,7 +13,7 @@ Statuses: **Ported** · **Partial** (works, known gaps) · **Planned** (phase no
 | Single instance enforcement | Ported | flock-based; arg forwarding lands with CLI (Phase 10) |
 | `sharex://` URL scheme | Partial | Registered + received; dispatch lands in Phase 2 |
 | CI (build + test) | Ported | GitHub Actions, macOS runner |
-| Main window | Planned (4) | Shell only |
+| Main window | Ported | Landed in Phase 4 — searchable history, grid view, live upload rows |
 
 ## Phase 1 — Screen capture
 
