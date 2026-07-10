@@ -170,8 +170,12 @@ enum HotkeyDispatcher {
             ToolWindows.pickScreenColor()
         case .ruler:
             ToolWindows.runRuler()
-        case .pinToScreenFromClipboard:
+        case .pinToScreen, .pinToScreenFromClipboard:
             PinnedWindows.pinFromClipboard()
+        case .pinToScreenFromScreen:
+            PinnedWindows.pinFromScreen()
+        case .pinToScreenFromFile:
+            PinnedWindows.pinFromFile()
         case .pinToScreenCloseAll:
             PinnedWindows.closeAll()
         case .disableHotkeys:
