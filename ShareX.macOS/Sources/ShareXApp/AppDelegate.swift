@@ -16,6 +16,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var settingsWindow: NSWindow?
     private var recordItem: NSMenuItem?
     private var recordGIFItem: NSMenuItem?
+    private var pauseRecordingItem: NSMenuItem?
     private var abortRecordingItem: NSMenuItem?
     private let screensSubmenu = NSMenu()
     private let windowsSubmenu = NSMenu()
@@ -93,13 +94,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(.separator())
         let record = NSMenuItem(title: "Record Screen (Region)…", action: #selector(toggleRecording), keyEquivalent: "")
         let recordGIF = NSMenuItem(title: "Record GIF (Region)…", action: #selector(toggleGIFRecording), keyEquivalent: "")
+        let pause = NSMenuItem(title: "Pause Recording", action: #selector(togglePauseRecording), keyEquivalent: "")
+        pause.isHidden = true
         let abort = NSMenuItem(title: "Abort Recording", action: #selector(abortRecording), keyEquivalent: "")
         abort.isHidden = true
         recordItem = record
         recordGIFItem = recordGIF
+        pauseRecordingItem = pause
         abortRecordingItem = abort
         menu.addItem(record)
         menu.addItem(recordGIF)
+        menu.addItem(pause)
         menu.addItem(abort)
 
         menu.addItem(.separator())
@@ -152,10 +157,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         RecordingCoordinator.shared.abort()
     }
 
+    @objc private func togglePauseRecording() {
+        RecordingCoordinator.shared.togglePause()
+    }
+
     private func updateRecordingUI() {
         let recording = RecordingCoordinator.shared.isRecording
         recordItem?.title = recording ? "Stop Recording" : "Record Screen (Region)…"
         recordGIFItem?.isHidden = recording
+        pauseRecordingItem?.isHidden = !recording
+        pauseRecordingItem?.title = RecordingCoordinator.shared.isPaused ? "Resume Recording" : "Pause Recording"
         abortRecordingItem?.isHidden = !recording
         statusItem?.button?.image = NSImage(
             systemSymbolName: recording ? "record.circle" : "camera.viewfinder",
