@@ -6,6 +6,7 @@
 // SwiftUI view hosted in a tracked NSWindow.
 
 import AppKit
+import CaptureKit
 import SwiftUI
 import ToolsKit
 
@@ -33,6 +34,32 @@ enum ToolWindows {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.setString(string, forType: .string)
+    }
+
+    /// Region select → screenshot, shared by OCR / QR scan / ruler flows.
+    static func captureRegionImage() async -> CGImage? {
+        guard let rect = await RegionSelectController().selectRegion() else { return nil }
+        // let the compositor remove the overlay before shooting
+        try? await Task.sleep(for: .milliseconds(80))
+        return try? await ScreenCapture.captureRegion(cocoaRect: rect)
+    }
+
+    // MARK: - OCR
+
+    static func runOCRFromRegion() {
+        Task {
+            guard let image = await captureRegionImage() else { return }
+            await showOCRResult(for: image)
+        }
+    }
+
+    static func showOCRResult(for image: CGImage) async {
+        do {
+            let text = try await OCRService.recognizeText(in: image)
+            present(title: "OCR", resizable: true, content: TextResultView(text: text))
+        } catch {
+            Notifier.notify(title: "OCR failed", body: error.localizedDescription)
+        }
     }
 
     // MARK: - Color picker
@@ -63,6 +90,26 @@ extension NSColor {
         return (Int((srgb.redComponent * 255).rounded()),
                 Int((srgb.greenComponent * 255).rounded()),
                 Int((srgb.blueComponent * 255).rounded()))
+    }
+}
+
+/// Selectable text + copy, used by OCR and QR decode results.
+struct TextResultView: View {
+    @State var text: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            TextEditor(text: $text)
+                .font(.body.monospaced())
+                .frame(minWidth: 420, minHeight: 220)
+            HStack {
+                Text("\(text.count) characters").foregroundStyle(.secondary).font(.caption)
+                Spacer()
+                Button("Copy All") { ToolWindows.copyToClipboard(text) }
+                    .keyboardShortcut("c", modifiers: [.command, .shift])
+            }
+        }
+        .padding()
     }
 }
 
