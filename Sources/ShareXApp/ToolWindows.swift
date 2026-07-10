@@ -62,6 +62,26 @@ enum ToolWindows {
         }
     }
 
+    // MARK: - Ruler
+
+    /// C# ruler mode: drag a region, read its measurements. The selection
+    /// overlay already shows live size; the summary lands in a notification
+    /// and the clipboard.
+    static func runRuler() {
+        Task {
+            guard let rect = await RegionSelectController().selectRegion() else { return }
+            let width = Int(rect.width), height = Int(rect.height)
+            let diagonal = (rect.width * rect.width + rect.height * rect.height).squareRoot()
+            let angle = atan2(rect.height, rect.width) * 180 / .pi
+            copyToClipboard("\(width) x \(height)")
+            Notifier.notify(
+                title: "Ruler — \(width) × \(height)",
+                body: String(format: "Diagonal %.1f px, angle %.1f° — size copied to clipboard",
+                             diagonal, angle)
+            )
+        }
+    }
+
     // MARK: - Image metadata
 
     static func showMetadataViewer() {
