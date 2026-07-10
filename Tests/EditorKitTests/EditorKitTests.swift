@@ -398,6 +398,44 @@ struct EditorKitTests {
         #expect(canvas.canvasSize == base)
     }
 
+    @Test func fillColorRendersInsideRectangle() {
+        let canvas = EditorCanvasView(image: makeImage()) // red base
+        var shape = AnnotationShape(tool: .rectangle)
+        let w = canvas.canvasSize.width, h = canvas.canvasSize.height
+        shape.rect = CGRect(x: w * 0.2, y: h * 0.2, width: w * 0.6, height: h * 0.6)
+        shape.color = .black
+        shape.fillColor = .systemBlue
+        canvas.addShape(shape)
+
+        let rendered = canvas.renderFinalImage()!
+        let center = pixel(rendered, x: 50, y: 50)
+        #expect(center.b > 150 && center.r < 150) // filled blue, not base red
+    }
+
+    @Test func fillAndShadowApplyToSelectionAndAreUndoable() {
+        let canvas = EditorCanvasView(image: makeImage())
+        var shape = AnnotationShape(tool: .ellipse)
+        shape.rect = CGRect(x: 10, y: 10, width: 30, height: 30)
+        canvas.addShape(shape) // auto-selected
+
+        canvas.setFillColor(.systemGreen)
+        canvas.setShadow(true)
+        #expect(canvas.shapes[0].fillColor == .systemGreen)
+        #expect(canvas.shapes[0].shadow)
+
+        canvas.undo() // shadow
+        #expect(!canvas.shapes[0].shadow)
+        canvas.undo() // fill
+        #expect(canvas.shapes[0].fillColor.alphaComponent == 0)
+
+        // with nothing selected only the tool defaults change
+        canvas.selectShape(id: nil)
+        canvas.setShadow(false)
+        canvas.setShadow(true)
+        #expect(!canvas.shapes[0].shadow)
+        #expect(canvas.currentShadow)
+    }
+
     @Test func stepNumbersRenderFilledCircle() {
         let canvas = EditorCanvasView(image: makeImage())
         var shape = AnnotationShape(tool: .step)

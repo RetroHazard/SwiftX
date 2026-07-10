@@ -84,6 +84,17 @@ public enum AnnotationTool: String, CaseIterable, Identifiable {
     public var isClickPlaced: Bool {
         self == .text || self == .step || self == .image
     }
+
+    /// Annotation shapes that honor the drop-shadow style. Effect regions,
+    /// modes and the balloon (which draws its own body) are excluded.
+    public var castsShadow: Bool {
+        switch self {
+        case .rectangle, .ellipse, .line, .arrow, .freehand, .text, .step, .image:
+            return true
+        default:
+            return false
+        }
+    }
 }
 
 public struct AnnotationShape: Identifiable {
@@ -96,6 +107,9 @@ public struct AnnotationShape: Identifiable {
     public var text: String = ""
     public var number: Int = 0
     public var color: NSColor = .systemRed
+    /// Interior fill for rectangle/ellipse; alpha 0 means no fill (C# default).
+    public var fillColor: NSColor = .clear
+    public var shadow = false
     public var lineWidth: CGFloat = 3
     public var fontSize: CGFloat = 18
     /// Stamp content for the image tool (CGImages are immutable, copies are cheap).
