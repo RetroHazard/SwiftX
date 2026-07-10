@@ -205,10 +205,12 @@ enum AfterCapturePipeline {
 }
 
 /// Floating always-on-top image windows ("Pin to screen").
-/// Drag to move, double-click to close.
+/// Drag to move, double-click to close, scroll to scale (⌘-scroll for
+/// opacity), +/- keys likewise, right-click for the menu - the C#
+/// PinToScreenForm interactions with its default 10% steps.
 @MainActor
 enum PinnedWindows {
-    private static var panels: [NSPanel] = []
+    private static var panels: [PinPanel] = []
 
     static func pin(_ cgImage: CGImage) {
         let scale = NSScreen.main?.backingScaleFactor ?? 2
@@ -225,28 +227,15 @@ enum PinnedWindows {
             size = NSSize(width: size.width * ratio, height: size.height * ratio)
         }
 
-        let panel = NSPanel(
-            contentRect: NSRect(origin: .zero, size: size),
-            styleMask: [.borderless, .nonactivatingPanel],
-            backing: .buffered,
-            defer: false
-        )
-        panel.level = .floating
-        panel.isMovableByWindowBackground = true
-        panel.hasShadow = true
-        panel.isReleasedWhenClosed = false
-        panel.collectionBehavior = [.canJoinAllSpaces]
-
-        let imageView = NSImageView(image: image)
-        imageView.imageScaling = .scaleProportionallyUpOrDown
-        let doubleClick = NSClickGestureRecognizer(target: panel, action: #selector(NSPanel.close))
-        doubleClick.numberOfClicksRequired = 2
-        imageView.addGestureRecognizer(doubleClick)
-        panel.contentView = imageView
-
+        let panel = PinPanel(image: image, size: size)
         panel.center()
         panel.orderFrontRegardless()
         panels.append(panel)
+        NotificationCenter.default.addObserver(
+            forName: NSWindow.willCloseNotification, object: panel, queue: .main
+        ) { note in
+            Task { @MainActor in panels.removeAll { $0 == note.object as? PinPanel } }
+        }
     }
 
     static func pinFromClipboard() {
@@ -257,8 +246,126 @@ enum PinnedWindows {
         pin(image)
     }
 
+    static func pinFromFile() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.image]
+        NSApp.activate(ignoringOtherApps: true)
+        guard panel.runModal() == .OK, let url = panel.url,
+              let image = NSImage(contentsOf: url) else { return }
+        pin(image)
+    }
+
+    /// C# PinToScreenFromScreen: select a region, pin the capture.
+    static func pinFromScreen() {
+        Task {
+            guard let rect = await RegionSelectController().selectRegion() else { return }
+            try? await Task.sleep(for: .milliseconds(80))
+            guard let image = try? await ScreenCapture.captureRegion(cocoaRect: rect) else { return }
+            pin(image)
+        }
+    }
+
     static func closeAll() {
         panels.forEach { $0.close() }
         panels.removeAll()
+    }
+}
+
+final class PinPanel: NSPanel {
+    private let image: NSImage
+    private let baseSize: NSSize
+    private var scale: CGFloat = 1
+
+    // C# PinToScreenOptions defaults: ScaleStep/OpacityStep 10 %
+    private static let step: CGFloat = 0.1
+
+    init(image: NSImage, size: NSSize) {
+        self.image = image
+        self.baseSize = size
+        super.init(contentRect: NSRect(origin: .zero, size: size),
+                   styleMask: [.borderless, .nonactivatingPanel],
+                   backing: .buffered, defer: false)
+        level = .floating
+        isMovableByWindowBackground = true
+        hasShadow = true
+        isReleasedWhenClosed = false
+        collectionBehavior = [.canJoinAllSpaces]
+
+        let imageView = NSImageView(image: image)
+        imageView.imageScaling = .scaleProportionallyUpOrDown
+        imageView.autoresizingMask = [.width, .height]
+        let doubleClick = NSClickGestureRecognizer(target: self, action: #selector(NSPanel.close))
+        doubleClick.numberOfClicksRequired = 2
+        imageView.addGestureRecognizer(doubleClick)
+        contentView = imageView
+    }
+
+    override var canBecomeKey: Bool { true }
+
+    override func scrollWheel(with event: NSEvent) {
+        let direction: CGFloat = event.scrollingDeltaY > 0 ? 1 : event.scrollingDeltaY < 0 ? -1 : 0
+        guard direction != 0 else { return }
+        if event.modifierFlags.contains(.command) {
+            adjustOpacity(direction * Self.step)
+        } else {
+            adjustScale(direction * Self.step)
+        }
+    }
+
+    override func keyDown(with event: NSEvent) {
+        let opacity = event.modifierFlags.contains(.command)
+        switch event.charactersIgnoringModifiers {
+        case "+", "=": opacity ? adjustOpacity(Self.step) : adjustScale(Self.step)
+        case "-", "_": opacity ? adjustOpacity(-Self.step) : adjustScale(-Self.step)
+        case "w" where opacity, "\u{1B}": close()  // ⌘W / Esc
+        default: super.keyDown(with: event)
+        }
+    }
+
+    override func rightMouseDown(with event: NSEvent) {
+        let menu = NSMenu()
+        menu.addItem(withTitle: "Copy Image", action: #selector(copyImage), keyEquivalent: "")
+        menu.addItem(withTitle: "Save As…", action: #selector(saveImage), keyEquivalent: "")
+        menu.addItem(.separator())
+        menu.addItem(withTitle: "Close", action: #selector(close), keyEquivalent: "")
+        menu.addItem(withTitle: "Close All Pins", action: #selector(closeAllPins), keyEquivalent: "")
+        menu.items.forEach { $0.target = self }
+        NSMenu.popUpContextMenu(menu, with: event, for: contentView ?? NSView())
+    }
+
+    @objc private func copyImage() {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.writeObjects([image])
+    }
+
+    @objc private func saveImage() {
+        guard let tiff = image.tiffRepresentation,
+              let png = NSBitmapImageRep(data: tiff)?.representation(using: .png, properties: [:])
+        else { return }
+        let panel = NSSavePanel()
+        panel.nameFieldStringValue = "pinned.png"
+        NSApp.activate(ignoringOtherApps: true)
+        if panel.runModal() == .OK, let url = panel.url {
+            try? png.write(to: url)
+        }
+    }
+
+    @objc private func closeAllPins() {
+        MainActor.assumeIsolated { PinnedWindows.closeAll() }
+    }
+
+    /// Resizes around the window center (C# KeepCenterLocation default).
+    private func adjustScale(_ delta: CGFloat) {
+        scale = min(5, max(0.2, scale + delta))
+        let size = NSSize(width: baseSize.width * scale, height: baseSize.height * scale)
+        let center = NSPoint(x: frame.midX, y: frame.midY)
+        setFrame(NSRect(x: center.x - size.width / 2, y: center.y - size.height / 2,
+                        width: size.width, height: size.height),
+                 display: true, animate: false)
+    }
+
+    private func adjustOpacity(_ delta: CGFloat) {
+        alphaValue = min(1, max(0.1, alphaValue + delta))
     }
 }
