@@ -15,6 +15,8 @@ public final class EditorCanvasView: NSView {
     public private(set) var baseImage: CGImage
     public var currentTool: AnnotationTool = .rectangle
     public private(set) var currentColor: NSColor = .systemRed
+    public private(set) var currentFillColor: NSColor = .clear
+    public private(set) var currentShadow = false
     public private(set) var currentLineWidth: CGFloat = 3
     public var onHistoryChanged: (() -> Void)?
     /// Fired when crop changes the canvas dimensions (SwiftUI must re-frame).
@@ -217,6 +219,26 @@ public final class EditorCanvasView: NSView {
         }
     }
 
+    public func setFillColor(_ color: NSColor) {
+        guard !isEqualColor(color, currentFillColor) else { return }
+        currentFillColor = color
+        if let index = selectedIndex {
+            pushHistory()
+            shapes[index].fillColor = color
+            needsDisplay = true
+        }
+    }
+
+    public func setShadow(_ enabled: Bool) {
+        guard enabled != currentShadow else { return }
+        currentShadow = enabled
+        if let index = selectedIndex {
+            pushHistory()
+            shapes[index].shadow = enabled
+            needsDisplay = true
+        }
+    }
+
     private var selectedIndex: Int? {
         shapes.firstIndex { $0.id == selectedShapeID }
     }
@@ -363,6 +385,7 @@ public final class EditorCanvasView: NSView {
             shape.number = (shapes.filter { $0.tool == .step }.map(\.number).max() ?? 0) + 1
             shape.rect = CGRect(x: point.x - 14, y: point.y - 14, width: 28, height: 28)
             shape.color = currentColor
+            shape.shadow = currentShadow
             addShape(shape)
             return
         }
@@ -372,6 +395,8 @@ public final class EditorCanvasView: NSView {
         var shape = AnnotationShape(tool: currentTool)
         // C# SmartEraserDrawingShape samples the canvas color where the drag starts
         shape.color = currentTool == .smartEraser ? baseColor(at: point) : currentColor
+        shape.fillColor = currentFillColor
+        shape.shadow = currentShadow
         shape.lineWidth = currentLineWidth
         shape.points = [point, point]
         draft = shape
@@ -719,6 +744,7 @@ public final class EditorCanvasView: NSView {
         shape.text = text
         shape.rect = CGRect(origin: origin, size: .zero)
         shape.color = color
+        shape.shadow = currentShadow
         addShape(shape)
     }
 
@@ -747,6 +773,10 @@ public final class EditorCanvasView: NSView {
 
         shape.color.setStroke()
         shape.color.setFill()
+        if shape.shadow, shape.tool.castsShadow {
+            context.setShadow(offset: CGSize(width: 2, height: -2), blur: 4,
+                              color: NSColor.black.withAlphaComponent(0.5).cgColor)
+        }
 
         switch shape.tool {
         case .select:
@@ -794,10 +824,18 @@ public final class EditorCanvasView: NSView {
         case .rectangle:
             let path = NSBezierPath(rect: shape.rect)
             path.lineWidth = shape.lineWidth
+            if shape.fillColor.alphaComponent > 0 {
+                shape.fillColor.setFill()
+                path.fill()
+            }
             path.stroke()
         case .ellipse:
             let path = NSBezierPath(ovalIn: shape.rect)
             path.lineWidth = shape.lineWidth
+            if shape.fillColor.alphaComponent > 0 {
+                shape.fillColor.setFill()
+                path.fill()
+            }
             path.stroke()
         case .line:
             strokeLine(shape)
