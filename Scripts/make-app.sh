@@ -22,6 +22,9 @@ if [ -d .build/release/ShareX_SharedKit.bundle ]; then
     cp -R .build/release/ShareX_SharedKit.bundle "$APP/Contents/Resources/"
 fi
 
+# SwiftX aperture icon — regenerate with Scripts/make-icon.swift
+cp Resources/SwiftX.icns "$APP/Contents/Resources/"
+
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -29,6 +32,8 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 <dict>
     <key>CFBundleExecutable</key>
     <string>ShareX</string>
+    <key>CFBundleIconFile</key>
+    <string>SwiftX</string>
     <key>CFBundleIdentifier</key>
     <string>com.getsharex.sharex-macos</string>
     <key>CFBundleName</key>
