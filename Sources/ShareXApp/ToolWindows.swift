@@ -14,10 +14,8 @@ import ToolsKit
 enum ToolWindows {
     private static var open: [NSWindow] = []
 
-    static func present(title: String, resizable: Bool = false, content: some View) {
-        let window = NSWindow(contentViewController: NSHostingController(rootView: content))
-        window.title = title
-        if !resizable { window.styleMask.remove(.resizable) }
+    /// Keeps a strong reference until the window closes.
+    static func track(_ window: NSWindow) {
         window.isReleasedWhenClosed = false
         open.append(window)
         NotificationCenter.default.addObserver(
@@ -25,6 +23,13 @@ enum ToolWindows {
         ) { note in
             Task { @MainActor in open.removeAll { $0 == note.object as? NSWindow } }
         }
+    }
+
+    static func present(title: String, resizable: Bool = false, content: some View) {
+        let window = NSWindow(contentViewController: NSHostingController(rootView: content))
+        window.title = title
+        if !resizable { window.styleMask.remove(.resizable) }
+        track(window)
         window.center()
         NSApp.activate(ignoringOtherApps: true)
         window.makeKeyAndOrderFront(nil)
