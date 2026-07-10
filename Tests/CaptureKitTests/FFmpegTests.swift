@@ -73,8 +73,37 @@ struct FFmpegTranscodeTests {
         }
         try await writer.finish()
 
-        try await FFmpeg.transcodeToWebM(input: mp4, output: webm)
+        try await FFmpeg.transcode(input: mp4, output: webm, format: .vp9)
         let size = try FileManager.default.attributesOfItem(atPath: webm.path)[.size] as? Int ?? 0
         #expect(size > 0)
+    }
+}
+
+struct FFmpegArgumentTests {
+    @Test func presetArgumentsWrapInputAndOutput() {
+        let args = FFmpeg.transcodeArguments(input: "in.mp4", output: "out.webm", format: .vp9)
+        #expect(args.first == "-y")
+        #expect(Array(args[1...2]) == ["-i", "in.mp4"])
+        #expect(args.last == "out.webm")
+        #expect(args.contains("libvpx-vp9"))
+    }
+
+    @Test func customArgumentsReplaceThePreset() {
+        let args = FFmpeg.transcodeArguments(
+            input: "in.mp4", output: "out.webm", format: .vp9,
+            customArgs: "-c:v libvpx-vp9 -crf 24"
+        )
+        #expect(args == ["-y", "-i", "in.mp4", "-c:v", "libvpx-vp9", "-crf", "24", "out.webm"])
+        #expect(!args.contains("-row-mt")) // preset gone
+    }
+
+    @Test func formatExtensionsMatchTheirContainers() {
+        #expect(FFmpeg.TranscodeFormat.vp9.fileExtension == "webm")
+        #expect(FFmpeg.TranscodeFormat.vp8.fileExtension == "webm")
+        #expect(FFmpeg.TranscodeFormat.webp.fileExtension == "webp")
+        #expect(FFmpeg.TranscodeFormat.apng.fileExtension == "apng")
+        // codec setting strings resolve to transcode targets (via uppercased())
+        #expect(FFmpeg.TranscodeFormat(rawValue: "VP8") == .vp8)
+        #expect(FFmpeg.TranscodeFormat(rawValue: "H264") == nil)
     }
 }
