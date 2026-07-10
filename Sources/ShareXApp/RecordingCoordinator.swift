@@ -16,8 +16,8 @@ final class RecordingCoordinator {
 
     private var activeRecorder: ScreenRecorder?
     private var activeFormat: RecordingFormat = .movie(hevc: false)
-    /// VP9/WebM records H.264 first, then transcodes via ffmpeg on stop.
-    private var transcodeToWebM = false
+    /// VP9/VP8/WebP/APNG record H.264 first, then transcode via ffmpeg on stop.
+    private var transcodeTarget: FFmpeg.TranscodeFormat?
     var isRecording: Bool { activeRecorder != nil }
     var isPaused: Bool { activeRecorder?.isPaused ?? false }
     /// AppDelegate hook: refresh menu titles and the status item icon.
@@ -57,20 +57,24 @@ final class RecordingCoordinator {
         activeRecorder = nil
         onStateChange?()
         let format = activeFormat
-        let wantsWebM = transcodeToWebM
+        let target = transcodeTarget
         Task {
             do {
                 var url = try await recorder.stop()
-                if wantsWebM {
-                    Notifier.notify(title: "Converting to WebM…", body: url.lastPathComponent)
-                    let webmURL = url.deletingPathExtension().appendingPathExtension("webm")
+                if let target {
+                    Notifier.notify(title: "Converting to \(target.displayName)…", body: url.lastPathComponent)
+                    let converted = url.deletingPathExtension().appendingPathExtension(target.fileExtension)
                     do {
-                        try await FFmpeg.transcodeToWebM(input: url, output: webmURL)
+                        try await FFmpeg.transcode(
+                            input: url, output: converted, format: target,
+                            customArgs: TaskSettings.load().screenRecordCustomFFmpegArgs
+                        )
                         try? FileManager.default.removeItem(at: url)
-                        url = webmURL
+                        url = converted
                     } catch {
                         // keep the MP4 so the recording isn't lost
-                        Notifier.notify(title: "WebM conversion failed — kept MP4", body: error.localizedDescription)
+                        Notifier.notify(title: "\(target.displayName) conversion failed — kept MP4",
+                                        body: error.localizedDescription)
                     }
                 }
                 finish(url: url, format: format)
@@ -90,11 +94,12 @@ final class RecordingCoordinator {
     private func begin(target: ScreenRecorder.Target, gif: Bool) async {
         let settings = TaskSettings.load()
         let config = ApplicationConfig.load()
-        var codec = settings.screenRecordCodec.uppercased()
-        if codec == "VP9", FFmpeg.installedPath == nil {
+        let codec = settings.screenRecordCodec.uppercased()
+        var transcode = FFmpeg.TranscodeFormat(rawValue: codec)
+        if transcode != nil, FFmpeg.installedPath == nil {
             Notifier.notify(title: "ffmpeg not found — recording H.264 instead",
-                            body: "Install ffmpeg from ShareX Settings to enable WebM/VP9.")
-            codec = "H264"
+                            body: "Install ffmpeg from ShareX Settings to enable WebM/WebP/APNG.")
+            transcode = nil
         }
         let format: RecordingFormat = gif ? .gif : .movie(hevc: codec == "HEVC")
         let fps = gif ? settings.gifFPS : settings.screenRecordFPS
@@ -109,7 +114,7 @@ final class RecordingCoordinator {
                 microphone: settings.screenRecordMicrophone
             )
             activeFormat = format
-            transcodeToWebM = !gif && codec == "VP9"
+            transcodeTarget = gif ? nil : transcode
             onStateChange?()
         } catch {
             let alert = NSAlert()

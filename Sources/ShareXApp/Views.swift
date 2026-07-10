@@ -471,6 +471,9 @@ struct SettingsView: View {
                 Text("H.264 (most compatible)").tag("H264")
                 Text("HEVC (smaller files)").tag("HEVC")
                 Text("WebM / VP9 (requires ffmpeg)").tag("VP9")
+                Text("WebM / VP8 (requires ffmpeg)").tag("VP8")
+                Text("WebP animation (requires ffmpeg)").tag("WEBP")
+                Text("APNG animation (requires ffmpeg)").tag("APNG")
             }
             TextField("Video frame rate (1–60 fps)",
                       value: clampedBinding(\.screenRecordFPS, 1...60), format: .number)
@@ -487,6 +490,12 @@ struct SettingsView: View {
         }
         Section("External tools") {
             FFmpegStatusView()
+            TextField("Custom ffmpeg arguments", text: taskBinding(\.screenRecordCustomFFmpegArgs))
+                .font(.body.monospaced())
+            Text("Applied to transcoded formats (VP9/VP8/WebP/APNG) instead of the built-in preset. "
+                 + "Example: -c:v libvpx-vp9 -crf 24 -b:v 0")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
     }
 
@@ -676,7 +685,7 @@ struct FFmpegStatusView: View {
                 Label(ffmpegPath != nil ? "ffmpeg installed" : "ffmpeg not installed",
                       systemImage: ffmpegPath != nil ? "checkmark.circle.fill" : "xmark.circle.fill")
                     .foregroundStyle(ffmpegPath != nil ? .green : .red)
-                Text(ffmpegPath ?? "Required for WebM/VP9 export. Without it, VP9 recordings fall back to H.264.")
+                Text(ffmpegPath ?? "Required for WebM/WebP/APNG export. Without it, those recordings fall back to H.264.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
