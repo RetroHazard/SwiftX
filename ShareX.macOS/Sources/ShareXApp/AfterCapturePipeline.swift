@@ -11,6 +11,7 @@ import CaptureKit
 import EditorKit
 import HistoryKit
 import SharedKit
+import ToolsKit
 
 @MainActor
 enum AfterCapturePipeline {
@@ -18,7 +19,7 @@ enum AfterCapturePipeline {
         .annotateImage, .copyImageToClipboard, .pinToScreen, .sendImageToPrinter,
         .saveImageToFile, .saveImageToFileWithDialog, .saveThumbnailImageToFile,
         .performActions, .copyFileToClipboard, .copyFilePathToClipboard, .copyFolderPathToClipboard,
-        .showInExplorer, .uploadImageToHost, .deleteFile
+        .showInExplorer, .doOCR, .uploadImageToHost, .deleteFile
     ]
 
     static func run(image capturedImage: CGImage, processName: String? = nil, windowTitle: String? = nil) async {
@@ -134,6 +135,11 @@ enum AfterCapturePipeline {
             if tasks.contains(.showInExplorer) {
                 NSWorkspace.shared.activateFileViewerSelecting([savedURL])
             }
+        }
+
+        if tasks.contains(.doOCR) {
+            // C# opens the OCR form with the capture; the window has Copy All
+            await ToolWindows.showOCRResult(for: image)
         }
 
         if tasks.contains(.uploadImageToHost) {
