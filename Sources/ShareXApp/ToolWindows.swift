@@ -62,6 +62,31 @@ enum ToolWindows {
         }
     }
 
+    // MARK: - Image metadata
+
+    static func showMetadataViewer() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.image]
+        NSApp.activate(ignoringOtherApps: true)
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        present(title: "Metadata — \(url.lastPathComponent)", resizable: true,
+                content: MetadataView(url: url))
+    }
+
+    static func stripMetadataFromFile() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.image]
+        panel.message = "The selected image will be rewritten without metadata."
+        NSApp.activate(ignoringOtherApps: true)
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        do {
+            try ImageMetadata.strip(url: url)
+            Notifier.notify(title: "Metadata stripped", body: url.lastPathComponent)
+        } catch {
+            Notifier.notify(title: "Strip metadata failed", body: error.localizedDescription)
+        }
+    }
+
     // MARK: - Hash checker
 
     static func showHashChecker() {
@@ -126,6 +151,38 @@ extension NSColor {
         return (Int((srgb.redComponent * 255).rounded()),
                 Int((srgb.greenComponent * 255).rounded()),
                 Int((srgb.blueComponent * 255).rounded()))
+    }
+}
+
+private struct MetadataView: View {
+    let url: URL
+    @State private var text = ""
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            TextEditor(text: $text)
+                .font(.body.monospaced())
+                .frame(minWidth: 520, minHeight: 300)
+            HStack {
+                Button("Strip Metadata") {
+                    do {
+                        try ImageMetadata.strip(url: url)
+                        reload()
+                        Notifier.notify(title: "Metadata stripped", body: url.lastPathComponent)
+                    } catch {
+                        text = error.localizedDescription
+                    }
+                }
+                Spacer()
+                Button("Copy All") { ToolWindows.copyToClipboard(text) }
+            }
+        }
+        .padding()
+        .onAppear { reload() }
+    }
+
+    private func reload() {
+        text = (try? ImageMetadata.describe(url: url)) ?? "Could not read metadata."
     }
 }
 
