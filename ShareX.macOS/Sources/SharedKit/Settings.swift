@@ -57,6 +57,13 @@ public struct ApplicationConfig: SettingsFile {
     public var taskViewMode = "ListView"
     /// One automatic retry after a failed upload (C# ApplicationSettings key).
     public var retryUpload = true
+    /// AI image analysis (macOS-only keys; C# nests these per provider in
+    /// AIOptions - one OpenAI-compatible endpoint covers OpenAI, OpenRouter
+    /// and Gemini's compatibility API here).
+    public var aiBaseURL = "https://api.openai.com/v1"
+    public var aiAPIKey = ""
+    public var aiModel = "gpt-5-mini"
+    public var aiPrompt = "What is in this image?"
 
     public var screenshotsFolder: URL {
         if useCustomScreenshotsPath, !customScreenshotsPath.isEmpty {
@@ -73,6 +80,10 @@ public struct ApplicationConfig: SettingsFile {
         case saveImageSubFolderPattern = "SaveImageSubFolderPattern"
         case taskViewMode = "TaskViewMode"
         case retryUpload = "RetryUpload"
+        case aiBaseURL = "AIBaseURL"
+        case aiAPIKey = "AIAPIKey"
+        case aiModel = "AIModel"
+        case aiPrompt = "AIPrompt"
     }
 
     public init(from decoder: Decoder) throws {
@@ -82,6 +93,10 @@ public struct ApplicationConfig: SettingsFile {
         saveImageSubFolderPattern = try c.decodeIfPresent(String.self, forKey: .saveImageSubFolderPattern) ?? "%y-%mo"
         taskViewMode = try c.decodeIfPresent(String.self, forKey: .taskViewMode) ?? "ListView"
         retryUpload = try c.decodeIfPresent(Bool.self, forKey: .retryUpload) ?? true
+        aiBaseURL = try c.decodeIfPresent(String.self, forKey: .aiBaseURL) ?? "https://api.openai.com/v1"
+        aiAPIKey = try c.decodeIfPresent(String.self, forKey: .aiAPIKey) ?? ""
+        aiModel = try c.decodeIfPresent(String.self, forKey: .aiModel) ?? "gpt-5-mini"
+        aiPrompt = try c.decodeIfPresent(String.self, forKey: .aiPrompt) ?? "What is in this image?"
     }
 }
 
