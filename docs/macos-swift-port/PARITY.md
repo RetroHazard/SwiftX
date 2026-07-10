@@ -79,8 +79,9 @@ Statuses: **Ported** · **Partial** (works, known gaps) · **Planned** (phase no
 | Shape selection, move, resize handles, Delete, double-click text re-edit, recolor selection | Ported — Screenshot.app-style manipulation |
 | Speech balloon (draggable tail, inline text) | Ported |
 | Crop (undoable, shapes translate, canvas resizes) | Ported |
-| Smart eraser, image/emoji/cursor stamps, magnify, spotlight, cut-out | Planned (5 follow-up) |
-| Canvas expand, zoom/pan, border/fill/shadow style options | Planned (5 follow-up) |
+| Smart eraser, magnify, spotlight, cut-out, image stamp | Ported — eraser samples the canvas color like C#; magnify is a 2× ellipse zoom; spotlight is a movable shape (same visual as C#'s destructive dim); cut-out joins halves with a straight edge (torn-edge effects not ported) |
+| Emoji / cursor stamps | N/A — emoji via text tool + macOS emoji palette (⌃⌘Space); captures already include the cursor |
+| Canvas expand, zoom/pan, fill/shadow style options | Ported — per-edge expand with fill color, ⌘+/⌘- zoom (pan via scrollbars), fill color + drop shadow apply to selection like recolor |
 
 ## Phase 6 — Image effects
 
@@ -94,11 +95,11 @@ Statuses: **Ported** · **Partial** (works, known gaps) · **Planned** (phase no
 
 | Feature | Status |
 |---|---|
-| H.264/HEVC recording (region/window/screen, audio, pause) | Partial — SCStream → AVAssetWriter MP4; region/window/screen + hotkey toggles + menu bar; audio and pause planned (7 follow-up) |
+| H.264/HEVC recording (region/window/screen, audio, pause) | Ported — SCStream → AVAssetWriter MP4; system audio + microphone as AAC tracks (mic needs macOS 15); pause/resume via menu or PauseScreenRecording hotkey drops the gap from the timeline |
 | GIF recording | Ported — ImageIO encoder, real per-frame delays, region/window/screen |
 | Recording through task pipeline (save, history, notify, path copy, upload) | Ported — uploads reuse the image destination |
 | WebM/VP9 via ffmpeg | Ported — detects Homebrew/MacPorts ffmpeg, records H.264 then transcodes; Settings shows install status + one-click Homebrew install; falls back to H.264 when ffmpeg is missing |
-| VP8/WebP/APNG, custom ffmpeg args | Planned (7 follow-up) |
+| VP8/WebP/APNG, custom ffmpeg args | Ported — post-stop ffmpeg transcode like VP9; WebM keeps recorded audio as Opus; custom args replace the preset (C# UseCustomCommands) |
 | gdigrab/ddagrab/screen-capture-recorder sources | N/A — replaced by ScreenCaptureKit / avfoundation |
 
 ## Phase 8 — Tools
