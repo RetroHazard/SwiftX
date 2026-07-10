@@ -42,21 +42,42 @@ public enum RecordingError: LocalizedError {
     }
 }
 
-/// Compresses raw BGRA sample buffers into an MP4 file.
+/// Compresses raw BGRA sample buffers into an MP4 file, plus optional AAC
+/// audio tracks (system audio and microphone land on separate tracks).
 final class MovieWriter {
     private let writer: AVAssetWriter
     private let input: AVAssetWriterInput
+    private let systemAudioInput: AVAssetWriterInput?
+    private let microphoneInput: AVAssetWriterInput?
     private var sessionStarted = false
 
-    init(url: URL, width: Int, height: Int, hevc: Bool) throws {
-        writer = try AVAssetWriter(outputURL: url, fileType: .mp4)
-        input = AVAssetWriterInput(mediaType: .video, outputSettings: [
+    init(url: URL, width: Int, height: Int, hevc: Bool,
+         systemAudio: Bool = false, microphone: Bool = false) throws {
+        let writer = try AVAssetWriter(outputURL: url, fileType: .mp4)
+        let input = AVAssetWriterInput(mediaType: .video, outputSettings: [
             AVVideoCodecKey: hevc ? AVVideoCodecType.hevc : .h264,
             AVVideoWidthKey: width,
             AVVideoHeightKey: height
         ])
         input.expectsMediaDataInRealTime = true
         writer.add(input)
+
+        func makeAudioInput() -> AVAssetWriterInput {
+            let audioInput = AVAssetWriterInput(mediaType: .audio, outputSettings: [
+                AVFormatIDKey: kAudioFormatMPEG4AAC,
+                AVSampleRateKey: 48000,
+                AVNumberOfChannelsKey: 2,
+                AVEncoderBitRateKey: 128_000
+            ])
+            audioInput.expectsMediaDataInRealTime = true
+            writer.add(audioInput)
+            return audioInput
+        }
+        self.writer = writer
+        self.input = input
+        systemAudioInput = systemAudio ? makeAudioInput() : nil
+        microphoneInput = microphone ? makeAudioInput() : nil
+
         guard writer.startWriting() else {
             throw RecordingError.writerFailed(writer.error?.localizedDescription ?? "startWriting failed")
         }
@@ -74,12 +95,29 @@ final class MovieWriter {
         }
     }
 
+    func appendSystemAudio(_ sampleBuffer: CMSampleBuffer) {
+        appendAudio(sampleBuffer, to: systemAudioInput)
+    }
+
+    func appendMicrophone(_ sampleBuffer: CMSampleBuffer) {
+        appendAudio(sampleBuffer, to: microphoneInput)
+    }
+
+    /// Audio arriving before the first video frame is dropped: the writer
+    /// session starts at the first video PTS, and video defines the timeline.
+    private func appendAudio(_ sampleBuffer: CMSampleBuffer, to audioInput: AVAssetWriterInput?) {
+        guard sessionStarted, let audioInput, audioInput.isReadyForMoreMediaData else { return }
+        audioInput.append(sampleBuffer)
+    }
+
     func finish() async throws {
         guard sessionStarted else {
             writer.cancelWriting()
             throw RecordingError.noFrames
         }
         input.markAsFinished()
+        systemAudioInput?.markAsFinished()
+        microphoneInput?.markAsFinished()
         await writer.finishWriting()
         if writer.status == .failed {
             throw RecordingError.writerFailed(writer.error?.localizedDescription ?? "finishWriting failed")
@@ -155,7 +193,8 @@ public final class ScreenRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
     }
 
     public static func start(
-        target: Target, format: RecordingFormat, fps: Int, outputURL: URL, showsCursor: Bool = true
+        target: Target, format: RecordingFormat, fps: Int, outputURL: URL, showsCursor: Bool = true,
+        systemAudio: Bool = false, microphone: Bool = false
     ) async throws -> ScreenRecorder {
         let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
         let configuration = SCStreamConfiguration()
@@ -163,6 +202,29 @@ public final class ScreenRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
         configuration.showsCursor = showsCursor
         configuration.pixelFormat = kCVPixelFormatType_32BGRA
         configuration.queueDepth = 6
+
+        // audio only makes sense for movie output; GIFs ignore it
+        let wantsSystemAudio: Bool
+        var wantsMicrophone = false
+        if case .movie = format {
+            wantsSystemAudio = systemAudio
+            if systemAudio {
+                configuration.capturesAudio = true
+                configuration.sampleRate = 48000
+                configuration.channelCount = 2
+                configuration.excludesCurrentProcessAudio = true
+            }
+            if microphone {
+                // SCStream microphone capture arrived in macOS 15
+                if #available(macOS 15.0, *) {
+                    configuration.captureMicrophone = true
+                    configuration.microphoneCaptureDeviceID = nil // system default input
+                    wantsMicrophone = true
+                }
+            }
+        } else {
+            wantsSystemAudio = false
+        }
 
         let filter: SCContentFilter
         switch target {
@@ -211,7 +273,8 @@ public final class ScreenRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
         switch format {
         case .movie(let hevc):
             recorder.movieWriter = try MovieWriter(
-                url: outputURL, width: configuration.width, height: configuration.height, hevc: hevc
+                url: outputURL, width: configuration.width, height: configuration.height, hevc: hevc,
+                systemAudio: wantsSystemAudio, microphone: wantsMicrophone
             )
         case .gif:
             recorder.gifEncoder = GIFEncoder()
@@ -219,6 +282,12 @@ public final class ScreenRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
 
         let stream = SCStream(filter: filter, configuration: configuration, delegate: recorder)
         try stream.addStreamOutput(recorder, type: .screen, sampleHandlerQueue: recorder.sampleQueue)
+        if wantsSystemAudio {
+            try stream.addStreamOutput(recorder, type: .audio, sampleHandlerQueue: recorder.sampleQueue)
+        }
+        if wantsMicrophone, #available(macOS 15.0, *) {
+            try stream.addStreamOutput(recorder, type: .microphone, sampleHandlerQueue: recorder.sampleQueue)
+        }
         try await stream.startCapture()
         recorder.stream = stream
         return recorder
@@ -250,7 +319,16 @@ public final class ScreenRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
     // MARK: - SCStreamOutput
 
     public func stream(_ stream: SCStream, didOutputSampleBuffer sampleBuffer: CMSampleBuffer, of type: SCStreamOutputType) {
-        guard type == .screen, sampleBuffer.isValid else { return }
+        guard sampleBuffer.isValid else { return }
+        if type == .audio {
+            movieWriter?.appendSystemAudio(sampleBuffer)
+            return
+        }
+        if #available(macOS 15.0, *), type == .microphone {
+            movieWriter?.appendMicrophone(sampleBuffer)
+            return
+        }
+        guard type == .screen else { return }
         // SCStream also delivers idle/incomplete frames; only encode complete ones
         guard let attachments = CMSampleBufferGetSampleAttachmentsArray(sampleBuffer, createIfNecessary: false)
                 as? [[SCStreamFrameInfo: Any]],

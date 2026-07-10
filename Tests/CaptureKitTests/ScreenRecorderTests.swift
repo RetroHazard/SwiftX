@@ -71,6 +71,26 @@ struct MovieWriterTests {
         #expect(tracks.count == 1)
     }
 
+    @Test func audioEnabledWriterStillFinishesWithVideoOnly() async throws {
+        // audio tracks are declared up front but AAC inputs with no samples
+        // must not block finalization (mic may simply be silent/denied)
+        let url = tempURL("mp4")
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        let writer = try MovieWriter(url: url, width: 64, height: 64, hevc: false,
+                                     systemAudio: true, microphone: true)
+        for frame in 0..<5 {
+            writer.append(try makeSampleBuffer(width: 64, height: 64,
+                                               pts: CMTime(value: CMTimeValue(frame), timescale: 30)))
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        try await writer.finish()
+
+        let asset = AVURLAsset(url: url)
+        let videoTracks = try await asset.loadTracks(withMediaType: .video)
+        #expect(videoTracks.count == 1)
+    }
+
     @Test func finishWithoutFramesThrows() async throws {
         let url = tempURL("mp4")
         defer { try? FileManager.default.removeItem(at: url) }

@@ -45,6 +45,8 @@ cat > "$APP/Contents/Info.plist" <<PLIST
     <true/>
     <key>NSPrincipalClass</key>
     <string>NSApplication</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>ShareX records the microphone when "Record microphone" is enabled in Recording settings.</string>
     <key>CFBundleURLTypes</key>
     <array>
         <dict>

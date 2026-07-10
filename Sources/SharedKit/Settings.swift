@@ -102,6 +102,11 @@ public struct TaskSettings: SettingsFile {
     public var gifFPS = 15
     /// "H264" or "HEVC" (macOS-only key; C# keeps codec inside FFmpegOptions).
     public var screenRecordCodec = "H264"
+    /// Record system audio into MP4/MOV recordings (macOS-only keys; C# keeps
+    /// audio sources inside FFmpegOptions).
+    public var screenRecordSystemAudio = false
+    /// Record the microphone (needs macOS 15+ and mic permission).
+    public var screenRecordMicrophone = false
 
     // Image output. Key names and defaults match C# TaskSettingsImage.
     /// C# EImageFormat enum name: PNG/JPEG/GIF/BMP/TIFF.
@@ -136,6 +141,8 @@ public struct TaskSettings: SettingsFile {
         case screenRecordFPS = "ScreenRecordFPS"
         case gifFPS = "GIFFPS"
         case screenRecordCodec = "ScreenRecordCodec"
+        case screenRecordSystemAudio = "ScreenRecordSystemAudio"
+        case screenRecordMicrophone = "ScreenRecordMicrophone"
         case imageFormat = "ImageFormat"
         case imageJPEGQuality = "ImageJPEGQuality"
         case imageAutoUseJPEG = "ImageAutoUseJPEG"
@@ -161,6 +168,8 @@ public struct TaskSettings: SettingsFile {
         screenRecordFPS = try c.decodeIfPresent(Int.self, forKey: .screenRecordFPS) ?? 30
         gifFPS = try c.decodeIfPresent(Int.self, forKey: .gifFPS) ?? 15
         screenRecordCodec = try c.decodeIfPresent(String.self, forKey: .screenRecordCodec) ?? "H264"
+        screenRecordSystemAudio = try c.decodeIfPresent(Bool.self, forKey: .screenRecordSystemAudio) ?? false
+        screenRecordMicrophone = try c.decodeIfPresent(Bool.self, forKey: .screenRecordMicrophone) ?? false
         imageFormat = try c.decodeIfPresent(String.self, forKey: .imageFormat) ?? "PNG"
         imageJPEGQuality = try c.decodeIfPresent(Int.self, forKey: .imageJPEGQuality) ?? 90
         imageAutoUseJPEG = try c.decodeIfPresent(Bool.self, forKey: .imageAutoUseJPEG) ?? true
