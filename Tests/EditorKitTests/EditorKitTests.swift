@@ -362,6 +362,42 @@ struct EditorKitTests {
         #expect(pixel(rendered, x: 10, y: 10).r > 200) // base visible elsewhere
     }
 
+    @Test func expandCanvasGrowsImageAndTranslatesShapes() {
+        let canvas = EditorCanvasView(image: makeImage(width: 100, height: 100))
+        let pixelsPerPoint = CGFloat(100) / canvas.canvasSize.width
+
+        var shape = AnnotationShape(tool: .rectangle)
+        shape.rect = CGRect(x: 10, y: 10, width: 5, height: 5)
+        canvas.addShape(shape)
+
+        canvas.expandCanvas(top: 10, left: 20, bottom: 0, right: 0, color: .white)
+        #expect(canvas.baseImage.width == 100 + Int(20 * pixelsPerPoint))
+        #expect(canvas.baseImage.height == 100 + Int(10 * pixelsPerPoint))
+        #expect(canvas.shapes[0].rect.origin == CGPoint(x: 30, y: 20))
+
+        // padding is white, original content starts after it
+        let rendered = canvas.renderFinalImage()!
+        let pad = pixel(rendered, x: 2, y: rendered.height - 2)
+        #expect(pad.r > 240 && pad.g > 240 && pad.b > 240)
+
+        canvas.undo()
+        #expect(canvas.baseImage.width == 100)
+        #expect(canvas.shapes[0].rect.origin == CGPoint(x: 10, y: 10))
+    }
+
+    @Test func zoomClampsAndScalesDisplaySize() {
+        let canvas = EditorCanvasView(image: makeImage(width: 100, height: 100))
+        let base = canvas.canvasSize
+        canvas.setZoom(2)
+        #expect(canvas.displaySize == NSSize(width: base.width * 2, height: base.height * 2))
+        canvas.setZoom(100)
+        #expect(canvas.zoom == 4) // clamped
+        canvas.setZoom(0.01)
+        #expect(canvas.zoom == 0.25)
+        // zoom is a view transform only - canvas geometry untouched
+        #expect(canvas.canvasSize == base)
+    }
+
     @Test func stepNumbersRenderFilledCircle() {
         let canvas = EditorCanvasView(image: makeImage())
         var shape = AnnotationShape(tool: .step)
