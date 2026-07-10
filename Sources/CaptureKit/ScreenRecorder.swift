@@ -3,9 +3,9 @@
 // Licensed under GPL v3 - see /LICENSE.txt
 //
 // Screen recording: SCStream frames feed either an AVAssetWriter (MP4,
-// H.264/HEVC) or a GIF encoder (ImageIO). No ffmpeg dependency.
-// ponytail: no audio and no pause yet - add mic/system audio via a second
-// stream output and pause via PTS offsetting when someone asks.
+// H.264/HEVC, optional AAC audio tracks) or a GIF encoder (ImageIO).
+// Pause drops frames and shifts later timestamps back by the gap.
+// No ffmpeg dependency (WebM and friends transcode after the fact).
 
 import AVFoundation
 import AppKit
@@ -186,6 +186,60 @@ public final class ScreenRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
     // all writer access happens on this queue (SCStream sample handler + fences from stop/abort)
     private let sampleQueue = DispatchQueue(label: "com.getsharex.recorder")
 
+    // Pause: frames are dropped while paused; on resume the wall-clock gap is
+    // added to an offset that shifts every later PTS, so the output has no hole.
+    // All three fields are touched only on sampleQueue.
+    private var isPausedFlag = false
+    private var pauseStartedAt: CMTime = .invalid
+    private var pauseOffset: CMTime = .zero
+
+    public var isPaused: Bool { sampleQueue.sync { isPausedFlag } }
+
+    public func pause() {
+        sampleQueue.sync {
+            guard !isPausedFlag else { return }
+            isPausedFlag = true
+            // SCStream stamps buffers with the host clock, so measure gaps on it too
+            pauseStartedAt = CMClockGetTime(CMClockGetHostTimeClock())
+        }
+    }
+
+    public func resume() {
+        sampleQueue.sync {
+            guard isPausedFlag else { return }
+            isPausedFlag = false
+            let now = CMClockGetTime(CMClockGetHostTimeClock())
+            pauseOffset = CMTimeAdd(pauseOffset, CMTimeSubtract(now, pauseStartedAt))
+        }
+    }
+
+    /// Returns a copy of the buffer with every timestamp shifted back by
+    /// `offset`; returns the original when there is nothing to shift.
+    static func retimed(_ sampleBuffer: CMSampleBuffer, by offset: CMTime) -> CMSampleBuffer {
+        guard offset != .zero else { return sampleBuffer }
+        var count = 0
+        CMSampleBufferGetSampleTimingInfoArray(sampleBuffer, entryCount: 0,
+                                               arrayToFill: nil, entriesNeededOut: &count)
+        guard count > 0 else { return sampleBuffer }
+        var timings = [CMSampleTimingInfo](repeating: CMSampleTimingInfo(), count: count)
+        CMSampleBufferGetSampleTimingInfoArray(sampleBuffer, entryCount: count,
+                                               arrayToFill: &timings, entriesNeededOut: &count)
+        for index in timings.indices {
+            timings[index].presentationTimeStamp =
+                CMTimeSubtract(timings[index].presentationTimeStamp, offset)
+            if timings[index].decodeTimeStamp.isValid {
+                timings[index].decodeTimeStamp =
+                    CMTimeSubtract(timings[index].decodeTimeStamp, offset)
+            }
+        }
+        var adjusted: CMSampleBuffer?
+        CMSampleBufferCreateCopyWithNewTiming(
+            allocator: kCFAllocatorDefault, sampleBuffer: sampleBuffer,
+            sampleTimingEntryCount: count, sampleTimingArray: &timings, sampleBufferOut: &adjusted
+        )
+        return adjusted ?? sampleBuffer
+    }
+
     private init(outputURL: URL, format: RecordingFormat, fps: Int) {
         self.outputURL = outputURL
         self.format = format
@@ -318,8 +372,9 @@ public final class ScreenRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
 
     // MARK: - SCStreamOutput
 
-    public func stream(_ stream: SCStream, didOutputSampleBuffer sampleBuffer: CMSampleBuffer, of type: SCStreamOutputType) {
-        guard sampleBuffer.isValid else { return }
+    public func stream(_ stream: SCStream, didOutputSampleBuffer buffer: CMSampleBuffer, of type: SCStreamOutputType) {
+        guard buffer.isValid, !isPausedFlag else { return } // handler runs on sampleQueue
+        let sampleBuffer = Self.retimed(buffer, by: pauseOffset)
         if type == .audio {
             movieWriter?.appendSystemAudio(sampleBuffer)
             return
