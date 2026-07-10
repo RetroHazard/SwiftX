@@ -10,6 +10,8 @@ final class EditorState: ObservableObject {
     @Published var tool: AnnotationTool = .rectangle
     @Published var color: Color = Color(nsColor: .systemRed)
     @Published var lineWidth: CGFloat = 3
+    @Published var fillColor: Color = .clear
+    @Published var shadow = false
     @Published var canUndo = false
     @Published var canRedo = false
     @Published var zoom: CGFloat = 1
@@ -49,6 +51,17 @@ public struct EditorView: View {
 
                 ColorPicker("", selection: $state.color, supportsOpacity: false)
                     .labelsHidden()
+                    .help("Stroke color")
+
+                ColorPicker("", selection: $state.fillColor, supportsOpacity: true)
+                    .labelsHidden()
+                    .help("Fill color for rectangle/ellipse (transparent = no fill)")
+
+                Toggle(isOn: $state.shadow) {
+                    Image(systemName: "square.fill.on.square")
+                }
+                .toggleStyle(.button)
+                .help("Drop shadow")
 
                 Slider(value: $state.lineWidth, in: 1...10) {
                     EmptyView()
@@ -155,6 +168,8 @@ private struct CanvasRepresentable: NSViewRepresentable {
         canvas.currentTool = state.tool
         // setters apply to the current selection when one exists
         canvas.setColor(NSColor(state.color))
+        canvas.setFillColor(NSColor(state.fillColor))
+        canvas.setShadow(state.shadow)
         canvas.setLineWidth(state.lineWidth)
         canvas.setZoom(state.zoom)
     }
