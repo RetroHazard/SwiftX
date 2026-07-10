@@ -130,6 +130,10 @@ enum HotkeyDispatcher {
             (NSApp.delegate as? AppDelegate)?.showMainWindow()
         case .openScreenshotsFolder:
             NSWorkspace.shared.open(ApplicationConfig.load().screenshotsFolder)
+        case .colorPicker:
+            ToolWindows.showColorPicker()
+        case .screenColorPicker:
+            ToolWindows.pickScreenColor()
         case .pinToScreenFromClipboard:
             PinnedWindows.pinFromClipboard()
         case .pinToScreenCloseAll:
