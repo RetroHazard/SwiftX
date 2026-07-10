@@ -328,6 +328,10 @@ public final class EditorCanvasView: NSView {
             beginTextEntry(at: point)
             return
         }
+        if currentTool == .image {
+            placeImageStamp(at: point)
+            return
+        }
         if currentTool == .step {
             var shape = AnnotationShape(tool: .step)
             shape.number = (shapes.filter { $0.tool == .step }.map(\.number).max() ?? 0) + 1
@@ -340,7 +344,8 @@ public final class EditorCanvasView: NSView {
         dragStart = point
         dragMode = .draw
         var shape = AnnotationShape(tool: currentTool)
-        shape.color = currentColor
+        // C# SmartEraserDrawingShape samples the canvas color where the drag starts
+        shape.color = currentTool == .smartEraser ? baseColor(at: point) : currentColor
         shape.lineWidth = currentLineWidth
         shape.points = [point, point]
         draft = shape
@@ -395,6 +400,10 @@ public final class EditorCanvasView: NSView {
             applyCrop(shape.rect)
             return
         }
+        if shape.tool == .cutOut {
+            applyCutOut(shape.rect)
+            return
+        }
         if shape.tool == .speechBalloon {
             // default tail: below-left of the balloon, pointing away
             shape.points = [CGPoint(x: shape.rect.minX + shape.rect.width * 0.25,
@@ -426,6 +435,124 @@ public final class EditorCanvasView: NSView {
         shapes = shapes.map { translated($0, by: delta) }
         selectedShapeID = nil
         needsDisplay = true
+    }
+
+    /// The band that a cut-out drag removes: wider than tall removes columns
+    /// (full canvas height), otherwise rows (full width) - C# CutOutTool rules.
+    func cutOutBand(for rect: CGRect) -> CGRect {
+        let canvasRect = CGRect(origin: .zero, size: canvasSize)
+        let band = rect.width > rect.height
+            ? CGRect(x: rect.minX, y: 0, width: rect.width, height: canvasSize.height)
+            : CGRect(x: 0, y: rect.minY, width: canvasSize.width, height: rect.height)
+        return band.intersection(canvasRect)
+    }
+
+    /// Removes the band and joins the halves. C# offers torn/wave edge effects;
+    /// ponytail: straight cut only, add edge effects if anyone misses them.
+    func applyCutOut(_ rectInPoints: CGRect) {
+        let band = cutOutBand(for: rectInPoints)
+        let horizontal = rectInPoints.width > rectInPoints.height // removes columns
+        guard band.width >= 4, band.height >= 4 else { return }
+        // cutting away the whole canvas is a no-op (C# IsValidShape rejects it)
+        if horizontal, band.width >= canvasSize.width - 1 { return }
+        if !horizontal, band.height >= canvasSize.height - 1 { return }
+
+        let pixelsPerPoint = CGFloat(baseImage.width) / canvasSize.width
+        let width = baseImage.width, height = baseImage.height
+        // cropping(to:) uses top-left pixel coordinates, same as the view
+        let firstRect: CGRect, secondRect: CGRect
+        if horizontal {
+            let cutMin = (band.minX * pixelsPerPoint).rounded()
+            let cutMax = (band.maxX * pixelsPerPoint).rounded()
+            firstRect = CGRect(x: 0, y: 0, width: cutMin, height: CGFloat(height))
+            secondRect = CGRect(x: cutMax, y: 0, width: CGFloat(width) - cutMax, height: CGFloat(height))
+        } else {
+            let cutMin = (band.minY * pixelsPerPoint).rounded()
+            let cutMax = (band.maxY * pixelsPerPoint).rounded()
+            firstRect = CGRect(x: 0, y: 0, width: CGFloat(width), height: cutMin)
+            secondRect = CGRect(x: 0, y: cutMax, width: CGFloat(width), height: CGFloat(height) - cutMax)
+        }
+
+        let newWidth = Int(firstRect.width + (horizontal ? secondRect.width : 0))
+        let newHeight = Int(firstRect.height + (horizontal ? 0 : secondRect.height))
+        guard let context = CGContext(
+            data: nil, width: horizontal ? newWidth : width, height: horizontal ? height : newHeight,
+            bitsPerComponent: 8, bytesPerRow: 0,
+            space: baseImage.colorSpace ?? CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else { return }
+
+        // context origin is bottom-left; place the pieces accordingly
+        if horizontal {
+            if let first = baseImage.cropping(to: firstRect) {
+                context.draw(first, in: CGRect(x: 0, y: 0, width: firstRect.width, height: CGFloat(height)))
+            }
+            if let second = baseImage.cropping(to: secondRect) {
+                context.draw(second, in: CGRect(x: firstRect.width, y: 0, width: secondRect.width, height: CGFloat(height)))
+            }
+        } else {
+            if let first = baseImage.cropping(to: firstRect) { // top piece stays on top
+                context.draw(first, in: CGRect(x: 0, y: CGFloat(newHeight) - firstRect.height,
+                                               width: CGFloat(width), height: firstRect.height))
+            }
+            if let second = baseImage.cropping(to: secondRect) {
+                context.draw(second, in: CGRect(x: 0, y: 0, width: CGFloat(width), height: secondRect.height))
+            }
+        }
+        guard let joined = context.makeImage() else { return }
+
+        pushHistory()
+        setBaseImage(joined)
+        // ponytail: shapes fully past the band collapse toward it; straddlers stay put
+        let delta = horizontal ? CGPoint(x: -band.width, y: 0) : CGPoint(x: 0, y: -band.height)
+        shapes = shapes.map { shape in
+            let bounds = selectionBounds(shape)
+            let isPast = horizontal ? bounds.minX >= band.maxX : bounds.minY >= band.maxY
+            return isPast ? translated(shape, by: delta) : shape
+        }
+        selectedShapeID = nil
+        needsDisplay = true
+    }
+
+    /// Color of the base image under a canvas point (smart eraser source).
+    /// Redraws into a 1x1 context, so any pixel format/byte order works.
+    func baseColor(at point: CGPoint) -> NSColor {
+        let pixelsPerPoint = CGFloat(baseImage.width) / canvasSize.width
+        let px = min(max(Int(point.x * pixelsPerPoint), 0), baseImage.width - 1)
+        let py = min(max(Int(point.y * pixelsPerPoint), 0), baseImage.height - 1)
+        var rgba = [UInt8](repeating: 0, count: 4)
+        guard let context = CGContext(
+            data: &rgba, width: 1, height: 1, bitsPerComponent: 8, bytesPerRow: 4,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else { return .white }
+        // slide the image so pixel (px, py from top) lands on the 1x1 context
+        context.draw(baseImage, in: CGRect(
+            x: -CGFloat(px), y: -CGFloat(baseImage.height - 1 - py),
+            width: CGFloat(baseImage.width), height: CGFloat(baseImage.height)
+        ))
+        return NSColor(red: CGFloat(rgba[0]) / 255, green: CGFloat(rgba[1]) / 255,
+                       blue: CGFloat(rgba[2]) / 255, alpha: 1)
+    }
+
+    /// Image stamp: pick a file, place it centered on the click at natural
+    /// size (fit to 80% of the canvas), then move/resize like any shape.
+    private func placeImageStamp(at point: CGPoint) {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.image]
+        guard panel.runModal() == .OK, let url = panel.url,
+              let nsImage = NSImage(contentsOf: url),
+              let stamp = nsImage.cgImage(forProposedRect: nil, context: nil, hints: nil)
+        else { return }
+        var size = NSSize(width: CGFloat(stamp.width) / displayScale,
+                          height: CGFloat(stamp.height) / displayScale)
+        let fit = min(1, canvasSize.width * 0.8 / size.width, canvasSize.height * 0.8 / size.height)
+        size = NSSize(width: size.width * fit, height: size.height * fit)
+        var shape = AnnotationShape(tool: .image)
+        shape.stampImage = stamp
+        shape.rect = CGRect(x: point.x - size.width / 2, y: point.y - size.height / 2,
+                            width: size.width, height: size.height)
+        addShape(shape)
     }
 
     public override func keyDown(with event: NSEvent) {
@@ -561,15 +688,43 @@ public final class EditorCanvasView: NSView {
         case .select:
             break // never stored; satisfies exhaustiveness
         case .crop:
-            // draft-only visualization: dashed marching rectangle
-            let path = NSBezierPath(rect: shape.rect)
-            path.lineWidth = 1
-            path.setLineDash([5, 5], count: 2, phase: 0)
-            NSColor.white.setStroke()
-            path.stroke()
-            NSColor.black.withAlphaComponent(0.6).setStroke()
-            path.setLineDash([5, 5], count: 2, phase: 5)
-            path.stroke()
+            drawMarchingRect(shape.rect)
+        case .cutOut:
+            // draft-only visualization: the full band that will be removed
+            let band = cutOutBand(for: shape.rect)
+            NSColor.systemRed.withAlphaComponent(0.25).setFill()
+            band.fill(using: .sourceOver)
+            drawMarchingRect(band)
+        case .smartEraser:
+            // color was sampled from the canvas at drag start
+            shape.rect.fill()
+        case .spotlight:
+            // C# dims the canvas destructively; here it's a shape - movable,
+            // resizable and undoable like everything else. Same visual result.
+            let dimmed = NSBezierPath(rect: CGRect(origin: .zero, size: canvasSize))
+            dimmed.append(NSBezierPath(rect: shape.rect))
+            dimmed.windingRule = .evenOdd
+            NSColor.black.withAlphaComponent(0.7).setFill()
+            dimmed.fill()
+        case .magnify:
+            guard shape.rect.width > 2, shape.rect.height > 2 else { break }
+            context.saveGState()
+            NSBezierPath(ovalIn: shape.rect).addClip()
+            // 2x zoom about the shape center (C# MagnifyStrength default 200)
+            let magnification: CGFloat = 2
+            let center = CGPoint(x: shape.rect.midX, y: shape.rect.midY)
+            let dest = CGRect(x: center.x * (1 - magnification), y: center.y * (1 - magnification),
+                              width: canvasSize.width * magnification,
+                              height: canvasSize.height * magnification)
+            NSImage(cgImage: baseImage, size: canvasSize).draw(in: dest)
+            context.restoreGState()
+            let border = NSBezierPath(ovalIn: shape.rect)
+            border.lineWidth = shape.lineWidth
+            border.stroke()
+        case .image:
+            if let stamp = shape.stampImage {
+                NSImage(cgImage: stamp, size: shape.rect.size).draw(in: shape.rect)
+            }
         case .speechBalloon:
             drawSpeechBalloon(shape)
         case .rectangle:
@@ -620,6 +775,17 @@ public final class EditorCanvasView: NSView {
             text.draw(at: CGPoint(x: shape.rect.midX - size.width / 2, y: shape.rect.midY - size.height / 2),
                       withAttributes: attributes)
         }
+    }
+
+    private func drawMarchingRect(_ rect: CGRect) {
+        let path = NSBezierPath(rect: rect)
+        path.lineWidth = 1
+        path.setLineDash([5, 5], count: 2, phase: 0)
+        NSColor.white.setStroke()
+        path.stroke()
+        NSColor.black.withAlphaComponent(0.6).setStroke()
+        path.setLineDash([5, 5], count: 2, phase: 5)
+        path.stroke()
     }
 
     private func drawSpeechBalloon(_ shape: AnnotationShape) {

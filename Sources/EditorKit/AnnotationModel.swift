@@ -3,8 +3,9 @@
 // Licensed under GPL v3 - see /LICENSE.txt
 //
 // Annotation model for the image editor. Tool set mirrors the core of
-// ShareX.ImageEditor/Core/Annotations; selection/move and the long tail
-// (speech balloon, emoji, magnify, spotlight, smart eraser) come later.
+// ShareX.ImageEditor/Core/Annotations. Emoji stamps are covered by the text
+// tool + the macOS emoji palette; cursor stamps are N/A (captures already
+// include the cursor).
 
 import AppKit
 
@@ -19,11 +20,17 @@ public enum AnnotationTool: String, CaseIterable, Identifiable {
     case text
     case speechBalloon
     case step
+    case magnify
     case blur
     case pixelate
     case highlight
+    case smartEraser
+    case spotlight
+    case image
     /// Crops the base image - a mode like select, never stored as a shape.
     case crop
+    /// Removes a full-width or full-height band - a mode, never stored.
+    case cutOut
 
     public var id: String { rawValue }
 
@@ -38,10 +45,15 @@ public enum AnnotationTool: String, CaseIterable, Identifiable {
         case .text: return "textformat"
         case .speechBalloon: return "bubble.left"
         case .step: return "1.circle"
+        case .magnify: return "plus.magnifyingglass"
         case .blur: return "drop"
         case .pixelate: return "squareshape.split.3x3"
         case .highlight: return "highlighter"
+        case .smartEraser: return "eraser"
+        case .spotlight: return "flashlight.on.fill"
+        case .image: return "photo"
         case .crop: return "crop"
+        case .cutOut: return "scissors"
         }
     }
 
@@ -56,16 +68,21 @@ public enum AnnotationTool: String, CaseIterable, Identifiable {
         case .text: return "Text"
         case .speechBalloon: return "Speech balloon"
         case .step: return "Step number"
+        case .magnify: return "Magnify"
         case .blur: return "Blur"
         case .pixelate: return "Pixelate"
         case .highlight: return "Highlight"
+        case .smartEraser: return "Smart eraser"
+        case .spotlight: return "Spotlight"
+        case .image: return "Image stamp"
         case .crop: return "Crop"
+        case .cutOut: return "Cut out"
         }
     }
 
     /// Tools placed with a single click rather than a drag.
     public var isClickPlaced: Bool {
-        self == .text || self == .step
+        self == .text || self == .step || self == .image
     }
 }
 
@@ -81,6 +98,8 @@ public struct AnnotationShape: Identifiable {
     public var color: NSColor = .systemRed
     public var lineWidth: CGFloat = 3
     public var fontSize: CGFloat = 18
+    /// Stamp content for the image tool (CGImages are immutable, copies are cheap).
+    public var stampImage: CGImage?
 
     public init(tool: AnnotationTool) {
         self.tool = tool

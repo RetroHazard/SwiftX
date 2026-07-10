@@ -273,6 +273,95 @@ struct EditorKitTests {
         #expect(outside.r > 215 || outside.r < 40)
     }
 
+    private func makeSplitImage(width: Int = 100, height: Int = 100) -> CGImage {
+        // left half red, right half blue
+        let context = CGContext(
+            data: nil, width: width, height: height,
+            bitsPerComponent: 8, bytesPerRow: 0,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        )!
+        context.setFillColor(CGColor(red: 1, green: 0, blue: 0, alpha: 1))
+        context.fill(CGRect(x: 0, y: 0, width: width / 2, height: height))
+        context.setFillColor(CGColor(red: 0, green: 0, blue: 1, alpha: 1))
+        context.fill(CGRect(x: width / 2, y: 0, width: width - width / 2, height: height))
+        return context.makeImage()!
+    }
+
+    @Test func smartEraserSamplesBaseColor() {
+        let canvas = EditorCanvasView(image: makeSplitImage())
+        let w = canvas.canvasSize.width
+        let left = canvas.baseColor(at: CGPoint(x: w * 0.25, y: canvas.canvasSize.height / 2))
+        let right = canvas.baseColor(at: CGPoint(x: w * 0.75, y: canvas.canvasSize.height / 2))
+        #expect(left.redComponent > 0.8 && left.blueComponent < 0.2)
+        #expect(right.blueComponent > 0.8 && right.redComponent < 0.2)
+    }
+
+    @Test func cutOutRemovesColumnsAndCollapsesShapes() {
+        let canvas = EditorCanvasView(image: makeImage(width: 100, height: 100))
+        let w = canvas.canvasSize.width, h = canvas.canvasSize.height
+
+        var shape = AnnotationShape(tool: .rectangle)
+        shape.rect = CGRect(x: w * 0.8, y: h * 0.2, width: w * 0.1, height: h * 0.1)
+        canvas.addShape(shape)
+
+        // wider than tall -> removes the column band [0.3w, 0.5w) at full height
+        canvas.applyCutOut(CGRect(x: w * 0.3, y: h * 0.4, width: w * 0.2, height: h * 0.05))
+
+        #expect(canvas.baseImage.width == 80)
+        #expect(canvas.baseImage.height == 100)
+        // shape beyond the band moved left by the band width
+        #expect(abs(canvas.shapes[0].rect.minX - w * 0.6) < 0.5)
+
+        canvas.undo()
+        #expect(canvas.baseImage.width == 100)
+        #expect(abs(canvas.shapes[0].rect.minX - w * 0.8) < 0.5)
+    }
+
+    @Test func cutOutRemovesRows() {
+        let canvas = EditorCanvasView(image: makeImage(width: 100, height: 100))
+        let w = canvas.canvasSize.width, h = canvas.canvasSize.height
+        // taller than wide -> removes the row band at full width
+        canvas.applyCutOut(CGRect(x: w * 0.4, y: h * 0.25, width: w * 0.05, height: h * 0.5))
+        #expect(canvas.baseImage.width == 100)
+        #expect(canvas.baseImage.height == 50)
+    }
+
+    @Test func cutOutFullSpanIsIgnored() {
+        let canvas = EditorCanvasView(image: makeImage(width: 100, height: 100))
+        let w = canvas.canvasSize.width, h = canvas.canvasSize.height
+        canvas.applyCutOut(CGRect(x: 0, y: h * 0.4, width: w, height: h * 0.1))
+        #expect(canvas.baseImage.width == 100)
+        #expect(!canvas.canUndo)
+    }
+
+    @Test func spotlightDimsOutsideItsRegion() {
+        let canvas = EditorCanvasView(image: makeImage()) // all red
+        var shape = AnnotationShape(tool: .spotlight)
+        let w = canvas.canvasSize.width, h = canvas.canvasSize.height
+        shape.rect = CGRect(x: w * 0.3, y: h * 0.3, width: w * 0.4, height: h * 0.4)
+        canvas.addShape(shape)
+
+        let rendered = canvas.renderFinalImage()!
+        let inside = pixel(rendered, x: 50, y: 50)
+        let outside = pixel(rendered, x: 5, y: 5)
+        #expect(inside.r > 200)          // spotlit area untouched
+        #expect(outside.r < inside.r / 2) // dimmed area clearly darker
+    }
+
+    @Test func imageStampRendersInItsRect() {
+        let canvas = EditorCanvasView(image: makeImage()) // red base
+        var shape = AnnotationShape(tool: .image)
+        shape.stampImage = makeImage(width: 10, height: 10, red: 0) // black stamp
+        let w = canvas.canvasSize.width, h = canvas.canvasSize.height
+        shape.rect = CGRect(x: w * 0.4, y: h * 0.4, width: w * 0.2, height: h * 0.2)
+        canvas.addShape(shape)
+
+        let rendered = canvas.renderFinalImage()!
+        #expect(pixel(rendered, x: 50, y: 50).r < 60)  // stamp covers center
+        #expect(pixel(rendered, x: 10, y: 10).r > 200) // base visible elsewhere
+    }
+
     @Test func stepNumbersRenderFilledCircle() {
         let canvas = EditorCanvasView(image: makeImage())
         var shape = AnnotationShape(tool: .step)
