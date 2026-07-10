@@ -12,6 +12,7 @@ final class EditorState: ObservableObject {
     @Published var lineWidth: CGFloat = 3
     @Published var canUndo = false
     @Published var canRedo = false
+    @Published var zoom: CGFloat = 1
     /// Updated when crop shrinks the canvas; nil until the canvas exists.
     @Published var canvasSize: NSSize?
     weak var canvas: EditorCanvasView?
@@ -21,6 +22,7 @@ public struct EditorView: View {
     let image: CGImage
     let onComplete: (CGImage?) -> Void
     @StateObject private var state = EditorState()
+    @State private var showExpandCanvas = false
 
     public init(image: CGImage, onComplete: @escaping (CGImage?) -> Void) {
         self.image = image
@@ -57,6 +59,37 @@ public struct EditorView: View {
                 Spacer()
 
                 Button {
+                    state.zoom = max(0.25, state.zoom / 1.25)
+                } label: {
+                    Image(systemName: "minus.magnifyingglass")
+                }
+                .keyboardShortcut("-", modifiers: .command)
+                .help("Zoom out")
+
+                Text("\(Int((state.zoom * 100).rounded()))%")
+                    .font(.caption.monospacedDigit())
+                    .frame(width: 40)
+                    .onTapGesture { state.zoom = 1 }
+
+                Button {
+                    state.zoom = min(4, state.zoom * 1.25)
+                } label: {
+                    Image(systemName: "plus.magnifyingglass")
+                }
+                .keyboardShortcut("+", modifiers: .command)
+                .help("Zoom in")
+
+                Button {
+                    showExpandCanvas.toggle()
+                } label: {
+                    Image(systemName: "arrow.up.left.and.arrow.down.right.square")
+                }
+                .help("Expand canvas")
+                .popover(isPresented: $showExpandCanvas) {
+                    ExpandCanvasForm(state: state, isPresented: $showExpandCanvas)
+                }
+
+                Button {
                     state.canvas?.undo()
                 } label: {
                     Image(systemName: "arrow.uturn.backward")
@@ -78,8 +111,8 @@ public struct EditorView: View {
 
             ScrollView([.horizontal, .vertical]) {
                 CanvasRepresentable(image: image, state: state)
-                    .frame(width: (state.canvasSize ?? canvasPointSize).width,
-                           height: (state.canvasSize ?? canvasPointSize).height)
+                    .frame(width: (state.canvasSize ?? canvasPointSize).width * state.zoom,
+                           height: (state.canvasSize ?? canvasPointSize).height * state.zoom)
             }
 
             Divider()
@@ -123,6 +156,46 @@ private struct CanvasRepresentable: NSViewRepresentable {
         // setters apply to the current selection when one exists
         canvas.setColor(NSColor(state.color))
         canvas.setLineWidth(state.lineWidth)
+        canvas.setZoom(state.zoom)
+    }
+}
+
+/// Per-edge padding form for growing the canvas (C# canvas size tool).
+private struct ExpandCanvasForm: View {
+    @ObservedObject var state: EditorState
+    @Binding var isPresented: Bool
+    @State private var top = 0
+    @State private var left = 0
+    @State private var bottom = 0
+    @State private var right = 0
+    @State private var fill: Color = .white
+
+    var body: some View {
+        VStack(spacing: 10) {
+            Text("Expand canvas (points)").font(.headline)
+            Grid {
+                GridRow {
+                    Text("Top"); TextField("", value: $top, format: .number).frame(width: 60)
+                    Text("Bottom"); TextField("", value: $bottom, format: .number).frame(width: 60)
+                }
+                GridRow {
+                    Text("Left"); TextField("", value: $left, format: .number).frame(width: 60)
+                    Text("Right"); TextField("", value: $right, format: .number).frame(width: 60)
+                }
+            }
+            ColorPicker("Fill color", selection: $fill, supportsOpacity: true)
+            Button("Expand") {
+                state.canvas?.expandCanvas(
+                    top: CGFloat(top), left: CGFloat(left),
+                    bottom: CGFloat(bottom), right: CGFloat(right),
+                    color: NSColor(fill)
+                )
+                isPresented = false
+            }
+            .keyboardShortcut(.defaultAction)
+            .disabled(top <= 0 && left <= 0 && bottom <= 0 && right <= 0)
+        }
+        .padding(12)
     }
 }
 
