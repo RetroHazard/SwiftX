@@ -477,6 +477,14 @@ struct SettingsView: View {
             TextField("GIF frame rate (1–30 fps)",
                       value: clampedBinding(\.gifFPS, 1...30), format: .number)
         }
+        Section("Audio") {
+            Toggle("Record system audio", isOn: taskBinding(\.screenRecordSystemAudio))
+            Toggle("Record microphone", isOn: taskBinding(\.screenRecordMicrophone))
+            Text("Audio applies to video recordings only; GIFs are always silent. "
+                 + "Microphone capture needs macOS 15 and Microphone permission (asked on first use).")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
         Section("External tools") {
             FFmpegStatusView()
         }

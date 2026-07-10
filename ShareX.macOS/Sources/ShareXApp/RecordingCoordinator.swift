@@ -96,7 +96,11 @@ final class RecordingCoordinator {
             try FileManager.default.createDirectory(
                 at: url.deletingLastPathComponent(), withIntermediateDirectories: true
             )
-            activeRecorder = try await ScreenRecorder.start(target: target, format: format, fps: fps, outputURL: url)
+            activeRecorder = try await ScreenRecorder.start(
+                target: target, format: format, fps: fps, outputURL: url,
+                systemAudio: settings.screenRecordSystemAudio,
+                microphone: settings.screenRecordMicrophone
+            )
             activeFormat = format
             transcodeToWebM = !gif && codec == "VP9"
             onStateChange?()
