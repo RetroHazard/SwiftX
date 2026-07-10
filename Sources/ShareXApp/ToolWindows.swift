@@ -62,6 +62,12 @@ enum ToolWindows {
         }
     }
 
+    // MARK: - Hash checker
+
+    static func showHashChecker() {
+        present(title: "Hash Checker", content: HashCheckerView())
+    }
+
     // MARK: - QR code
 
     static func showQRCode() {
@@ -120,6 +126,95 @@ extension NSColor {
         return (Int((srgb.redComponent * 255).rounded()),
                 Int((srgb.greenComponent * 255).rounded()),
                 Int((srgb.blueComponent * 255).rounded()))
+    }
+}
+
+private struct HashCheckerView: View {
+    @State private var fileURL: URL?
+    @State private var algorithm: HashAlgorithm = .sha256
+    @State private var result = ""
+    @State private var target = ""
+    @State private var isHashing = false
+
+    private var matches: Bool? {
+        let trimmed = target.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, !result.isEmpty else { return nil }
+        return trimmed.caseInsensitiveCompare(result) == .orderedSame
+    }
+
+    var body: some View {
+        Form {
+            LabeledContent("File") {
+                HStack {
+                    Text(fileURL?.lastPathComponent ?? "No file selected")
+                        .foregroundStyle(fileURL == nil ? .secondary : .primary)
+                        .truncationMode(.middle).lineLimit(1)
+                    Button("Browse…") {
+                        let panel = NSOpenPanel()
+                        if panel.runModal() == .OK, let url = panel.url {
+                            fileURL = url
+                            rehash()
+                        }
+                    }
+                }
+            }
+            Picker("Algorithm", selection: $algorithm) {
+                ForEach(HashAlgorithm.allCases) { Text($0.rawValue).tag($0) }
+            }
+            .onChange(of: algorithm) { rehash() }
+            LabeledContent("Result") {
+                HStack {
+                    if isHashing {
+                        ProgressView().controlSize(.small)
+                    } else {
+                        Text(result).monospaced().textSelection(.enabled)
+                            .truncationMode(.middle).lineLimit(1)
+                        if !result.isEmpty {
+                            Button {
+                                ToolWindows.copyToClipboard(result)
+                            } label: {
+                                Image(systemName: "doc.on.doc")
+                            }
+                            .buttonStyle(.borderless)
+                        }
+                    }
+                }
+            }
+            TextField("Target (paste to compare)", text: $target)
+                .monospaced()
+            if let matches {
+                Label(matches ? "Hashes match" : "Hashes do not match",
+                      systemImage: matches ? "checkmark.circle.fill" : "xmark.circle.fill")
+                    .foregroundStyle(matches ? .green : .red)
+            }
+        }
+        .formStyle(.grouped)
+        .frame(width: 460)
+        .fixedSize(horizontal: false, vertical: true)
+        .onDrop(of: [.fileURL], isTargeted: nil) { providers in
+            _ = providers.first?.loadObject(ofClass: URL.self) { url, _ in
+                guard let url else { return }
+                Task { @MainActor in
+                    fileURL = url
+                    rehash()
+                }
+            }
+            return true
+        }
+    }
+
+    private func rehash() {
+        guard let fileURL else { return }
+        isHashing = true
+        result = ""
+        let algorithm = algorithm
+        Task.detached(priority: .userInitiated) {
+            let digest = (try? HashChecker.hashFile(at: fileURL, algorithm: algorithm)) ?? "Could not read file"
+            await MainActor.run {
+                result = digest
+                isHashing = false
+            }
+        }
     }
 }
 
