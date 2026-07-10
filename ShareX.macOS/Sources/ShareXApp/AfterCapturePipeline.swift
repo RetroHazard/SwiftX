@@ -19,7 +19,7 @@ enum AfterCapturePipeline {
         .annotateImage, .copyImageToClipboard, .pinToScreen, .sendImageToPrinter,
         .saveImageToFile, .saveImageToFileWithDialog, .saveThumbnailImageToFile,
         .performActions, .copyFileToClipboard, .copyFilePathToClipboard, .copyFolderPathToClipboard,
-        .showInExplorer, .doOCR, .uploadImageToHost, .deleteFile
+        .showInExplorer, .scanQRCode, .doOCR, .uploadImageToHost, .deleteFile
     ]
 
     static func run(image capturedImage: CGImage, processName: String? = nil, windowTitle: String? = nil) async {
@@ -135,6 +135,10 @@ enum AfterCapturePipeline {
             if tasks.contains(.showInExplorer) {
                 NSWorkspace.shared.activateFileViewerSelecting([savedURL])
             }
+        }
+
+        if tasks.contains(.scanQRCode) {
+            ToolWindows.showQRDecodeResult(for: image)
         }
 
         if tasks.contains(.doOCR) {

@@ -62,6 +62,36 @@ enum ToolWindows {
         }
     }
 
+    // MARK: - QR code
+
+    static func showQRCode() {
+        present(title: "QR Code", content: QRCodeToolView())
+    }
+
+    static func scanQRFromRegion() {
+        Task {
+            guard let image = await captureRegionImage() else { return }
+            showQRDecodeResult(for: image)
+        }
+    }
+
+    static func scanQRFromScreen() {
+        Task {
+            guard let image = try? await ScreenCapture.captureDisplay() else { return }
+            showQRDecodeResult(for: image)
+        }
+    }
+
+    static func showQRDecodeResult(for image: CGImage) {
+        let payloads = (try? QRCodeTool.decode(image)) ?? []
+        guard !payloads.isEmpty else {
+            Notifier.notify(title: "QR code", body: "No QR code found.")
+            return
+        }
+        present(title: "QR Code — Decoded", resizable: true,
+                content: TextResultView(text: payloads.joined(separator: "\n")))
+    }
+
     // MARK: - Color picker
 
     static func showColorPicker() {
@@ -90,6 +120,54 @@ extension NSColor {
         return (Int((srgb.redComponent * 255).rounded()),
                 Int((srgb.greenComponent * 255).rounded()),
                 Int((srgb.blueComponent * 255).rounded()))
+    }
+}
+
+private struct QRCodeToolView: View {
+    @State private var text = "https://getsharex.com"
+
+    var body: some View {
+        VStack(spacing: 12) {
+            TextField("Content", text: $text)
+                .textFieldStyle(.roundedBorder)
+            Group {
+                if let code = QRCodeTool.generate(text) {
+                    Image(code, scale: 2, label: Text("QR code"))
+                        .resizable()
+                        .interpolation(.none)
+                } else {
+                    Text("Enter content to encode").foregroundStyle(.secondary)
+                }
+            }
+            .frame(width: 256, height: 256)
+            HStack {
+                Button("Copy Image") {
+                    guard let code = QRCodeTool.generate(text) else { return }
+                    ImageWriter.copyToClipboard(code)
+                }
+                Button("Save…") {
+                    guard let code = QRCodeTool.generate(text) else { return }
+                    let panel = NSSavePanel()
+                    panel.nameFieldStringValue = "qrcode.png"
+                    if panel.runModal() == .OK, let url = panel.url {
+                        try? ImageWriter.writePNG(code, to: url)
+                    }
+                }
+                Spacer()
+                Button("Decode File…") {
+                    let panel = NSOpenPanel()
+                    panel.allowedContentTypes = [.image]
+                    if panel.runModal() == .OK, let url = panel.url,
+                       let image = ImageLoader.load(url: url) {
+                        ToolWindows.showQRDecodeResult(for: image)
+                    }
+                }
+                Button("Scan Region…") { ToolWindows.scanQRFromRegion() }
+            }
+        }
+        .padding()
+        .frame(width: 420)
+        .fixedSize()
     }
 }
 
