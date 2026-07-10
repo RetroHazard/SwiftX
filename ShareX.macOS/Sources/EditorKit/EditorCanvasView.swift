@@ -53,6 +53,26 @@ public final class EditorCanvasView: NSView {
     public private(set) var canvasSize: NSSize
     private let displayScale: CGFloat
 
+    /// View magnification. Shapes stay in canvas points; input divides by
+    /// zoom, drawing multiplies. Pan comes free from the enclosing ScrollView.
+    public private(set) var zoom: CGFloat = 1
+
+    /// What the view actually occupies on screen (canvas points x zoom).
+    public var displaySize: NSSize {
+        NSSize(width: canvasSize.width * zoom, height: canvasSize.height * zoom)
+    }
+
+    /// SwiftUI owns the zoom value and also scales the layout frame itself,
+    /// so this only refreshes the view - no state published back mid-update.
+    public func setZoom(_ value: CGFloat) {
+        let clamped = min(4, max(0.25, value))
+        guard abs(clamped - zoom) > 0.001 else { return }
+        commitTextEntry() // the field's frame is in view coords of the old zoom
+        zoom = clamped
+        invalidateIntrinsicContentSize()
+        needsDisplay = true
+    }
+
     public init(image: CGImage) {
         self.baseImage = image
         self.displayScale = NSScreen.main?.backingScaleFactor ?? 2
@@ -66,7 +86,13 @@ public final class EditorCanvasView: NSView {
     public override var isFlipped: Bool { true }
     public override var acceptsFirstResponder: Bool { true }
     // without this, the representable collapses to zero inside a SwiftUI ScrollView
-    public override var intrinsicContentSize: NSSize { canvasSize }
+    public override var intrinsicContentSize: NSSize { displaySize }
+
+    /// Event location in canvas points (undoes the zoom).
+    private func canvasPoint(for event: NSEvent) -> CGPoint {
+        let p = convert(event.locationInWindow, from: nil)
+        return CGPoint(x: p.x / zoom, y: p.y / zoom)
+    }
 
     // MARK: - Effect variants (blur/pixelate draw regions from these; reset on crop/undo)
 
@@ -280,7 +306,7 @@ public final class EditorCanvasView: NSView {
     public override func mouseDown(with event: NSEvent) {
         commitTextEntry()
         window?.makeFirstResponder(self)
-        let point = convert(event.locationInWindow, from: nil)
+        let point = canvasPoint(for: event)
 
         // double-click a text shape or balloon re-opens it for editing, regardless of tool
         if event.clickCount == 2, let index = shapeIndex(at: point) {
@@ -352,7 +378,7 @@ public final class EditorCanvasView: NSView {
     }
 
     public override func mouseDragged(with event: NSEvent) {
-        let point = convert(event.locationInWindow, from: nil)
+        let point = canvasPoint(for: event)
 
         switch dragMode {
         case .draw:
@@ -389,7 +415,7 @@ public final class EditorCanvasView: NSView {
         }
         guard case .draw = dragMode, var shape = draft else { return }
         draft = nil
-        let point = convert(event.locationInWindow, from: nil)
+        let point = canvasPoint(for: event)
         let dragDistance = hypot(point.x - dragStart.x, point.y - dragStart.y)
         guard dragDistance >= 3 || shape.tool == .freehand else {
             needsDisplay = true
@@ -434,6 +460,41 @@ public final class EditorCanvasView: NSView {
         let delta = CGPoint(x: -rect.minX, y: -rect.minY)
         shapes = shapes.map { translated($0, by: delta) }
         selectedShapeID = nil
+        needsDisplay = true
+    }
+
+    /// Grows the canvas by per-edge padding (canvas points) filled with a
+    /// color; shapes keep their position relative to the original image.
+    /// Undoable like crop - the snapshot carries the image.
+    public func expandCanvas(top: CGFloat, left: CGFloat, bottom: CGFloat, right: CGFloat, color: NSColor) {
+        let top = max(0, top), left = max(0, left), bottom = max(0, bottom), right = max(0, right)
+        guard top + left + bottom + right > 0 else { return }
+
+        let pixelsPerPoint = CGFloat(baseImage.width) / canvasSize.width
+        let newWidth = baseImage.width + Int((left + right) * pixelsPerPoint)
+        let newHeight = baseImage.height + Int((top + bottom) * pixelsPerPoint)
+        guard let context = CGContext(
+            data: nil, width: newWidth, height: newHeight,
+            bitsPerComponent: 8, bytesPerRow: 0,
+            space: baseImage.colorSpace ?? CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else { return }
+
+        if let fill = color.usingColorSpace(.sRGB), fill.alphaComponent > 0 {
+            context.setFillColor(fill.cgColor)
+            context.fill(CGRect(x: 0, y: 0, width: newWidth, height: newHeight))
+        }
+        // CG origin is bottom-left: the bottom padding sits under the image
+        context.draw(baseImage, in: CGRect(
+            x: left * pixelsPerPoint, y: bottom * pixelsPerPoint,
+            width: CGFloat(baseImage.width), height: CGFloat(baseImage.height)
+        ))
+        guard let expanded = context.makeImage() else { return }
+
+        pushHistory()
+        setBaseImage(expanded)
+        let delta = CGPoint(x: left, y: top)
+        shapes = shapes.map { translated($0, by: delta) }
         needsDisplay = true
     }
 
@@ -621,7 +682,8 @@ public final class EditorCanvasView: NSView {
 
     private func beginTextEntry(at point: CGPoint, prefilled: String = "", color: NSColor? = nil, target: UUID? = nil) {
         textEntryTarget = target
-        let field = NSTextField(frame: NSRect(x: point.x, y: point.y, width: 240, height: 26))
+        // the field is a subview, so its frame lives in zoomed view coordinates
+        let field = NSTextField(frame: NSRect(x: point.x * zoom, y: point.y * zoom, width: 240, height: 26))
         field.font = .systemFont(ofSize: 18)
         field.textColor = color ?? currentColor
         field.stringValue = prefilled
@@ -638,7 +700,7 @@ public final class EditorCanvasView: NSView {
         guard let field = activeTextField else { return }
         activeTextField = nil
         let text = field.stringValue.trimmingCharacters(in: .whitespaces)
-        let origin = field.frame.origin
+        let origin = CGPoint(x: field.frame.origin.x / zoom, y: field.frame.origin.y / zoom)
         let color = field.textColor ?? currentColor
         let target = textEntryTarget
         textEntryTarget = nil
@@ -663,6 +725,8 @@ public final class EditorCanvasView: NSView {
     // MARK: - Drawing
 
     public override func draw(_ dirtyRect: NSRect) {
+        // everything below works in canvas points; the transform applies the zoom
+        NSGraphicsContext.current?.cgContext.scaleBy(x: zoom, y: zoom)
         // use canvasSize, not bounds: after a crop, SwiftUI relayout lags a frame
         NSImage(cgImage: baseImage, size: canvasSize).draw(in: NSRect(origin: .zero, size: canvasSize))
         for shape in shapes {
