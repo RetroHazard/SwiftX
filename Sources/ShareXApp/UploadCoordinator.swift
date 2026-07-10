@@ -39,7 +39,7 @@ enum UploadCoordinator {
         var errorDescription: String? {
             switch self {
             case .noCustomUploader:
-                return "No custom uploader configured. Import a .sxcu from the ShareX menu."
+                return "No custom uploader configured. Import a .sxcu in Settings → Custom Uploader."
             case .notImplemented(let destination):
                 return "Destination \"\(destination)\" is not implemented yet."
             }

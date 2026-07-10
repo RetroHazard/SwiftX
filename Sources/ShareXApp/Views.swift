@@ -524,7 +524,7 @@ struct SettingsView: View {
             if task.imageDestination == "CustomImageUploader" {
                 let uploaders = CustomUploaderStore.list()
                 if uploaders.isEmpty {
-                    Text("No custom uploaders imported. Use “Import Custom Uploader…” in the ShareX menu — any community .sxcu file works.")
+                    Text("No custom uploaders imported. Use Import… in Settings → Custom Uploader — any community .sxcu file works.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 } else {
