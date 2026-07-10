@@ -134,6 +134,12 @@ enum HotkeyDispatcher {
             ToolWindows.showColorPicker()
         case .ocr:
             ToolWindows.runOCRFromRegion()
+        case .qrCode:
+            ToolWindows.showQRCode()
+        case .qrCodeDecodeFromScreen:
+            ToolWindows.scanQRFromScreen()
+        case .qrCodeScanRegion:
+            ToolWindows.scanQRFromRegion()
         case .screenColorPicker:
             ToolWindows.pickScreenColor()
         case .pinToScreenFromClipboard:
