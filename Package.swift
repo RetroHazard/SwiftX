@@ -31,12 +31,15 @@ let package = Package(
             name: "EditorKit"
         ),
         .target(
+            name: "EffectsKit"
+        ),
+        .target(
             name: "ToolsKit",
             dependencies: ["CaptureKit"]
         ),
         .executableTarget(
             name: "SwiftXApp",
-            dependencies: ["SharedKit", "CaptureKit", "UploadKit", "HistoryKit", "EditorKit", "ToolsKit"]
+            dependencies: ["SharedKit", "CaptureKit", "UploadKit", "HistoryKit", "EditorKit", "EffectsKit", "ToolsKit"]
         ),
         .testTarget(
             name: "SharedKitTests",
@@ -57,6 +60,10 @@ let package = Package(
         .testTarget(
             name: "EditorKitTests",
             dependencies: ["EditorKit"]
+        ),
+        .testTarget(
+            name: "EffectsKitTests",
+            dependencies: ["EffectsKit"]
         ),
         .testTarget(
             name: "ToolsKitTests",
