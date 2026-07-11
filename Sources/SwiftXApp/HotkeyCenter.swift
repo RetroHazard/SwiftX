@@ -156,6 +156,10 @@ enum HotkeyDispatcher {
             ToolWindows.showImageSplitter()
         case .imageThumbnailer:
             ToolWindows.showImageThumbnailer()
+        case .imageEffects:
+            ImageEffectsWindows.showEditor()
+        case .imageBeautifier:
+            ImageEffectsWindows.showBeautifier()
         case .metadata:
             ToolWindows.showMetadataViewer()
         case .stripMetadata:
