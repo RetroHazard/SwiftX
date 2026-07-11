@@ -33,16 +33,45 @@ public enum ScreenCapture {
     }
 
     /// Captures a region given in Cocoa global coordinates (bottom-left origin, y-up).
-    /// The region is clamped to the display where it (mostly) lives.
-    /// ponytail: selections spanning multiple displays capture only the primary intersecting display - stitch later if anyone asks
+    /// Selections spanning multiple displays are stitched into one image at the
+    /// highest backing scale among the displays; uncovered gaps stay transparent.
     public static func captureRegion(cocoaRect: CGRect, showsCursor: Bool = false) async throws -> CGImage {
-        guard let screen = NSScreen.screens
-            .filter({ $0.frame.intersects(cocoaRect) })
-            .max(by: { $0.frame.intersection(cocoaRect).area < $1.frame.intersection(cocoaRect).area })
-        else { throw ScreenCaptureError.noDisplay }
-
-        let clamped = cocoaRect.intersection(screen.frame)
+        let screens = NSScreen.screens.filter { $0.frame.intersects(cocoaRect) }
+        guard !screens.isEmpty else { throw ScreenCaptureError.noDisplay }
         let content = try await shareableContent()
+
+        if screens.count == 1 {
+            return try await captureRegionCrop(cocoaRect, on: screens[0], in: content, showsCursor: showsCursor)
+        }
+
+        let scale = screens.map(\.backingScaleFactor).max()!
+        guard let context = CGContext(
+            data: nil,
+            width: Int(cocoaRect.width * scale), height: Int(cocoaRect.height * scale),
+            bitsPerComponent: 8, bytesPerRow: 0,
+            space: CGColorSpace(name: CGColorSpace.sRGB)!,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else { throw ScreenCaptureError.cropFailed }
+        context.interpolationQuality = .high
+
+        for screen in screens {
+            let part = cocoaRect.intersection(screen.frame)
+            let image = try await captureRegionCrop(part, on: screen, in: content, showsCursor: showsCursor)
+            // context origin is bottom-left, same as Cocoa global — no flip needed
+            context.draw(image, in: CGRect(x: (part.minX - cocoaRect.minX) * scale,
+                                           y: (part.minY - cocoaRect.minY) * scale,
+                                           width: part.width * scale,
+                                           height: part.height * scale))
+        }
+        guard let stitched = context.makeImage() else { throw ScreenCaptureError.cropFailed }
+        return stitched
+    }
+
+    /// Captures one display and crops out the given Cocoa-global rect (clamped to that display).
+    private static func captureRegionCrop(_ cocoaRect: CGRect, on screen: NSScreen,
+                                          in content: SCShareableContent,
+                                          showsCursor: Bool) async throws -> CGImage {
+        let clamped = cocoaRect.intersection(screen.frame)
         let scale = screen.backingScaleFactor
         let full = try await captureImage(of: try scDisplay(for: screen, in: content), scale: scale, showsCursor: showsCursor)
         let pixelRect = ScreenCoordinates.displayLocalPixelRect(of: clamped, in: screen.frame, scale: scale)
