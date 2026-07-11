@@ -4,6 +4,7 @@
 
 import AppKit
 import CaptureKit
+import EffectsKit
 import SwiftUI
 import SharedKit
 import UploadKit
@@ -33,6 +34,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         item.button?.image = NSImage(systemSymbolName: "camera.viewfinder", accessibilityDescription: "SwiftX")
         item.menu = buildMenu()
         statusItem = item
+
+        // watermark text (%h, %mi, ...) runs through the ShareX pattern parser
+        EffectsEnvironment.textParser = { NameParser(.text).parse($0) }
 
         setupHotkeys()
         Notifier.setup()
@@ -136,6 +140,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             ("Image Combiner…", .imageCombiner),
             ("Image Splitter…", .imageSplitter),
             ("Image Thumbnailer…", .imageThumbnailer),
+            ("Image Effects…", .imageEffects),
+            ("Image Beautifier…", .imageBeautifier),
             nil,
             ("Video Converter…", .videoConverter),
             ("Video Thumbnailer…", .videoThumbnailer),

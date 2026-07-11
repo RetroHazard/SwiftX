@@ -61,9 +61,10 @@ enum EffectJSON {
     }()
 }
 
-extension ImageEffecting {
+public extension ImageEffecting {
     /// Decodes from a JSON object, filling missing keys from a default
     /// instance so partial C# exports (DefaultValueHandling.Ignore) work.
+    /// Public so the app's parameter editor can round-trip field edits.
     static func decode(mergedWith dict: [String: Any]) throws -> Self {
         let defaults = try JSONSerialization.jsonObject(
             with: EffectJSON.encoder.encode(Self())) as! [String: Any]
