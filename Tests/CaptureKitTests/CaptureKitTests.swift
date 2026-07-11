@@ -117,3 +117,58 @@ struct ImageWriterTests {
         #expect(ImageWriter.thumbnail(small, width: 0, height: 0) == nil)
     }
 }
+
+struct RegionSelectionTests {
+    private func solidImage(width: Int, height: Int) -> CGImage {
+        let context = CGContext(
+            data: nil, width: width, height: height,
+            bitsPerComponent: 8, bytesPerRow: 0,
+            space: CGColorSpace(name: CGColorSpace.sRGB)!,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        )!
+        context.setFillColor(CGColor(red: 0, green: 1, blue: 0, alpha: 1))
+        context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+        return context.makeImage()!
+    }
+
+    private func alpha(of image: CGImage, x: Int, y: Int) -> UInt8 {
+        let context = CGContext(
+            data: nil, width: image.width, height: image.height,
+            bitsPerComponent: 8, bytesPerRow: image.width * 4,
+            space: CGColorSpace(name: CGColorSpace.sRGB)!,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        )!
+        context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+        let pixels = context.data!.assumingMemoryBound(to: UInt8.self)
+        return pixels[(y * image.width + x) * 4 + 3]
+    }
+
+    @Test func rectangleMaskIsIdentity() {
+        let image = solidImage(width: 20, height: 20)
+        let selection = RegionSelection(rect: CGRect(x: 0, y: 0, width: 20, height: 20),
+                                        shape: .rectangle, freehandPoints: [])
+        #expect(selection.applyMask(to: image) === image)
+    }
+
+    @Test func ellipseMaskClearsCornersKeepsCenter() {
+        let image = solidImage(width: 40, height: 40)
+        let selection = RegionSelection(rect: CGRect(x: 100, y: 100, width: 40, height: 40),
+                                        shape: .ellipse, freehandPoints: [])
+        let masked = selection.applyMask(to: image)
+        #expect(alpha(of: masked, x: 1, y: 1) == 0)      // corner outside the ellipse
+        #expect(alpha(of: masked, x: 20, y: 20) == 255)  // center inside
+    }
+
+    @Test func freehandMaskFollowsPolygon() {
+        // triangle occupying the left half of a selection at global (100, 100)
+        let image = solidImage(width: 40, height: 40)
+        let selection = RegionSelection(
+            rect: CGRect(x: 100, y: 100, width: 40, height: 40),
+            shape: .freehand,
+            freehandPoints: [CGPoint(x: 100, y: 100), CGPoint(x: 100, y: 140), CGPoint(x: 120, y: 120)]
+        )
+        let masked = selection.applyMask(to: image)
+        #expect(alpha(of: masked, x: 3, y: 20) == 255)  // deep inside the triangle
+        #expect(alpha(of: masked, x: 38, y: 20) == 0)   // right half is outside
+    }
+}

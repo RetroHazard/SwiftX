@@ -15,23 +15,23 @@ final class CaptureCoordinator {
 
     /// Most recent region selection, for LastRegion capture. In-memory only,
     /// like the Windows app within a session.
-    private var lastRegion: CGRect?
+    private var lastRegion: RegionSelection?
 
     func captureRegion() {
         Task {
-            guard let rect = await RegionSelectController().selectRegion() else { return }
-            lastRegion = rect
+            guard let selection = await RegionSelectController().selectRegionDetailed() else { return }
+            lastRegion = selection
             // let the compositor remove the overlay before shooting
             try? await Task.sleep(for: .milliseconds(80))
-            await run { try await ScreenCapture.captureRegion(cocoaRect: rect) }
+            await run { selection.applyMask(to: try await ScreenCapture.captureRegion(cocoaRect: selection.rect)) }
         }
     }
 
     /// Re-captures the previous region; falls back to the picker the first time.
     func captureLastRegion() {
-        guard let rect = lastRegion else { return captureRegion() }
+        guard let selection = lastRegion else { return captureRegion() }
         Task {
-            await run { try await ScreenCapture.captureRegion(cocoaRect: rect) }
+            await run { selection.applyMask(to: try await ScreenCapture.captureRegion(cocoaRect: selection.rect)) }
         }
     }
 
