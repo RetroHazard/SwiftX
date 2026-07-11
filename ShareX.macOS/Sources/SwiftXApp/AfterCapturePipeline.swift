@@ -9,6 +9,7 @@
 import AppKit
 import CaptureKit
 import EditorKit
+import EffectsKit
 import HistoryKit
 import SharedKit
 import ToolsKit
@@ -16,6 +17,7 @@ import ToolsKit
 @MainActor
 enum AfterCapturePipeline {
     static let implemented: AfterCaptureTasks = [
+        .beautifyImage, .addImageEffects,
         .annotateImage, .copyImageToClipboard, .pinToScreen, .sendImageToPrinter,
         .saveImageToFile, .saveImageToFileWithDialog, .saveThumbnailImageToFile,
         .performActions, .copyFileToClipboard, .copyFilePathToClipboard, .copyFolderPathToClipboard,
@@ -28,6 +30,13 @@ enum AfterCapturePipeline {
         let tasks = settings.afterCaptureJob
 
         var image = capturedImage
+        // C# task order: beautify, then effects, then the editor
+        if tasks.contains(.beautifyImage) {
+            image = ImageBeautifier.render(image, options: ImageEffectsStore.shared.beautifier)
+        }
+        if tasks.contains(.addImageEffects), let preset = ImageEffectsStore.shared.selectedPreset {
+            image = preset.apply(image)
+        }
         if tasks.contains(.annotateImage) {
             // C# behavior: the task waits for the editor; Cancel aborts the whole task
             guard let edited = await ImageEditorPresenter.present(image: image) else { return }

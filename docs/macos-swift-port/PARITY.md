@@ -33,7 +33,7 @@ Statuses: **Ported** · **Partial** (works, known gaps) · **Planned** (phase no
 
 | Feature | Status |
 |---|---|
-| After-capture pipeline (C#-compatible flag serialization) | Ported — 17 of 22 flags: annotate, image/file/paths to clipboard, pin, print, save, save-dialog, thumbnail, actions, show in Finder, analyze (AI), scan QR, OCR, upload, delete (Trash); remaining 5 wait on their phases (quick task menu, after-capture/before-upload windows, beautify, effects) |
+| After-capture pipeline (C#-compatible flag serialization) | Ported — 19 of 22 flags: beautify, effects, annotate, image/file/paths to clipboard, pin, print, save, save-dialog, thumbnail, actions, show in Finder, analyze (AI), scan QR, OCR, upload, delete (Trash); remaining 3 wait on their phases (quick task menu, after-capture/before-upload windows) |
 | Pin to screen (from capture, clipboard, file, screen region, close all) | Ported — drag to move, double-click to close, scroll/± to scale, ⌘-scroll/⌘± for opacity (C# 10% steps), right-click menu (copy, save, close all) |
 | After-upload tasks (6) | Planned (3) — flags model ready |
 | Global hotkey engine (Carbon), defaults ⌃⇧3/4/5, DisableHotkeys toggle | Ported — recorder UI in Settings, live re-registration |
@@ -87,9 +87,9 @@ Statuses: **Ported** · **Partial** (works, known gaps) · **Planned** (phase no
 
 | Feature | Status |
 |---|---|
-| 15 adjustments, 18 filters, 10 manipulations, 8 drawings | Planned (6) |
-| .sxie preset import/export | Planned (6) |
-| Image beautifier | Planned (6) |
+| 15 adjustments, 18 filters, 10 manipulations, 8 drawings | Ported — C#-exact matrices/kernels on straight-alpha buffers; editor window generates one reflection-based parameter form for all 51 effects, with live preview |
+| .sxie preset import/export | Ported — C#-compatible Config.json ($type bare class names, PascalCase keys, TypeConverter scalar strings); BeautifyImage/AddImageEffects run in the after-capture pipeline before annotate |
+| Image beautifier | Ported — smart padding, rounded corners, shadow angle/distance, gradient/color/image/transparent backgrounds; tool window with live preview + Copy/Save |
 
 ## Phase 7 — Screen recording
 
