@@ -17,7 +17,8 @@ import ToolsKit
 @MainActor
 enum AfterCapturePipeline {
     static let implemented: AfterCaptureTasks = [
-        .showQuickTaskMenu, .beautifyImage, .addImageEffects,
+        .showQuickTaskMenu, .showAfterCaptureWindow, .showBeforeUploadWindow,
+        .beautifyImage, .addImageEffects,
         .annotateImage, .copyImageToClipboard, .pinToScreen, .sendImageToPrinter,
         .saveImageToFile, .saveImageToFileWithDialog, .saveThumbnailImageToFile,
         .performActions, .copyFileToClipboard, .copyFilePathToClipboard, .copyFolderPathToClipboard,
@@ -38,6 +39,27 @@ enum AfterCapturePipeline {
                 // C#: the preset replaces both task chains for this run only
                 settings.afterCaptureJob = preset.afterCaptureTasks
                 settings.afterUploadJob = preset.afterUploadTasks
+            }
+        }
+
+        var fileNameOverride: String?
+        if settings.afterCaptureJob.contains(.showAfterCaptureWindow) {
+            let defaultName = SavePath.screenshotURL(
+                config: config, task: settings,
+                windowTitle: windowTitle, processName: processName,
+                width: capturedImage.width, height: capturedImage.height,
+                fileExtension: "png"
+            ).deletingPathExtension().lastPathComponent
+            switch await AfterCaptureWindow.present(image: capturedImage, settings: settings,
+                                                    defaultFileName: defaultName) {
+            case .cancel:
+                return
+            case .proceed(let edited, let fileName):
+                settings = edited
+                settings.afterCaptureJob.remove(.showAfterCaptureWindow)
+                if !fileName.isEmpty, fileName != defaultName {
+                    fileNameOverride = fileName
+                }
             }
         }
         let tasks = settings.afterCaptureJob
@@ -71,13 +93,21 @@ enum AfterCapturePipeline {
         )
         var savedURL: URL?
 
+        // after-capture window edits replace the generated name (same folder)
+        func withNameOverride(_ url: URL) -> URL {
+            guard let fileNameOverride else { return url }
+            return url.deletingLastPathComponent()
+                .appendingPathComponent(fileNameOverride)
+                .appendingPathExtension(format.fileExtension)
+        }
+
         if tasks.contains(.saveImageToFile) {
-            let url = SavePath.screenshotURL(
+            let url = withNameOverride(SavePath.screenshotURL(
                 config: config, task: settings,
                 windowTitle: windowTitle, processName: processName,
                 width: image.width, height: image.height,
                 fileExtension: format.fileExtension
-            )
+            ))
             do {
                 try ImageWriter.write(image, to: url, format: format, jpegQuality: settings.imageJPEGQuality)
                 savedURL = url
@@ -91,8 +121,8 @@ enum AfterCapturePipeline {
             let panel = NSSavePanel()
             panel.directoryURL = config.screenshotsFolder
             panel.nameFieldStringValue = savedURL?.lastPathComponent
-                ?? SavePath.screenshotURL(config: config, task: settings, processName: processName,
-                                          fileExtension: format.fileExtension).lastPathComponent
+                ?? withNameOverride(SavePath.screenshotURL(config: config, task: settings, processName: processName,
+                                                           fileExtension: format.fileExtension)).lastPathComponent
             NSApp.activate(ignoringOtherApps: true)
             if panel.runModal() == .OK, let url = panel.url {
                 do {
@@ -108,12 +138,12 @@ enum AfterCapturePipeline {
            let thumb = ImageWriter.thumbnail(image, width: settings.thumbnailWidth,
                                              height: settings.thumbnailHeight,
                                              onlyIfLarger: settings.thumbnailCheckSize) {
-            let base = savedURL ?? SavePath.screenshotURL(
+            let base = savedURL ?? withNameOverride(SavePath.screenshotURL(
                 config: config, task: settings,
                 windowTitle: windowTitle, processName: processName,
                 width: image.width, height: image.height,
                 fileExtension: format.fileExtension
-            )
+            ))
             let name = base.deletingPathExtension().lastPathComponent + settings.thumbnailName
             let url = base.deletingLastPathComponent()
                 .appendingPathComponent(name).appendingPathExtension(format.fileExtension)
@@ -177,8 +207,10 @@ enum AfterCapturePipeline {
                 // reuse the encoded file so bytes, name and MIME type all agree
                 UploadCoordinator.uploadFile(at: savedURL, settings: settings)
             } else {
-                let fileName = SavePath.screenshotURL(config: config, task: settings, processName: processName,
-                                                      fileExtension: format.fileExtension).lastPathComponent
+                let fileName = withNameOverride(SavePath.screenshotURL(config: config, task: settings,
+                                                                       processName: processName,
+                                                                       fileExtension: format.fileExtension))
+                    .lastPathComponent
                 UploadCoordinator.uploadImage(image, fileName: fileName,
                                               format: format, jpegQuality: settings.imageJPEGQuality,
                                               settings: settings)

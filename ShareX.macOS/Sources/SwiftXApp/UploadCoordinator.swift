@@ -82,8 +82,21 @@ enum UploadCoordinator {
 
     private static func upload(_ file: UploadFile, filePath: String?,
                                settingsOverride: TaskSettings? = nil, isRetry: Bool = false) {
-        let config = UploadersConfig.load()
         let settings = settingsOverride ?? TaskSettings.load()
+
+        // C# WorkerTask: the before-upload window intercepts every upload
+        // source (captures, recordings, files) right before dispatch
+        if !isRetry, settings.afterCaptureJob.contains(.showBeforeUploadWindow) {
+            Task {
+                guard var chosen = await BeforeUploadWindow.present(
+                    fileName: file.fileName, previewData: file.data, settings: settings) else { return }
+                chosen.afterCaptureJob.remove(.showBeforeUploadWindow)
+                upload(file, filePath: filePath, settingsOverride: chosen)
+            }
+            return
+        }
+
+        let config = UploadersConfig.load()
         let entryID = UploadTaskCenter.shared.begin(fileName: file.fileName, host: settings.imageDestination)
         let reporter = UploadProgressReporter { sent, expected in
             Task { @MainActor in
