@@ -23,10 +23,10 @@ Statuses: **Ported** · **Partial** (works, known gaps) · **Planned** (phase no
 | Monitor picker / window picker capture | Ported — status-menu submenus populate on open |
 | Region select overlay — rectangle, dimming, crosshair, size label, multi-display, Esc cancel | Ported |
 | Region overlay — window snapping (hover highlight, click captures), last region (menu + hotkey) | Ported |
-| Region overlay extras — ellipse/freehand, magnifier, fixed size, snap sizes | Planned (1 follow-up) — ruler and screen color picker shipped as standalone tools (Phase 8) |
+| Region overlay extras — ellipse/freehand, magnifier, fixed size, snap sizes | Ported — Tab cycles shape, M toggles magnifier, F toggles fixed size, drags auto-snap to presets; ruler and screen color picker shipped as standalone tools (Phase 8) |
 | Save to file + subfolder patterns (name parser), clipboard copy | Ported |
 | JPEG/GIF/BMP/TIFF encoders + quality, auto-JPEG for large captures | Ported — C# EImageFormat set; WebP is not a C# image format either |
-| Cross-display region selection (stitching) | Planned — clamps to dominant display for now |
+| Cross-display region selection (stitching) | Ported — per-display captures composited at the highest backing scale |
 | Transparent/shadow window capture | N/A — ScreenCaptureKit window capture includes native shadows |
 
 ## Phase 2 — Task pipeline, hotkeys
