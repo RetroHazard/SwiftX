@@ -241,7 +241,7 @@ public enum ImageEditorPresenter {
                 backing: .buffered,
                 defer: false
             )
-            window.title = "ShareX Image Editor"
+            window.title = "SwiftX Image Editor"
             window.isReleasedWhenClosed = false
             window.delegate = delegate
 

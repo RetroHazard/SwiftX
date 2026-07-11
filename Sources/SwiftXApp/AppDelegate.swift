@@ -30,7 +30,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
 
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        item.button?.image = NSImage(systemSymbolName: "camera.viewfinder", accessibilityDescription: "ShareX")
+        item.button?.image = NSImage(systemSymbolName: "camera.viewfinder", accessibilityDescription: "SwiftX")
         item.menu = buildMenu()
         statusItem = item
 
@@ -55,7 +55,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                       settings.authorizationStatus.rawValue, settings.alertSetting.rawValue)
             }
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                Notifier.notify(title: "ShareX test", body: "Notifications are working.")
+                Notifier.notify(title: "SwiftX test", body: "Notifications are working.")
             }
         }
     }
@@ -117,7 +117,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let settings = NSMenuItem(title: "Settings…", action: #selector(showSettingsWindow), keyEquivalent: ",")
         menu.addItem(settings)
         menu.addItem(.separator())
-        menu.addItem(NSMenuItem(title: "Quit ShareX", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+        menu.addItem(NSMenuItem(title: "Quit SwiftX", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
 
         menu.items.forEach { $0.target = $0.action != nil ? self : nil }
         return menu
@@ -219,21 +219,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         abortRecordingItem?.isHidden = !recording
         statusItem?.button?.image = NSImage(
             systemSymbolName: recording ? "record.circle" : "camera.viewfinder",
-            accessibilityDescription: "ShareX"
+            accessibilityDescription: "SwiftX"
         )
         statusItem?.button?.contentTintColor = recording ? .systemRed : nil
     }
 
     @objc func showMainWindow() {
         if mainWindow == nil {
-            mainWindow = makeWindow(title: "ShareX", size: NSSize(width: 640, height: 420), view: AnyView(MainWindowView()))
+            mainWindow = makeWindow(title: "SwiftX", size: NSSize(width: 640, height: 420), view: AnyView(MainWindowView()))
         }
         present(mainWindow)
     }
 
     @objc private func showSettingsWindow() {
         if settingsWindow == nil {
-            settingsWindow = makeWindow(title: "ShareX Settings", size: NSSize(width: 700, height: 460), view: AnyView(SettingsView()))
+            settingsWindow = makeWindow(title: "SwiftX Settings", size: NSSize(width: 700, height: 460), view: AnyView(SettingsView()))
         }
         present(settingsWindow)
     }
@@ -260,7 +260,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func handleURLEvent(_ event: NSAppleEventDescriptor, with replyEvent: NSAppleEventDescriptor) {
         guard let urlString = event.paramDescriptor(forKeyword: keyDirectObject)?.stringValue else { return }
         // ponytail: log only; sharex:// actions dispatch into the task pipeline from Phase 2 on
-        NSLog("ShareX received URL: %@", urlString)
+        NSLog("SwiftX received URL: %@", urlString)
     }
 }
 

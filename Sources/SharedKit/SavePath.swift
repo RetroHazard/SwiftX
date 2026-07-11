@@ -35,7 +35,7 @@ public enum SavePath {
         let pattern = processName != nil ? task.nameFormatPatternActiveWindow : task.nameFormatPattern
         var name = nameParser.parse(pattern)
         if name.isEmpty {
-            name = "ShareX"
+            name = "SwiftX"
         }
 
         var candidate = folder.appendingPathComponent(name).appendingPathExtension(fileExtension)

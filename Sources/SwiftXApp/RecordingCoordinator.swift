@@ -98,7 +98,7 @@ final class RecordingCoordinator {
         var transcode = FFmpeg.TranscodeFormat(rawValue: codec)
         if transcode != nil, FFmpeg.installedPath == nil {
             Notifier.notify(title: "ffmpeg not found — recording H.264 instead",
-                            body: "Install ffmpeg from ShareX Settings to enable WebM/WebP/APNG.")
+                            body: "Install ffmpeg from SwiftX Settings to enable WebM/WebP/APNG.")
             transcode = nil
         }
         let format: RecordingFormat = gif ? .gif : .movie(hevc: codec == "HEVC")
@@ -120,7 +120,7 @@ final class RecordingCoordinator {
             let alert = NSAlert()
             alert.messageText = "Recording failed"
             alert.informativeText = error.localizedDescription
-                + "\n\nIf this is a permission problem, grant Screen Recording access in ShareX Settings."
+                + "\n\nIf this is a permission problem, grant Screen Recording access in SwiftX Settings."
             alert.alertStyle = .warning
             NSApp.activate(ignoringOtherApps: true)
             alert.runModal()
