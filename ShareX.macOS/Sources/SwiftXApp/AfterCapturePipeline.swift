@@ -25,8 +25,12 @@ enum AfterCapturePipeline {
         .showInExplorer, .analyzeImage, .scanQRCode, .doOCR, .uploadImageToHost, .deleteFile
     ]
 
-    static func run(image capturedImage: CGImage, processName: String? = nil, windowTitle: String? = nil) async {
-        var settings = TaskSettings.load()
+    /// `settings` overrides the stored TaskSettings (auto capture strips the
+    /// interactive steps); `quiet` drops the capture banner (C# auto-capture
+    /// suppresses toasts).
+    static func run(image capturedImage: CGImage, processName: String? = nil, windowTitle: String? = nil,
+                    settings settingsOverride: TaskSettings? = nil, quiet: Bool = false) async {
+        var settings = settingsOverride ?? TaskSettings.load()
         let config = ApplicationConfig.load()
 
         if settings.afterCaptureJob.contains(.showQuickTaskMenu) {
@@ -111,7 +115,7 @@ enum AfterCapturePipeline {
             do {
                 try ImageWriter.write(image, to: url, format: format, jpegQuality: settings.imageJPEGQuality)
                 savedURL = url
-                Notifier.captureSaved(url)
+                if !quiet { Notifier.captureSaved(url) }
             } catch {
                 presentError(error)
             }
