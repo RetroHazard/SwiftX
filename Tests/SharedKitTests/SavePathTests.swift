@@ -72,7 +72,7 @@ struct SavePathTests {
             var task = TaskSettings()
             task.nameFormatPattern = "%width" // empty when width unset
             let url = SavePath.screenshotURL(config: makeConfig(in: folder), task: task)
-            #expect(url.lastPathComponent == "ShareX.png")
+            #expect(url.lastPathComponent == "SwiftX.png")
         }
     }
 }

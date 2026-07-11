@@ -6,13 +6,13 @@ import AppKit
 import CaptureKit
 import SharedKit
 
-// Headless capture check for development: sharex --capture-selftest
+// Headless capture check for development: swiftx --capture-selftest
 if CommandLine.arguments.contains("--capture-selftest") {
     let semaphore = DispatchSemaphore(value: 0)
     Task {
         do {
             let image = try await ScreenCapture.captureDisplay()
-            let url = FileManager.default.temporaryDirectory.appendingPathComponent("sharex-selftest.png")
+            let url = FileManager.default.temporaryDirectory.appendingPathComponent("swiftx-selftest.png")
             try ImageWriter.writePNG(image, to: url)
             print("selftest ok: \(image.width)x\(image.height) -> \(url.path)")
         } catch {
@@ -46,7 +46,7 @@ enum SingleInstance {
         lockFileDescriptor = open(path, O_CREAT | O_RDWR, 0o644)
         if lockFileDescriptor == -1 || flock(lockFileDescriptor, LOCK_EX | LOCK_NB) != 0 {
             // ponytail: just exit; forwarding args to the running instance lands with the CLI (Phase 10)
-            print("ShareX is already running.")
+            print("SwiftX is already running.")
             exit(0)
         }
         // fd stays open for process lifetime to hold the lock

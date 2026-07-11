@@ -35,7 +35,7 @@ public enum SimpleHostDestination: String, Codable, CaseIterable {
 
 public enum SimpleHostUploader {
     /// C# sends its user agent as a form value on some hosts.
-    static let clientName = "ShareX-macOS"
+    static let clientName = "SwiftX-macOS"
 
     /// Builds the multipart request without sending it, so tests run offline.
     public static func request(file: UploadFile, destination: SimpleHostDestination,
