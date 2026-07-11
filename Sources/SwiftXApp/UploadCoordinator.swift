@@ -11,25 +11,30 @@ import UploadKit
 
 @MainActor
 enum UploadCoordinator {
+    /// `settings` overrides the stored TaskSettings for this run (quick task
+    /// presets, before-upload destination change); nil loads from disk.
     static func uploadImage(_ image: CGImage, fileName: String, filePath: String? = nil,
-                            format: ImageFileFormat = .png, jpegQuality: Int = 90) {
+                            format: ImageFileFormat = .png, jpegQuality: Int = 90,
+                            settings: TaskSettings? = nil) {
         guard let data = ImageWriter.data(image, format: format, jpegQuality: jpegQuality) else {
             Notifier.notify(title: "Upload failed", body: "Could not encode the image.")
             return
         }
-        upload(UploadFile(data: data, fileName: fileName, mimeType: format.mimeType), filePath: filePath)
+        upload(UploadFile(data: data, fileName: fileName, mimeType: format.mimeType),
+               filePath: filePath, settingsOverride: settings)
     }
 
     /// Uploads an existing file (recordings, GIFs) through the image destination.
     /// ponytail: reuses ImageDestination for all file types; a separate
     /// FileDestination setting can come with the destination long tail (Phase 9).
-    static func uploadFile(at url: URL) {
+    static func uploadFile(at url: URL, settings: TaskSettings? = nil) {
         guard let data = try? Data(contentsOf: url) else {
             Notifier.notify(title: "Upload failed", body: "Could not read \(url.lastPathComponent).")
             return
         }
         let mime = UTType(filenameExtension: url.pathExtension)?.preferredMIMEType ?? "application/octet-stream"
-        upload(UploadFile(data: data, fileName: url.lastPathComponent, mimeType: mime), filePath: url.path)
+        upload(UploadFile(data: data, fileName: url.lastPathComponent, mimeType: mime),
+               filePath: url.path, settingsOverride: settings)
     }
 
     enum RoutingError: LocalizedError {
@@ -75,9 +80,10 @@ enum UploadCoordinator {
         }
     }
 
-    private static func upload(_ file: UploadFile, filePath: String?, isRetry: Bool = false) {
+    private static func upload(_ file: UploadFile, filePath: String?,
+                               settingsOverride: TaskSettings? = nil, isRetry: Bool = false) {
         let config = UploadersConfig.load()
-        let settings = TaskSettings.load()
+        let settings = settingsOverride ?? TaskSettings.load()
         let entryID = UploadTaskCenter.shared.begin(fileName: file.fileName, host: settings.imageDestination)
         let reporter = UploadProgressReporter { sent, expected in
             Task { @MainActor in
@@ -112,7 +118,7 @@ enum UploadCoordinator {
                     }
                     try? await Task.sleep(for: .seconds(1))
                     await MainActor.run {
-                        upload(file, filePath: filePath, isRetry: true)
+                        upload(file, filePath: filePath, settingsOverride: settingsOverride, isRetry: true)
                     }
                     return
                 }

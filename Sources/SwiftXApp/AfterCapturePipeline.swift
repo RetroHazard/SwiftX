@@ -17,7 +17,7 @@ import ToolsKit
 @MainActor
 enum AfterCapturePipeline {
     static let implemented: AfterCaptureTasks = [
-        .beautifyImage, .addImageEffects,
+        .showQuickTaskMenu, .beautifyImage, .addImageEffects,
         .annotateImage, .copyImageToClipboard, .pinToScreen, .sendImageToPrinter,
         .saveImageToFile, .saveImageToFileWithDialog, .saveThumbnailImageToFile,
         .performActions, .copyFileToClipboard, .copyFilePathToClipboard, .copyFolderPathToClipboard,
@@ -25,8 +25,21 @@ enum AfterCapturePipeline {
     ]
 
     static func run(image capturedImage: CGImage, processName: String? = nil, windowTitle: String? = nil) async {
-        let settings = TaskSettings.load()
+        var settings = TaskSettings.load()
         let config = ApplicationConfig.load()
+
+        if settings.afterCaptureJob.contains(.showQuickTaskMenu) {
+            switch QuickTaskMenu.choose() {
+            case .cancel:
+                return
+            case .continueChain:
+                settings.afterCaptureJob.remove(.showQuickTaskMenu)
+            case .preset(let preset):
+                // C#: the preset replaces both task chains for this run only
+                settings.afterCaptureJob = preset.afterCaptureTasks
+                settings.afterUploadJob = preset.afterUploadTasks
+            }
+        }
         let tasks = settings.afterCaptureJob
 
         var image = capturedImage
@@ -162,12 +175,13 @@ enum AfterCapturePipeline {
         if tasks.contains(.uploadImageToHost) {
             if let savedURL {
                 // reuse the encoded file so bytes, name and MIME type all agree
-                UploadCoordinator.uploadFile(at: savedURL)
+                UploadCoordinator.uploadFile(at: savedURL, settings: settings)
             } else {
                 let fileName = SavePath.screenshotURL(config: config, task: settings, processName: processName,
                                                       fileExtension: format.fileExtension).lastPathComponent
                 UploadCoordinator.uploadImage(image, fileName: fileName,
-                                              format: format, jpegQuality: settings.imageJPEGQuality)
+                                              format: format, jpegQuality: settings.imageJPEGQuality,
+                                              settings: settings)
             }
         }
 
