@@ -222,6 +222,10 @@ public struct TaskSettings: SettingsFile {
     public var playSoundAfterCapture = true
     public var playSoundAfterUpload = true
 
+    /// Watch folders: upload files that appear in monitored directories.
+    public var watchFolderEnabled = false
+    public var watchFolderList: [WatchFolderSettings] = []
+
     public init() {}
 
     enum CodingKeys: String, CodingKey {
@@ -249,6 +253,8 @@ public struct TaskSettings: SettingsFile {
         case externalPrograms = "ExternalPrograms"
         case playSoundAfterCapture = "PlaySoundAfterCapture"
         case playSoundAfterUpload = "PlaySoundAfterUpload"
+        case watchFolderEnabled = "WatchFolderEnabled"
+        case watchFolderList = "WatchFolderList"
     }
 
     public init(from decoder: Decoder) throws {
@@ -277,6 +283,34 @@ public struct TaskSettings: SettingsFile {
         externalPrograms = try c.decodeIfPresent([ExternalProgramSettings].self, forKey: .externalPrograms) ?? []
         playSoundAfterCapture = try c.decodeIfPresent(Bool.self, forKey: .playSoundAfterCapture) ?? true
         playSoundAfterUpload = try c.decodeIfPresent(Bool.self, forKey: .playSoundAfterUpload) ?? true
+        watchFolderEnabled = try c.decodeIfPresent(Bool.self, forKey: .watchFolderEnabled) ?? false
+        watchFolderList = try c.decodeIfPresent([WatchFolderSettings].self, forKey: .watchFolderList) ?? []
+    }
+}
+
+/// One monitored directory. Field names match the C# WatchFolderSettings JSON.
+public struct WatchFolderSettings: Codable, Equatable, Sendable {
+    public var folderPath = ""
+    /// Glob for file names ("*.png"); empty matches everything.
+    public var filter = ""
+    public var includeSubdirectories = false
+    public var moveFilesToScreenshotsFolder = false
+
+    public init() {}
+
+    enum CodingKeys: String, CodingKey {
+        case folderPath = "FolderPath"
+        case filter = "Filter"
+        case includeSubdirectories = "IncludeSubdirectories"
+        case moveFilesToScreenshotsFolder = "MoveFilesToScreenshotsFolder"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        folderPath = try c.decodeIfPresent(String.self, forKey: .folderPath) ?? ""
+        filter = try c.decodeIfPresent(String.self, forKey: .filter) ?? ""
+        includeSubdirectories = try c.decodeIfPresent(Bool.self, forKey: .includeSubdirectories) ?? false
+        moveFilesToScreenshotsFolder = try c.decodeIfPresent(Bool.self, forKey: .moveFilesToScreenshotsFolder) ?? false
     }
 }
 
