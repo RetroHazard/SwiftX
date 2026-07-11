@@ -81,7 +81,7 @@ final class CaptureCoordinator {
         let alert = NSAlert()
         alert.messageText = "Capture failed"
         alert.informativeText = error.localizedDescription
-            + "\n\nIf this is a permission problem, grant Screen Recording access in ShareX Settings."
+            + "\n\nIf this is a permission problem, grant Screen Recording access in SwiftX Settings."
         alert.alertStyle = .warning
         NSApp.activate(ignoringOtherApps: true)
         alert.runModal()

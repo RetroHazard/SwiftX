@@ -708,7 +708,7 @@ struct FFmpegStatusView: View {
     private func installViaHomebrew() {
         guard let brew = FFmpeg.homebrewPath else { return }
         let script = "#!/bin/zsh\n\(brew) install ffmpeg\n"
-        let url = FileManager.default.temporaryDirectory.appendingPathComponent("sharex-install-ffmpeg.command")
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("swiftx-install-ffmpeg.command")
         do {
             try script.write(to: url, atomically: true, encoding: .utf8)
             try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: url.path)

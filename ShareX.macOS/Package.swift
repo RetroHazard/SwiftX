@@ -1,13 +1,13 @@
 // swift-tools-version:5.10
-// ShareX for macOS - part of ShareX (GPL v3), see /LICENSE.txt
+// SwiftX - ShareX for macOS (GPL v3), see /LICENSE.txt
 
 import PackageDescription
 
 let package = Package(
-    name: "ShareX",
+    name: "SwiftX",
     platforms: [.macOS(.v14)], // SCScreenshotManager baseline
     products: [
-        .executable(name: "sharex", targets: ["ShareXApp"]),
+        .executable(name: "swiftx", targets: ["SwiftXApp"]),
         .library(name: "SharedKit", targets: ["SharedKit"]),
         .library(name: "CaptureKit", targets: ["CaptureKit"])
     ],
@@ -35,7 +35,7 @@ let package = Package(
             dependencies: ["CaptureKit"]
         ),
         .executableTarget(
-            name: "ShareXApp",
+            name: "SwiftXApp",
             dependencies: ["SharedKit", "CaptureKit", "UploadKit", "HistoryKit", "EditorKit", "ToolsKit"]
         ),
         .testTarget(

@@ -3,7 +3,7 @@
 # Copyright (c) 2007-2026 ShareX Team
 # Licensed under GPL v3 - see /LICENSE.txt
 #
-# Builds ShareX.app from the SPM executable. No Xcode project required.
+# Builds SwiftX.app from the SPM executable. No Xcode project required.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -11,15 +11,15 @@ VERSION="${1:-0.1.0}"
 
 swift build -c release
 
-APP="build/ShareX.app"
+APP="build/SwiftX.app"
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
-cp .build/release/sharex "$APP/Contents/MacOS/ShareX"
+cp .build/release/swiftx "$APP/Contents/MacOS/SwiftX"
 
 # SPM resource bundle (word lists) must sit in Contents/Resources for Bundle.module lookup
-if [ -d .build/release/ShareX_SharedKit.bundle ]; then
-    cp -R .build/release/ShareX_SharedKit.bundle "$APP/Contents/Resources/"
+if [ -d .build/release/SwiftX_SharedKit.bundle ]; then
+    cp -R .build/release/SwiftX_SharedKit.bundle "$APP/Contents/Resources/"
 fi
 
 # SwiftX aperture icon — regenerate with Scripts/make-icon.swift
@@ -31,13 +31,13 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 <plist version="1.0">
 <dict>
     <key>CFBundleExecutable</key>
-    <string>ShareX</string>
+    <string>SwiftX</string>
     <key>CFBundleIconFile</key>
     <string>SwiftX</string>
     <key>CFBundleIdentifier</key>
-    <string>com.getsharex.sharex-macos</string>
+    <string>com.getsharex.swiftx</string>
     <key>CFBundleName</key>
-    <string>ShareX</string>
+    <string>SwiftX</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
@@ -51,14 +51,16 @@ cat > "$APP/Contents/Info.plist" <<PLIST
     <key>NSPrincipalClass</key>
     <string>NSApplication</string>
     <key>NSMicrophoneUsageDescription</key>
-    <string>ShareX records the microphone when "Record microphone" is enabled in Recording settings.</string>
+    <string>SwiftX records the microphone when "Record microphone" is enabled in Recording settings.</string>
     <key>CFBundleURLTypes</key>
     <array>
         <dict>
             <key>CFBundleURLName</key>
-            <string>ShareX URL Scheme</string>
+            <string>SwiftX URL Scheme</string>
             <key>CFBundleURLSchemes</key>
             <array>
+                <string>swiftx</string>
+                <!-- legacy scheme from before the SwiftX rename -->
                 <string>sharex</string>
             </array>
         </dict>
@@ -77,7 +79,7 @@ echo "Signed as: ${IDENTITY:-ad-hoc}"
 
 echo "Built $APP"
 
-if pgrep -xq ShareX; then
-    echo "warning: a ShareX instance is still running and will NOT pick up this build."
-    echo "         restart it with: pkill -x ShareX && open $APP"
+if pgrep -xq SwiftX; then
+    echo "warning: a SwiftX instance is still running and will NOT pick up this build."
+    echo "         restart it with: pkill -x SwiftX && open $APP"
 fi

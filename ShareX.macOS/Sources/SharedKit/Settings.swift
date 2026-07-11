@@ -9,14 +9,25 @@
 import Foundation
 
 public enum SettingsPaths {
-    /// Overridable for tests.
-    public static var root: URL = FileManager.default
-        .urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        .appendingPathComponent("ShareX", isDirectory: true)
+    /// Overridable for tests. Everything under root is addressed relative to it,
+    /// so migrating the whole directory from the pre-rename "ShareX" name is safe.
+    public static var root: URL = {
+        let appSupport = FileManager.default
+            .urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        let new = appSupport.appendingPathComponent("SwiftX", isDirectory: true)
+        let old = appSupport.appendingPathComponent("ShareX", isDirectory: true)
+        if !FileManager.default.fileExists(atPath: new.path),
+           FileManager.default.fileExists(atPath: old.path) {
+            try? FileManager.default.moveItem(at: old, to: new)
+        }
+        return new
+    }()
 
+    /// Not migrated like root: history entries store absolute paths into the old
+    /// folder, so existing screenshots stay put; new captures land here.
     public static var defaultScreenshotsFolder: URL {
         FileManager.default.urls(for: .picturesDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("ShareX", isDirectory: true)
+            .appendingPathComponent("SwiftX", isDirectory: true)
     }
 }
 
@@ -295,7 +306,7 @@ public struct UploadersConfig: SettingsFile {
     public var b2ApplicationKeyId = ""
     public var b2ApplicationKey = ""
     public var b2BucketName = ""
-    public var b2UploadPath = "ShareX/%y/%mo"
+    public var b2UploadPath = "SwiftX/%y/%mo"
     public var b2UseCustomUrl = false
     public var b2CustomUrl = ""
     public var azureStorageAccountName = ""
@@ -397,7 +408,7 @@ public struct UploadersConfig: SettingsFile {
         b2ApplicationKeyId = try c.decodeIfPresent(String.self, forKey: .b2ApplicationKeyId) ?? ""
         b2ApplicationKey = try c.decodeIfPresent(String.self, forKey: .b2ApplicationKey) ?? ""
         b2BucketName = try c.decodeIfPresent(String.self, forKey: .b2BucketName) ?? ""
-        b2UploadPath = try c.decodeIfPresent(String.self, forKey: .b2UploadPath) ?? "ShareX/%y/%mo"
+        b2UploadPath = try c.decodeIfPresent(String.self, forKey: .b2UploadPath) ?? "SwiftX/%y/%mo"
         b2UseCustomUrl = try c.decodeIfPresent(Bool.self, forKey: .b2UseCustomUrl) ?? false
         b2CustomUrl = try c.decodeIfPresent(String.self, forKey: .b2CustomUrl) ?? ""
         azureStorageAccountName = try c.decodeIfPresent(String.self, forKey: .azureStorageAccountName) ?? ""
@@ -509,7 +520,7 @@ public struct AmazonS3Settings: Codable, Equatable {
     public var secretAccessKey = ""
     public var region = "us-east-1"
     public var bucket = ""
-    public var objectPrefix = "ShareX/%y/%mo"
+    public var objectPrefix = "SwiftX/%y/%mo"
     /// Custom endpoint host for S3-compatible services (empty = AWS).
     public var endpoint = ""
 
@@ -530,7 +541,7 @@ public struct AmazonS3Settings: Codable, Equatable {
         secretAccessKey = try c.decodeIfPresent(String.self, forKey: .secretAccessKey) ?? ""
         region = try c.decodeIfPresent(String.self, forKey: .region) ?? "us-east-1"
         bucket = try c.decodeIfPresent(String.self, forKey: .bucket) ?? ""
-        objectPrefix = try c.decodeIfPresent(String.self, forKey: .objectPrefix) ?? "ShareX/%y/%mo"
+        objectPrefix = try c.decodeIfPresent(String.self, forKey: .objectPrefix) ?? "SwiftX/%y/%mo"
         endpoint = try c.decodeIfPresent(String.self, forKey: .endpoint) ?? ""
     }
 }
