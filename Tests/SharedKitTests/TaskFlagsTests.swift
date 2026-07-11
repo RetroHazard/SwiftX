@@ -46,6 +46,34 @@ struct TaskFlagsTests {
         #expect(AfterUploadTasks.copyURLToClipboard.rawValue == 1 << 3)
     }
 
+    @Test func taskFlagTitlesReadLikeCSharpDescriptions() {
+        #expect(taskFlagTitle("SaveImageToFile") == "Save image to file")
+        #expect(taskFlagTitle("CopyURLToClipboard") == "Copy URL to clipboard")
+        #expect(taskFlagTitle("DoOCR") == "Do OCR")
+        #expect(taskFlagTitle("ShowQRCode") == "Show QR code")
+    }
+
+    @Test func quickTaskPresetRoundTripsCSharpJSON() throws {
+        // Windows ShareX QuickTaskPresets entry shape
+        let json = """
+        {"Name": "Save, Upload", "AfterCaptureTasks": "SaveImageToFile, UploadImageToHost",
+         "AfterUploadTasks": "CopyURLToClipboard"}
+        """
+        let preset = try JSONDecoder().decode(QuickTaskPreset.self, from: json.data(using: .utf8)!)
+        #expect(preset.name == "Save, Upload")
+        #expect(preset.afterCaptureTasks == [.saveImageToFile, .uploadImageToHost])
+        #expect(preset.afterUploadTasks == [.copyURLToClipboard])
+        #expect(preset.isValid)
+
+        // separator entry: no tasks
+        #expect(!QuickTaskPreset().isValid)
+
+        // unnamed presets describe their flags, like C# ToString()
+        let unnamed = QuickTaskPreset(afterCaptureTasks: [.uploadImageToHost],
+                                      afterUploadTasks: [.copyURLToClipboard])
+        #expect(unnamed.displayName == "Upload image to host, Copy URL to clipboard")
+    }
+
     @Test func taskSettingsDefaultsAndDecode() throws {
         #expect(TaskSettings().afterCaptureJob == [.copyImageToClipboard, .saveImageToFile])
 

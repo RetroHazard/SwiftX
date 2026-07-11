@@ -47,6 +47,37 @@ public extension NamedOptionSet {
     }
 }
 
+/// "SaveImageToFile" -> "Save image to file"; acronym runs stay upper ("DoOCR" -> "Do OCR").
+/// Approximates the C# [Description] strings without a hand-written table.
+public func taskFlagTitle(_ pascal: String) -> String {
+    var words: [String] = []
+    var current = ""
+    let chars = Array(pascal)
+    for (i, ch) in chars.enumerated() {
+        if ch.isUppercase && !current.isEmpty {
+            let prevIsLower = chars[i - 1].isLowercase
+            let nextIsLower = i + 1 < chars.count && chars[i + 1].isLowercase
+            if prevIsLower || (nextIsLower && current.count > 1 && current == current.uppercased()) {
+                words.append(current)
+                current = ""
+            }
+        }
+        current.append(ch)
+    }
+    if !current.isEmpty { words.append(current) }
+    return words.enumerated().map { i, word in
+        if word == word.uppercased() && word.count > 1 { return word } // acronym
+        return i == 0 ? word : word.lowercased()
+    }.joined(separator: " ")
+}
+
+public extension NamedOptionSet {
+    /// Human-readable flag list ("Save image to file, Upload image to host").
+    var friendlyString: String {
+        Self.flagNames.filter { contains($0.0) }.map { taskFlagTitle($0.1) }.joined(separator: ", ")
+    }
+}
+
 public struct AfterCaptureTasks: NamedOptionSet {
     public let rawValue: Int
     public init(rawValue: Int) { self.rawValue = rawValue }

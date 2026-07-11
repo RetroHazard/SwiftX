@@ -58,6 +58,66 @@ public extension SettingsFile {
     }
 }
 
+/// One entry in the quick task menu. Field names match the C# QuickTaskInfo
+/// JSON shape; an entry with no after-capture tasks renders as a separator.
+public struct QuickTaskPreset: Codable, Equatable, Sendable {
+    public var name = ""
+    public var afterCaptureTasks: AfterCaptureTasks = []
+    public var afterUploadTasks: AfterUploadTasks = []
+
+    public var isValid: Bool { !afterCaptureTasks.isEmpty }
+
+    public var displayName: String {
+        if !name.isEmpty { return name }
+        var result = afterCaptureTasks.friendlyString
+        if afterCaptureTasks.contains(.uploadImageToHost), !afterUploadTasks.isEmpty {
+            result += ", " + afterUploadTasks.friendlyString
+        }
+        return result
+    }
+
+    public init(name: String = "", afterCaptureTasks: AfterCaptureTasks = [],
+                afterUploadTasks: AfterUploadTasks = []) {
+        self.name = name
+        self.afterCaptureTasks = afterCaptureTasks
+        self.afterUploadTasks = afterUploadTasks
+    }
+
+    /// C# QuickTaskInfo.DefaultPresets, including its separator entry.
+    public static let defaultPresets: [QuickTaskPreset] = [
+        QuickTaskPreset(name: "Save, Upload, Copy URL",
+                        afterCaptureTasks: [.saveImageToFile, .uploadImageToHost],
+                        afterUploadTasks: [.copyURLToClipboard]),
+        QuickTaskPreset(name: "Save, Copy image",
+                        afterCaptureTasks: [.saveImageToFile, .copyImageToClipboard]),
+        QuickTaskPreset(name: "Save, Copy image file",
+                        afterCaptureTasks: [.saveImageToFile, .copyFileToClipboard]),
+        QuickTaskPreset(name: "Annotate, Save, Upload, Copy URL",
+                        afterCaptureTasks: [.annotateImage, .saveImageToFile, .uploadImageToHost],
+                        afterUploadTasks: [.copyURLToClipboard]),
+        QuickTaskPreset(),
+        QuickTaskPreset(name: "Upload, Copy URL",
+                        afterCaptureTasks: [.uploadImageToHost],
+                        afterUploadTasks: [.copyURLToClipboard]),
+        QuickTaskPreset(name: "Save", afterCaptureTasks: [.saveImageToFile]),
+        QuickTaskPreset(name: "Copy image", afterCaptureTasks: [.copyImageToClipboard]),
+        QuickTaskPreset(name: "Annotate", afterCaptureTasks: [.annotateImage])
+    ]
+
+    enum CodingKeys: String, CodingKey {
+        case name = "Name"
+        case afterCaptureTasks = "AfterCaptureTasks"
+        case afterUploadTasks = "AfterUploadTasks"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        name = try c.decodeIfPresent(String.self, forKey: .name) ?? ""
+        afterCaptureTasks = try c.decodeIfPresent(AfterCaptureTasks.self, forKey: .afterCaptureTasks) ?? []
+        afterUploadTasks = try c.decodeIfPresent(AfterUploadTasks.self, forKey: .afterUploadTasks) ?? []
+    }
+}
+
 public struct ApplicationConfig: SettingsFile {
     public static let fileName = "ApplicationConfig.json"
 
@@ -75,6 +135,8 @@ public struct ApplicationConfig: SettingsFile {
     public var aiAPIKey = ""
     public var aiModel = "gpt-5-mini"
     public var aiPrompt = "What is in this image?"
+    /// Quick task menu entries (C# ApplicationSettings.QuickTaskPresets).
+    public var quickTaskPresets = QuickTaskPreset.defaultPresets
 
     public var screenshotsFolder: URL {
         if useCustomScreenshotsPath, !customScreenshotsPath.isEmpty {
@@ -95,6 +157,7 @@ public struct ApplicationConfig: SettingsFile {
         case aiAPIKey = "AIAPIKey"
         case aiModel = "AIModel"
         case aiPrompt = "AIPrompt"
+        case quickTaskPresets = "QuickTaskPresets"
     }
 
     public init(from decoder: Decoder) throws {
@@ -108,6 +171,8 @@ public struct ApplicationConfig: SettingsFile {
         aiAPIKey = try c.decodeIfPresent(String.self, forKey: .aiAPIKey) ?? ""
         aiModel = try c.decodeIfPresent(String.self, forKey: .aiModel) ?? "gpt-5-mini"
         aiPrompt = try c.decodeIfPresent(String.self, forKey: .aiPrompt) ?? "What is in this image?"
+        quickTaskPresets = try c.decodeIfPresent([QuickTaskPreset].self, forKey: .quickTaskPresets)
+            ?? QuickTaskPreset.defaultPresets
     }
 }
 
