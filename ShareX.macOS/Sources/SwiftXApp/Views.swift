@@ -241,6 +241,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
     case capture = "Capture"
     case recording = "Recording"
     case actions = "Actions"
+    case watchFolders = "Watch Folders"
     case destinations = "Destinations"
     case customUploader = "Custom Uploader"
     case hotkeys = "Hotkeys"
@@ -253,6 +254,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .capture: "camera.viewfinder"
         case .recording: "record.circle"
         case .actions: "terminal"
+        case .watchFolders: "folder.badge.gearshape"
         case .destinations: "square.and.arrow.up"
         case .customUploader: "wrench.and.screwdriver"
         case .hotkeys: "keyboard"
@@ -387,6 +389,7 @@ struct SettingsView: View {
                 case .capture: capturePane
                 case .recording: recordingPane
                 case .actions: ActionsSettingsView()
+                case .watchFolders: WatchFoldersSettingsView()
                 case .destinations: destinationsPane
                 case .customUploader: CustomUploaderEditorView()
                 case .hotkeys: HotkeysSettingsView()
