@@ -40,6 +40,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         setupHotkeys()
         Notifier.setup()
+        WatchFolderCenter.shared.applySettings()
         RecordingCoordinator.shared.onStateChange = { [weak self] in self?.updateRecordingUI() }
 
         // debug: upload a file through the full pipeline, then report what the
