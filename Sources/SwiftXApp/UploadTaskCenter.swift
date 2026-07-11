@@ -29,6 +29,11 @@ final class UploadTaskCenter: ObservableObject {
 
     @Published private(set) var entries: [Entry] = []
 
+    /// Uploads still in flight (auto capture's "wait for uploads" gate).
+    var isBusy: Bool {
+        entries.contains { $0.state == .uploading || $0.state == .retrying }
+    }
+
     func begin(fileName: String, host: String) -> UUID {
         let entry = Entry(fileName: fileName, host: host)
         entries.append(entry)
