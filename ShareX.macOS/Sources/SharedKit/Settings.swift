@@ -254,6 +254,8 @@ public struct TaskSettings: SettingsFile {
     public var watchFolderEnabled = false
     public var watchFolderList: [WatchFolderSettings] = []
 
+    public var scrollingCapture = ScrollingCaptureOptions()
+
     public init() {}
 
     enum CodingKeys: String, CodingKey {
@@ -283,6 +285,7 @@ public struct TaskSettings: SettingsFile {
         case playSoundAfterUpload = "PlaySoundAfterUpload"
         case watchFolderEnabled = "WatchFolderEnabled"
         case watchFolderList = "WatchFolderList"
+        case scrollingCapture = "ScrollingCaptureOptions"
     }
 
     public init(from decoder: Decoder) throws {
@@ -313,6 +316,42 @@ public struct TaskSettings: SettingsFile {
         playSoundAfterUpload = try c.decodeIfPresent(Bool.self, forKey: .playSoundAfterUpload) ?? true
         watchFolderEnabled = try c.decodeIfPresent(Bool.self, forKey: .watchFolderEnabled) ?? false
         watchFolderList = try c.decodeIfPresent([WatchFolderSettings].self, forKey: .watchFolderList) ?? []
+        scrollingCapture = try c.decodeIfPresent(ScrollingCaptureOptions.self, forKey: .scrollingCapture)
+            ?? ScrollingCaptureOptions()
+    }
+}
+
+/// C# ScrollingCaptureOptions. The scroll method is always a synthetic mouse
+/// wheel on macOS (the other C# methods are Windows message based).
+public struct ScrollingCaptureOptions: Codable, Equatable, Sendable {
+    /// Milliseconds to wait before the first shot.
+    public var startDelay = 300
+    /// Send Home before starting so the capture begins at the top.
+    public var autoScrollTop = false
+    /// Milliseconds between scroll steps.
+    public var scrollDelay = 300
+    /// Wheel lines per scroll step.
+    public var scrollAmount = 2
+    /// Detect and trim a fixed bottom edge (sticky footers, scrollbars).
+    public var autoIgnoreBottomEdge = true
+
+    public init() {}
+
+    enum CodingKeys: String, CodingKey {
+        case startDelay = "StartDelay"
+        case autoScrollTop = "AutoScrollTop"
+        case scrollDelay = "ScrollDelay"
+        case scrollAmount = "ScrollAmount"
+        case autoIgnoreBottomEdge = "AutoIgnoreBottomEdge"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        startDelay = try c.decodeIfPresent(Int.self, forKey: .startDelay) ?? 300
+        autoScrollTop = try c.decodeIfPresent(Bool.self, forKey: .autoScrollTop) ?? false
+        scrollDelay = try c.decodeIfPresent(Int.self, forKey: .scrollDelay) ?? 300
+        scrollAmount = try c.decodeIfPresent(Int.self, forKey: .scrollAmount) ?? 2
+        autoIgnoreBottomEdge = try c.decodeIfPresent(Bool.self, forKey: .autoIgnoreBottomEdge) ?? true
     }
 }
 
