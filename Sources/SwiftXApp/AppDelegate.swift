@@ -95,6 +95,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         windowPicker.submenu = windowsSubmenu
         menu.addItem(windowPicker)
         menu.addItem(NSMenuItem(title: "Capture Last Region", action: #selector(captureLastRegion), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: "Auto Capture…", action: #selector(showAutoCapture), keyEquivalent: ""))
 
         menu.addItem(.separator())
         let record = NSMenuItem(title: "Record Screen (Region)…", action: #selector(toggleRecording), keyEquivalent: "")
@@ -189,6 +190,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func captureLastRegion() {
         CaptureCoordinator.shared.captureLastRegion()
+    }
+
+    @objc private func showAutoCapture() {
+        AutoCaptureController.show()
     }
 
     @objc private func captureScreenItem(_ sender: NSMenuItem) {
