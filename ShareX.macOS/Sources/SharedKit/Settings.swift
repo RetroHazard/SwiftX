@@ -6,6 +6,7 @@
 // Windows ShareX config files, so backups/presets can be imported later.
 // Structs start with the fields Phase 0/1 need and grow per phase.
 
+import CoreGraphics
 import Foundation
 
 public enum SettingsPaths {
@@ -137,6 +138,13 @@ public struct ApplicationConfig: SettingsFile {
     public var aiPrompt = "What is in this image?"
     /// Quick task menu entries (C# ApplicationSettings.QuickTaskPresets).
     public var quickTaskPresets = QuickTaskPreset.defaultPresets
+    /// Auto capture region as a C# Rectangle string "X, Y, Width, Height";
+    /// empty = not configured (C# ApplicationSettings.AutoCaptureRegion).
+    public var autoCaptureRegion = ""
+    /// Seconds between auto captures (C# AutoCaptureRepeatTime).
+    public var autoCaptureRepeatTime: Double = 60
+    /// Skip the timer tick while uploads are in flight (C# AutoCaptureWaitUpload).
+    public var autoCaptureWaitUpload = true
 
     public var screenshotsFolder: URL {
         if useCustomScreenshotsPath, !customScreenshotsPath.isEmpty {
@@ -158,6 +166,9 @@ public struct ApplicationConfig: SettingsFile {
         case aiModel = "AIModel"
         case aiPrompt = "AIPrompt"
         case quickTaskPresets = "QuickTaskPresets"
+        case autoCaptureRegion = "AutoCaptureRegion"
+        case autoCaptureRepeatTime = "AutoCaptureRepeatTime"
+        case autoCaptureWaitUpload = "AutoCaptureWaitUpload"
     }
 
     public init(from decoder: Decoder) throws {
@@ -173,6 +184,23 @@ public struct ApplicationConfig: SettingsFile {
         aiPrompt = try c.decodeIfPresent(String.self, forKey: .aiPrompt) ?? "What is in this image?"
         quickTaskPresets = try c.decodeIfPresent([QuickTaskPreset].self, forKey: .quickTaskPresets)
             ?? QuickTaskPreset.defaultPresets
+        autoCaptureRegion = try c.decodeIfPresent(String.self, forKey: .autoCaptureRegion) ?? ""
+        autoCaptureRepeatTime = try c.decodeIfPresent(Double.self, forKey: .autoCaptureRepeatTime) ?? 60
+        autoCaptureWaitUpload = try c.decodeIfPresent(Bool.self, forKey: .autoCaptureWaitUpload) ?? true
+    }
+}
+
+/// C# System.Drawing.Rectangle TypeConverter format: "X, Y, Width, Height".
+public enum CSharpRect {
+    public static func parse(_ string: String) -> CGRect? {
+        let parts = string.split(separator: ",").compactMap { Double($0.trimmingCharacters(in: .whitespaces)) }
+        guard parts.count == 4 else { return nil }
+        return CGRect(x: parts[0], y: parts[1], width: parts[2], height: parts[3])
+    }
+
+    public static func string(from rect: CGRect) -> String {
+        [rect.origin.x, rect.origin.y, rect.width, rect.height]
+            .map { String(Int($0.rounded())) }.joined(separator: ", ")
     }
 }
 

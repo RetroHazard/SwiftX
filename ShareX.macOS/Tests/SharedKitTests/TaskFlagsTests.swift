@@ -84,4 +84,11 @@ struct TaskFlagsTests {
         #expect(settings.afterCaptureJob == [.pinToScreen, .saveImageToFile])
         #expect(settings.afterUploadJob == [.copyURLToClipboard, .openURL])
     }
+
+    @Test func csharpRectStringRoundTrips() {
+        #expect(CSharpRect.parse("100, 200, 1280, 720") == CGRect(x: 100, y: 200, width: 1280, height: 720))
+        #expect(CSharpRect.parse("") == nil)
+        #expect(CSharpRect.parse("1, 2, 3") == nil)
+        #expect(CSharpRect.string(from: CGRect(x: 9.6, y: 0, width: 800.4, height: 600)) == "10, 0, 800, 600")
+    }
 }

@@ -184,6 +184,12 @@ enum HotkeyDispatcher {
             PinnedWindows.pinFromFile()
         case .pinToScreenCloseAll:
             PinnedWindows.closeAll()
+        case .autoCapture:
+            AutoCaptureController.show()
+        case .startAutoCapture:
+            AutoCaptureController.shared.start()
+        case .stopAutoCapture:
+            AutoCaptureController.shared.stop()
         case .disableHotkeys:
             HotkeyCenter.shared.isEnabled.toggle()
         case .exitShareX:
