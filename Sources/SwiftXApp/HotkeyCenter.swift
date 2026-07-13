@@ -184,6 +184,8 @@ enum HotkeyDispatcher {
             PinnedWindows.pinFromFile()
         case .pinToScreenCloseAll:
             PinnedWindows.closeAll()
+        case .scrollingCapture:
+            ScrollingCaptureController.show()
         case .autoCapture:
             AutoCaptureController.show()
         case .startAutoCapture:
