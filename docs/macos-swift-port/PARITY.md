@@ -8,10 +8,10 @@ Statuses: **Ported** · **Partial** (works, known gaps) · **Planned** (phase no
 |---|---|---|
 | Menu bar app shell (tray icon equivalent) | Ported | `NSStatusItem`, accessory activation policy |
 | Settings engine (JSON, Windows-compatible keys) | Ported | Fields grow per phase; unknown keys tolerated |
-| Name parser macro engine | Partial | All codes ported; `%remoji` uses a curated subset, `%rf` error surfacing waits on task pipeline (Phase 2) |
+| Name parser macro engine | Ported | All codes; `%remoji` uses the full C# emoji list; invalid `%rf` paths raise a notification (C# fails the task) |
 | TCC permission onboarding | Ported | Screen Recording + Accessibility status/request UI |
 | Single instance enforcement | Ported | flock-based; second instance forwards argv over distributed notifications and exits |
-| `sharex://` URL scheme | Partial | Registered + received; dispatch lands in Phase 2 |
+| `sharex://` URL scheme | Ported | `swiftx://Verb/parameter` dispatches through the CLI verb handler (hotkey verbs, workflows, imports) |
 | CI (build + test) | Ported | GitHub Actions, macOS runner |
 | Main window | Ported | Landed in Phase 4 — searchable history, grid view, live upload rows |
 
@@ -35,9 +35,9 @@ Statuses: **Ported** · **Partial** (works, known gaps) · **Planned** (phase no
 |---|---|
 | After-capture pipeline (C#-compatible flag serialization) | Ported — all 22 flags: beautify, effects, annotate, image/file/paths to clipboard, pin, print, save, save-dialog, thumbnail, actions, show in Finder, analyze (AI), scan QR, OCR, upload, delete (Trash), quick task menu, after-capture window, before-upload window |
 | Pin to screen (from capture, clipboard, file, screen region, close all) | Ported — drag to move, double-click to close, scroll/± to scale, ⌘-scroll/⌘± for opacity (C# 10% steps), right-click menu (copy, save, close all) |
-| After-upload tasks (6) | Planned (3) — flags model ready |
+| After-upload tasks (6) | Ported — shorten, copy URL, open URL, share URL, QR code window, after-upload window (link formats + copy buttons) |
 | Global hotkey engine (Carbon), defaults ⌃⇧3/4/5, DisableHotkeys toggle | Ported — recorder UI in Settings, live re-registration |
-| HotkeyType vocabulary (C#-compatible raw values) | Ported — capture/record/pin/window actions implemented, rest dispatch as stubs |
+| HotkeyType vocabulary (C#-compatible raw values) | Ported — every verb dispatches: upload sources (file/folder/clipboard/text/URL/drag-drop), custom region/window, stop uploads, standalone image editor, actions toolbar, tray menu toggle |
 | Capture notifications | Ported — banner + optional sound (C# PlaySound keys); click reveals file or opens URL |
 | Actions (external commands) | Ported — C# ExternalProgram JSON, $input/$output placeholders, output-extension chaining, Settings pane |
 
