@@ -256,6 +256,12 @@ public struct TaskSettings: SettingsFile {
 
     public var scrollingCapture = ScrollingCaptureOptions()
 
+    // ponytail: C# nests these under CaptureSettings; flattened like the other task keys
+    /// CustomRegion capture rect, C# Rectangle string "X, Y, Width, Height" (cocoa coordinates here).
+    public var captureCustomRegion = ""
+    /// CustomWindow capture: window title (or app name) substring to match.
+    public var captureCustomWindow = ""
+
     public init() {}
 
     enum CodingKeys: String, CodingKey {
@@ -286,6 +292,8 @@ public struct TaskSettings: SettingsFile {
         case watchFolderEnabled = "WatchFolderEnabled"
         case watchFolderList = "WatchFolderList"
         case scrollingCapture = "ScrollingCaptureOptions"
+        case captureCustomRegion = "CaptureCustomRegion"
+        case captureCustomWindow = "CaptureCustomWindow"
     }
 
     public init(from decoder: Decoder) throws {
@@ -318,6 +326,8 @@ public struct TaskSettings: SettingsFile {
         watchFolderList = try c.decodeIfPresent([WatchFolderSettings].self, forKey: .watchFolderList) ?? []
         scrollingCapture = try c.decodeIfPresent(ScrollingCaptureOptions.self, forKey: .scrollingCapture)
             ?? ScrollingCaptureOptions()
+        captureCustomRegion = try c.decodeIfPresent(String.self, forKey: .captureCustomRegion) ?? ""
+        captureCustomWindow = try c.decodeIfPresent(String.self, forKey: .captureCustomWindow) ?? ""
     }
 }
 

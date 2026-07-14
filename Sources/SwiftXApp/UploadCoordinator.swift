@@ -37,6 +37,24 @@ enum UploadCoordinator {
                filePath: url.path, settingsOverride: settings)
     }
 
+    /// ponytail: text uploads go out as a .txt file; dedicated text
+    /// destinations (Pastebin etc.) are benched
+    static func uploadText(_ text: String) {
+        let temp = FileManager.default.temporaryDirectory
+            .appendingPathComponent("swiftx-\(UUID().uuidString).txt")
+        try? Data(text.utf8).write(to: temp)
+        uploadFile(at: temp)
+    }
+
+    /// Downloads a remote file into temp, then uploads it.
+    static func downloadAndUpload(_ url: URL) async {
+        guard let (data, response) = try? await URLSession.shared.data(from: url) else { return }
+        let name = response.suggestedFilename ?? (url.lastPathComponent.isEmpty ? "download" : url.lastPathComponent)
+        let temp = FileManager.default.temporaryDirectory.appendingPathComponent(name)
+        guard (try? data.write(to: temp)) != nil else { return }
+        uploadFile(at: temp)
+    }
+
     enum RoutingError: LocalizedError {
         case noCustomUploader
         case notImplemented(String)
@@ -104,7 +122,7 @@ enum UploadCoordinator {
             }
         }
 
-        Task {
+        let task = Task {
             do {
                 let (result, hostName) = try await UploadProgressReporter.$current.withValue(reporter) {
                     try await route(file, settings: settings, config: config)
@@ -122,6 +140,12 @@ enum UploadCoordinator {
                 }
                 try await afterUpload(result, settings: settings)
             } catch {
+                if error is CancellationError || (error as? URLError)?.code == .cancelled {
+                    await MainActor.run {
+                        UploadTaskCenter.shared.finish(entryID, state: .failed(message: "Stopped"))
+                    }
+                    return
+                }
                 // misconfiguration won't fix itself in one second; only
                 // transport/host failures earn the retry
                 if !isRetry, ApplicationConfig.load().retryUpload, !(error is RoutingError) {
@@ -141,6 +165,7 @@ enum UploadCoordinator {
                 }
             }
         }
+        UploadTaskCenter.shared.register(entryID, task: task)
     }
 
     private static func afterUpload(_ result: UploadResult, settings: TaskSettings) async throws {

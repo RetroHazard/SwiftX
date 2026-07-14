@@ -25,7 +25,7 @@ enum CLI {
                 await run(command)
             } else if let url = URL(string: command.command),
                       ["http", "https"].contains(url.scheme?.lowercased()) {
-                await downloadAndUpload(url)
+                await UploadCoordinator.downloadAndUpload(url)
             } else {
                 let path = absolutePath(command.command)
                 if FileManager.default.fileExists(atPath: path) {
@@ -91,23 +91,10 @@ enum CLI {
               let input = try? JSONDecoder().decode(Input.self, from: data) else { return }
         if let link = input.URL, let remote = Foundation.URL(string: link),
            ["http", "https"].contains(remote.scheme?.lowercased()) {
-            await downloadAndUpload(remote)
+            await UploadCoordinator.downloadAndUpload(remote)
         } else if let text = input.Text, !text.isEmpty {
-            // ponytail: text uploads go out as a .txt file; dedicated text
-            // destinations (Pastebin etc.) are benched
-            let temp = FileManager.default.temporaryDirectory
-                .appendingPathComponent("swiftx-\(UUID().uuidString).txt")
-            try? Data(text.utf8).write(to: temp)
-            UploadCoordinator.uploadFile(at: temp)
+            UploadCoordinator.uploadText(text)
         }
-    }
-
-    private static func downloadAndUpload(_ url: URL) async {
-        guard let (data, response) = try? await URLSession.shared.data(from: url) else { return }
-        let name = response.suggestedFilename ?? (url.lastPathComponent.isEmpty ? "download" : url.lastPathComponent)
-        let temp = FileManager.default.temporaryDirectory.appendingPathComponent(name)
-        guard (try? data.write(to: temp)) != nil else { return }
-        UploadCoordinator.uploadFile(at: temp)
     }
 
     private static func absolutePath(_ path: String) -> String {
