@@ -171,9 +171,11 @@ enum UploadCoordinator {
             }
         }
 
-        let pending = tasks.subtracting([.copyURLToClipboard, .openURL, .useURLShortener, .shareURL])
-        if !pending.isEmpty {
-            NSLog("AfterUploadTasks not implemented yet: %@", pending.nameString)
+        if tasks.contains(.showQRCode), !finalURL.isEmpty {
+            ToolWindows.showQRCode(text: finalURL)
+        }
+        if tasks.contains(.showAfterUploadWindow) {
+            AfterUploadWindow.present(result: result, finalURL: finalURL)
         }
 
         Notifier.notify(title: "Upload complete", body: finalURL,

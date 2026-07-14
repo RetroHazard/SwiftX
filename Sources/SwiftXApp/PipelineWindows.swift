@@ -218,3 +218,55 @@ private struct BeforeUploadView: View {
             ?? settings.imageDestination
     }
 }
+
+// MARK: - After-upload window (C# AfterUploadForm: link formats + copy)
+
+@MainActor
+enum AfterUploadWindow {
+    static func present(result: UploadResult, finalURL: String) {
+        ToolWindows.present(title: "Upload complete", resizable: true,
+                            content: AfterUploadLinksView(result: result, finalURL: finalURL))
+    }
+}
+
+private struct AfterUploadLinksView: View {
+    let result: UploadResult
+    let finalURL: String
+
+    private var formats: [(String, String)] {
+        var rows: [(String, String)] = [("URL", finalURL)]
+        if finalURL != result.url { rows.append(("Original URL", result.url)) }
+        if !result.thumbnailURL.isEmpty { rows.append(("Thumbnail URL", result.thumbnailURL)) }
+        if !result.deletionURL.isEmpty { rows.append(("Deletion URL", result.deletionURL)) }
+        // C# hides the image markups for non-image URLs
+        let ext = URL(string: result.url)?.pathExtension.lowercased() ?? ""
+        if ["png", "jpg", "jpeg", "gif", "bmp", "tif", "tiff", "webp"].contains(ext) {
+            rows.append(("Forum (BBCode)", "[img]\(result.url)[/img]"))
+            rows.append(("HTML", "<img src=\"\(result.url)\"/>"))
+            rows.append(("Markdown", "![](\(result.url))"))
+            rows.append(("Wiki", "[\(result.url)]"))
+        }
+        return rows
+    }
+
+    var body: some View {
+        Form {
+            ForEach(formats, id: \.0) { label, value in
+                LabeledContent(label) {
+                    HStack {
+                        Text(value)
+                            .textSelection(.enabled)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                        Button("Copy") {
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(value, forType: .string)
+                        }
+                    }
+                }
+            }
+        }
+        .formStyle(.grouped)
+        .frame(minWidth: 500, minHeight: 240)
+    }
+}
