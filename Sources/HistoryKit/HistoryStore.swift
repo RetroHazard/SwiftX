@@ -71,6 +71,26 @@ public final class HistoryStore {
 
     @discardableResult
     public func append(_ item: HistoryItem) -> HistoryItem {
+        let inserted = insert(item)
+        if inserted.id > 0 {
+            NotificationCenter.default.post(name: Self.changedNotification, object: nil)
+        }
+        return inserted
+    }
+
+    /// Batch import (Windows History.json/xml) in one transaction, one notification.
+    @discardableResult
+    public func appendAll(_ items: [HistoryItem]) -> Int {
+        execute("BEGIN;")
+        let count = items.filter { insert($0).id > 0 }.count
+        execute("COMMIT;")
+        if count > 0 {
+            NotificationCenter.default.post(name: Self.changedNotification, object: nil)
+        }
+        return count
+    }
+
+    private func insert(_ item: HistoryItem) -> HistoryItem {
         var statement: OpaquePointer?
         let sql = """
         INSERT INTO History (FileName, FilePath, DateTime, Type, Host, URL, ThumbnailURL, DeletionURL, ShortenedURL, Tags)
@@ -89,7 +109,6 @@ public final class HistoryStore {
 
         var inserted = item
         inserted.id = sqlite3_last_insert_rowid(db)
-        NotificationCenter.default.post(name: Self.changedNotification, object: nil)
         return inserted
     }
 
@@ -140,7 +159,9 @@ public final class HistoryStore {
         var conditions: [String] = []
         let trimmed = search.trimmingCharacters(in: .whitespaces)
         if !trimmed.isEmpty {
-            conditions.append("(FileName LIKE ? OR URL LIKE ? OR Host LIKE ?)")
+            // Tags LIKE covers C#'s SearchInTags (window title, process name);
+            // matching the raw JSON also hits tag keys, which is fine
+            conditions.append("(FileName LIKE ? OR URL LIKE ? OR Host LIKE ? OR Tags LIKE ?)")
         }
         if favoritesOnly {
             conditions.append("Tags LIKE '%\"Favorite\"%'")
@@ -166,7 +187,7 @@ public final class HistoryStore {
         var bindIndex: Int32 = 1
         if !trimmed.isEmpty {
             let pattern = "%\(trimmed)%"
-            for _ in 0..<3 {
+            for _ in 0..<4 {
                 sqlite3_bind_text(statement, bindIndex, pattern, -1, SQLITE_TRANSIENT)
                 bindIndex += 1
             }
@@ -195,8 +216,9 @@ public final class HistoryStore {
             item.deletionURL = column(statement, 8)
             item.shortenedURL = column(statement, 9)
             if let data = column(statement, 10).data(using: .utf8),
-               let tags = try? JSONSerialization.jsonObject(with: data) as? [String: String] {
-                item.tags = tags
+               let tags = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                // C# writes Favorite with a null value; keep the key, drop the null
+                item.tags = tags.mapValues { $0 as? String ?? "" }
             }
             items.append(item)
         }
