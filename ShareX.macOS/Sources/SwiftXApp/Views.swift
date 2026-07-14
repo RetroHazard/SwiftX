@@ -413,6 +413,9 @@ struct SettingsView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
+        Section("Browser extension") {
+            NativeMessagingSection()
+        }
         Section("Paths") {
             LabeledContent("Screenshots folder") {
                 HStack {

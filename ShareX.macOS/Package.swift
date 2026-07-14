@@ -8,6 +8,7 @@ let package = Package(
     platforms: [.macOS(.v14)], // SCScreenshotManager baseline
     products: [
         .executable(name: "swiftx", targets: ["SwiftXApp"]),
+        .executable(name: "swiftx-host", targets: ["NativeMessagingHost"]),
         .library(name: "SharedKit", targets: ["SharedKit"]),
         .library(name: "CaptureKit", targets: ["CaptureKit"])
     ],
@@ -36,6 +37,9 @@ let package = Package(
         .target(
             name: "ToolsKit",
             dependencies: ["CaptureKit"]
+        ),
+        .executableTarget(
+            name: "NativeMessagingHost"
         ),
         .executableTarget(
             name: "SwiftXApp",
