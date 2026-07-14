@@ -184,9 +184,7 @@ public final class ScreenRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
     private var movieWriter: MovieWriter?
     private var gifEncoder: GIFEncoder?
     // all writer access happens on this queue (SCStream sample handler + fences from stop/abort)
-    // label follows the bundle ID; both move together if the com.getsharex
-    // prefix is ever dropped (changing the bundle ID resets TCC grants)
-    private let sampleQueue = DispatchQueue(label: "com.getsharex.swiftx.recorder")
+    private let sampleQueue = DispatchQueue(label: "com.retrohazard.swiftx.recorder")
 
     // Pause: frames are dropped while paused; on resume the wall-clock gap is
     // added to an offset that shifts every later PTS, so the output has no hole.
