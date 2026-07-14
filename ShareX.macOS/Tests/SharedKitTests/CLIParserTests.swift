@@ -2,10 +2,18 @@
 // Copyright (c) 2007-2026 ShareX Team
 // Licensed under GPL v3 - see /LICENSE.txt
 
+import Foundation
 import Testing
 @testable import SharedKit
 
 struct CLIParserTests {
+    @Test func urlSchemeMapsHostToVerbAndPathToParameter() {
+        #expect(CLIParser.arguments(fromURL: URL(string: "swiftx://OCR")!) == ["-OCR"])
+        #expect(CLIParser.arguments(fromURL: URL(string: "swiftx://workflow/My%20Task")!) == ["-workflow", "My Task"])
+        #expect(CLIParser.arguments(fromURL: URL(string: "sharex://RectangleRegion/")!) == ["-RectangleRegion"])
+        #expect(CLIParser.arguments(fromURL: URL(string: "swiftx://")!).isEmpty)
+    }
+
     @Test func verbsParametersAndBareArgumentsParseLikeCSharp() {
         let commands = CLIParser.parse(
             ["-RectangleRegion", "-FileUpload", "/tmp/a.png", "shot.png", "-workflow", "OCR", "https://example.com/x.jpg"]
