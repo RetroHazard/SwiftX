@@ -263,21 +263,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     /// Standard About panel: icon, name, version and copyright come from
-    /// Info.plist; the credits string carries the C# AboutForm links.
+    /// Info.plist; the credits string links the SwiftX project and author,
+    /// with an attribution line for the upstream ShareX code.
     @objc private func showAbout() {
         let credits = NSMutableAttributedString()
         let links: [(String, String)] = [
-            ("Website", "https://getsharex.com"),
-            ("Project page", "https://github.com/ShareX/ShareX"),
-            ("Changelog", "https://getsharex.com/changelog"),
-            ("Privacy policy", "https://getsharex.com/privacy-policy"),
-            ("Donate", "https://getsharex.com/donate")
+            ("Project page", "https://github.com/RetroHazard/SwiftX"),
+            ("Report an issue", "https://github.com/RetroHazard/SwiftX/issues"),
+            ("RetroHazard", "https://github.com/RetroHazard")
         ]
         for (index, (title, url)) in links.enumerated() {
             if index > 0 { credits.append(NSAttributedString(string: "   ")) }
             credits.append(NSAttributedString(string: title, attributes: [.link: url]))
         }
-        credits.append(NSAttributedString(string: "\nA macOS port of ShareX, built with Swift."))
+        credits.append(NSAttributedString(string: "\nBased on "))
+        credits.append(NSAttributedString(string: "ShareX", attributes: [.link: "https://github.com/ShareX/ShareX"]))
+        credits.append(NSAttributedString(string: " by the ShareX Team."))
         let paragraph = NSMutableParagraphStyle()
         paragraph.alignment = .center
         paragraph.lineSpacing = 4
