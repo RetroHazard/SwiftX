@@ -62,10 +62,10 @@ Statuses: **Ported** · **Partial** (works, known gaps) · **Planned** (phase no
 | Feature | Status |
 |---|---|
 | SQLite history (Windows-compatible History.db schema) | Ported — a Windows History.db opens directly |
-| JSON/XML history import from Windows | Planned (4/11) |
-| Main window: searchable history list, thumbnails, context actions | Ported — search by name/URL/host |
+| JSON/XML history import from Windows | Ported — Import History… in the main window reads History.json (bracketless object stream) and History.xml (root-level fragments) into the SQLite store |
+| Main window: searchable history list, thumbnails, context actions | Ported — search by name/URL/host/tags |
 | Thumbnail grid view (persisted TaskViewMode), time-range filter, favorites (Windows-compatible "Favorite" tag) | Ported |
-| Tag filters (window title/process), stats | Planned (4) |
+| Tag filters (window title/process), stats | Ported — captures record WindowTitle/ProcessName tags, search matches tag values (C# SearchInTags), Statistics… shows the C# stats report (types, years, extensions, hosts, process names) |
 | Live task queue with upload progress rows | Ported — upload rows above the history list (progress bar, retry state, URL/error) |
 
 ## Phase 5 — Annotation editor
