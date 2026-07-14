@@ -280,9 +280,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func handleURLEvent(_ event: NSAppleEventDescriptor, with replyEvent: NSAppleEventDescriptor) {
-        guard let urlString = event.paramDescriptor(forKeyword: keyDirectObject)?.stringValue else { return }
-        // ponytail: log only; sharex:// actions dispatch into the task pipeline from Phase 2 on
-        NSLog("SwiftX received URL: %@", urlString)
+        guard let urlString = event.paramDescriptor(forKeyword: keyDirectObject)?.stringValue,
+              let url = URL(string: urlString) else { return }
+        // swiftx://Verb/parameter reuses the CLI verb handler (workflows,
+        // hotkey verbs, .sxcu/.sxie imports) — one dispatch path for both
+        let args = CLIParser.arguments(fromURL: url)
+        guard !args.isEmpty else {
+            NSLog("SwiftX received URL with no verb: %@", urlString)
+            return
+        }
+        Task { await CLI.handle(args) }
     }
 }
 

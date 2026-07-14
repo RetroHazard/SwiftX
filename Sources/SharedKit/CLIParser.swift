@@ -26,6 +26,20 @@ public struct CLICommand: Equatable, Sendable {
 }
 
 public enum CLIParser {
+    /// Maps a swiftx:// or sharex:// URL onto CLI arguments: the host is the
+    /// verb, the (percent-decoded) path is its parameter. No Windows
+    /// equivalent — the URL scheme is this port's addition.
+    /// swiftx://OCR → ["-OCR"]; swiftx://workflow/My%20Task → ["-workflow", "My Task"]
+    public static func arguments(fromURL url: URL) -> [String] {
+        guard let verb = url.host, !verb.isEmpty else { return [] }
+        var args = ["-" + verb]
+        let parameter = url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        if !parameter.isEmpty {
+            args.append(parameter)
+        }
+        return args
+    }
+
     /// A bare argument following a "-Verb" becomes that verb's parameter;
     /// otherwise it stands alone (a path or URL to upload).
     public static func parse(_ arguments: [String]) -> [CLICommand] {
