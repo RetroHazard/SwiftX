@@ -90,7 +90,22 @@ echo "Signed as: ${IDENTITY:-ad-hoc}"
 
 echo "Built $APP"
 
+# Install into /Applications and run from there. TCC keys its identity cache on
+# the bundle PATH: the dev build/ path got permanently associated with the old
+# com.getsharex.swiftx bundle ID during the rename, so capture requests from it
+# resolve to a dead ID that never shows in System Settings. A stable install
+# path resolves the current signature cleanly. Skips the copy if unwritable
+# (e.g. CI) — the build/ bundle still works for everything except fresh TCC.
+INSTALLED="/Applications/SwiftX.app"
+if rm -rf "$INSTALLED" 2>/dev/null && cp -R "$APP" "$INSTALLED" 2>/dev/null; then
+    echo "Installed $INSTALLED"
+    LAUNCH="$INSTALLED"
+else
+    echo "note: could not write /Applications; run from $APP"
+    LAUNCH="$APP"
+fi
+
 if pgrep -xq SwiftX; then
     echo "warning: a SwiftX instance is still running and will NOT pick up this build."
-    echo "         restart it with: pkill -x SwiftX && open $APP"
+    echo "         restart it with: pkill -x SwiftX && open $LAUNCH"
 fi
