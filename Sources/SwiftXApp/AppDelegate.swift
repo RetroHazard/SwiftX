@@ -283,9 +283,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         append("\nmacOS port © 2026 ", size: small)
         append("RetroHazard", size: small, link: "https://github.com/RetroHazard")
-        // U+2028 breaks the line without ending the paragraph, so the
-        // paragraphSpacing gap only lands between the three blocks
-        append("\u{2028}Based on ", size: small, color: .secondaryLabelColor)
+        append("\nBased on ", size: small, color: .secondaryLabelColor)
         append("ShareX", size: small, link: "https://github.com/ShareX/ShareX")
         append(" © 2007–2026 ShareX Team", size: small, color: .secondaryLabelColor)
 
