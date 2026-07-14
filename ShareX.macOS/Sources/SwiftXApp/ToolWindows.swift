@@ -120,8 +120,8 @@ enum ToolWindows {
 
     // MARK: - QR code
 
-    static func showQRCode() {
-        present(title: "QR Code", content: QRCodeToolView())
+    static func showQRCode(text: String = "https://getsharex.com") {
+        present(title: "QR Code", content: QRCodeToolView(text: text))
     }
 
     static func scanQRFromRegion() {
@@ -301,7 +301,11 @@ private struct HashCheckerView: View {
 }
 
 private struct QRCodeToolView: View {
-    @State private var text = "https://getsharex.com"
+    @State private var text: String
+
+    init(text: String) {
+        _text = State(initialValue: text)
+    }
 
     var body: some View {
         VStack(spacing: 12) {
