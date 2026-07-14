@@ -64,6 +64,14 @@ struct MainWindowView: View {
                 }
                 .menuStyle(.borderlessButton)
                 .fixedSize()
+                // nil target: walks the responder chain to the app delegate
+                Button {
+                    NSApp.sendAction(#selector(AppDelegate.showSettingsWindow), to: nil, from: nil)
+                } label: {
+                    Image(systemName: "gearshape")
+                }
+                .buttonStyle(.borderless)
+                .help("Settings")
             }
             .padding(8)
 
@@ -307,6 +315,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
     case destinations = "Destinations"
     case customUploader = "Custom Uploader"
     case hotkeys = "Hotkeys"
+    case about = "About"
 
     var id: String { rawValue }
 
@@ -320,6 +329,68 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .destinations: "square.and.arrow.up"
         case .customUploader: "wrench.and.screwdriver"
         case .hotkeys: "keyboard"
+        case .about: "info.circle"
+        }
+    }
+}
+
+/// Shared so the "About SwiftX" menu item can jump the (cached) Settings
+/// window straight to the About pane, not just on first open.
+@MainActor final class SettingsNavigator: ObservableObject {
+    static let shared = SettingsNavigator()
+    @Published var pane: SettingsPane? = .general
+}
+
+/// About pane. Carries the GPL v3 "Appropriate Legal Notices": both copyright
+/// notices, the redistribution statement, the no-warranty statement, and a
+/// link to the bundled license text. Replaces the old AppKit About panel.
+struct AboutView: View {
+    private var version: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"
+    }
+    private var licenseURL: URL {
+        Bundle.main.url(forResource: "LICENSE", withExtension: "txt")
+            ?? URL(string: "https://www.gnu.org/licenses/gpl-3.0.html")!
+    }
+
+    var body: some View {
+        Section {
+            HStack(spacing: 16) {
+                Image(nsImage: NSApp.applicationIconImage)
+                    .resizable()
+                    .frame(width: 72, height: 72)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("SwiftX").font(.title).bold()
+                    Text("Version \(version)").foregroundStyle(.secondary)
+                    HStack(spacing: 12) {
+                        Link("Project page", destination: URL(string: "https://github.com/RetroHazard/SwiftX")!)
+                        Link("Report an issue", destination: URL(string: "https://github.com/RetroHazard/SwiftX/issues")!)
+                    }
+                    .font(.callout)
+                    .padding(.top, 2)
+                }
+                Spacer()
+            }
+            .padding(.vertical, 4)
+        }
+        Section("Credits") {
+            LabeledContent("macOS port") {
+                Link("RetroHazard", destination: URL(string: "https://github.com/RetroHazard")!)
+            }
+            LabeledContent("Based on") {
+                HStack(spacing: 4) {
+                    Link("ShareX", destination: URL(string: "https://github.com/ShareX/ShareX")!)
+                    Text("© 2007–2026 ShareX Team").foregroundStyle(.secondary)
+                }
+            }
+        }
+        Section("License") {
+            Text("macOS port © 2026 RetroHazard.\nBased on ShareX © 2007–2026 ShareX Team.")
+                .font(.callout)
+            Text("SwiftX is free software: you may redistribute it and/or modify it under the terms of the GNU General Public License v3. It comes with ABSOLUTELY NO WARRANTY.")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+            Link("View the full license", destination: licenseURL)
         }
     }
 }
@@ -327,7 +398,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
 struct SettingsView: View {
     @State private var config = ApplicationConfig.load()
     @State private var task = TaskSettings.load()
-    @State private var pane: SettingsPane? = .general
+    @ObservedObject private var nav = SettingsNavigator.shared
 
     private static let afterCaptureToggles: [(AfterCaptureTasks, String)] = [
         (.annotateImage, "Annotate image (editor)"),
@@ -434,7 +505,7 @@ struct SettingsView: View {
 
     var body: some View {
         NavigationSplitView {
-            List(SettingsPane.allCases, selection: $pane) { pane in
+            List(SettingsPane.allCases, selection: $nav.pane) { pane in
                 // explicit tag: List's implicit selection value is the String id,
                 // which never matches our SettingsPane? binding
                 Label(pane.rawValue, systemImage: pane.icon)
@@ -446,7 +517,7 @@ struct SettingsView: View {
             .toolbar(removing: .sidebarToggle)
         } detail: {
             Form {
-                switch pane ?? .general {
+                switch nav.pane ?? .general {
                 case .general: generalPane
                 case .capture: capturePane
                 case .recording: recordingPane
@@ -455,10 +526,11 @@ struct SettingsView: View {
                 case .destinations: destinationsPane
                 case .customUploader: CustomUploaderEditorView()
                 case .hotkeys: HotkeysSettingsView()
+                case .about: AboutView()
                 }
             }
             .formStyle(.grouped)
-            .navigationTitle((pane ?? .general).rawValue)
+            .navigationTitle((nav.pane ?? .general).rawValue)
         }
         .frame(minWidth: 640, minHeight: 420)
     }
