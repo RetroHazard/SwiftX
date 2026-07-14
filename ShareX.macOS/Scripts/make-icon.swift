@@ -140,5 +140,13 @@ try iconutil.run()
 iconutil.waitUntilExit()
 guard iconutil.terminationStatus == 0 else { fatalError("iconutil failed") }
 
+// Standalone PNG set for documentation, packaging, and the website.
+// 180 = apple-touch-icon, 192/512 = web manifest, rest are the classic ladder.
+let assets = URL(fileURLWithPath: "Assets/icons")
+try fm.createDirectory(at: assets, withIntermediateDirectories: true)
+for size in [16, 32, 48, 64, 128, 180, 192, 256, 512, 1024] {
+    try writePNG(render(size), to: assets.appendingPathComponent("swiftx-\(size).png"))
+}
+
 try writePNG(render(512), to: URL(fileURLWithPath: "build/icon-preview.png"))
-print("Wrote Resources/SwiftX.icns (preview: build/icon-preview.png)")
+print("Wrote Resources/SwiftX.icns, Assets/icons/swiftx-{16...1024}.png (preview: build/icon-preview.png)")
