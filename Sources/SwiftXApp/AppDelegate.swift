@@ -262,23 +262,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         present(mainWindow)
     }
 
-    /// Standard About panel: icon, name, version and copyright come from
-    /// Info.plist; the credits string links the SwiftX project and author,
-    /// with an attribution line for the upstream ShareX code.
+    /// Standard About panel; the credits string carries the GPL v3
+    /// "Appropriate Legal Notices": both copyright notices, the no-warranty
+    /// statement, and a link to the bundled license text.
     @objc private func showAbout() {
         let credits = NSMutableAttributedString()
-        let links: [(String, String)] = [
-            ("Project page", "https://github.com/RetroHazard/SwiftX"),
-            ("Report an issue", "https://github.com/RetroHazard/SwiftX/issues"),
-            ("RetroHazard", "https://github.com/RetroHazard")
-        ]
-        for (index, (title, url)) in links.enumerated() {
-            if index > 0 { credits.append(NSAttributedString(string: "   ")) }
-            credits.append(NSAttributedString(string: title, attributes: [.link: url]))
+        func append(_ text: String, link: String? = nil) {
+            credits.append(NSAttributedString(string: text, attributes: link.map { [.link: $0] } ?? [:]))
         }
-        credits.append(NSAttributedString(string: "\nBased on "))
-        credits.append(NSAttributedString(string: "ShareX", attributes: [.link: "https://github.com/ShareX/ShareX"]))
-        credits.append(NSAttributedString(string: " by the ShareX Team."))
+
+        append("Project page", link: "https://github.com/RetroHazard/SwiftX")
+        append("   ")
+        append("Report an issue", link: "https://github.com/RetroHazard/SwiftX/issues")
+        append("\n\nmacOS port copyright © 2026 ")
+        append("RetroHazard", link: "https://github.com/RetroHazard")
+        append("\nBased on ")
+        append("ShareX", link: "https://github.com/ShareX/ShareX")
+        append(" — copyright © 2007-2026 ShareX Team\n\n")
+        append("SwiftX is free software licensed under the ")
+        let licenseLink = Bundle.main.url(forResource: "LICENSE", withExtension: "txt")?.absoluteString
+            ?? "https://www.gnu.org/licenses/gpl-3.0.html"
+        append("GNU GPL v3", link: licenseLink)
+        append(". You may redistribute and modify it under the terms of that license. "
+               + "This program comes with ABSOLUTELY NO WARRANTY.")
+
         let paragraph = NSMutableParagraphStyle()
         paragraph.alignment = .center
         paragraph.lineSpacing = 4
