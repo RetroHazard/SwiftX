@@ -34,10 +34,21 @@ final class UploadTaskCenter: ObservableObject {
         entries.contains { $0.state == .uploading || $0.state == .retrying }
     }
 
+    private var inFlight: [UUID: Task<Void, Never>] = [:]
+
     func begin(fileName: String, host: String) -> UUID {
         let entry = Entry(fileName: fileName, host: host)
         entries.append(entry)
         return entry.id
+    }
+
+    func register(_ id: UUID, task: Task<Void, Never>) {
+        inFlight[id] = task
+    }
+
+    /// StopUploads hotkey (C# TaskManager.StopAllTasks).
+    func stopAll() {
+        inFlight.values.forEach { $0.cancel() }
     }
 
     func progress(_ id: UUID, sent: Int64, expected: Int64) {
@@ -49,6 +60,7 @@ final class UploadTaskCenter: ObservableObject {
     }
 
     func finish(_ id: UUID, state: State) {
+        inFlight[id] = nil
         guard let index = entries.firstIndex(where: { $0.id == id }) else { return }
         entries[index].state = state
         if case .completed = state { entries[index].fraction = 1 }
