@@ -98,8 +98,14 @@ enum HotkeyRegistrar {
 enum HotkeyDispatcher {
     static func execute(_ type: HotkeyType) {
         switch type {
-        case .rectangleRegion:
+        case .rectangleRegion, .rectangleLight, .rectangleTransparent:
+            // C# Light/Transparent are lighter-weight overlay variants of the
+            // same rectangle capture; one overlay serves all three here
             CaptureCoordinator.shared.captureRegion()
+        case .customRegion:
+            CaptureCoordinator.shared.captureCustomRegion()
+        case .customWindow:
+            CaptureCoordinator.shared.captureCustomWindow()
         case .lastRegion:
             CaptureCoordinator.shared.captureLastRegion()
         case .printScreen, .activeMonitor:
@@ -192,6 +198,30 @@ enum HotkeyDispatcher {
             AutoCaptureController.shared.start()
         case .stopAutoCapture:
             AutoCaptureController.shared.stop()
+        case .fileUpload:
+            UploadActions.filesUpload()
+        case .folderUpload:
+            UploadActions.folderUpload()
+        case .clipboardUpload:
+            UploadActions.clipboardUpload()
+        case .clipboardUploadWithContentViewer:
+            UploadActions.clipboardUploadWithContentViewer()
+        case .uploadText:
+            UploadActions.uploadTextPrompt()
+        case .uploadURL:
+            UploadActions.uploadURLPrompt()
+        case .shortenURL:
+            UploadActions.shortenURLPrompt()
+        case .dragDropUpload:
+            DropWindow.toggle()
+        case .stopUploads:
+            UploadTaskCenter.shared.stopAll()
+        case .imageEditor:
+            UploadActions.openImageEditor()
+        case .toggleActionsToolbar:
+            ActionsToolbar.toggle()
+        case .toggleTrayMenu:
+            (NSApp.delegate as? AppDelegate)?.toggleStatusMenu()
         case .disableHotkeys:
             HotkeyCenter.shared.isEnabled.toggle()
         case .exitShareX:

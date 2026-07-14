@@ -51,6 +51,44 @@ final class CaptureCoordinator {
         }
     }
 
+    /// Captures the stored CaptureCustomRegion rect without a picker.
+    /// ponytail: an empty rect prompts a one-time region select and persists
+    /// it; C# edits the rect in the task settings UI instead
+    func captureCustomRegion() {
+        Task {
+            var settings = TaskSettings.load()
+            if CSharpRect.parse(settings.captureCustomRegion) == nil {
+                guard let selection = await RegionSelectController().selectRegionDetailed() else { return }
+                settings.captureCustomRegion = CSharpRect.string(from: selection.rect)
+                try? settings.save()
+                try? await Task.sleep(for: .milliseconds(80))
+            }
+            guard let rect = CSharpRect.parse(settings.captureCustomRegion) else { return }
+            await run { try await ScreenCapture.captureRegion(cocoaRect: rect) }
+        }
+    }
+
+    /// Captures the first window whose title or app name contains
+    /// CaptureCustomWindow (C# CaptureCustomWindow).
+    func captureCustomWindow() {
+        let needle = TaskSettings.load().captureCustomWindow
+        guard !needle.isEmpty else {
+            Notifier.notify(title: "Custom window capture",
+                            body: "Set CaptureCustomWindow in TaskSettings.json first.")
+            return
+        }
+        let match = WindowLister.onScreenWindows(excludingPID: ProcessInfo.processInfo.processIdentifier)
+            .first {
+                $0.title.localizedCaseInsensitiveContains(needle)
+                    || $0.ownerName.localizedCaseInsensitiveContains(needle)
+            }
+        guard let match else {
+            Notifier.notify(title: "Custom window capture", body: "No window matching \"\(needle)\".")
+            return
+        }
+        captureWindow(match)
+    }
+
     /// Captures one display picked from the menu.
     func captureScreen(_ screen: NSScreen) {
         Task {

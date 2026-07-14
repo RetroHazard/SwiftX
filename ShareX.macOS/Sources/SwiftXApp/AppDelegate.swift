@@ -249,6 +249,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem?.button?.contentTintColor = recording ? .systemRed : nil
     }
 
+    /// ToggleTrayMenu hotkey: pops the status-item menu open.
+    func toggleStatusMenu() {
+        statusItem?.button?.performClick(nil)
+    }
+
     @objc func showMainWindow() {
         if mainWindow == nil {
             mainWindow = makeWindow(title: "SwiftX", size: NSSize(width: 640, height: 420), view: AnyView(MainWindowView()))
