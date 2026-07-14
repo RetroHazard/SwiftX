@@ -31,7 +31,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
 
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        item.button?.image = NSImage(systemSymbolName: "camera.viewfinder", accessibilityDescription: "SwiftX")
+        item.button?.image = StatusIcon.idle
         item.menu = buildMenu()
         statusItem = item
 
@@ -243,10 +243,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         pauseRecordingItem?.isHidden = !recording
         pauseRecordingItem?.title = RecordingCoordinator.shared.isPaused ? "Resume Recording" : "Pause Recording"
         abortRecordingItem?.isHidden = !recording
-        statusItem?.button?.image = NSImage(
-            systemSymbolName: recording ? "record.circle" : "camera.viewfinder",
-            accessibilityDescription: "SwiftX"
-        )
+        statusItem?.button?.image = recording
+            ? NSImage(systemSymbolName: "record.circle", accessibilityDescription: "SwiftX recording")
+            : StatusIcon.idle
         statusItem?.button?.contentTintColor = recording ? .systemRed : nil
     }
 
