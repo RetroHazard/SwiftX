@@ -263,48 +263,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         present(mainWindow)
     }
 
-    /// Standard About panel; the credits string carries the GPL v3
-    /// "Appropriate Legal Notices": both copyright notices, the no-warranty
-    /// statement, and a link to the bundled license text.
+    /// About now lives as a pane in the Settings window; open it there.
     @objc private func showAbout() {
-        let small = NSFont.smallSystemFontSize
-        let footnote = NSFont.systemFontSize(for: .mini)
-        let credits = NSMutableAttributedString()
-        func append(_ text: String, size: CGFloat, color: NSColor = .labelColor, link: String? = nil) {
-            var attributes: [NSAttributedString.Key: Any] = [
-                .font: NSFont.systemFont(ofSize: size), .foregroundColor: color
-            ]
-            if let link { attributes[.link] = link }
-            credits.append(NSAttributedString(string: text, attributes: attributes))
-        }
-
-        append("Project page", size: small, link: "https://github.com/RetroHazard/SwiftX")
-        append("  ·  ", size: small, color: .tertiaryLabelColor)
-        append("Report an issue", size: small, link: "https://github.com/RetroHazard/SwiftX/issues")
-
-        append("\nmacOS port © 2026 ", size: small)
-        append("RetroHazard", size: small, link: "https://github.com/RetroHazard")
-        append("\nBased on ", size: small, color: .secondaryLabelColor)
-        append("ShareX", size: small, link: "https://github.com/ShareX/ShareX")
-        append(" © 2007–2026 ShareX Team", size: small, color: .secondaryLabelColor)
-
-        let licenseLink = Bundle.main.url(forResource: "LICENSE", withExtension: "txt")?.absoluteString
-            ?? "https://www.gnu.org/licenses/gpl-3.0.html"
-        append("\nFree software: redistribute or modify it under the ", size: footnote, color: .secondaryLabelColor)
-        append("GNU GPL v3", size: footnote, link: licenseLink)
-        append(".\u{2028}This program comes with ABSOLUTELY NO WARRANTY.", size: footnote, color: .secondaryLabelColor)
-
-        let paragraph = NSMutableParagraphStyle()
-        paragraph.alignment = .center
-        paragraph.lineSpacing = 2
-        paragraph.paragraphSpacing = 7 // breathing room between the blocks
-        credits.addAttributes([.paragraphStyle: paragraph],
-                              range: NSRange(location: 0, length: credits.length))
-        NSApp.activate(ignoringOtherApps: true)
-        NSApp.orderFrontStandardAboutPanel(options: [.credits: credits])
+        SettingsNavigator.shared.pane = .about
+        showSettingsWindow()
     }
 
-    @objc private func showSettingsWindow() {
+    @objc func showSettingsWindow() {
         if settingsWindow == nil {
             settingsWindow = makeWindow(title: "SwiftX Settings", size: NSSize(width: 700, height: 460), view: AnyView(SettingsView()))
         }
