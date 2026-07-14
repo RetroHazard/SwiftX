@@ -45,8 +45,13 @@ enum SingleInstance {
         let path = SettingsPaths.root.appendingPathComponent(".sharex.lock").path
         lockFileDescriptor = open(path, O_CREAT | O_RDWR, 0o644)
         if lockFileDescriptor == -1 || flock(lockFileDescriptor, LOCK_EX | LOCK_NB) != 0 {
-            // ponytail: just exit; forwarding args to the running instance lands with the CLI (Phase 10)
-            print("SwiftX is already running.")
+            let args = CLI.relevantArguments()
+            if args.isEmpty {
+                print("SwiftX is already running.")
+            } else {
+                CLIRelay.forward(args)
+                print("SwiftX is already running; arguments forwarded.")
+            }
             exit(0)
         }
         // fd stays open for process lifetime to hold the lock
