@@ -49,7 +49,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
     <key>LSMinimumSystemVersion</key>
     <string>13.0</string>
     <key>NSHumanReadableCopyright</key>
-    <string>Copyright © 2007-2026 ShareX Team. Licensed under GPL v3.</string>
+    <string>Copyright © 2026 RetroHazard. Based on ShareX © 2007-2026 ShareX Team. Licensed under GPL v3.</string>
     <key>LSUIElement</key>
     <true/>
     <key>NSPrincipalClass</key>
