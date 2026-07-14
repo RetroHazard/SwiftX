@@ -41,7 +41,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
     <key>CFBundleIconFile</key>
     <string>SwiftX</string>
     <key>CFBundleIdentifier</key>
-    <string>com.getsharex.swiftx</string>
+    <string>com.retrohazard.swiftx</string>
     <key>CFBundleName</key>
     <string>SwiftX</string>
     <key>CFBundlePackageType</key>
