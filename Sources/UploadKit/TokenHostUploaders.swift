@@ -110,7 +110,7 @@ public enum SeafileUploader {
         }
 
         // 2. multipart upload to that URL
-        let boundary = "----ShareXBoundary\(UUID().uuidString)"
+        let boundary = "----SwiftXBoundary\(UUID().uuidString)"
         var upload = URLRequest(url: uploadURL)
         upload.httpMethod = "POST"
         upload.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
@@ -189,7 +189,7 @@ public enum PushbulletUploader {
 
         // 2. post the file to the pre-signed URL; form fields must precede the file
         guard let uploadURL = URL(string: slot.uploadUrl) else { throw UploadError.invalidRequestURL(slot.uploadUrl) }
-        let boundary = "----ShareXBoundary\(UUID().uuidString)"
+        let boundary = "----SwiftXBoundary\(UUID().uuidString)"
         var upload = URLRequest(url: uploadURL)
         upload.httpMethod = "POST"
         upload.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")

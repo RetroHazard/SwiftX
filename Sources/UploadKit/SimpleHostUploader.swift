@@ -39,7 +39,7 @@ public enum SimpleHostUploader {
 
     /// Builds the multipart request without sending it, so tests run offline.
     public static func request(file: UploadFile, destination: SimpleHostDestination,
-                               config: UploadersConfig, boundary: String = "----ShareXBoundary\(UUID().uuidString)") throws -> URLRequest {
+                               config: UploadersConfig, boundary: String = "----SwiftXBoundary\(UUID().uuidString)") throws -> URLRequest {
         let urlString: String
         var fields: [(String, String)] = []
         let fileField: String

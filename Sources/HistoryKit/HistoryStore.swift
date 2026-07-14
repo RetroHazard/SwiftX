@@ -34,7 +34,7 @@ public struct HistoryItem: Identifiable, Equatable {
 @MainActor
 public final class HistoryStore {
     public static let shared = HistoryStore(url: SettingsPaths.root.appendingPathComponent("History.db"))
-    public static let changedNotification = Notification.Name("ShareXHistoryChanged")
+    public static let changedNotification = Notification.Name("SwiftXHistoryChanged")
 
     private var db: OpaquePointer?
     private let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)

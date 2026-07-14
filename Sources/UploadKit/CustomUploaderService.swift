@@ -83,7 +83,7 @@ public enum CustomUploaderService {
         case .none:
             break
         case .multipartFormData:
-            let boundary = "----ShareXBoundary\(UUID().uuidString.replacingOccurrences(of: "-", with: ""))"
+            let boundary = "----SwiftXBoundary\(UUID().uuidString.replacingOccurrences(of: "-", with: ""))"
             request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
             request.httpBody = try multipartBody(item: item, file: file, parser: parser, boundary: boundary)
         case .formURLEncoded:
