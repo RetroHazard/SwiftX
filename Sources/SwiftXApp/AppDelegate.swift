@@ -41,6 +41,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         setupHotkeys()
         Notifier.setup()
         WatchFolderCenter.shared.applySettings()
+        CLIRelay.startListening()
+        let launchArgs = CLI.relevantArguments()
+        if !launchArgs.isEmpty {
+            Task { await CLI.handle(launchArgs) }
+        }
         RecordingCoordinator.shared.onStateChange = { [weak self] in self?.updateRecordingUI() }
 
         // debug: upload a file through the full pipeline, then report what the
