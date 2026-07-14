@@ -42,7 +42,7 @@ enum SingleInstance {
 
     static func acquireOrExit() {
         try? FileManager.default.createDirectory(at: SettingsPaths.root, withIntermediateDirectories: true)
-        let path = SettingsPaths.root.appendingPathComponent(".sharex.lock").path
+        let path = SettingsPaths.root.appendingPathComponent(".swiftx.lock").path
         lockFileDescriptor = open(path, O_CREAT | O_RDWR, 0o644)
         if lockFileDescriptor == -1 || flock(lockFileDescriptor, LOCK_EX | LOCK_NB) != 0 {
             let args = CLI.relevantArguments()
