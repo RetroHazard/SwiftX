@@ -121,6 +121,100 @@ struct HistoryKitTests {
         }
     }
 
+    @Test func searchMatchesTagValues() {
+        withStore { store in
+            store.append(makeItem(fileName: "a.png")) // tags: WindowTitle = Safari
+            var plain = makeItem(fileName: "b.png")
+            plain.tags = [:]
+            store.append(plain)
+
+            // C# SearchInTags: the search box matches window title / process name
+            #expect(store.recent(search: "Safari").map(\.fileName) == ["a.png"])
+        }
+    }
+
+    @Test func importsWindowsJSONStream() {
+        // History.json is comma-separated objects with no array brackets,
+        // C# "o" dates, and Favorite serialized with a null value
+        let json = """
+        {
+          "FileName": "a.png",
+          "FilePath": "C:\\\\Screenshots\\\\a.png",
+          "DateTime": "2024-03-15T10:30:45.1234567",
+          "Type": "Image",
+          "Host": "Imgur",
+          "URL": "https://i.imgur.com/a.png",
+          "Tags": { "WindowTitle": "Notepad", "ProcessName": "notepad", "Favorite": null }
+        },
+        {
+          "FileName": "b.txt",
+          "DateTime": "2023-01-01T00:00:00Z",
+          "Type": "Text"
+        }
+        """
+        let items = HistoryImport.items(fromJSON: json)
+        #expect(items.count == 2)
+        #expect(items[0].fileName == "a.png")
+        #expect(items[0].url == "https://i.imgur.com/a.png")
+        #expect(items[0].tags["WindowTitle"] == "Notepad")
+        #expect(items[0].isFavorite) // null-valued tag still counts as present
+        #expect(Calendar.current.component(.year, from: items[0].date) == 2024)
+        #expect(items[1].type == "Text")
+        #expect(HistoryImport.items(fromJSON: "not json").isEmpty)
+    }
+
+    @Test func importsWindowsXMLFragmentStream() {
+        // History.xml is root-level <HistoryItem> fragments with no document root
+        let xml = """
+        <HistoryItem>
+            <Filename>a.png</Filename>
+            <Filepath>C:\\Screenshots\\a.png</Filepath>
+            <DateTimeUtc>2015-08-30T12:36:00.0000000Z</DateTimeUtc>
+            <Type>Image</Type>
+            <Host>Imgur</Host>
+            <URL>https://i.imgur.com/a.png</URL>
+        </HistoryItem>
+        <HistoryItem>
+            <Filename>b.png</Filename>
+            <Type>Image</Type>
+        </HistoryItem>
+        """
+        let items = HistoryImport.items(fromXML: xml)
+        #expect(items.count == 2)
+        #expect(items[0].fileName == "a.png")
+        #expect(items[0].host == "Imgur")
+        #expect(Calendar.current.component(.year, from: items[0].date) == 2015)
+        #expect(items[1].fileName == "b.png")
+    }
+
+    @Test func appendAllImportsInOneBatch() {
+        withStore { store in
+            let imported = store.appendAll([makeItem(fileName: "a.png"), makeItem(fileName: "b.png")])
+            #expect(imported == 2)
+            #expect(store.count() == 2)
+        }
+    }
+
+    @Test func statsReportGroupsAndCounts() {
+        var image = HistoryItem()
+        image.fileName = "shot.png"
+        image.type = "Image"
+        image.host = "Imgur"
+        image.tags = ["ProcessName": "Safari"]
+        var text = HistoryItem()
+        text.fileName = "note.txt"
+        text.type = "Text"
+
+        let report = HistoryStats.report([image, image, text])
+        #expect(report.contains("Total: 3"))
+        #expect(report.contains("Image: 2 (67%)"))
+        #expect(report.contains("Text: 1 (33%)"))
+        #expect(report.contains("[2] png"))
+        #expect(report.contains("[2] Imgur"))
+        #expect(report.contains("[1] (empty)"))
+        #expect(report.contains("[2] Safari"))
+    }
+
     @Test func parsesCSharpRoundTripDates() {
         // C# DateTime.ToString("o") without timezone (Unspecified kind)
         #expect(HistoryDate.date(from: "2015-08-30T12:36:00.0000000") != nil)

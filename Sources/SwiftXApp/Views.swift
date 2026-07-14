@@ -7,6 +7,7 @@ import ApplicationServices
 import CaptureKit
 import HistoryKit
 import SharedKit
+import UniformTypeIdentifiers
 import UploadKit
 
 enum TimeRange: String, CaseIterable {
@@ -54,6 +55,14 @@ struct MainWindowView: View {
                     Image(systemName: "square.grid.2x2").tag("ThumbnailView")
                 }
                 .pickerStyle(.segmented)
+                .fixedSize()
+                Menu {
+                    Button("Import History…") { importHistory() }
+                    Button("Statistics…") { showStats() }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                }
+                .menuStyle(.borderlessButton)
                 .fixedSize()
             }
             .padding(8)
@@ -134,6 +143,54 @@ struct MainWindowView: View {
         pasteboard.clearContents()
         pasteboard.setString(string, forType: .string)
     }
+
+    /// C# History.json/xml migration (HistoryManagerJSON/XML loaders).
+    private func importHistory() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.json, .xml]
+        panel.message = "Choose a Windows ShareX History.json or History.xml"
+        NSApp.activate(ignoringOtherApps: true)
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        do {
+            let imported = HistoryStore.shared.appendAll(try HistoryImport.items(fromFile: url))
+            Notifier.notify(title: "History import", body: "Imported \(imported) items.")
+        } catch {
+            Notifier.notify(title: "History import failed", body: error.localizedDescription)
+        }
+    }
+
+    private func showStats() {
+        // ponytail: loads every row to group in memory, same as C#; stream via
+        // SQL GROUP BY if million-row databases ever show up
+        let all = HistoryStore.shared.recent(limit: Int(Int32.max))
+        ToolWindows.present(title: "History Stats", resizable: true,
+                            content: HistoryStatsView(text: HistoryStats.report(all)))
+    }
+}
+
+/// C# shows stats in an OutputBox: monospaced text plus a copy button.
+private struct HistoryStatsView: View {
+    let text: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            ScrollView {
+                Text(text)
+                    .font(.body.monospaced())
+                    .textSelection(.enabled)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            HStack {
+                Spacer()
+                Button("Copy") {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(text, forType: .string)
+                }
+            }
+        }
+        .padding(12)
+        .frame(minWidth: 340, minHeight: 420)
+    }
 }
 
 struct HistoryGridCell: View {
@@ -174,6 +231,8 @@ struct HistoryGridCell: View {
 struct HistoryRow: View {
     let item: HistoryItem
 
+    private var windowTitle: String { item.tags["WindowTitle"] ?? "" }
+
     var body: some View {
         HStack(spacing: 10) {
             Group {
@@ -192,9 +251,12 @@ struct HistoryRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.fileName)
                     .lineLimit(1)
-                Text(item.date.formatted(date: .abbreviated, time: .shortened))
+                Text(windowTitle.isEmpty
+                     ? item.date.formatted(date: .abbreviated, time: .shortened)
+                     : "\(item.date.formatted(date: .abbreviated, time: .shortened)) · \(windowTitle)")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
                 if !item.url.isEmpty {
                     Text(item.url)
                         .font(.caption)
