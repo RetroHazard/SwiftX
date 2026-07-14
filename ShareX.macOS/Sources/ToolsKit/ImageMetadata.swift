@@ -38,7 +38,7 @@ public enum ImageMetadata {
         else { throw MetadataError.unreadable }
 
         let temp = url.deletingLastPathComponent()
-            .appendingPathComponent(".sharex-strip-\(UUID().uuidString)")
+            .appendingPathComponent(".swiftx-strip-\(UUID().uuidString)")
         let count = CGImageSourceGetCount(source)
         guard let destination = CGImageDestinationCreateWithURL(temp as CFURL, type, count, nil) else {
             throw MetadataError.unwritable

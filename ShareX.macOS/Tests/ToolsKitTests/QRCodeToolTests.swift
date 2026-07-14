@@ -7,7 +7,7 @@ import Testing
 
 struct QRCodeToolTests {
     @Test func generatedCodeDecodesBackToItsText() throws {
-        let text = "https://getsharex.com/?test=1"
+        let text = "https://github.com/RetroHazard/SwiftX?test=1"
         let image = try #require(QRCodeTool.generate(text))
         #expect(image.width >= 256)
         let payloads = try QRCodeTool.decode(image)

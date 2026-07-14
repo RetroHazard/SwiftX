@@ -120,7 +120,7 @@ enum ToolWindows {
 
     // MARK: - QR code
 
-    static func showQRCode(text: String = "https://getsharex.com") {
+    static func showQRCode(text: String = "https://github.com/RetroHazard/SwiftX") {
         present(title: "QR Code", content: QRCodeToolView(text: text))
     }
 
