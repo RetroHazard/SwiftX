@@ -135,7 +135,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(NSMenuItem(title: "About SwiftX", action: #selector(showAbout), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Quit SwiftX", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
 
-        menu.items.forEach { $0.target = $0.action != nil ? self : nil }
+        // only claim selectors we implement; the rest (e.g. terminate) stay
+        // targetless so the responder chain delivers them to NSApp
+        menu.items.forEach { $0.target = $0.action.map(responds(to:)) == true ? self : nil }
         return menu
     }
 
