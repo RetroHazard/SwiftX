@@ -9,6 +9,25 @@ import Testing
 struct NameParserTests {
     private let utc = TimeZone(identifier: "UTC")!
 
+    @Test func remojiDrawsFromFullCSharpList() {
+        // Smileys+AnimalsNature+FoodDrink+TravelPlaces+Objects; C# comments out the last 4 lock emojis
+        #expect(Emoji.emojis.count == 705)
+        let result = NameParser(.default).parse("%remoji")
+        #expect(Emoji.emojis.contains(result))
+    }
+
+    @Test func rfWithBadPathReportsErrorAndSubstitutesEmpty() {
+        nonisolated(unsafe) var reported: String?
+        NameParser.onError = { reported = $0 }
+        defer { NameParser.onError = nil }
+        #expect(NameParser(.default).parse("a%rf{/no/such/file.txt}b") == "ab")
+        #expect(reported?.contains("Valid text file path is required.") == true)
+
+        let preview = NameParser(.default)
+        preview.isPreviewMode = true
+        #expect(preview.parse("%rf{/no/such/file.txt}") == "Valid text file path is required.")
+    }
+
     private func makeParser(_ type: NameParserType = .default, hour: Int = 9) -> NameParser {
         let parser = NameParser(type)
         parser.customTimeZone = utc

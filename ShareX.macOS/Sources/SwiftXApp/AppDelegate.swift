@@ -42,6 +42,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         Notifier.setup()
         WatchFolderCenter.shared.applySettings()
         CLIRelay.startListening()
+        NameParser.onError = { message in
+            Task { @MainActor in Notifier.notify(title: "Name parser", body: message) }
+        }
         let launchArgs = CLI.relevantArguments()
         if !launchArgs.isEmpty {
             Task { await CLI.handle(launchArgs) }
