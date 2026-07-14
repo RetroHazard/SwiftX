@@ -27,6 +27,10 @@ fi
 # SwiftX aperture icon — regenerate with Scripts/make-icon.swift
 cp Resources/SwiftX.icns "$APP/Contents/Resources/"
 
+# GPL v3 requires conveying the license text with the program; the About
+# panel's "GNU GPL v3" link opens this copy
+cp ../LICENSE.txt "$APP/Contents/Resources/LICENSE.txt"
+
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
