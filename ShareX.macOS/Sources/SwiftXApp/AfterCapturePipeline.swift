@@ -174,6 +174,9 @@ enum AfterCapturePipeline {
             historyItem.filePath = savedURL.path
             historyItem.type = "Image"
             historyItem.host = "File"
+            // same tags C# TaskMetadata records; the history search matches them
+            if let windowTitle, !windowTitle.isEmpty { historyItem.tags["WindowTitle"] = windowTitle }
+            if let processName, !processName.isEmpty { historyItem.tags["ProcessName"] = processName }
             HistoryStore.shared.append(historyItem)
 
             if tasks.contains(.copyFileToClipboard) {
