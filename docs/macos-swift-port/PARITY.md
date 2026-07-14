@@ -10,7 +10,7 @@ Statuses: **Ported** · **Partial** (works, known gaps) · **Planned** (phase no
 | Settings engine (JSON, Windows-compatible keys) | Ported | Fields grow per phase; unknown keys tolerated |
 | Name parser macro engine | Partial | All codes ported; `%remoji` uses a curated subset, `%rf` error surfacing waits on task pipeline (Phase 2) |
 | TCC permission onboarding | Ported | Screen Recording + Accessibility status/request UI |
-| Single instance enforcement | Ported | flock-based; arg forwarding lands with CLI (Phase 10) |
+| Single instance enforcement | Ported | flock-based; second instance forwards argv over distributed notifications and exits |
 | `sharex://` URL scheme | Partial | Registered + received; dispatch lands in Phase 2 |
 | CI (build + test) | Ported | GitHub Actions, macOS runner |
 | Main window | Ported | Landed in Phase 4 — searchable history, grid view, live upload rows |
@@ -33,7 +33,7 @@ Statuses: **Ported** · **Partial** (works, known gaps) · **Planned** (phase no
 
 | Feature | Status |
 |---|---|
-| After-capture pipeline (C#-compatible flag serialization) | Ported — 19 of 22 flags: beautify, effects, annotate, image/file/paths to clipboard, pin, print, save, save-dialog, thumbnail, actions, show in Finder, analyze (AI), scan QR, OCR, upload, delete (Trash); remaining 3 wait on their phases (quick task menu, after-capture/before-upload windows) |
+| After-capture pipeline (C#-compatible flag serialization) | Ported — all 22 flags: beautify, effects, annotate, image/file/paths to clipboard, pin, print, save, save-dialog, thumbnail, actions, show in Finder, analyze (AI), scan QR, OCR, upload, delete (Trash), quick task menu, after-capture window, before-upload window |
 | Pin to screen (from capture, clipboard, file, screen region, close all) | Ported — drag to move, double-click to close, scroll/± to scale, ⌘-scroll/⌘± for opacity (C# 10% steps), right-click menu (copy, save, close all) |
 | After-upload tasks (6) | Planned (3) — flags model ready |
 | Global hotkey engine (Carbon), defaults ⌃⇧3/4/5, DisableHotkeys toggle | Ported — recorder UI in Settings, live re-registration |
@@ -132,10 +132,14 @@ Statuses: **Ported** · **Partial** (works, known gaps) · **Planned** (phase no
 
 | Feature | Status |
 |---|---|
-| Watch folders, auto capture, scrolling capture | Planned (10) |
-| CLI verbs, workflows, quick task menu | Planned (10) |
-| Native messaging host (Chrome/Edge/Firefox) | Planned (10) |
-| Safari extension | Planned (10) — evaluate, may defer |
+| Watch folders | Ported — FSEvents watcher with glob filter, subdirectories, move-to-screenshots, C# size-stability gate; Settings pane |
+| Auto capture | Ported — region/full-screen repeat timer, wait-for-uploads, C# AutoCapture* keys; annotate/menus stripped per shot like C# |
+| Scrolling capture | Ported — synthetic scroll-wheel events + C# CombineImages row-matching stitcher (side margins, auto bottom-edge trim, best-guess fallback); Windows-message scroll methods N/A |
+| Quick task menu (ShowQuickTaskMenu) + editor | Ported — C# QuickTaskPresets JSON incl. separators; menu at cursor |
+| After-capture / before-upload windows | Ported — filename + task toggles; destination override before upload (all sources) |
+| CLI verbs, workflows | Ported — -HotkeyTypeName [file], -workflow, -CustomUploader .sxcu, -ImageEffect .sxie, -NativeMessagingInput .json, bare path/URL upload; second instance forwards to primary |
+| Native messaging host (Chrome/Edge/Firefox) | Ported — SwiftXHost binary in bundle speaks the Chrome stdio protocol; manifest install toggle in General settings |
+| Safari extension | Deferred — needs an Xcode app-extension target + separate distribution; revisit after Phase 11 signing |
 
 ## Phase 11 — Distribution
 
