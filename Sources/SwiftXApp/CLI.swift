@@ -104,7 +104,7 @@ enum CLI {
 
 /// IPC between the running instance and later invocations.
 enum CLIRelay {
-    private static let notification = Notification.Name("com.getsharex.swiftx.cli")
+    private static let notification = Notification.Name("com.retrohazard.swiftx.cli")
 
     /// Primary instance: run arguments forwarded by later invocations.
     @MainActor static func startListening() {
