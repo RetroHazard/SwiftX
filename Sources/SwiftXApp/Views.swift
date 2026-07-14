@@ -390,7 +390,11 @@ struct AboutView: View {
             Text("SwiftX is free software: you may redistribute it and/or modify it under the terms of the GNU General Public License v3. It comes with ABSOLUTELY NO WARRANTY.")
                 .font(.callout)
                 .foregroundStyle(.secondary)
-            Link("View the full license", destination: licenseURL)
+            // SwiftUI Link won't open file:// URLs; NSWorkspace opens the
+            // bundled LICENSE.txt (or the gnu.org fallback) reliably
+            Button("View the full license") {
+                NSWorkspace.shared.open(licenseURL)
+            }
         }
     }
 }
