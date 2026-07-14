@@ -266,31 +266,40 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// "Appropriate Legal Notices": both copyright notices, the no-warranty
     /// statement, and a link to the bundled license text.
     @objc private func showAbout() {
+        let small = NSFont.smallSystemFontSize
+        let footnote = NSFont.systemFontSize(for: .mini)
         let credits = NSMutableAttributedString()
-        func append(_ text: String, link: String? = nil) {
-            credits.append(NSAttributedString(string: text, attributes: link.map { [.link: $0] } ?? [:]))
+        func append(_ text: String, size: CGFloat, color: NSColor = .labelColor, link: String? = nil) {
+            var attributes: [NSAttributedString.Key: Any] = [
+                .font: NSFont.systemFont(ofSize: size), .foregroundColor: color
+            ]
+            if let link { attributes[.link] = link }
+            credits.append(NSAttributedString(string: text, attributes: attributes))
         }
 
-        append("Project page", link: "https://github.com/RetroHazard/SwiftX")
-        append("   ")
-        append("Report an issue", link: "https://github.com/RetroHazard/SwiftX/issues")
-        append("\n\nmacOS port copyright © 2026 ")
-        append("RetroHazard", link: "https://github.com/RetroHazard")
-        append("\nBased on ")
-        append("ShareX", link: "https://github.com/ShareX/ShareX")
-        append(" — copyright © 2007-2026 ShareX Team\n\n")
-        append("SwiftX is free software licensed under the ")
+        append("Project page", size: small, link: "https://github.com/RetroHazard/SwiftX")
+        append("  ·  ", size: small, color: .tertiaryLabelColor)
+        append("Report an issue", size: small, link: "https://github.com/RetroHazard/SwiftX/issues")
+
+        append("\nmacOS port © 2026 ", size: small)
+        append("RetroHazard", size: small, link: "https://github.com/RetroHazard")
+        // U+2028 breaks the line without ending the paragraph, so the
+        // paragraphSpacing gap only lands between the three blocks
+        append("\u{2028}Based on ", size: small, color: .secondaryLabelColor)
+        append("ShareX", size: small, link: "https://github.com/ShareX/ShareX")
+        append(" © 2007–2026 ShareX Team", size: small, color: .secondaryLabelColor)
+
         let licenseLink = Bundle.main.url(forResource: "LICENSE", withExtension: "txt")?.absoluteString
             ?? "https://www.gnu.org/licenses/gpl-3.0.html"
-        append("GNU GPL v3", link: licenseLink)
-        append(". You may redistribute and modify it under the terms of that license. "
-               + "This program comes with ABSOLUTELY NO WARRANTY.")
+        append("\nFree software: redistribute or modify it under the ", size: footnote, color: .secondaryLabelColor)
+        append("GNU GPL v3", size: footnote, link: licenseLink)
+        append(".\u{2028}This program comes with ABSOLUTELY NO WARRANTY.", size: footnote, color: .secondaryLabelColor)
 
         let paragraph = NSMutableParagraphStyle()
         paragraph.alignment = .center
-        paragraph.lineSpacing = 4
-        credits.addAttributes([.font: NSFont.systemFont(ofSize: NSFont.smallSystemFontSize),
-                               .paragraphStyle: paragraph],
+        paragraph.lineSpacing = 2
+        paragraph.paragraphSpacing = 7 // breathing room between the blocks
+        credits.addAttributes([.paragraphStyle: paragraph],
                               range: NSRange(location: 0, length: credits.length))
         NSApp.activate(ignoringOtherApps: true)
         NSApp.orderFrontStandardAboutPanel(options: [.credits: credits])
