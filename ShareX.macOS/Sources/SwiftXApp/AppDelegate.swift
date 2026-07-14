@@ -132,7 +132,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let settings = NSMenuItem(title: "Settings…", action: #selector(showSettingsWindow), keyEquivalent: ",")
         menu.addItem(settings)
         menu.addItem(.separator())
-        menu.addItem(NSMenuItem(title: "About SwiftX", action: #selector(showAbout), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Quit SwiftX", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
 
         // only claim selectors we implement; the rest (e.g. terminate) stay
@@ -261,12 +260,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             mainWindow = makeWindow(title: "SwiftX", size: NSSize(width: 640, height: 420), view: AnyView(MainWindowView()))
         }
         present(mainWindow)
-    }
-
-    /// About now lives as a pane in the Settings window; open it there.
-    @objc private func showAbout() {
-        SettingsNavigator.shared.pane = .about
-        showSettingsWindow()
     }
 
     @objc func showSettingsWindow() {
