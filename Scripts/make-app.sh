@@ -16,6 +16,8 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
 cp .build/release/swiftx "$APP/Contents/MacOS/SwiftX"
+# browser native messaging host, launched by Chrome/Edge/Firefox
+cp .build/release/swiftx-host "$APP/Contents/MacOS/SwiftXHost"
 
 # SPM resource bundle (word lists) must sit in Contents/Resources for Bundle.module lookup
 if [ -d .build/release/SwiftX_SharedKit.bundle ]; then
@@ -74,6 +76,8 @@ PLIST
 # which invalidates grants on EVERY rebuild (tccutil reset + re-grant needed).
 # Developer ID signing + notarization lands in Phase 11.
 IDENTITY=$(security find-identity -v -p codesigning 2>/dev/null | awk -F'"' '/Apple Development|Developer ID Application/ {print $2; exit}')
+# nested executables must be signed before the bundle seal
+codesign --force --options runtime --sign "${IDENTITY:--}" "$APP/Contents/MacOS/SwiftXHost"
 codesign --force --options runtime --sign "${IDENTITY:--}" "$APP"
 echo "Signed as: ${IDENTITY:-ad-hoc}"
 
