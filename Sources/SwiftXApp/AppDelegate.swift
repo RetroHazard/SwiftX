@@ -132,6 +132,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let settings = NSMenuItem(title: "Settings…", action: #selector(showSettingsWindow), keyEquivalent: ",")
         menu.addItem(settings)
         menu.addItem(.separator())
+        menu.addItem(NSMenuItem(title: "About SwiftX", action: #selector(showAbout), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Quit SwiftX", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
 
         menu.items.forEach { $0.target = $0.action != nil ? self : nil }
@@ -259,6 +260,32 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             mainWindow = makeWindow(title: "SwiftX", size: NSSize(width: 640, height: 420), view: AnyView(MainWindowView()))
         }
         present(mainWindow)
+    }
+
+    /// Standard About panel: icon, name, version and copyright come from
+    /// Info.plist; the credits string carries the C# AboutForm links.
+    @objc private func showAbout() {
+        let credits = NSMutableAttributedString()
+        let links: [(String, String)] = [
+            ("Website", "https://getsharex.com"),
+            ("Project page", "https://github.com/ShareX/ShareX"),
+            ("Changelog", "https://getsharex.com/changelog"),
+            ("Privacy policy", "https://getsharex.com/privacy-policy"),
+            ("Donate", "https://getsharex.com/donate")
+        ]
+        for (index, (title, url)) in links.enumerated() {
+            if index > 0 { credits.append(NSAttributedString(string: "   ")) }
+            credits.append(NSAttributedString(string: title, attributes: [.link: url]))
+        }
+        credits.append(NSAttributedString(string: "\nA macOS port of ShareX, built with Swift."))
+        let paragraph = NSMutableParagraphStyle()
+        paragraph.alignment = .center
+        paragraph.lineSpacing = 4
+        credits.addAttributes([.font: NSFont.systemFont(ofSize: NSFont.smallSystemFontSize),
+                               .paragraphStyle: paragraph],
+                              range: NSRange(location: 0, length: credits.length))
+        NSApp.activate(ignoringOtherApps: true)
+        NSApp.orderFrontStandardAboutPanel(options: [.credits: credits])
     }
 
     @objc private func showSettingsWindow() {
