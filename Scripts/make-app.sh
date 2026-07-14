@@ -53,7 +53,8 @@ cat > "$APP/Contents/Info.plist" <<PLIST
     <key>LSMinimumSystemVersion</key>
     <string>13.0</string>
     <key>NSHumanReadableCopyright</key>
-    <string>Copyright © 2026 RetroHazard. Based on ShareX © 2007-2026 ShareX Team. Licensed under GPL v3.</string>
+    <!-- &#10; = newline: each notice renders on its own line in About -->
+    <string>Copyright © 2026 RetroHazard.&#10;Based on ShareX © 2007-2026 ShareX Team.&#10;Licensed under GPL v3.</string>
     <key>LSUIElement</key>
     <true/>
     <key>NSPrincipalClass</key>
