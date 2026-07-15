@@ -31,6 +31,13 @@ cp Resources/SwiftX.icns "$APP/Contents/Resources/"
 # panel's "GNU GPL v3" link opens this copy
 cp ../LICENSE.txt "$APP/Contents/Resources/LICENSE.txt"
 
+# Baked-in OAuth app credentials, if this build has them (git-ignored). Absent
+# in the open-source tree -> OAuth hosts stay unavailable until a build ships it.
+if [ -f Resources/OAuthApps.plist ]; then
+    cp Resources/OAuthApps.plist "$APP/Contents/Resources/OAuthApps.plist"
+    echo "Bundled OAuth app credentials"
+fi
+
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">

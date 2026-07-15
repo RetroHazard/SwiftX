@@ -62,14 +62,49 @@ public struct OAuthAppCredentials: Codable, Equatable, Sendable {
     }
 }
 
+/// App-level OAuth credentials that identify SwiftX itself to each host. These
+/// are registered ONCE by the developer and shipped in the distributable — end
+/// users never see them. They live in a bundled, git-ignored `OAuthApps.plist`
+/// so real keys stay out of the open-source tree (see OAuthApps.example.plist).
+///
+/// A desktop app can't truly hide a client secret, so PKCE is the real
+/// protection; hosts that support public clients (Dropbox/OneDrive/Box) need no
+/// secret at all. Google and Imgur ship a semi-public secret, as ShareX does.
+public enum OAuthAppRegistry {
+    private static let builtins: [String: OAuthAppCredentials] = load()
+
+    private static func load() -> [String: OAuthAppCredentials] {
+        guard let url = Bundle.main.url(forResource: "OAuthApps", withExtension: "plist"),
+              let data = try? Data(contentsOf: url),
+              let dict = try? PropertyListDecoder().decode([String: OAuthAppCredentials].self, from: data)
+        else { return [:] }
+        return dict
+    }
+
+    /// The developer's registered credentials for a host, if this build shipped
+    /// with them.
+    public static func builtin(_ id: OAuthProviderID) -> OAuthAppCredentials? {
+        guard let creds = builtins[id.rawValue], creds.isPresent else { return nil }
+        return creds
+    }
+}
+
 public extension UploadersConfig {
-    /// Returns the credentials only when a client ID is present — the gate.
-    func oauthCredentials(for id: OAuthProviderID) -> OAuthAppCredentials? {
+    /// A power-user override supplied in Settings → Advanced (their own OAuth
+    /// app). Nil unless they entered a client ID.
+    func oauthUserOverride(for id: OAuthProviderID) -> OAuthAppCredentials? {
         guard let creds = oauthApps[id.rawValue], creds.isPresent else { return nil }
         return creds
     }
 
-    /// True once the user has supplied an app client ID for this host.
+    /// The credentials actually used to authenticate: a user override wins,
+    /// otherwise the developer's baked-in app credentials.
+    func oauthCredentials(for id: OAuthProviderID) -> OAuthAppCredentials? {
+        oauthUserOverride(for: id) ?? OAuthAppRegistry.builtin(id)
+    }
+
+    /// True when the host can be connected — i.e. some app credentials exist.
+    /// End users get here purely from the baked-in keys; no data entry needed.
     func isConfigured(_ id: OAuthProviderID) -> Bool {
         oauthCredentials(for: id) != nil
     }

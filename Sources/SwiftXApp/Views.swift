@@ -712,8 +712,8 @@ struct SettingsView: View {
     }
 
     private func oauthPickerLabel(_ id: OAuthProviderID) -> String {
-        // read fresh so the label drops "setup required" as soon as a key is pasted
-        UploadersConfig.load().isConfigured(id) ? id.displayName : "\(id.displayName) — setup required"
+        // hosts without baked-in (or override) credentials read "unavailable"
+        UploadersConfig.load().isConfigured(id) ? id.displayName : "\(id.displayName) — unavailable"
     }
 
     private func oauthBinding(_ id: OAuthProviderID,
@@ -730,32 +730,46 @@ struct SettingsView: View {
         )
     }
 
-    /// OAuth2 app credentials + Connect flow. The host stays disabled (see the
-    /// picker label) until a client ID is present; Connect runs the browser +
-    /// loopback flow and stores the token in the Keychain.
+    /// End-user OAuth setup is one-click: SwiftX ships the app credentials, so
+    /// the user only signs in and approves. The client ID/secret fields are for
+    /// developers / power users and stay hidden in an Advanced disclosure.
     @ViewBuilder
     private var oauthFields: some View {
         if let id = OAuthProviderID(rawValue: task.imageDestination) {
-            let creds = UploadersConfig.load().oauthApps[id.rawValue] ?? OAuthAppCredentials()
+            let configured = UploadersConfig.load().isConfigured(id)
             let connected = OAuthTokenStore.isConnected(id)
-            if !creds.isPresent {
-                Text("\(id.displayName) is disabled until you add OAuth app credentials. Register an app in the \(id.displayName) developer console, set its redirect URI to a loopback address (http://127.0.0.1), then paste the keys below.")
+
+            if configured {
+                HStack {
+                    Button(connected ? "Reconnect \(id.displayName)…" : "Connect \(id.displayName)…") {
+                        OAuthConnectCoordinator.shared.connect(id)
+                    }
+                    if connected {
+                        Label("Connected", systemImage: "checkmark.seal.fill")
+                            .foregroundStyle(.green)
+                            .font(.caption)
+                        Button("Disconnect") { OAuthTokenStore.delete(for: id) }
+                    }
+                }
+                Text(connected
+                     ? "SwiftX is authorized to upload to your \(id.displayName) account."
+                     : "Sign in with your \(id.displayName) account to authorize SwiftX.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else {
+                Text("\(id.displayName) uploads are unavailable in this build (no registered app). Supply your own OAuth app below, or use a build that ships \(id.displayName) credentials.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-            TextField("Client ID", text: oauthBinding(id, \.clientID))
-            SecureField("Client secret (leave blank for PKCE-only apps)", text: oauthBinding(id, \.clientSecret))
-            HStack {
-                Button(connected ? "Reconnect \(id.displayName)…" : "Connect \(id.displayName)…") {
-                    OAuthConnectCoordinator.shared.connect(id)
-                }
-                .disabled(!creds.isPresent)
-                if connected {
-                    Button("Disconnect") { OAuthTokenStore.delete(for: id) }
-                    Label("Connected", systemImage: "checkmark.seal.fill")
-                        .foregroundStyle(.green)
-                        .font(.caption)
-                }
+
+            // Developers / power users who want their own app + quota. Redirect
+            // URI to register with the host: http://127.0.0.1 (loopback).
+            DisclosureGroup("Advanced: use your own \(id.displayName) OAuth app") {
+                TextField("Client ID", text: oauthBinding(id, \.clientID))
+                SecureField("Client secret (blank for PKCE-only apps)", text: oauthBinding(id, \.clientSecret))
+                Text("Register the redirect URI as http://127.0.0.1 (loopback). Overrides the built-in app for this host.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
         }
     }
