@@ -84,6 +84,11 @@ enum UploadCoordinator {
             return (try await SeafileUploader.upload(file: file, config: config), "Seafile")
         case "Pushbullet":
             return (try await PushbulletUploader.upload(file: file, config: config), "Pushbullet")
+        case let dest where OAuthProviderID(rawValue: dest) != nil:
+            // OAuth2 hosts: the uploader enforces the configured/authenticated
+            // gate and throws a clear error until credentials + a connection exist.
+            let id = OAuthProviderID(rawValue: dest)!
+            return (try await OAuthUploaderRegistry.upload(id: id, file: file, config: config), id.displayName)
         case "CustomImageUploader":
             guard let item = CustomUploaderStore.load(named: config.activeCustomUploader) else {
                 throw RoutingError.noCustomUploader
