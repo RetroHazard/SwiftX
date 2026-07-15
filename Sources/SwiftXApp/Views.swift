@@ -1,5 +1,6 @@
-// ShareX - A program that allows you to take screenshots and share any file type
-// Copyright (c) 2007-2026 ShareX Team
+// SwiftX - screenshot capture and sharing for macOS
+// Copyright (c) 2026 RetroHazard
+// Contains code derived from ShareX, Copyright (c) 2007-2026 ShareX Team
 // Licensed under GPL v3 - see /LICENSE.txt
 
 import SwiftUI
