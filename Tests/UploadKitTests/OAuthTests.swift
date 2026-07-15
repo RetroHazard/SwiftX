@@ -95,14 +95,19 @@ struct OAuthTests {
         }
     }
 
-    @Test func aClientIDEnablesTheGate() {
+    @Test func aUserOverrideEnablesTheGate() {
+        // no OAuthApps.plist in the test bundle, so builtins are empty; a user
+        // override is the only path to configured here
         var config = UploadersConfig()
         config.oauthApps["Dropbox"] = OAuthAppCredentials(clientID: "cid")
         #expect(config.isConfigured(.dropbox))
+        #expect(config.oauthUserOverride(for: .dropbox)?.clientID == "cid")
+        #expect(config.oauthCredentials(for: .dropbox)?.clientID == "cid")   // override is used
         #expect(config.isConfigured(.googleDrive) == false)   // others stay off
         // blank/whitespace client ID does not count as configured
         config.oauthApps["Box"] = OAuthAppCredentials(clientID: "   ")
         #expect(config.isConfigured(.box) == false)
+        #expect(config.oauthUserOverride(for: .box) == nil)
     }
 
     @Test func oauthAppsSurviveARoundTrip() throws {
