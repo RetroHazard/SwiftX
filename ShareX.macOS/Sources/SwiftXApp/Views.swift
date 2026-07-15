@@ -657,6 +657,9 @@ struct SettingsView: View {
                 ForEach(SimpleHostDestination.allCases, id: \.rawValue) { destination in
                     Text(destination.displayName).tag(destination.rawValue)
                 }
+                ForEach(OAuthProviderID.allCases, id: \.rawValue) { provider in
+                    Text(oauthPickerLabel(provider)).tag(provider.rawValue)
+                }
             }
             Toggle("Retry once when an upload fails", isOn: Binding(
                 get: { config.retryUpload },
@@ -686,6 +689,7 @@ struct SettingsView: View {
                 TextField("Object prefix", text: s3Binding(\.objectPrefix))
                 TextField("Custom endpoint (optional, for S3-compatible hosts)", text: s3Binding(\.endpoint))
             }
+            oauthFields
         }
         Section("After upload") {
             Toggle("Copy URL to clipboard", isOn: afterUploadBinding(.copyURLToClipboard))
@@ -702,6 +706,55 @@ struct SettingsView: View {
             Picker("Sharing service", selection: taskBinding(\.urlSharingServiceDestination)) {
                 ForEach(URLSharingService.allCases, id: \.rawValue) { service in
                     Text(service.displayName).tag(service.rawValue)
+                }
+            }
+        }
+    }
+
+    private func oauthPickerLabel(_ id: OAuthProviderID) -> String {
+        // read fresh so the label drops "setup required" as soon as a key is pasted
+        UploadersConfig.load().isConfigured(id) ? id.displayName : "\(id.displayName) — setup required"
+    }
+
+    private func oauthBinding(_ id: OAuthProviderID,
+                              _ keyPath: WritableKeyPath<OAuthAppCredentials, String>) -> Binding<String> {
+        Binding(
+            get: { (UploadersConfig.load().oauthApps[id.rawValue] ?? OAuthAppCredentials())[keyPath: keyPath] },
+            set: { value in
+                var config = UploadersConfig.load()
+                var creds = config.oauthApps[id.rawValue] ?? OAuthAppCredentials()
+                creds[keyPath: keyPath] = value
+                config.oauthApps[id.rawValue] = creds
+                try? config.save()
+            }
+        )
+    }
+
+    /// OAuth2 app credentials + Connect flow. The host stays disabled (see the
+    /// picker label) until a client ID is present; Connect runs the browser +
+    /// loopback flow and stores the token in the Keychain.
+    @ViewBuilder
+    private var oauthFields: some View {
+        if let id = OAuthProviderID(rawValue: task.imageDestination) {
+            let creds = UploadersConfig.load().oauthApps[id.rawValue] ?? OAuthAppCredentials()
+            let connected = OAuthTokenStore.isConnected(id)
+            if !creds.isPresent {
+                Text("\(id.displayName) is disabled until you add OAuth app credentials. Register an app in the \(id.displayName) developer console, set its redirect URI to a loopback address (http://127.0.0.1), then paste the keys below.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            TextField("Client ID", text: oauthBinding(id, \.clientID))
+            SecureField("Client secret (leave blank for PKCE-only apps)", text: oauthBinding(id, \.clientSecret))
+            HStack {
+                Button(connected ? "Reconnect \(id.displayName)…" : "Connect \(id.displayName)…") {
+                    OAuthConnectCoordinator.shared.connect(id)
+                }
+                .disabled(!creds.isPresent)
+                if connected {
+                    Button("Disconnect") { OAuthTokenStore.delete(for: id) }
+                    Label("Connected", systemImage: "checkmark.seal.fill")
+                        .foregroundStyle(.green)
+                        .font(.caption)
                 }
             }
         }

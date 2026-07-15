@@ -50,9 +50,11 @@ Statuses: **Ported** · **Partial** (works, known gaps) · **Planned** (phase no
 | Upload core — chunked/resumable, secondary fallback | Planned — chunked only serves the benched OAuth hosts; fallback needs multi-destination config |
 | Custom uploader engine (.sxcu) — syntax parser (json/xml/regex/base64/random/select/filename/header/response), import, destination picker | Ported — legacy pre-13.7.1 `$var$` files migrate at load; interactive select takes first option |
 | Custom uploader editor (create/edit/duplicate/delete in settings) | Ported — Settings → Custom Uploader pane; edits write Windows-compatible .sxcu files |
-| OAuth1 + OAuth2 infrastructure | Planned (3) |
+| OAuth2 infrastructure (authorize-code + PKCE, refresh, Keychain tokens, loopback redirect) | Ported — reusable OAuth2Flow/OAuthSession/OAuthTokenStore + loopback listener; gated: a host is disabled until its client ID is entered in Settings (no rebuild to enable) |
+| OAuth1 infrastructure | Deferred — no kept host needs it (Photobucket dropped, Flickr deferred); add an OAuth1Flow layer only if Flickr is wanted |
 | Amazon S3 (+ S3-compatible via custom endpoint) — SigV4, prefix patterns | Ported |
-| Imgur, Dropbox, Google Drive, OneDrive, FTP/FTPS/SFTP, Pastebin, GitHub Gist, Email (SMTP) | Planned (3) — many work today via community .sxcu files |
+| Google Drive, Dropbox, OneDrive, Box, YouTube, Imgur (OAuth2) | Scaffolded — full upload + public-link flow wired through the OAuth2 core, disabled pending app credentials; uploader bodies untested until real keys exist (no chunked/resumable/progress yet) |
+| FTP/FTPS/SFTP, Pastebin, GitHub Gist, Email (SMTP) | Planned (3) — many work today via community .sxcu files |
 | URL shorteners: is.gd, v.gd, TinyURL (keyless) | Ported — wired to UseURLShortener flag |
 | URL shorteners requiring keys: bit.ly, Polr, Kutt, YOURLS | Ported (9) — see Phase 9 |
 | After-upload: copy URL to clipboard, open URL | Ported |
@@ -120,7 +122,10 @@ Statuses: **Ported** · **Partial** (works, known gaps) · **Planned** (phase no
 |---|---|
 | Uguu, Pomf clones (configurable URL), vgy.me, s-ul, LobFile, Puush, Chevereto, Streamable | Ported — shared multipart engine; Streamable returns the page URL without transcode polling |
 | Backblaze B2 (native API, stale-URL retry), Azure Storage (SharedKey), ownCloud/Nextcloud (WebDAV + OCS share), Seafile (upload-link + share-link), Pushbullet (pushes to all devices) | Ported |
-| Box, GCS, YouTube, Dropbox-family, Flickr, Photobucket | Benched — need OAuth1/OAuth2 app credentials; revisit if per-user client keys become acceptable |
+| Box, YouTube, Dropbox-family | Scaffolded — see Phase 3; wired through the OAuth2 core, disabled until app credentials are supplied |
+| GCS | Benched — needs OAuth2/service-account app credentials; revisit if per-user client keys become acceptable |
+| Flickr | Deferred — alive but niche and OAuth1-only; needs an OAuth1 signing layer no kept host requires |
+| Photobucket | Dropped — defunct developer program / disrepute (2017 hotlink-ransom history) |
 | MediaFire (session signing), Plik (session protocol), ImageShack (login flow), Lambda (canonical domain down), remaining text hosts | Planned (9 follow-up) |
 | transfer.sh | Dead — public instance offline, verified 2026-07 |
 | Shorteners: bit.ly (personal access token), Polr, Kutt, YOURLS, Zero Width, vurl.com | Ported — settings UI per service; bit.ly uses a user token instead of C#'s app-key OAuth flow |

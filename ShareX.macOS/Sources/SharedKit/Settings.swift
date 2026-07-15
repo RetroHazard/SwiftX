@@ -503,6 +503,12 @@ public struct UploadersConfig: SettingsFile {
     public var seafilePath = "/"
     public var pushbulletAPIKey = ""
 
+    // OAuth2 app credentials, keyed by OAuthProviderID raw value. Empty by
+    // default: an absent/blank client ID keeps the host disabled (see
+    // OAuthCredentials.swift). A dictionary keeps CodingKeys stable as hosts
+    // are added.
+    public var oauthApps: [String: OAuthAppCredentials] = [:]
+
     public init() {}
 
     enum CodingKeys: String, CodingKey {
@@ -553,6 +559,7 @@ public struct UploadersConfig: SettingsFile {
         case seafileRepoID = "SeafileRepoID"
         case seafilePath = "SeafilePath"
         case pushbulletAPIKey = "PushbulletAPIKey"
+        case oauthApps = "OAuthApps"
     }
 
     public init(from decoder: Decoder) throws {
@@ -604,6 +611,7 @@ public struct UploadersConfig: SettingsFile {
         seafileRepoID = try c.decodeIfPresent(String.self, forKey: .seafileRepoID) ?? ""
         seafilePath = try c.decodeIfPresent(String.self, forKey: .seafilePath) ?? "/"
         pushbulletAPIKey = try c.decodeIfPresent(String.self, forKey: .pushbulletAPIKey) ?? ""
+        oauthApps = try c.decodeIfPresent([String: OAuthAppCredentials].self, forKey: .oauthApps) ?? [:]
     }
 }
 
