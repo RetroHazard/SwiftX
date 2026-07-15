@@ -380,10 +380,7 @@ struct AboutView: View {
                 Link("RetroHazard", destination: URL(string: "https://github.com/RetroHazard")!)
             }
             LabeledContent("Based on") {
-                HStack(spacing: 4) {
-                    Link("ShareX", destination: URL(string: "https://github.com/ShareX/ShareX")!)
-                    Text("© 2007–2026 ShareX Team").foregroundStyle(.secondary)
-                }
+                Link("ShareX", destination: URL(string: "https://github.com/ShareX/ShareX")!)
             }
             Text("SwiftX is an independent project and is not affiliated with or endorsed by the ShareX Team.")
                 .font(.caption)
@@ -392,7 +389,7 @@ struct AboutView: View {
         Section("License") {
             // GPL v3 §5(d) copyright notice: SwiftX's own plus the preserved
             // upstream notice, matching the source-file header wording
-            Text("© 2026 RetroHazard. Contains code derived from ShareX, © 2007–2026 ShareX Team.")
+            Text("© 2026 RetroHazard.\nContains code derived from ShareX, © 2007–2026 ShareX Team.")
                 .font(.callout)
             Text("SwiftX is free software: you may redistribute it and/or modify it under the terms of the GNU General Public License v3. It comes with ABSOLUTELY NO WARRANTY.")
                 .font(.callout)
