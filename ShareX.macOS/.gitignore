@@ -1,3 +1,7 @@
 .build/
 build/
 .swiftpm/
+
+# Real baked-in OAuth app credentials — never commit. Copy OAuthApps.example.plist
+# to OAuthApps.plist and fill in registered keys; make-app.sh bundles it if present.
+Resources/OAuthApps.plist
