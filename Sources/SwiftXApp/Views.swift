@@ -363,6 +363,7 @@ struct AboutView: View {
                 VStack(alignment: .leading, spacing: 3) {
                     Text("SwiftX").font(.title).bold()
                     Text("Version \(version)").foregroundStyle(.secondary)
+                    Text("© 2026 RetroHazard").font(.callout).foregroundStyle(.secondary)
                     HStack(spacing: 12) {
                         Link("Project page", destination: URL(string: "https://github.com/RetroHazard/SwiftX")!)
                         Link("Report an issue", destination: URL(string: "https://github.com/RetroHazard/SwiftX/issues")!)
@@ -384,9 +385,14 @@ struct AboutView: View {
                     Text("© 2007–2026 ShareX Team").foregroundStyle(.secondary)
                 }
             }
+            Text("SwiftX is an independent project and is not affiliated with or endorsed by the ShareX Team.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
         Section("License") {
-            Text("macOS port © 2026 RetroHazard.\nBased on ShareX © 2007–2026 ShareX Team.")
+            // GPL v3 §5(d) copyright notice: SwiftX's own plus the preserved
+            // upstream notice, matching the source-file header wording
+            Text("© 2026 RetroHazard. Contains code derived from ShareX, © 2007–2026 ShareX Team.")
                 .font(.callout)
             Text("SwiftX is free software: you may redistribute it and/or modify it under the terms of the GNU General Public License v3. It comes with ABSOLUTELY NO WARRANTY.")
                 .font(.callout)
