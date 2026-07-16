@@ -1,17 +1,14 @@
 # Contributing to SwiftX
 
-SwiftX is a from-scratch Swift rewrite of [ShareX](https://github.com/ShareX/ShareX) for macOS.
-All active development happens under [`ShareX.macOS/`](ShareX.macOS); the rest of the repository is
-the legacy Windows/C# codebase it's being ported from and will be removed once parity work is far
-enough along.
+SwiftX is a from-scratch Swift rewrite of [ShareX](https://github.com/ShareX/ShareX) for macOS,
+built entirely in Swift on top of ScreenCaptureKit, SwiftUI, and AppKit.
 
 ## Development setup
 
-See [`ShareX.macOS/README.md`](ShareX.macOS/README.md) for build, test, and packaging commands.
+See [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) for build, test, and packaging commands.
 The short version:
 
 ```sh
-cd ShareX.macOS
 swift build
 DEVELOPER_DIR=/Applications/Xcode.app swift test
 ./Scripts/make-app.sh
@@ -37,7 +34,7 @@ before debugging further.
 
 ## Coding conventions
 
-- Every source file under `ShareX.macOS/Sources/` starts with a header identifying the project,
+- Every source file under `Sources/` starts with a header identifying the project,
   copyright, and license. Use whichever pattern applies:
 
   **Original code** (no upstream equivalent — new macOS-native capture/recording code, the OAuth

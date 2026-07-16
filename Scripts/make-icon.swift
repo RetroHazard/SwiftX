@@ -7,7 +7,7 @@
 // with a swift in flight (nod to the Swift language) inside the opening.
 // Pure CoreGraphics — rerun to regenerate Resources/SwiftX.icns at any size.
 //
-// Usage: swift Scripts/make-icon.swift   (from the ShareX.macOS directory)
+// Usage: swift Scripts/make-icon.swift   (from the repo root)
 
 import AppKit
 

@@ -4,7 +4,7 @@ The Swift Package Manager project for SwiftX — see the [repo root README](../R
 SwiftX is and its feature set. This document covers the local development workflow.
 
 There is no Xcode project; everything is driven through `swift build`/`swift test` and the scripts
-in [`Scripts/`](Scripts).
+in [`Scripts/`](../Scripts).
 
 ## Requirements
 
@@ -41,7 +41,7 @@ Apple Development identity if one is available (falling back to ad-hoc), and ins
 and Accessibility permissions are granted per bundle path — launching the bare executable from a
 terminal makes the terminal the "responsible process" and SwiftX never gets its own prompt. If
 permissions get stuck, see
-[`docs/solutions/runtime-errors/tcc-screen-recording-responsible-process-ShareXmacOS-20260708.md`](../docs/solutions/runtime-errors/tcc-screen-recording-responsible-process-ShareXmacOS-20260708.md).
+[`docs/solutions/runtime-errors/tcc-screen-recording-responsible-process-ShareXmacOS-20260708.md`](solutions/runtime-errors/tcc-screen-recording-responsible-process-ShareXmacOS-20260708.md).
 
 If SwiftX is already running, `make-app.sh` will warn you — a running instance won't pick up a new
 build; quit it first (`pkill -x SwiftX && open build/SwiftX.app`).
@@ -59,7 +59,7 @@ swift Scripts/make-icon.swift
 ## OAuth credentials for optional upload destinations
 
 Google Drive, YouTube, Dropbox, OneDrive, Box, and Imgur use OAuth2 and need app credentials to be
-usable. Copy [`Resources/OAuthApps.example.plist`](Resources/OAuthApps.example.plist) to
+usable. Copy [`Resources/OAuthApps.example.plist`](../Resources/OAuthApps.example.plist) to
 `Resources/OAuthApps.plist` and fill in your own registered app's client ID/secret (the redirect
 URI to register is the loopback address `http://127.0.0.1`). `OAuthApps.plist` is git-ignored, so
 real credentials never enter the tree; `make-app.sh` bundles it automatically when present. Without
@@ -87,10 +87,10 @@ Assets/icons/              exported PNG icon ladder
 
 ## Documentation
 
-- [`../docs/macos-swift-port/ROADMAP.md`](../docs/macos-swift-port/ROADMAP.md) — phase plan and
+- [`macos-swift-port/ROADMAP.md`](macos-swift-port/ROADMAP.md) — phase plan and
   Windows→macOS API mapping
-- [`../docs/macos-swift-port/PARITY.md`](../docs/macos-swift-port/PARITY.md) — feature parity
+- [`macos-swift-port/PARITY.md`](macos-swift-port/PARITY.md) — feature parity
   status against upstream ShareX
-- [`../docs/solutions/`](../docs/solutions/) — patterns and gotchas found while building this
+- [`solutions/`](solutions/) — patterns and gotchas found while building this
 - [`../CONTRIBUTING.md`](../CONTRIBUTING.md) — coding conventions, including the copyright header
   used on ported vs. original files

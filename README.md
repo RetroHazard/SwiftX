@@ -1,4 +1,4 @@
-<p align="center"><img src="ShareX.macOS/Assets/icons/swiftx-256.png" width="128" height="128" alt="SwiftX icon"/></p>
+<p align="center"><img src="Assets/icons/swiftx-256.png" width="128" height="128" alt="SwiftX icon"/></p>
 <h1 align="center">SwiftX</h1>
 <h3 align="center">A native macOS screenshot, screen recording &amp; file-sharing tool</h3>
 <br>
@@ -68,10 +68,10 @@ SwiftX is a plain Swift Package — there's no Xcode project to open.
 
 ```sh
 git clone https://github.com/RetroHazard/SwiftX.git
-cd SwiftX/ShareX.macOS
+cd SwiftX
 
 swift build              # debug build
-swift test                # requires a full Xcode install; see ShareX.macOS/README.md
+swift test                # requires a full Xcode install; see docs/DEVELOPMENT.md
 ./Scripts/make-app.sh     # bundles build/SwiftX.app
 open build/SwiftX.app
 ```
@@ -79,7 +79,7 @@ open build/SwiftX.app
 Always launch SwiftX through the `.app` bundle (`open build/SwiftX.app`), not the raw binary —
 macOS ties Screen Recording/Accessibility permission grants to the bundle, and a bare terminal
 launch never gets its own prompt. See
-[`ShareX.macOS/README.md`](ShareX.macOS/README.md) for the full developer workflow, and
+[`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) for the full developer workflow, and
 [`docs/solutions/patterns/critical-patterns.md`](docs/solutions/patterns/critical-patterns.md) for
 this and other gotchas discovered while porting.
 
@@ -97,7 +97,7 @@ this and other gotchas discovered while porting.
 | `SwiftXApp` | The app itself — menu bar shell, settings, CLI |
 | `NativeMessagingHost` | `swiftx-host` — browser native messaging binary |
 
-Each package has a matching test target under `ShareX.macOS/Tests/`.
+Each package has a matching test target under `Tests/`.
 
 ## Documentation
 
