@@ -2,13 +2,13 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "SwiftX — ShareX, rebuilt for macOS",
+  title: "SwiftX — native screen capture for macOS",
   description:
-    "SwiftX is an independent, ground-up native Swift port of ShareX — screen capture, recording, annotation, image effects, and uploads for macOS.",
+    "SwiftX is a native macOS app for screen capture, recording, annotation, image effects, and uploads — built in Swift, inspired by ShareX's workflow.",
   openGraph: {
-    title: "SwiftX — ShareX, rebuilt for macOS",
+    title: "SwiftX — native screen capture for macOS",
     description:
-      "A native Swift & SwiftUI port of ShareX built on ScreenCaptureKit, Vision, and AVFoundation.",
+      "A native Swift & SwiftUI menu bar app built on ScreenCaptureKit, Vision, and AVFoundation.",
     type: "website",
   },
 };

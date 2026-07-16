@@ -13,14 +13,11 @@ export function Footer() {
             height={18}
             className="rounded-md opacity-80"
           />
-          <span>SwiftX &mdash; an independent Swift port of ShareX.</span>
+          <span>SwiftX &mdash; a native macOS capture &amp; sharing app.</span>
         </div>
         <div className="flex items-center gap-5">
           <a href={links.github} target="_blank" rel="noreferrer" className="hover:text-white/70">
             GitHub
-          </a>
-          <a href={links.upstream} target="_blank" rel="noreferrer" className="hover:text-white/70">
-            Upstream ShareX
           </a>
           <a href={links.roadmap} target="_blank" rel="noreferrer" className="hover:text-white/70">
             Roadmap

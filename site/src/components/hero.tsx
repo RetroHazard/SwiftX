@@ -22,7 +22,7 @@ export function Hero() {
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
           <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
         </span>
-        Ground-up native rewrite &middot; Swift &amp; SwiftUI
+        Native menu bar app &middot; Swift &amp; SwiftUI
       </motion.div>
 
       <motion.h1
@@ -31,10 +31,10 @@ export function Hero() {
         transition={{ duration: 0.7, delay: 0.1 }}
         className="mt-6 max-w-3xl text-balance text-5xl font-semibold tracking-tight text-white sm:text-6xl md:text-7xl"
       >
-        ShareX, rebuilt for
+        Capture, annotate, and share
         <span className="bg-gradient-to-r from-indigo-400 via-sky-300 to-fuchsia-400 bg-clip-text text-transparent">
           {" "}
-          the Mac.
+          — built for the Mac.
         </span>
       </motion.h1>
 
@@ -44,9 +44,10 @@ export function Hero() {
         transition={{ duration: 0.7, delay: 0.2 }}
         className="mt-6 max-w-xl text-balance text-lg text-white/60"
       >
-        Capture, record, annotate, and upload — the ShareX workflow you know,
-        ported feature-for-feature to a native menu bar app built on
-        ScreenCaptureKit, SwiftUI, and Vision.
+        SwiftX is a native macOS menu bar app for screen capture, recording,
+        annotation, and uploads — built from the ground up in Swift on
+        ScreenCaptureKit, SwiftUI, and Vision, with a workflow inspired by
+        ShareX.
       </motion.p>
 
       <motion.div
