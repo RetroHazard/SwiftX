@@ -376,13 +376,13 @@ struct AboutView: View {
             .padding(.vertical, 4)
         }
         Section("Credits") {
-            LabeledContent("macOS port") {
+            LabeledContent("Developed by") {
                 Link("RetroHazard", destination: URL(string: "https://github.com/RetroHazard")!)
             }
-            LabeledContent("Based on") {
+            LabeledContent("Derived from") {
                 Link("ShareX", destination: URL(string: "https://github.com/ShareX/ShareX")!)
             }
-            Text("SwiftX is an independent project and is not affiliated with or endorsed by the ShareX Team.")
+            Text("SwiftX is not affiliated with or endorsed by the ShareX Team.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }

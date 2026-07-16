@@ -4,12 +4,12 @@ cask "swiftx" do
 
   url "https://github.com/RetroHazard/SwiftX/releases/download/v#{version}/SwiftX-#{version}.dmg"
   name "SwiftX"
-  desc "Screenshot, screen recording, and file-sharing tool (macOS port of ShareX)"
+  desc "Screenshot, screen recording, and file-sharing tool derived from ShareX"
   homepage "https://github.com/RetroHazard/SwiftX"
 
   # Menu-bar (LSUIElement) app. No auto_updates stanza: `brew upgrade --cask` is
   # the update channel, so Sparkle is unnecessary.
-  depends_on macos: ">= :ventura" # Info.plist LSMinimumSystemVersion 13.0
+  depends_on macos: :ventura # Info.plist LSMinimumSystemVersion 13.0; :ventura means ">= 13"
 
   app "SwiftX.app"
 
