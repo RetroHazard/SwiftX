@@ -1,9 +1,11 @@
 import type { NextConfig } from "next";
 
-// GitHub Pages serves this project at https://<owner>.github.io/SwiftX/,
-// so every asset and internal link needs the /SwiftX base path baked in.
-const repoName = "SwiftX";
-const basePath = process.env.NODE_ENV === "production" ? `/${repoName}` : "";
+// Served at the custom domain root (swiftx.retrohazard.jp — see public/CNAME).
+// If the domain isn't active yet and you need the fallback
+// https://<owner>.github.io/SwiftX/ URL instead, build with
+// NEXT_PUBLIC_USE_REPO_BASE_PATH=true to prefix every asset/link with /SwiftX.
+const useRepoBasePath = process.env.NEXT_PUBLIC_USE_REPO_BASE_PATH === "true";
+const basePath = useRepoBasePath ? "/SwiftX" : "";
 
 const nextConfig: NextConfig = {
   output: "export",
