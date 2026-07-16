@@ -40,7 +40,6 @@ for users and fully in your control.
 Versions default to `0.1.0`; pass an explicit version to every script.
 
 ```bash
-cd ShareX.macOS
 Scripts/make-app.sh 0.1.0            # build + bundle build/SwiftX.app
 Scripts/make-dmg.sh 0.1.0            # -> build/SwiftX-0.1.0.dmg, prints sha256
 # Scripts/notarize.sh build/SwiftX-0.1.0.dmg   # once a Developer ID exists (see below)

@@ -3,20 +3,29 @@ name: macOS Swift
 on:
   push:
     paths:
-      - "ShareX.macOS/**"
+      - "Sources/**"
+      - "Tests/**"
+      - "Package.swift"
+      - "Scripts/**"
+      - "Resources/**"
+      - "Assets/**"
+      - "Casks/**"
       - ".github/workflows/macos-swift.yml"
   pull_request:
     paths:
-      - "ShareX.macOS/**"
+      - "Sources/**"
+      - "Tests/**"
+      - "Package.swift"
+      - "Scripts/**"
+      - "Resources/**"
+      - "Assets/**"
+      - "Casks/**"
       - ".github/workflows/macos-swift.yml"
 
 jobs:
   build-and-test:
-    if: github.repository == 'getsharex/ShareX'
+    if: github.repository == 'RetroHazard/SwiftX'
     runs-on: macos-15
-    defaults:
-      run:
-        working-directory: ShareX.macOS
     steps:
       - uses: actions/checkout@v4
       - name: Build

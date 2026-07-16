@@ -29,7 +29,7 @@ cp Resources/SwiftX.icns "$APP/Contents/Resources/"
 
 # GPL v3 requires conveying the license text with the program; the About
 # panel's "GNU GPL v3" link opens this copy
-cp ../LICENSE.txt "$APP/Contents/Resources/LICENSE.txt"
+cp LICENSE.txt "$APP/Contents/Resources/LICENSE.txt"
 
 # Baked-in OAuth app credentials, if this build has them (git-ignored). Absent
 # in the open-source tree -> OAuth hosts stay unavailable until a build ships it.

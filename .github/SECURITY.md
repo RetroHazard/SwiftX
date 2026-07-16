@@ -14,7 +14,7 @@ To report a security vulnerability, please follow these steps:
 
 Please do not report vulnerabilities through public GitHub issues.
 
-This policy covers SwiftX itself (the macOS app under `ShareX.macOS/`). SwiftX is an independent
+This policy covers SwiftX itself (the native macOS app in this repository). SwiftX is an independent
 project and is not affiliated with the ShareX Team — vulnerabilities specific to the original
 Windows ShareX application should be reported to [ShareX/ShareX](https://github.com/ShareX/ShareX/security)
 instead.
