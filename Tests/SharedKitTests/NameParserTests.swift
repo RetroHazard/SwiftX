@@ -71,6 +71,15 @@ struct NameParserTests {
         #expect(parser.parse("%t") == "My")
     }
 
+    @Test func windowTextStripsShellMetacharacters() {
+        // a hostile window title must not carry shell command-substitution or
+        // separator characters into a generated file name (defense behind the
+        // quoting in ExternalProgramRunner)
+        let parser = makeParser(.fileName)
+        parser.windowText = "a`b$c;d&e"
+        #expect(parser.parse("%t") == "abcde")
+    }
+
     @Test func imageDimensions() {
         let parser = makeParser()
         #expect(parser.parse("%width x %height") == " x ")
