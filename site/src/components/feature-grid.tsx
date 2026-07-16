@@ -11,11 +11,11 @@ export function FeatureGrid() {
       <div className="mx-auto max-w-5xl">
         <div className="mx-auto max-w-xl text-center">
           <h2 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-            Everything ShareX does. Nothing it shouldn&rsquo;t.
+            A full capture-to-share toolkit, natively macOS
           </h2>
           <p className="mt-3 text-white/55">
-            Every core workflow rebuilt on native macOS frameworks instead of
-            emulated Win32 behavior.
+            Every core workflow built on native macOS frameworks — no
+            emulation layer, no compromises.
           </p>
         </div>
 

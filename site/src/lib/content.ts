@@ -111,19 +111,19 @@ export type FaqItem = {
 
 export const faqs: FaqItem[] = [
   {
-    question: "Is this the official ShareX macOS app?",
+    question: "Is SwiftX affiliated with ShareX?",
     answer:
-      "No. SwiftX is an independent, ground-up native port written in Swift and SwiftUI, built from an inventory of the original C# codebase. It isn't affiliated with or endorsed by the ShareX project.",
+      "No. SwiftX is an independent macOS app, written from the ground up in Swift and SwiftUI. Its capture-to-upload workflow takes inspiration from ShareX, but it isn't a build of ShareX, and it isn't affiliated with or endorsed by the ShareX project.",
   },
   {
-    question: "Why a rewrite instead of a wrapper?",
+    question: "Why native instead of a wrapper or emulator?",
     answer:
-      "ShareX is a Windows Forms app tied to GDI+, Win32 hotkeys, and DirectShow. There's no compatibility layer that gets you global hotkeys, arbitrary-app screen recording, and watch folders inside App Sandbox — so SwiftX targets ScreenCaptureKit, Carbon hotkeys, and Vision directly instead.",
+      "A compatibility layer can't give you real global hotkeys, screen recording of arbitrary apps, or watch folders inside App Sandbox. SwiftX targets ScreenCaptureKit, Carbon hotkeys, and Vision directly instead, so those features behave like a first-party Mac app.",
   },
   {
-    question: "Does it read my existing ShareX settings?",
+    question: "Can I bring over my existing ShareX custom uploaders?",
     answer:
-      "Settings, custom uploaders (.sxcu), image effect presets (.sxie), and History.db all use Windows-compatible formats and keys, so files carry over directly.",
+      "Yes — SwiftX's custom uploader (.sxcu) and image effect preset (.sxie) formats, plus its history store, are compatible with ShareX's, and it works with ShareX's existing browser extensions. Files and workflows you already have carry over directly.",
   },
   {
     question: "What macOS version does it need?",
