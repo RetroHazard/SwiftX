@@ -146,6 +146,87 @@ Ends with: every remaining C# destination either hand-ported, shipped as a bundl
 - Login item (SMAppService), Finder "Share via ShareX" extension (optional), localization scaffolding (23 languages exist upstream — infrastructure now, translations later)
 - Settings import from Windows ShareX backup (JSON shapes intentionally kept compatible since Phase 0)
 
+Phases 12–15 come from the July 2026 audit against upstream v21.0.0
+(`GAP-ANALYSIS.md`, which holds the detailed rationale, C# setting names and
+code references for every item below).
+
+### Phase 12 — Workflow engine & destination routing
+The two architectural gaps from the audit (GAP-ANALYSIS §1–2). Ends with:
+two hotkeys bound to the same verb doing different things.
+- **Per-hotkey TaskSettings overrides**: extend `HotkeyConfig` with
+  `Description` plus an embedded `TaskSettings` and the C# `UseDefault*` flag
+  semantics, using upstream key names so a Windows `HotkeysConfig.json`
+  imports cleanly; resolve through the existing `settings:` override plumbing
+  (quick tasks / before-upload window already use it)
+- Hotkeys settings UI: per-hotkey override sheet; named workflows surfaced in
+  the tray; `-workflow <name>` CLI matches by `Description` (falls back to
+  verb name)
+- **Destination typing**: `TextDestination` / `FileDestination` keys (plus
+  image-file/text-file fallback slots) in `TaskSettings`, routed by task data
+  type in `UploadCoordinator.route`; unblocks the Phase 3 Pastebin/Gist
+  backlog landing in a C#-shaped way
+- `UploaderFilters` per-extension routing
+
+### Phase 13 — Capture, recording & output options
+The user-visible toggles C# `TaskSettings` exposes around already-ported
+cores (GAP-ANALYSIS §3, §4, §8).
+- Capture: `ScreenshotDelay` (+ tray capture-with-delay submenu), `ShowCursor`
+  toggle threaded into `SCStreamConfiguration` (currently hardcoded)
+- Recording session UX: on-screen recording frame + control strip (elapsed
+  time, pause, stop), start countdown (`ScreenRecordStartDelay`),
+  fixed-duration mode (`ScreenRecordDuration`), abort confirmation,
+  `ScreenRecordShowCursor`
+- `ScreenRecordTwoPassEncoding` via the ffmpeg path
+- Image output: `FileExistAction` (Ask / Overwrite / UniqueName / Cancel —
+  currently always auto-numbers), `ImagePNGBitDepth`, `ImageGIFQuality`,
+  `ImageAutoJPEGQuality`
+- Effects-pipeline switches: `ShowImageEffectsWindowAfterCapture`,
+  `ImageEffectOnlyRegionCapture`, `UseRandomImageEffect`
+- Deferred unless demanded: in-overlay annotation (post-capture editor covers
+  the job), overlay cosmetic options (dimming toggle, custom colors)
+
+### Phase 14 — Upload robustness, URL post-processing & shell UX
+Small, high-leverage items (GAP-ANALYSIS §5–7).
+- Upload guards: `UploadLimit` concurrency cap, configurable
+  `MaxUploadFailRetry` (fixed retry-once today), `DisableUpload` master
+  switch, multi-upload and large-file warnings
+- URL post-processing: `ClipboardContentFormat` / `OpenURLFormat` `$result`
+  templates, `EarlyCopyURL`, `URLRegexReplace`, `ResultForceHTTPS`,
+  `AutoShortenURLLength`
+- Clipboard-upload intelligence: `ClipboardUploadURLContents`,
+  `ClipboardUploadShortenURL`, `ClipboardUploadAutoIndexFolder`;
+  `AutoClearClipboard`
+- Upload naming: `FileUploadUseNamePattern`, problematic-character
+  replacement, custom time zone (wire the existing
+  `NameParser.customTimeZone`)
+- Notifications: app-level off-switch, fullscreen suppression, custom sounds
+  per event (`UNNotificationSound(named:)`), action buttons via
+  `UNNotificationAction` (Copy URL / Delete / Annotate)
+- Tray & shell: recent-links submenu (`RecentTasks*`), Upload section in the
+  tray menu, configurable left-click action, upload progress in the status
+  icon, `DisableHotkeysOnFullscreen`, configurable actions toolbar
+
+### Phase 15 — Upstream v21 additions & supportability
+Features upstream shipped after the roadmap inventory (v19→v21), plus
+supportability debt (GAP-ANALYSIS §9–11).
+- **History.db schema re-verification** against upstream v21's new SQLite
+  writer — do first; the import path already ships and upstream's own
+  migration is now the reference
+- **Background remover**: Vision `VNGenerateForegroundInstanceMaskRequest`
+  (macOS 14+) — no model download, likely better UX than upstream's ONNX
+  approach; after-capture flag + tool window
+- **Image comparer** tool (side-by-side / slider diff of two images)
+- History: import-folder ingestion (select a folder, ingest images into
+  history)
+- Editor: font-family option for text/speech-balloon tools, arrow styles
+  (classic/modern), middle-click canvas pan
+- Supportability: `os.Logger` subsystem + Show Log window, auto-cleanup knobs
+  (logs/backups), native settings export/restore (Keychain-held secrets need
+  an explicit consent story; Windows-backup *import* stays in Phase 11)
+- Document as N/A: themes, `SilentRun`, `BrowserPath`, white-icon variant,
+  machine-specific config paths, toast geometry, manual proxy (URLSession
+  follows the system proxy)
+
 ---
 
 ## Risks & non-portable notes
@@ -158,3 +239,9 @@ Ends with: every remaining C# destination either hand-ported, shipped as a bundl
 ## Parity tracking
 Each phase PR updates `docs/macos-swift-port/PARITY.md` (created in Phase 0):
 one row per feature from the inventory above — `Ported / Partial / N/A-Windows / Dead-service` — so "fully ported" is a checklist, not a feeling.
+
+Upstream is now on a fast release cadence (v19→v21 in six months on .NET 9),
+so the inventory is a moving target: on each upstream release, skim the
+changelog and log deltas in `GAP-ANALYSIS.md` §10 (append-only), then fold
+significant items into these phases — parity should track a *stated* baseline
+instead of silently drifting. Current baseline: **v21.0.0** (2026-07).
