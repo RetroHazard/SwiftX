@@ -41,6 +41,37 @@ public enum HistoryImport {
         }
     }
 
+    /// Upstream v21 "import folder": ingest a directory of media files as
+    /// history entries. Recursive, hidden files skipped; images get Type
+    /// "Image", audio/video get "File" (matching what captures/recordings
+    /// record); dates come from the files' creation dates.
+    public static func items(fromFolder folder: URL) -> [HistoryItem] {
+        let imageExtensions: Set<String> = ["png", "jpg", "jpeg", "gif", "bmp", "tiff", "tif", "webp", "heic"]
+        let mediaExtensions: Set<String> = ["mp4", "mov", "webm", "apng", "mkv", "avi", "m4v", "mp3", "m4a", "wav"]
+
+        let enumerator = FileManager.default.enumerator(
+            at: folder, includingPropertiesForKeys: [.isRegularFileKey, .creationDateKey],
+            options: [.skipsHiddenFiles])
+        var items: [HistoryItem] = []
+        while let file = enumerator?.nextObject() as? URL {
+            let values = try? file.resourceValues(forKeys: [.isRegularFileKey, .creationDateKey])
+            guard values?.isRegularFile == true else { continue }
+            let ext = file.pathExtension.lowercased()
+            let isImage = imageExtensions.contains(ext)
+            guard isImage || mediaExtensions.contains(ext) else { continue }
+
+            var item = HistoryItem()
+            item.fileName = file.lastPathComponent
+            item.filePath = file.path
+            item.date = values?.creationDate ?? .distantPast
+            item.type = isImage ? "Image" : "File"
+            item.host = "File"
+            items.append(item)
+        }
+        // stable order for batch inserts: oldest first so "recent" stays sane
+        return items.sorted { $0.date < $1.date }
+    }
+
     /// History.xml is a stream of root-level <HistoryItem> fragments.
     public static func items(fromXML text: String) -> [HistoryItem] {
         guard let data = ("<Root>" + text + "</Root>").data(using: .utf8) else { return [] }

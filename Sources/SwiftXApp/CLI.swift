@@ -140,7 +140,7 @@ enum CLI {
     }
 
     private static func denied(_ action: String) {
-        NSLog("SwiftX ignored an untrusted request to %@", action)
+        AppLog.app.warning("Ignored an untrusted request to \(action, privacy: .public)")
         Notifier.notify(title: "SwiftX blocked a request",
                         body: "Ignored a request from another app or web page to \(action).")
     }

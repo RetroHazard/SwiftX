@@ -52,6 +52,29 @@ struct SettingsTests {
         }
     }
 
+    @Test func settingsBackupRoundTrips() throws {
+        try withTempRoot { root in
+            var task = TaskSettings()
+            task.nameFormatPattern = "backup-test-%y"
+            try task.save()
+            var hotkeys = HotkeySettings()
+            hotkeys.hotkeys = [HotkeyConfig(.printScreen, key: "3", modifiers: ["command"])]
+            try hotkeys.save()
+
+            let zip = FileManager.default.temporaryDirectory
+                .appendingPathComponent("swiftx-backup-test-\(UUID().uuidString).zip")
+            defer { try? FileManager.default.removeItem(at: zip) }
+            try SettingsBackup.export(to: zip)
+            #expect(FileManager.default.fileExists(atPath: zip.path))
+
+            // wipe the settings root, then restore from the archive
+            try FileManager.default.removeItem(at: root)
+            try SettingsBackup.restore(from: zip)
+            #expect(TaskSettings.load().nameFormatPattern == "backup-test-%y")
+            #expect(HotkeySettings.load().hotkeys.first?.key == "3")
+        }
+    }
+
     @Test func unknownAndMissingKeysAreTolerated() throws {
         try withTempRoot { temp in
             // Simulates loading a config written by Windows ShareX with many more fields
