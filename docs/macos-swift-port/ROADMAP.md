@@ -9,8 +9,8 @@ where SwiftUI falls short (region overlay, editor canvas). Distribution outside
 the Mac App Store (Developer ID + notarization) — sandboxing is incompatible
 with global hotkeys, screen recording of arbitrary apps, and watch folders.
 
-**Repo layout:** new top-level `ShareX.macOS/` directory — Xcode project with
-SPM local packages mirroring the C# project boundaries:
+**Repo layout:** SPM package at the repo root (no Xcode project) with local
+packages mirroring the C# project boundaries:
 
 | Swift package        | Ports                                        |
 |----------------------|----------------------------------------------|
@@ -22,8 +22,8 @@ SPM local packages mirroring the C# project boundaries:
 | `MediaKit`           | ShareX.MediaLib                              |
 | `HistoryKit`         | ShareX.HistoryLib                            |
 | `IndexerKit`         | ShareX.IndexerLib                            |
-| `ShareX` (app)       | ShareX main app                              |
-| `sharex-nmh` (tool)  | ShareX.NativeMessagingHost                   |
+| `SwiftXApp` (app)    | ShareX main app                              |
+| `NativeMessagingHost` (tool) | ShareX.NativeMessagingHost           |
 
 ---
 
