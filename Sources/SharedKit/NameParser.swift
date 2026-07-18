@@ -362,8 +362,14 @@ enum Emoji {
 // MARK: - Output sanitizing
 
 enum Sanitize {
-    // Windows-invalid chars removed too, so generated names stay portable across sync/upload targets
-    private static let invalidFileNameChars: Set<Character> = ["\\", "/", ":", "*", "?", "\"", "<", ">", "|"]
+    // Windows-invalid chars removed too, so generated names stay portable across sync/upload targets.
+    // The trailing group (backtick, $, ;, &) are shell command-substitution and
+    // command-separator characters: they have no place in a file name and,
+    // stripped here, can never reach a shell even as defense behind the quoting
+    // in ExternalProgramRunner (a name can derive from an attacker window title).
+    private static let invalidFileNameChars: Set<Character> = [
+        "\\", "/", ":", "*", "?", "\"", "<", ">", "|", "`", "$", ";", "&"
+    ]
 
     static func fileName(_ name: String) -> String {
         String(name.filter { !invalidFileNameChars.contains($0) && !$0.isControl })

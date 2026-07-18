@@ -299,7 +299,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             NSLog("SwiftX received URL with no verb: %@", urlString)
             return
         }
-        Task { await CLI.handle(args) }
+        // Any web page can open a swiftx:// URL, so this is untrusted input:
+        // file-touching verbs are confirmed or blocked inside CLI.handle.
+        Task { await CLI.handle(args, source: .untrusted) }
     }
 }
 

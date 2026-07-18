@@ -5,8 +5,11 @@
 //
 // "Actions": user-configured external programs run on captured files.
 // JSON shape matches C# ExternalProgram so Windows configs import.
-// Placeholders match CodeMenuEntryActions: $input/$output raw,
-// %input/%output quoted.
+// Placeholders $input/$output and %input/%output all expand to the file path
+// SHELL-QUOTED. The `args` template is user-authored (trusted) so pipes and
+// redirection still work, but the substituted path is untrusted data — a file
+// name derived from a window title or a downloaded file can contain shell
+// metacharacters, so it must never be interpolated raw into `zsh -c`.
 
 import Foundation
 
@@ -54,6 +57,7 @@ public enum ExternalProgramRunner {
     /// Builds the shell command line and the expected output path.
     /// ponytail: runs through zsh -c so args behave like one command line
     /// (C# hands a single argument string to CreateProcess); pipes work free.
+    /// Path substitutions are always shell-quoted — see the file header.
     public static func commandLine(for program: ExternalProgramSettings, inputPath: String) -> (command: String, outputPath: String) {
         var outputPath = inputPath
         let arguments: String
@@ -65,11 +69,14 @@ public enum ExternalProgramRunner {
                     ? String(program.outputExtension.dropFirst()) : program.outputExtension
                 outputPath = (inputPath as NSString).deletingPathExtension + "." + ext
             }
+            // Every path substitution is shell-quoted so a hostile file name
+            // (e.g. a backtick-laden window title baked into the name) can't
+            // break out of its argument and inject commands into zsh -c.
             arguments = program.args
                 .replacingOccurrences(of: "%input", with: shellQuoted(inputPath))
-                .replacingOccurrences(of: "$input", with: inputPath)
+                .replacingOccurrences(of: "$input", with: shellQuoted(inputPath))
                 .replacingOccurrences(of: "%output", with: shellQuoted(outputPath))
-                .replacingOccurrences(of: "$output", with: outputPath)
+                .replacingOccurrences(of: "$output", with: shellQuoted(outputPath))
         }
         return (shellQuoted(program.path) + " " + arguments, outputPath)
     }

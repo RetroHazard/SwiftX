@@ -85,6 +85,15 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 </plist>
 PLIST
 
+# Hardened runtime (--options runtime), no App Sandbox: SwiftX runs external
+# binaries (ffmpeg, the zsh that runs user Actions), writes browser native-
+# messaging manifests into other apps' support dirs, and uploads user-selected
+# files — all incompatible with the sandbox. The web/CLI attack surface that the
+# sandbox would otherwise contain is closed in code by the untrusted-input
+# boundary (see docs/macos-swift-port/SECURITY-MODEL.md). We ship NO entitlements
+# exceptions, so every hardened-runtime protection (JIT, unsigned exec memory,
+# library validation, debugger attach) stays at its most-restrictive default.
+#
 # Sign with a real identity when available: TCC anchors grants to the cert chain,
 # so permissions survive rebuilds. Ad-hoc fallback pins to the binary's CDHash,
 # which invalidates grants on EVERY rebuild (tccutil reset + re-grant needed).

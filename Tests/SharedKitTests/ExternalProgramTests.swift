@@ -23,7 +23,19 @@ struct ExternalProgramTests {
             inputPath: "/tmp/shot.png"
         )
         #expect(output == "/tmp/shot.webp")
-        #expect(command == "'/bin/echo' /tmp/shot.png -> '/tmp/shot.webp'")
+        // $input/$output are shell-quoted just like %input/%output so a hostile
+        // file name can't inject commands into zsh -c
+        #expect(command == "'/bin/echo' '/tmp/shot.png' -> '/tmp/shot.webp'")
+    }
+
+    @Test func inputPlaceholderIsQuotedAgainstCommandInjection() {
+        // a file name carrying a backtick command substitution stays inside its
+        // single-quoted argument and can never execute
+        let (command, _) = ExternalProgramRunner.commandLine(
+            for: program(args: "process $input"),
+            inputPath: "/tmp/`touch pwned`.png"
+        )
+        #expect(command == "'/bin/echo' process '/tmp/`touch pwned`.png'")
     }
 
     @Test func emptyArgsPassTheQuotedInput() {
