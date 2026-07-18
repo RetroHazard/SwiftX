@@ -26,6 +26,8 @@ final class HotkeyCenter {
     private var registrations: [UInt32: Registration] = [:]
     private var nextID: UInt32 = 1
     private var handlerInstalled = false
+    /// C# HotkeyRepeatLimit bookkeeping: last fire time per hotkey.
+    private var lastFired: [UInt32: Date] = [:]
 
     @discardableResult
     func register(_ combo: KeyCombo, alwaysEnabled: Bool = false, action: @escaping () -> Void) -> Bool {
@@ -51,6 +53,18 @@ final class HotkeyCenter {
     fileprivate func fire(id: UInt32) {
         guard let registration = registrations[id] else { return }
         guard isEnabled || registration.alwaysEnabled else { return }
+        let config = ApplicationConfig.load()
+        // C# DisableHotkeysOnFullscreen (the DisableHotkeys toggle itself stays live)
+        if config.disableHotkeysOnFullscreen, !registration.alwaysEnabled,
+           FullscreenDetector.frontmostAppIsFullscreen() {
+            return
+        }
+        // C# HotkeyRepeatLimit: drop key-repeat refires of the same hotkey
+        if config.hotkeyRepeatLimit > 0, let last = lastFired[id],
+           Date().timeIntervalSince(last) * 1000 < Double(config.hotkeyRepeatLimit) {
+            return
+        }
+        lastFired[id] = Date()
         registration.action()
     }
 

@@ -11,6 +11,7 @@ import AppKit
 import EditorKit
 import SharedKit
 import SwiftUI
+import ToolsKit
 import UniformTypeIdentifiers
 import UploadKit
 
@@ -20,7 +21,8 @@ enum UploadActions {
         let panel = NSOpenPanel()
         panel.allowsMultipleSelection = true
         NSApp.activate(ignoringOtherApps: true)
-        guard panel.runModal() == .OK else { return }
+        guard panel.runModal() == .OK,
+              UploadCoordinator.confirmMultiUpload(count: panel.urls.count) else { return }
         panel.urls.forEach { UploadCoordinator.uploadFile(at: $0) }
     }
 
@@ -33,27 +35,92 @@ enum UploadActions {
         // C# UploadFolder expands the directory into one task per file
         let enumerator = FileManager.default.enumerator(
             at: folder, includingPropertiesForKeys: [.isRegularFileKey], options: [.skipsHiddenFiles])
+        var files: [URL] = []
         while let file = enumerator?.nextObject() as? URL {
             if (try? file.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) == true {
-                UploadCoordinator.uploadFile(at: file)
+                files.append(file)
             }
         }
+        guard UploadCoordinator.confirmMultiUpload(count: files.count) else { return }
+        files.forEach { UploadCoordinator.uploadFile(at: $0) }
     }
 
     /// C# UploadManager.ClipboardUpload. File URLs are checked before text:
     /// Finder copies put both file URLs and their names on the pasteboard.
+    /// The ClipboardUpload* toggles reroute URLs and folders before the plain
+    /// text/image/file fallbacks run.
     static func clipboardUpload() {
+        let settings = TaskSettings.load()
         let pasteboard = NSPasteboard.general
+        defer {
+            // C# AutoClearClipboard: content is already captured in memory
+            if settings.autoClearClipboard { pasteboard.clearContents() }
+        }
         if let files = clipboardFileURLs(), !files.isEmpty {
+            if settings.clipboardUploadAutoIndexFolder, files.count == 1,
+               (try? files[0].resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true {
+                uploadFolderIndex(files[0])
+                return
+            }
+            guard UploadCoordinator.confirmMultiUpload(count: files.count) else { return }
             files.forEach { UploadCoordinator.uploadFile(at: $0) }
         } else if let image = NSImage(pasteboard: pasteboard),
                   let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) {
-            let name = NameParser(.fileName).parse(TaskSettings.load().nameFormatPattern)
+            let name = NameParser.forTask(.fileName, settings: settings).parse(settings.nameFormatPattern)
             UploadCoordinator.uploadImage(cgImage, fileName: (name.isEmpty ? "clipboard" : name) + ".png")
         } else if let text = pasteboard.string(forType: .string), !text.isEmpty {
-            // ponytail: C# can re-upload/shorten/share URL text via the
-            // ClipboardUpload* toggles (all default false); plain text upload here
+            let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            if let url = URL(string: trimmed), ["http", "https"].contains(url.scheme?.lowercased()) {
+                // C# order: download contents, else shorten, else share
+                if settings.clipboardUploadURLContents {
+                    Task { await UploadCoordinator.downloadAndUpload(url) }
+                    return
+                }
+                if settings.clipboardUploadShortenURL {
+                    shortenAndCopy(trimmed)
+                    return
+                }
+                if settings.clipboardUploadShareURL {
+                    let service = URLSharingService(rawValue: settings.urlSharingServiceDestination) ?? .email
+                    if let share = service.shareURL(for: trimmed) {
+                        NSWorkspace.shared.open(share)
+                    }
+                    return
+                }
+            }
             UploadCoordinator.uploadText(text)
+        }
+    }
+
+    /// C# ClipboardUploadAutoIndexFolder: index the copied folder and upload
+    /// the HTML index instead of the folder path text.
+    private static func uploadFolderIndex(_ folder: URL) {
+        var options = IndexerOptions()
+        options.format = .html
+        guard let html = try? FolderIndexer.index(folder: folder, options: options) else {
+            Notifier.notify(title: "Folder index failed", body: folder.lastPathComponent, event: .error)
+            return
+        }
+        let temp = FileManager.default.temporaryDirectory
+            .appendingPathComponent("swiftx-index-\(UUID().uuidString)")
+            .appendingPathComponent(folder.lastPathComponent + ".html")
+        try? FileManager.default.createDirectory(at: temp.deletingLastPathComponent(),
+                                                 withIntermediateDirectories: true)
+        guard (try? Data(html.utf8).write(to: temp)) != nil else { return }
+        UploadCoordinator.uploadFile(at: temp)
+    }
+
+    private static func shortenAndCopy(_ urlString: String) {
+        Task {
+            let type = URLShortenerType(rawValue: TaskSettings.load().urlShortenerDestination) ?? .isgd
+            guard let short = try? await URLShortener.shorten(urlString, type: type) else {
+                Notifier.notify(title: "URL shortener", body: "Could not shorten \(urlString).",
+                                event: .error)
+                return
+            }
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(short, forType: .string)
+            Notifier.notify(title: "URL shortened", body: short, url: short)
         }
     }
 
@@ -220,11 +287,49 @@ private struct DropTargetView: View {
     }
 }
 
-/// C# ActionsToolbar: a floating strip of one-click actions.
-/// ponytail: fixed button set; C# lets users configure the list
+/// C# ActionsToolbar: a floating strip of one-click actions. The button list
+/// comes from ApplicationConfig.actionsToolbarList (C# ActionsToolbarList);
+/// lock position and run-at-startup follow their C# keys too.
 @MainActor
 enum ActionsToolbar {
     private static var window: NSPanel?
+
+    /// Known symbols; anything else gets a generic bolt with its display name.
+    static let symbols: [HotkeyType: String] = [
+        .rectangleRegion: "rectangle.dashed",
+        .lastRegion: "rectangle.dashed.badge.record",
+        .activeWindow: "macwindow",
+        .printScreen: "display",
+        .activeMonitor: "display",
+        .scrollingCapture: "arrow.up.and.down.text.horizontal",
+        .autoCapture: "timer",
+        .screenRecorder: "record.circle",
+        .startScreenRecorder: "record.circle.fill",
+        .screenRecorderGIF: "photo.stack",
+        .stopScreenRecording: "stop.circle",
+        .abortScreenRecording: "xmark.circle",
+        .imageEditor: "pencil.and.outline",
+        .imageEffects: "wand.and.stars",
+        .imageBeautifier: "sparkles",
+        .colorPicker: "eyedropper",
+        .screenColorPicker: "eyedropper.halffull",
+        .ruler: "ruler",
+        .ocr: "text.viewfinder",
+        .qrCode: "qrcode",
+        .hashCheck: "number",
+        .pinToScreen: "pin",
+        .fileUpload: "square.and.arrow.up",
+        .folderUpload: "folder.badge.plus",
+        .clipboardUpload: "doc.on.clipboard",
+        .uploadURL: "link.badge.plus",
+        .shortenURL: "link",
+        .dragDropUpload: "tray.and.arrow.down",
+        .stopUploads: "stop.circle.fill",
+        .openMainWindow: "macwindow.on.rectangle",
+        .openHistory: "clock",
+        .openScreenshotsFolder: "folder",
+        .toggleTrayMenu: "filemenu.and.selection"
+    ]
 
     static func toggle() {
         if let window {
@@ -232,12 +337,19 @@ enum ActionsToolbar {
             Self.window = nil
             return
         }
+        show()
+    }
+
+    static func show() {
+        guard window == nil else { return }
+        let config = ApplicationConfig.load()
         let panel = NSPanel(contentRect: .zero,
                             styleMask: [.titled, .closable, .utilityWindow],
                             backing: .buffered, defer: false)
         panel.title = "SwiftX"
         panel.level = .floating
         panel.isReleasedWhenClosed = false
+        panel.isMovable = !config.actionsToolbarLockPosition
         panel.contentView = NSHostingView(rootView: ActionsToolbarView())
         panel.setContentSize(panel.contentView!.fittingSize)
         panel.center()
@@ -247,28 +359,20 @@ enum ActionsToolbar {
 }
 
 private struct ActionsToolbarView: View {
-    private let actions: [(label: String, symbol: String, type: HotkeyType)] = [
-        ("Capture region", "rectangle.dashed", .rectangleRegion),
-        ("Capture active window", "macwindow", .activeWindow),
-        ("Capture screen", "display", .printScreen),
-        ("Record screen", "record.circle", .screenRecorder),
-        ("Record GIF", "photo.stack", .screenRecorderGIF),
-        ("Image editor", "pencil.and.outline", .imageEditor),
-        ("Color picker", "eyedropper", .colorPicker),
-        ("History", "clock", .openHistory),
-    ]
+    private let actions: [HotkeyType] = ApplicationConfig.load().actionsToolbarList
+        .compactMap { HotkeyType(rawValue: $0) }
 
     var body: some View {
         HStack(spacing: 4) {
-            ForEach(actions, id: \.type) { action in
+            ForEach(actions, id: \.rawValue) { type in
                 Button {
-                    HotkeyDispatcher.execute(action.type)
+                    HotkeyDispatcher.execute(type)
                 } label: {
-                    Image(systemName: action.symbol)
+                    Image(systemName: ActionsToolbar.symbols[type] ?? "bolt")
                         .frame(width: 24, height: 20)
                 }
                 .buttonStyle(.borderless)
-                .help(action.label)
+                .help(HotkeysSettingsView.displayName(for: type))
             }
         }
         .padding(8)

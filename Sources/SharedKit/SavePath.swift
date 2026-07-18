@@ -47,7 +47,7 @@ public enum SavePath {
         fileExtension: String = "png",
         date: Date? = nil
     ) -> URL {
-        let subfolderParser = NameParser(.filePath)
+        let subfolderParser = NameParser.forTask(.filePath, settings: task)
         subfolderParser.date = date
         var folder = config.screenshotsFolder
         let subfolder = subfolderParser.parse(config.saveImageSubFolderPattern)
@@ -55,7 +55,7 @@ public enum SavePath {
             folder.appendPathComponent(subfolder, isDirectory: true)
         }
 
-        let nameParser = NameParser(.fileName)
+        let nameParser = NameParser.forTask(.fileName, settings: task)
         nameParser.date = date
         nameParser.windowText = windowTitle
         nameParser.processName = processName

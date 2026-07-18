@@ -18,7 +18,7 @@ enum UploadCoordinator {
                             format: ImageFileFormat = .png, jpegQuality: Int = 90,
                             settings: TaskSettings? = nil) {
         guard let data = ImageWriter.data(image, format: format, jpegQuality: jpegQuality) else {
-            Notifier.notify(title: "Upload failed", body: "Could not encode the image.")
+            Notifier.notify(title: "Upload failed", body: "Could not encode the image.", event: .error)
             return
         }
         upload(UploadFile(data: data, fileName: fileName, mimeType: format.mimeType),
@@ -30,13 +30,58 @@ enum UploadCoordinator {
     /// FileDestination setting can come with the destination long tail (Phase 9).
     static func uploadFile(at url: URL, settings: TaskSettings? = nil) {
         guard let data = try? Data(contentsOf: url) else {
-            Notifier.notify(title: "Upload failed", body: "Could not read \(url.lastPathComponent).")
+            Notifier.notify(title: "Upload failed", body: "Could not read \(url.lastPathComponent).",
+                            event: .error)
             return
         }
-        let mime = UTType(filenameExtension: url.pathExtension)?.preferredMIMEType ?? "application/octet-stream"
-        upload(UploadFile(data: data, fileName: url.lastPathComponent, mimeType: mime),
+        let task = settings ?? TaskSettings.load()
+        if ApplicationConfig.load().showLargeFileSizeWarning, data.count > largeFileWarningBytes {
+            let alert = NSAlert()
+            alert.messageText = "Upload large file?"
+            alert.informativeText = "\(url.lastPathComponent) is "
+                + ByteCountFormatter.string(fromByteCount: Int64(data.count), countStyle: .file) + "."
+            alert.addButton(withTitle: "Upload")
+            alert.addButton(withTitle: "Cancel")
+            NSApp.activate(ignoringOtherApps: true)
+            guard alert.runModal() == .alertFirstButtonReturn else { return }
+        }
+        upload(UploadFile(data: data, fileName: uploadName(for: url, task: task), mimeType:
+                UTType(filenameExtension: url.pathExtension)?.preferredMIMEType ?? "application/octet-stream"),
                filePath: url.path, settingsOverride: settings)
     }
+
+    /// C# FileUploadUseNamePattern / FileUploadReplaceProblematicCharacters:
+    /// the uploaded name (not the file on disk) follows the name pattern.
+    static func uploadName(for url: URL, task: TaskSettings) -> String {
+        var name = url.lastPathComponent
+        if task.fileUploadUseNamePattern {
+            let parser = NameParser.forTask(.fileName, settings: task)
+            let parsed = parser.parse(task.nameFormatPattern)
+            if !parsed.isEmpty {
+                name = url.pathExtension.isEmpty ? parsed : parsed + "." + url.pathExtension
+            }
+        }
+        if task.fileUploadReplaceProblematicCharacters {
+            name = ResultURL.problematicCharactersReplaced(name)
+        }
+        return name
+    }
+
+    /// C# ShowMultiUploadWarning: confirm before firing a big batch. Callers
+    /// pass the batch size; below the C# threshold (10) it never prompts.
+    static func confirmMultiUpload(count: Int) -> Bool {
+        guard count > 10, ApplicationConfig.load().showMultiUploadWarning else { return true }
+        let alert = NSAlert()
+        alert.messageText = "Upload \(count) files?"
+        alert.informativeText = "This starts \(count) upload tasks."
+        alert.addButton(withTitle: "Upload All")
+        alert.addButton(withTitle: "Cancel")
+        NSApp.activate(ignoringOtherApps: true)
+        return alert.runModal() == .alertFirstButtonReturn
+    }
+
+    /// C# LargeFileSizeWarning threshold (100 MB).
+    private static let largeFileWarningBytes = 100 * 1024 * 1024
 
     /// ponytail: text uploads go out as a .txt file; dedicated text
     /// destinations (Pastebin etc.) are benched
@@ -122,12 +167,19 @@ enum UploadCoordinator {
     }
 
     private static func upload(_ file: UploadFile, filePath: String?,
-                               settingsOverride: TaskSettings? = nil, isRetry: Bool = false) {
+                               settingsOverride: TaskSettings? = nil, attempt: Int = 0) {
         let settings = settingsOverride ?? TaskSettings.load()
+        let appConfig = ApplicationConfig.load()
+
+        // C# DisableUpload master switch: tasks silently no-op (tray shows state)
+        if appConfig.disableUpload {
+            Notifier.notify(title: "Upload skipped", body: "Uploads are disabled in the tray menu.")
+            return
+        }
 
         // C# WorkerTask: the before-upload window intercepts every upload
         // source (captures, recordings, files) right before dispatch
-        if !isRetry, settings.afterCaptureJob.contains(.showBeforeUploadWindow) {
+        if attempt == 0, settings.afterCaptureJob.contains(.showBeforeUploadWindow) {
             Task {
                 guard var chosen = await BeforeUploadWindow.present(
                     fileName: file.fileName, previewData: file.data, settings: settings) else { return }
@@ -146,6 +198,9 @@ enum UploadCoordinator {
         }
 
         let task = Task {
+            // C# UploadLimit: bounded parallelism; extra tasks wait their turn
+            await UploadGate.shared.acquire(limit: appConfig.uploadLimit)
+            defer { UploadGate.shared.release() }
             do {
                 let (result, hostName) = try await UploadProgressReporter.$current.withValue(reporter) {
                     try await route(file, settings: settings, config: config)
@@ -170,21 +225,24 @@ enum UploadCoordinator {
                     return
                 }
                 // misconfiguration won't fix itself in one second; only
-                // transport/host failures earn the retry
-                if !isRetry, ApplicationConfig.load().retryUpload, !(error is RoutingError) {
-                    NSLog("Upload failed (%@); retrying once", error.localizedDescription)
+                // transport/host failures earn a retry (C# MaxUploadFailRetry)
+                let retryLimit = appConfig.retryUpload ? max(0, appConfig.maxUploadFailRetry) : 0
+                if attempt < retryLimit, !(error is RoutingError) {
+                    NSLog("Upload failed (%@); retry %d of %d",
+                          error.localizedDescription, attempt + 1, retryLimit)
                     await MainActor.run {
                         UploadTaskCenter.shared.finish(entryID, state: .retrying)
                     }
                     try? await Task.sleep(for: .seconds(1))
                     await MainActor.run {
-                        upload(file, filePath: filePath, settingsOverride: settingsOverride, isRetry: true)
+                        upload(file, filePath: filePath, settingsOverride: settingsOverride,
+                               attempt: attempt + 1)
                     }
                     return
                 }
                 await MainActor.run {
                     UploadTaskCenter.shared.finish(entryID, state: .failed(message: error.localizedDescription))
-                    Notifier.notify(title: "Upload failed", body: error.localizedDescription)
+                    Notifier.notify(title: "Upload failed", body: error.localizedDescription, event: .error)
                 }
             }
         }
@@ -195,21 +253,39 @@ enum UploadCoordinator {
         let tasks = settings.afterUploadJob
         var finalURL = result.url
 
-        if tasks.contains(.useURLShortener) {
+        // C# EarlyCopyURL: the raw URL lands on the clipboard the moment the
+        // upload finishes, before shortening/post-processing can delay it.
+        // The final (processed) copy below overwrites it.
+        if settings.earlyCopyURL, tasks.contains(.copyURLToClipboard), !finalURL.isEmpty {
+            copyString(finalURL)
+        }
+
+        // C# post-processing order: regex replace, force HTTPS, then shorten
+        if settings.urlRegexReplace {
+            finalURL = ResultURL.regexReplaced(finalURL, pattern: settings.urlRegexReplacePattern,
+                                               replacement: settings.urlRegexReplaceReplacement)
+        }
+        if settings.resultForceHTTPS {
+            finalURL = ResultURL.forcedHTTPS(finalURL)
+        }
+
+        let autoShorten = settings.autoShortenURLLength > 0 && finalURL.count > settings.autoShortenURLLength
+        if tasks.contains(.useURLShortener) || autoShorten {
             let type = URLShortenerType(rawValue: settings.urlShortenerDestination) ?? .isgd
             do {
-                finalURL = try await URLShortener.shorten(result.url, type: type)
+                finalURL = try await URLShortener.shorten(finalURL, type: type)
             } catch {
-                Notifier.notify(title: "URL shortener failed", body: error.localizedDescription)
+                Notifier.notify(title: "URL shortener failed", body: error.localizedDescription,
+                                event: .error)
             }
         }
 
         if tasks.contains(.copyURLToClipboard), !finalURL.isEmpty {
-            let pasteboard = NSPasteboard.general
-            pasteboard.clearContents()
-            pasteboard.setString(finalURL, forType: .string)
+            // C# ClipboardContentFormat: $result template (Markdown, BBCode, …)
+            copyString(ResultURL.format(settings.clipboardContentFormat, result: finalURL))
         }
-        if tasks.contains(.openURL), let url = URL(string: finalURL) {
+        if tasks.contains(.openURL),
+           let url = URL(string: ResultURL.format(settings.openURLFormat, result: finalURL)) {
             NSWorkspace.shared.open(url)
         }
         if tasks.contains(.shareURL) {
@@ -226,7 +302,40 @@ enum UploadCoordinator {
             AfterUploadWindow.present(result: result, finalURL: finalURL)
         }
 
-        Notifier.notify(title: "Upload complete", body: finalURL,
-                        sound: settings.playSoundAfterUpload, url: finalURL)
+        Notifier.notify(title: "Upload complete",
+                        body: ResultURL.format(settings.balloonTipContentFormat, result: finalURL),
+                        sound: settings.playSoundAfterUpload, url: finalURL, event: .taskCompleted)
+    }
+
+    private static func copyString(_ string: String) {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(string, forType: .string)
+    }
+}
+
+/// C# UploadLimit: a MainActor counting gate. Tasks over the limit suspend in
+/// FIFO order until a running upload releases its slot.
+@MainActor
+final class UploadGate {
+    static let shared = UploadGate()
+
+    private var active = 0
+    private var waiters: [CheckedContinuation<Void, Never>] = []
+
+    func acquire(limit: Int) async {
+        if active < max(1, limit) {
+            active += 1
+            return
+        }
+        await withCheckedContinuation { waiters.append($0) }
+        active += 1
+    }
+
+    func release() {
+        active = max(0, active - 1)
+        if !waiters.isEmpty {
+            waiters.removeFirst().resume()
+        }
     }
 }
