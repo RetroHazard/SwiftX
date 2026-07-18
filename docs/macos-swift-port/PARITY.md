@@ -2,11 +2,11 @@
 
 Statuses: **Ported** · **Partial** (works, known gaps) · **Planned** (phase noted) · **N/A** (Windows-only) · **Dead** (service defunct upstream)
 
-Baseline: the roadmap's inventory of upstream ShareX. For gaps found against
-**upstream v21.0.0** (2026-07) that no row below tracks — per-hotkey workflow
-overrides, text/file destination routing, capture delay, recording UX, URL
-post-processing, background remover, image comparer — see
-[`GAP-ANALYSIS.md`](GAP-ANALYSIS.md).
+Baseline: **upstream v21.0.0** (2026-07). The gaps found by the July 2026
+audit are tracked below as Phases 12–15;
+[`GAP-ANALYSIS.md`](GAP-ANALYSIS.md) holds the detailed rationale, C# setting
+names and code references for each row, and its §10 is the append-only log of
+upstream deltas as new versions ship.
 
 ## Phase 0 — Foundation
 
@@ -30,8 +30,9 @@ post-processing, background remover, image comparer — see
 | Region select overlay — rectangle, dimming, crosshair, size label, multi-display, Esc cancel | Ported |
 | Region overlay — window snapping (hover highlight, click captures), last region (menu + hotkey) | Ported |
 | Region overlay extras — ellipse/freehand, magnifier, fixed size, snap sizes | Ported — Tab cycles shape, M toggles magnifier, F toggles fixed size, drags auto-snap to presets; ruler and screen color picker shipped as standalone tools (Phase 8) |
-| Save to file + subfolder patterns (name parser), clipboard copy | Ported |
-| JPEG/GIF/BMP/TIFF encoders + quality, auto-JPEG for large captures | Ported — C# EImageFormat set; WebP is not a C# image format either |
+| Save to file + subfolder patterns (name parser), clipboard copy | Ported — always auto-numbers on name collision; C# FileExistAction (Ask/Overwrite) planned (13) |
+| JPEG/GIF/BMP/TIFF encoders + quality, auto-JPEG for large captures | Ported — C# EImageFormat set; WebP is not a C# image format either; PNG bit depth / GIF quality / auto-JPEG quality knobs planned (13) |
+| Screenshot delay, cursor-capture toggle | Planned (13) — no delay support; cursor inclusion is hardcoded (display on, region off) |
 | Cross-display region selection (stitching) | Ported — per-display captures composited at the highest backing scale |
 | Transparent/shadow window capture | N/A — ScreenCaptureKit window capture includes native shadows |
 
@@ -44,7 +45,7 @@ post-processing, background remover, image comparer — see
 | After-upload tasks (6) | Ported — shorten, copy URL, open URL, share URL, QR code window, after-upload window (link formats + copy buttons) |
 | Global hotkey engine (Carbon), defaults ⌃⇧3/4/5, DisableHotkeys toggle | Ported — recorder UI in Settings, live re-registration |
 | HotkeyType vocabulary (C#-compatible raw values) | Ported — every verb dispatches: upload sources (file/folder/clipboard/text/URL/drag-drop), custom region/window, stop uploads, standalone image editor, actions toolbar, tray menu toggle |
-| Capture notifications | Ported — banner + optional sound (C# PlaySound keys); click reveals file or opens URL |
+| Capture notifications | Partial — banner + optional sound (C# PlaySound keys); click reveals file or opens URL. No app-level off-switch, fullscreen suppression, custom sounds or action buttons — planned (14); toast geometry is N/A under Notification Center |
 | Actions (external commands) | Ported — C# ExternalProgram JSON, $input/$output placeholders, output-extension chaining, Settings pane |
 
 ## Phase 3 — Upload engine & core destinations
@@ -52,7 +53,7 @@ post-processing, background remover, image comparer — see
 | Feature | Status |
 |---|---|
 | Upload core — multipart, form-urlencoded, JSON/XML body, binary | Ported |
-| Upload core — progress UI, retry | Ported — live rows in main window (bar, retry state, URL/error); RetryUpload retries once |
+| Upload core — progress UI, retry | Ported — live rows in main window (bar, retry state, URL/error); RetryUpload retries once. Configurable retry count, concurrency cap, DisableUpload switch and size warnings planned (14) |
 | Upload core — chunked/resumable, secondary fallback | Planned — chunked only serves the benched OAuth hosts; fallback needs multi-destination config |
 | Custom uploader engine (.sxcu) — syntax parser (json/xml/regex/base64/random/select/filename/header/response), import, destination picker | Ported — legacy pre-13.7.1 `$var$` files migrate at load; interactive select takes first option |
 | Custom uploader editor (create/edit/duplicate/delete in settings) | Ported — Settings → Custom Uploader pane; edits write Windows-compatible .sxcu files |
@@ -69,7 +70,7 @@ post-processing, background remover, image comparer — see
 
 | Feature | Status |
 |---|---|
-| SQLite history (Windows-compatible History.db schema) | Ported — a Windows History.db opens directly |
+| SQLite history (Windows-compatible History.db schema) | Ported — a Windows History.db opens directly; upstream itself moved to SQLite in v21, so re-verify the schema against its new writer — planned (15) |
 | JSON/XML history import from Windows | Ported — Import History… in the main window reads History.json (bracketless object stream) and History.xml (root-level fragments) into the SQLite store |
 | Main window: searchable history list, thumbnails, context actions | Ported — search by name/URL/host/tags |
 | Thumbnail grid view (persisted TaskViewMode), time-range filter, favorites (Windows-compatible "Favorite" tag) | Ported |
@@ -81,7 +82,7 @@ post-processing, background remover, image comparer — see
 | Feature | Status |
 |---|---|
 | Shapes: rectangle, ellipse, line, arrow, freehand | Ported |
-| Text (inline entry), step numbers (auto-increment) | Ported |
+| Text (inline entry), step numbers (auto-increment) | Ported — fixed system font; font-family option (upstream v20.1) planned (15) |
 | Effect regions: blur, pixelate, highlight | Ported |
 | Undo/redo, color/width controls, AnnotateImage pipeline flag (Cancel aborts task) | Ported |
 | Shape selection, move, resize handles, Delete, double-click text re-edit, recolor selection | Ported — Screenshot.app-style manipulation |
@@ -104,6 +105,7 @@ post-processing, background remover, image comparer — see
 | Feature | Status |
 |---|---|
 | H.264/HEVC recording (region/window/screen, audio, pause) | Ported — SCStream → AVAssetWriter MP4; system audio + microphone as AAC tracks (mic needs macOS 15); pause/resume via menu or PauseScreenRecording hotkey drops the gap from the timeline |
+| Recording session UX (on-screen frame + controls, countdown, fixed duration, abort confirm, cursor toggle) | Planned (13) — control is menu-bar-only today; recording cursor hardcoded on |
 | GIF recording | Ported — ImageIO encoder, real per-frame delays, region/window/screen |
 | Recording through task pipeline (save, history, notify, path copy, upload) | Ported — uploads reuse the image destination |
 | WebM/VP9 via ffmpeg | Ported — detects Homebrew/MacPorts ffmpeg, records H.264 then transcodes; Settings shows install status + one-click Homebrew install; falls back to H.264 when ffmpeg is missing |
@@ -148,7 +150,7 @@ post-processing, background remover, image comparer — see
 | Scrolling capture | Ported — synthetic scroll-wheel events + C# CombineImages row-matching stitcher (side margins, auto bottom-edge trim, best-guess fallback); Windows-message scroll methods N/A |
 | Quick task menu (ShowQuickTaskMenu) + editor | Ported — C# QuickTaskPresets JSON incl. separators; menu at cursor |
 | After-capture / before-upload windows | Ported — filename + task toggles; destination override before upload (all sources) |
-| CLI verbs, workflows | Partial — -HotkeyTypeName [file], -workflow, -CustomUploader .sxcu, -ImageEffect .sxie, -NativeMessagingInput .json, bare path/URL upload; second instance forwards to primary. Verb dispatch is ported, but hotkeys carry no per-workflow TaskSettings overrides (names, destinations, after-capture chains) — see GAP-ANALYSIS.md §1 |
+| CLI verbs, workflows | Partial — -HotkeyTypeName [file], -workflow, -CustomUploader .sxcu, -ImageEffect .sxie, -NativeMessagingInput .json, bare path/URL upload; second instance forwards to primary. Verb dispatch is ported, but hotkeys carry no per-workflow TaskSettings overrides (names, destinations, after-capture chains) — Planned (12) |
 | Native messaging host (Chrome/Edge/Firefox) | Ported — SwiftXHost binary in bundle speaks the Chrome stdio protocol; manifest install toggle in General settings |
 | Safari extension | Deferred — needs an Xcode app-extension target + separate distribution; revisit after Phase 11 signing |
 
@@ -161,3 +163,57 @@ post-processing, background remover, image comparer — see
 | Sparkle auto-update (Release/PreRelease) | N/A — `brew upgrade --cask` is the update channel; revisit only if a direct-download channel is added |
 | Login item, settings import from Windows backup, localization infra | Planned (11) |
 | Steam build, Windows installer, DevBuilds channel | N/A |
+
+## Phase 12 — Workflow engine & destination routing
+
+| Feature | Status |
+|---|---|
+| Per-hotkey TaskSettings overrides (named workflows, C# UseDefault* flags, Windows HotkeysConfig.json import) | Planned (12) — hotkeys are verb + key combo only today; the `settings:` override plumbing (quick tasks, before-upload window) is the intended path |
+| Named workflows in tray + `-workflow <name>` by Description | Planned (12) — CLI currently matches by verb name |
+| Text / File destination slots (TextDestination, FileDestination, image-file/text-file fallbacks), routing by task data type | Planned (12) — a single ImageDestination routes everything; text uploads wrap as .txt files |
+| UploaderFilters (per-extension destination routing) | Planned (12) |
+
+## Phase 13 — Capture, recording & output options
+
+| Feature | Status |
+|---|---|
+| Screenshot delay (ScreenshotDelay) + tray capture-with-delay submenu | Planned (13) |
+| Cursor-capture toggles (ShowCursor, ScreenRecordShowCursor) | Planned (13) — hardcoded today: display capture on, region off, recording on |
+| Recording frame + control strip (elapsed time, pause, stop) | Planned (13) |
+| Recording start countdown, fixed-duration mode, abort confirmation | Planned (13) |
+| Two-pass encoding (ffmpeg) | Planned (13) |
+| FileExistAction (Ask / Overwrite / UniqueName / Cancel) | Planned (13) — always auto-numbers today |
+| PNG bit depth, GIF quality, auto-JPEG quality | Planned (13) |
+| Effects-pipeline switches (effects window after capture, region-capture-only, random preset) | Planned (13) — single selected preset always applies today |
+| In-overlay annotation, overlay cosmetic options | Deferred — post-capture editor covers the job; revisit only if demanded |
+
+## Phase 14 — Upload robustness, URL post-processing & shell UX
+
+| Feature | Status |
+|---|---|
+| Upload concurrency cap (UploadLimit), configurable retry count, DisableUpload, multi-upload/large-file warnings | Planned (14) — fixed retry-once toggle today |
+| ClipboardContentFormat / OpenURLFormat $result templates, EarlyCopyURL | Planned (14) |
+| URLRegexReplace, ResultForceHTTPS, AutoShortenURLLength | Planned (14) |
+| Clipboard-upload intelligence (URL contents, shorten-instead, auto-index folder), AutoClearClipboard | Planned (14) |
+| Upload naming (FileUploadUseNamePattern, problematic-character replacement, custom time zone) | Planned (14) — NameParser already supports a custom time zone, unwired |
+| Notification granularity (off-switch, fullscreen suppression, custom per-event sounds, action buttons) | Planned (14) — UNUserNotification banner + default sound today |
+| Toast geometry (duration, placement, size, fade) | N/A — Notification Center owns presentation |
+| Recent-links tray submenu + main-window recent strip (RecentTasks*) | Planned (14) |
+| Tray Upload section, configurable left-click action, status-icon upload progress | Planned (14) — upload verbs are hotkey/CLI/drop-window-only today |
+| DisableHotkeysOnFullscreen, HotkeyRepeatLimit | Planned (14) |
+| Configurable actions toolbar (button list, position lock, run at startup) | Planned (14) — fixed 8-button strip today |
+
+## Phase 15 — Upstream v21 additions & supportability
+
+| Feature | Status |
+|---|---|
+| History.db schema re-verification vs upstream v21's new SQLite writer | Planned (15) — do first; upstream's own JSON→SQLite migration is now the reference |
+| Background remover | Planned (15) — Vision `VNGenerateForegroundInstanceMaskRequest` (macOS 14+), no model download; upstream v21 requires a user-supplied ONNX model |
+| Image comparer tool (v21) | Planned (15) — side-by-side / slider diff |
+| History import folder (v21) | Planned (15) — SwiftX imports History.json/xml only today |
+| Editor: font family, arrow styles (classic/modern), middle-click canvas pan (v20.1–21) | Planned (15) |
+| Sticker packs / sticker browser | Deferred — image stamp covers local files; emoji via macOS palette |
+| Log subsystem (os.Logger) + Show Log window, auto-cleanup of logs/backups | Planned (15) — NSLog only today |
+| Native settings export/restore | Planned (15) — Keychain-held secrets need an explicit consent story; Windows-backup import stays in Phase 11 |
+| Themes, SilentRun, BrowserPath, white-icon variant, machine-specific config paths, taskbar progress | N/A — macOS-native equivalents (appearance, menu bar app, default browser, template icon) |
+| Manual proxy configuration | N/A — URLSession follows the system proxy automatically |

@@ -13,6 +13,13 @@ Method: SwiftX sources were compared against the upstream settings surface
 v19→v21 changelogs. C# setting names are given so future work stays
 JSON-import-compatible.
 
+**Status: integrated.** Every item below is now tracked as roadmap/parity
+**Phases 12–15**: §1–2 → Phase 12 (workflow engine & destination routing),
+§3/§4/§8 → Phase 13 (capture, recording & output options), §5–7 → Phase 14
+(upload robustness & shell UX), §9–11 → Phase 15 (upstream v21 additions &
+supportability). This document remains the detailed rationale behind those
+rows; §10 stays append-only as the upstream-delta log.
+
 ---
 
 ## 1. Per-hotkey task settings — "workflows" (largest gap)
