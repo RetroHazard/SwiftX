@@ -267,7 +267,7 @@ enum AfterCapturePipeline {
 
         let pending = tasks.subtracting(implemented)
         if !pending.isEmpty {
-            NSLog("AfterCaptureTasks not implemented yet: %@", pending.nameString)
+            AppLog.capture.notice("AfterCaptureTasks not implemented yet: \(pending.nameString, privacy: .public)")
         }
     }
 

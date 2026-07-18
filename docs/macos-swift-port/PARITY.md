@@ -70,7 +70,7 @@ upstream deltas as new versions ship.
 
 | Feature | Status |
 |---|---|
-| SQLite history (Windows-compatible History.db schema) | Ported — a Windows History.db opens directly; upstream itself moved to SQLite in v21, so re-verify the schema against its new writer — planned (15) |
+| SQLite history (Windows-compatible History.db schema) | Ported — verified against upstream v21's HistoryManagerSQLite (2026-07): identical table/columns/insert order, Tags JSON and ISO-8601 dates all covered by the readers; adopted its `busy_timeout` pragma; schema drift now guarded by a test |
 | JSON/XML history import from Windows | Ported — Import History… in the main window reads History.json (bracketless object stream) and History.xml (root-level fragments) into the SQLite store |
 | Main window: searchable history list, thumbnails, context actions | Ported — search by name/URL/host/tags |
 | Thumbnail grid view (persisted TaskViewMode), time-range filter, favorites (Windows-compatible "Favorite" tag) | Ported |
@@ -82,7 +82,7 @@ upstream deltas as new versions ship.
 | Feature | Status |
 |---|---|
 | Shapes: rectangle, ellipse, line, arrow, freehand | Ported |
-| Text (inline entry), step numbers (auto-increment) | Ported — fixed system font; font-family option (upstream v20.1) planned (15) |
+| Text (inline entry), step numbers (auto-increment) | Ported — font-family picker for text/balloon tools shipped (15); step circles stay system font |
 | Effect regions: blur, pixelate, highlight | Ported |
 | Undo/redo, color/width controls, AnnotateImage pipeline flag (Cancel aborts task) | Ported |
 | Shape selection, move, resize handles, Delete, double-click text re-edit, recolor selection | Ported — Screenshot.app-style manipulation |
@@ -207,13 +207,13 @@ upstream deltas as new versions ship.
 
 | Feature | Status |
 |---|---|
-| History.db schema re-verification vs upstream v21's new SQLite writer | Planned (15) — do first; upstream's own JSON→SQLite migration is now the reference |
-| Background remover | Planned (15) — Vision `VNGenerateForegroundInstanceMaskRequest` (macOS 14+), no model download; upstream v21 requires a user-supplied ONNX model |
-| Image comparer tool (v21) | Planned (15) — side-by-side / slider diff |
-| History import folder (v21) | Planned (15) — SwiftX imports History.json/xml only today |
-| Editor: font family, arrow styles (classic/modern), middle-click canvas pan (v20.1–21) | Planned (15) |
+| History.db schema re-verification vs upstream v21's new SQLite writer | Ported — verified 2026-07 against `HistoryManagerSQLite.cs`: schema, insert order, Tags JSON and date formats all match; `busy_timeout` pragma adopted; a PRAGMA table_info test guards future drift |
+| Background remover | Ported — Vision `VNGenerateForegroundInstanceMaskRequest` (no model download, unlike upstream's user-supplied ONNX); Tools → Background Remover with checkerboard preview + Copy/Save, `BackgroundRemover` hotkey verb (upstream v21 name) |
+| Image comparer tool (v21) | Ported — side-by-side and slider-overlay modes; `ImageComparer` hotkey verb (upstream v21 name) |
+| History import folder (v21) | Ported — main window Import Folder… ingests images/media recursively (creation dates, Image/File types) |
+| Editor: font family, arrow styles (classic/modern), middle-click canvas pan (v20.1–21) | Ported — font-family picker (System + installed families) for text/balloon incl. the inline entry field; Classic (filled triangle) / Modern (open chevron) arrow heads; middle-drag pans the canvas |
 | Sticker packs / sticker browser | Deferred — image stamp covers local files; emoji via macOS palette |
-| Log subsystem (os.Logger) + Show Log window, auto-cleanup of logs/backups | Planned (15) — NSLog only today |
-| Native settings export/restore | Planned (15) — Keychain-held secrets need an explicit consent story; Windows-backup import stays in Phase 11 |
+| Log subsystem (os.Logger) + Show Log window, auto-cleanup of logs/backups | Ported — `AppLog` os.Logger subsystem (all NSLog call sites migrated), tray Show Log… window reads the session's entries via OSLogStore. Auto-cleanup knobs are N/A: the unified log owns storage/rotation and SwiftX writes no log or backup files |
+| Native settings export/restore | Ported — Export/Import Settings in General settings (zip via ditto; restore only touches known file names). Keychain secrets are never exported by design — the consent story is re-entry after restore, stated in the UI; Windows-backup import stays in Phase 11 |
 | Themes, SilentRun, BrowserPath, white-icon variant, machine-specific config paths, taskbar progress | N/A — macOS-native equivalents (appearance, menu bar app, default browser, template icon) |
 | Manual proxy configuration | N/A — URLSession follows the system proxy automatically |

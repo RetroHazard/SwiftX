@@ -66,8 +66,7 @@ enum Notifier {
             )
         ])
         center.requestAuthorization(options: [.alert, .sound]) { granted, error in
-            NSLog("Notification authorization result: granted=%d error=%@", granted,
-                  error?.localizedDescription ?? "none")
+            AppLog.notifications.info("Authorization result: granted=\(granted) error=\(error?.localizedDescription ?? "none", privacy: .public)")
             Task { @MainActor in
                 authorized = granted
                 let queued = pending
@@ -89,7 +88,7 @@ enum Notifier {
                        url: String? = nil, filePath: String? = nil,
                        event: Event = .taskCompleted) {
         guard Bundle.main.bundleIdentifier != nil else {
-            NSLog("%@: %@", title, body)
+            AppLog.notifications.info("\(title, privacy: .public): \(body, privacy: .public)")
             return
         }
         let settings = TaskSettings.load()
@@ -104,7 +103,7 @@ enum Notifier {
             playedCustomSound = true
         }
         if suppressed {
-            NSLog("Notification suppressed (settings): %@ - %@", title, body)
+            AppLog.notifications.info("Suppressed (settings): \(title, privacy: .public) - \(body, privacy: .public)")
             return
         }
 
@@ -129,7 +128,7 @@ enum Notifier {
         case .some(true):
             post(request)
         case .some(false):
-            NSLog("Notification suppressed (not authorized): %@ - %@", title, body)
+            AppLog.notifications.info("Suppressed (not authorized): \(title, privacy: .public) - \(body, privacy: .public)")
         }
     }
 
@@ -152,7 +151,7 @@ enum Notifier {
     private static func post(_ request: UNNotificationRequest) {
         UNUserNotificationCenter.current().add(request) { error in
             if let error {
-                NSLog("Notification delivery failed: %@", error.localizedDescription)
+                AppLog.notifications.error("Delivery failed: \(error.localizedDescription, privacy: .public)")
             }
         }
     }

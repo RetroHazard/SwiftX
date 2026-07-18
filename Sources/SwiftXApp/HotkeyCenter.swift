@@ -100,8 +100,7 @@ enum HotkeyRegistrar {
                 HotkeyDispatcher.execute(type)
             }
             if !registered {
-                NSLog("Could not register hotkey %@ for %@ (conflict or unknown key)",
-                      combo.displayString, config.taskType)
+                AppLog.hotkeys.error("Could not register hotkey \(combo.displayString, privacy: .public) for \(config.taskType, privacy: .public) (conflict or unknown key)")
             }
         }
     }
@@ -177,6 +176,10 @@ enum HotkeyDispatcher {
             ToolWindows.showImageSplitter()
         case .imageThumbnailer:
             ToolWindows.showImageThumbnailer()
+        case .backgroundRemover:
+            ToolWindows.showBackgroundRemover()
+        case .imageComparer:
+            ToolWindows.showImageComparer()
         case .imageEffects:
             ImageEffectsWindows.showEditor()
         case .imageBeautifier:
@@ -242,7 +245,7 @@ enum HotkeyDispatcher {
         case .exitShareX:
             NSApp.terminate(nil)
         default:
-            NSLog("HotkeyType %@ is not implemented yet", type.rawValue)
+            AppLog.hotkeys.notice("HotkeyType \(type.rawValue, privacy: .public) is not implemented yet")
         }
     }
 }
