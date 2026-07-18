@@ -47,6 +47,24 @@ public enum ImageFileFormat: String, CaseIterable, Sendable {
     }
 }
 
+/// PNG output depth; raw values match the C# PNGBitDepth enum names.
+/// Bit24 strips the alpha channel (smaller files, opaque background).
+public enum PNGBitDepth: String, CaseIterable, Sendable {
+    case `default` = "Default"
+    case bit32 = "Bit32"
+    case bit24 = "Bit24"
+}
+
+/// GIF palette mode; raw values match the C# GIFQuality enum names.
+/// ImageIO always quantizes to a 256-color palette, so Bit8 equals Default
+/// and Bit4 falls back to it; Grayscale converts before encoding.
+public enum GIFQuality: String, CaseIterable, Sendable {
+    case `default` = "Default"
+    case bit8 = "Bit8"
+    case bit4 = "Bit4"
+    case grayscale = "Grayscale"
+}
+
 public enum ImageWriter {
     /// Resolves the configured format, honoring C#'s ImageAutoUseJPEG:
     /// large captures switch to JPEG so wallpaper-sized PNGs don't hit hosts.
@@ -61,7 +79,33 @@ public enum ImageWriter {
         return format
     }
 
-    public static func data(_ image: CGImage, format: ImageFileFormat, jpegQuality: Int = 90) -> Data? {
+    /// C# ImageAutoJPEGQuality: when the auto-JPEG size rule forced JPEG,
+    /// its own quality setting applies instead of the regular one.
+    public static func effectiveJPEGQuality(
+        configuredFormatName: String, effectiveFormat: ImageFileFormat,
+        jpegQuality: Int, autoJPEGQuality: Int
+    ) -> Int {
+        effectiveFormat == .jpeg && ImageFileFormat(rawValue: configuredFormatName) != .jpeg
+            ? autoJPEGQuality : jpegQuality
+    }
+
+    public static func data(
+        _ image: CGImage, format: ImageFileFormat, jpegQuality: Int = 90,
+        pngBitDepth: PNGBitDepth = .default, gifQuality: GIFQuality = .default
+    ) -> Data? {
+        var source = image
+        if format == .png {
+            switch pngBitDepth {
+            case .bit24: source = redrawn(image, includeAlpha: false) ?? image
+            case .bit32 where image.alphaInfo == .none || image.alphaInfo == .noneSkipFirst
+                || image.alphaInfo == .noneSkipLast:
+                source = redrawn(image, includeAlpha: true) ?? image
+            default: break
+            }
+        }
+        if format == .gif, gifQuality == .grayscale {
+            source = grayscale(image) ?? image
+        }
         let data = NSMutableData()
         guard let destination = CGImageDestinationCreateWithData(data, format.utType.identifier as CFString, 1, nil) else {
             return nil
@@ -70,15 +114,49 @@ public enum ImageWriter {
         if format == .jpeg {
             properties[kCGImageDestinationLossyCompressionQuality] = Double(jpegQuality) / 100
         }
-        CGImageDestinationAddImage(destination, image, properties as CFDictionary)
+        CGImageDestinationAddImage(destination, source, properties as CFDictionary)
         guard CGImageDestinationFinalize(destination) else { return nil }
         return data as Data
     }
 
-    public static func write(_ image: CGImage, to url: URL, format: ImageFileFormat = .png, jpegQuality: Int = 90) throws {
-        guard let data = data(image, format: format, jpegQuality: jpegQuality) else { throw ImageWriterError.encodingFailed }
+    public static func write(
+        _ image: CGImage, to url: URL, format: ImageFileFormat = .png, jpegQuality: Int = 90,
+        pngBitDepth: PNGBitDepth = .default, gifQuality: GIFQuality = .default
+    ) throws {
+        guard let data = data(image, format: format, jpegQuality: jpegQuality,
+                              pngBitDepth: pngBitDepth, gifQuality: gifQuality) else {
+            throw ImageWriterError.encodingFailed
+        }
         try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
         try data.write(to: url, options: .atomic)
+    }
+
+    /// Redraws into an sRGB context with or without an alpha channel.
+    private static func redrawn(_ image: CGImage, includeAlpha: Bool) -> CGImage? {
+        guard let context = CGContext(
+            data: nil, width: image.width, height: image.height,
+            bitsPerComponent: 8, bytesPerRow: 0,
+            space: CGColorSpace(name: CGColorSpace.sRGB)!,
+            bitmapInfo: (includeAlpha ? CGImageAlphaInfo.premultipliedLast : .noneSkipLast).rawValue
+        ) else { return nil }
+        if !includeAlpha {
+            // transparent areas flatten onto white, like GDI+ drawing on a blank bitmap
+            context.setFillColor(CGColor(srgbRed: 1, green: 1, blue: 1, alpha: 1))
+            context.fill(CGRect(x: 0, y: 0, width: image.width, height: image.height))
+        }
+        context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+        return context.makeImage()
+    }
+
+    private static func grayscale(_ image: CGImage) -> CGImage? {
+        guard let context = CGContext(
+            data: nil, width: image.width, height: image.height,
+            bitsPerComponent: 8, bytesPerRow: 0,
+            space: CGColorSpaceCreateDeviceGray(),
+            bitmapInfo: CGImageAlphaInfo.none.rawValue
+        ) else { return nil }
+        context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+        return context.makeImage()
     }
 
     public static func pngData(_ image: CGImage) -> Data? {
