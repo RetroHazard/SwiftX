@@ -28,9 +28,11 @@ enum AfterCapturePipeline {
 
     /// `settings` overrides the stored TaskSettings (auto capture strips the
     /// interactive steps); `quiet` drops the capture banner (C# auto-capture
-    /// suppresses toasts).
+    /// suppresses toasts); `isRegionCapture` gates the C#
+    /// ImageEffectOnlyRegionCapture switch.
     static func run(image capturedImage: CGImage, processName: String? = nil, windowTitle: String? = nil,
-                    settings settingsOverride: TaskSettings? = nil, quiet: Bool = false) async {
+                    settings settingsOverride: TaskSettings? = nil, quiet: Bool = false,
+                    isRegionCapture: Bool = false) async {
         var settings = settingsOverride ?? TaskSettings.load()
         let config = ApplicationConfig.load()
 
@@ -74,8 +76,14 @@ enum AfterCapturePipeline {
         if tasks.contains(.beautifyImage) {
             image = ImageBeautifier.render(image, options: ImageEffectsStore.shared.beautifier)
         }
-        if tasks.contains(.addImageEffects), let preset = ImageEffectsStore.shared.selectedPreset {
-            image = preset.apply(image)
+        if tasks.contains(.addImageEffects), !settings.imageEffectOnlyRegionCapture || isRegionCapture {
+            // C# UseRandomImageEffect draws a fresh preset per capture
+            let preset = settings.useRandomImageEffect
+                ? ImageEffectsStore.shared.presets.randomElement()
+                : ImageEffectsStore.shared.selectedPreset
+            if let preset {
+                image = preset.apply(image)
+            }
         }
         if tasks.contains(.annotateImage) {
             // C# behavior: the task waits for the editor; Cancel aborts the whole task

@@ -284,10 +284,25 @@ public struct TaskSettings: SettingsFile {
     public var urlShortenerDestination = "ISGD"
     /// C# URLSharingServices enum name.
     public var urlSharingServiceDestination = "Email"
+    /// Seconds to wait before a screenshot fires (C# ScreenshotDelay, decimal).
+    public var screenshotDelay: Double = 0
+    /// Include the pointer in screenshots (C# ShowCursor).
+    public var showCursor = true
     public var screenRecordFPS = 30
     public var gifFPS = 15
     /// "H264" or "HEVC" (macOS-only key; C# keeps codec inside FFmpegOptions).
     public var screenRecordCodec = "H264"
+    /// Include the pointer in recordings (C# ScreenRecordShowCursor).
+    public var screenRecordShowCursor = true
+    /// Countdown before recording starts (C# ScreenRecordStartDelay, seconds).
+    public var screenRecordStartDelay: Double = 0
+    /// Auto-stop after ScreenRecordDuration seconds (C# ScreenRecordFixedDuration).
+    public var screenRecordFixedDuration = false
+    public var screenRecordDuration: Double = 3
+    /// Ask before discarding a recording (C# ScreenRecordAskConfirmationOnAbort).
+    public var screenRecordAskConfirmationOnAbort = false
+    /// Two-pass ffmpeg encode for VP9/VP8 (C# ScreenRecordTwoPassEncoding).
+    public var screenRecordTwoPassEncoding = false
     /// Record system audio into MP4/MOV recordings (macOS-only keys; C# keeps
     /// audio sources inside FFmpegOptions).
     public var screenRecordSystemAudio = false
@@ -304,6 +319,21 @@ public struct TaskSettings: SettingsFile {
     /// Captures larger than ImageAutoUseJPEGSize save as JPEG regardless of format.
     public var imageAutoUseJPEG = true
     public var imageAutoUseJPEGSize = 2048
+    /// JPEG quality when the auto-JPEG rule kicks in (C# ImageAutoJPEGQuality).
+    public var imageAutoJPEGQuality = 90
+    /// C# PNGBitDepth enum name: Default/Bit32/Bit24.
+    public var imagePNGBitDepth = "Default"
+    /// C# GIFQuality enum name: Default/Bit8/Bit4/Grayscale.
+    public var imageGIFQuality = "Default"
+    /// C# FileExistAction enum name: Ask/Overwrite/UniqueName/Cancel.
+    /// Defaults to UniqueName (SwiftX's historical auto-numbering; C# defaults to Ask).
+    public var fileExistAction = "UniqueName"
+    /// Open the effects editor with the capture instead of applying silently.
+    public var showImageEffectsWindowAfterCapture = false
+    /// Apply the effects task only to region captures (C# ImageEffectOnlyRegionCapture).
+    public var imageEffectOnlyRegionCapture = false
+    /// Pick a random preset per capture instead of the selected one.
+    public var useRandomImageEffect = false
     public var thumbnailWidth = 200
     public var thumbnailHeight = 0
     /// Appended to the file name (before the extension).
@@ -339,9 +369,17 @@ public struct TaskSettings: SettingsFile {
         case imageDestination = "ImageDestination"
         case urlShortenerDestination = "URLShortenerDestination"
         case urlSharingServiceDestination = "URLSharingServiceDestination"
+        case screenshotDelay = "ScreenshotDelay"
+        case showCursor = "ShowCursor"
         case screenRecordFPS = "ScreenRecordFPS"
         case gifFPS = "GIFFPS"
         case screenRecordCodec = "ScreenRecordCodec"
+        case screenRecordShowCursor = "ScreenRecordShowCursor"
+        case screenRecordStartDelay = "ScreenRecordStartDelay"
+        case screenRecordFixedDuration = "ScreenRecordFixedDuration"
+        case screenRecordDuration = "ScreenRecordDuration"
+        case screenRecordAskConfirmationOnAbort = "ScreenRecordAskConfirmationOnAbort"
+        case screenRecordTwoPassEncoding = "ScreenRecordTwoPassEncoding"
         case screenRecordSystemAudio = "ScreenRecordSystemAudio"
         case screenRecordMicrophone = "ScreenRecordMicrophone"
         case screenRecordCustomFFmpegArgs = "ScreenRecordCustomFFmpegArgs"
@@ -349,6 +387,13 @@ public struct TaskSettings: SettingsFile {
         case imageJPEGQuality = "ImageJPEGQuality"
         case imageAutoUseJPEG = "ImageAutoUseJPEG"
         case imageAutoUseJPEGSize = "ImageAutoUseJPEGSize"
+        case imageAutoJPEGQuality = "ImageAutoJPEGQuality"
+        case imagePNGBitDepth = "ImagePNGBitDepth"
+        case imageGIFQuality = "ImageGIFQuality"
+        case fileExistAction = "FileExistAction"
+        case showImageEffectsWindowAfterCapture = "ShowImageEffectsWindowAfterCapture"
+        case imageEffectOnlyRegionCapture = "ImageEffectOnlyRegionCapture"
+        case useRandomImageEffect = "UseRandomImageEffect"
         case thumbnailWidth = "ThumbnailWidth"
         case thumbnailHeight = "ThumbnailHeight"
         case thumbnailName = "ThumbnailName"
@@ -372,9 +417,17 @@ public struct TaskSettings: SettingsFile {
         imageDestination = try c.decodeIfPresent(String.self, forKey: .imageDestination) ?? "CustomImageUploader"
         urlShortenerDestination = try c.decodeIfPresent(String.self, forKey: .urlShortenerDestination) ?? "ISGD"
         urlSharingServiceDestination = try c.decodeIfPresent(String.self, forKey: .urlSharingServiceDestination) ?? "Email"
+        screenshotDelay = try c.decodeIfPresent(Double.self, forKey: .screenshotDelay) ?? 0
+        showCursor = try c.decodeIfPresent(Bool.self, forKey: .showCursor) ?? true
         screenRecordFPS = try c.decodeIfPresent(Int.self, forKey: .screenRecordFPS) ?? 30
         gifFPS = try c.decodeIfPresent(Int.self, forKey: .gifFPS) ?? 15
         screenRecordCodec = try c.decodeIfPresent(String.self, forKey: .screenRecordCodec) ?? "H264"
+        screenRecordShowCursor = try c.decodeIfPresent(Bool.self, forKey: .screenRecordShowCursor) ?? true
+        screenRecordStartDelay = try c.decodeIfPresent(Double.self, forKey: .screenRecordStartDelay) ?? 0
+        screenRecordFixedDuration = try c.decodeIfPresent(Bool.self, forKey: .screenRecordFixedDuration) ?? false
+        screenRecordDuration = try c.decodeIfPresent(Double.self, forKey: .screenRecordDuration) ?? 3
+        screenRecordAskConfirmationOnAbort = try c.decodeIfPresent(Bool.self, forKey: .screenRecordAskConfirmationOnAbort) ?? false
+        screenRecordTwoPassEncoding = try c.decodeIfPresent(Bool.self, forKey: .screenRecordTwoPassEncoding) ?? false
         screenRecordSystemAudio = try c.decodeIfPresent(Bool.self, forKey: .screenRecordSystemAudio) ?? false
         screenRecordMicrophone = try c.decodeIfPresent(Bool.self, forKey: .screenRecordMicrophone) ?? false
         screenRecordCustomFFmpegArgs = try c.decodeIfPresent(String.self, forKey: .screenRecordCustomFFmpegArgs) ?? ""
@@ -382,6 +435,13 @@ public struct TaskSettings: SettingsFile {
         imageJPEGQuality = try c.decodeIfPresent(Int.self, forKey: .imageJPEGQuality) ?? 90
         imageAutoUseJPEG = try c.decodeIfPresent(Bool.self, forKey: .imageAutoUseJPEG) ?? true
         imageAutoUseJPEGSize = try c.decodeIfPresent(Int.self, forKey: .imageAutoUseJPEGSize) ?? 2048
+        imageAutoJPEGQuality = try c.decodeIfPresent(Int.self, forKey: .imageAutoJPEGQuality) ?? 90
+        imagePNGBitDepth = try c.decodeIfPresent(String.self, forKey: .imagePNGBitDepth) ?? "Default"
+        imageGIFQuality = try c.decodeIfPresent(String.self, forKey: .imageGIFQuality) ?? "Default"
+        fileExistAction = try c.decodeIfPresent(String.self, forKey: .fileExistAction) ?? "UniqueName"
+        showImageEffectsWindowAfterCapture = try c.decodeIfPresent(Bool.self, forKey: .showImageEffectsWindowAfterCapture) ?? false
+        imageEffectOnlyRegionCapture = try c.decodeIfPresent(Bool.self, forKey: .imageEffectOnlyRegionCapture) ?? false
+        useRandomImageEffect = try c.decodeIfPresent(Bool.self, forKey: .useRandomImageEffect) ?? false
         thumbnailWidth = try c.decodeIfPresent(Int.self, forKey: .thumbnailWidth) ?? 200
         thumbnailHeight = try c.decodeIfPresent(Int.self, forKey: .thumbnailHeight) ?? 0
         thumbnailName = try c.decodeIfPresent(String.self, forKey: .thumbnailName) ?? "-thumbnail"

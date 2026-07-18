@@ -20,11 +20,15 @@ final class CaptureCoordinator {
 
     func captureRegion() {
         Task {
+            await applyScreenshotDelay()
             guard let selection = await RegionSelectController().selectRegionDetailed() else { return }
             lastRegion = selection
             // let the compositor remove the overlay before shooting
             try? await Task.sleep(for: .milliseconds(80))
-            await run { selection.applyMask(to: try await ScreenCapture.captureRegion(cocoaRect: selection.rect)) }
+            await run(isRegionCapture: true) {
+                selection.applyMask(to: try await ScreenCapture.captureRegion(
+                    cocoaRect: selection.rect, showsCursor: TaskSettings.load().showCursor))
+            }
         }
     }
 
@@ -32,22 +36,32 @@ final class CaptureCoordinator {
     func captureLastRegion() {
         guard let selection = lastRegion else { return captureRegion() }
         Task {
-            await run { selection.applyMask(to: try await ScreenCapture.captureRegion(cocoaRect: selection.rect)) }
+            await applyScreenshotDelay()
+            await run(isRegionCapture: true) {
+                selection.applyMask(to: try await ScreenCapture.captureRegion(
+                    cocoaRect: selection.rect, showsCursor: TaskSettings.load().showCursor))
+            }
         }
     }
 
     func captureFullScreen() {
         Task {
-            await run { try await ScreenCapture.captureDisplay() }
+            await applyScreenshotDelay()
+            await run { try await ScreenCapture.captureDisplay(showsCursor: TaskSettings.load().showCursor) }
         }
     }
 
     func captureActiveWindow() {
         // sample the frontmost app before any of our UI can steal focus
-        let app = NSWorkspace.shared.frontmostApplication
+        var app = NSWorkspace.shared.frontmostApplication
         Task {
+            if await applyScreenshotDelay() {
+                // the delay exists to let the user set a window up; resample
+                app = NSWorkspace.shared.frontmostApplication
+            }
             await run(processName: app?.localizedName) {
-                try await ScreenCapture.captureFrontmostWindow(processID: app?.processIdentifier)
+                try await ScreenCapture.captureFrontmostWindow(
+                    processID: app?.processIdentifier, showsCursor: TaskSettings.load().showCursor)
             }
         }
     }
@@ -57,6 +71,7 @@ final class CaptureCoordinator {
     /// it; C# edits the rect in the task settings UI instead
     func captureCustomRegion() {
         Task {
+            await applyScreenshotDelay()
             var settings = TaskSettings.load()
             if CSharpRect.parse(settings.captureCustomRegion) == nil {
                 guard let selection = await RegionSelectController().selectRegionDetailed() else { return }
@@ -65,7 +80,10 @@ final class CaptureCoordinator {
                 try? await Task.sleep(for: .milliseconds(80))
             }
             guard let rect = CSharpRect.parse(settings.captureCustomRegion) else { return }
-            await run { try await ScreenCapture.captureRegion(cocoaRect: rect) }
+            let showCursor = settings.showCursor
+            await run(isRegionCapture: true) {
+                try await ScreenCapture.captureRegion(cocoaRect: rect, showsCursor: showCursor)
+            }
         }
     }
 
@@ -93,24 +111,40 @@ final class CaptureCoordinator {
     /// Captures one display picked from the menu.
     func captureScreen(_ screen: NSScreen) {
         Task {
-            await run { try await ScreenCapture.captureDisplay(screen: screen) }
+            await applyScreenshotDelay()
+            await run { try await ScreenCapture.captureDisplay(screen: screen,
+                                                               showsCursor: TaskSettings.load().showCursor) }
         }
     }
 
     /// Captures one window picked from the menu.
     func captureWindow(_ window: CapturableWindow) {
         Task {
+            await applyScreenshotDelay()
             await run(processName: window.ownerName, windowTitle: window.title) {
-                try await ScreenCapture.captureWindow(windowID: window.id)
+                try await ScreenCapture.captureWindow(windowID: window.id,
+                                                      showsCursor: TaskSettings.load().showCursor)
             }
         }
     }
 
+    /// C# ScreenshotDelay: wait before the capture job runs (including any
+    /// region picker). Returns whether a delay actually happened.
+    @discardableResult
+    private func applyScreenshotDelay() async -> Bool {
+        let delay = TaskSettings.load().screenshotDelay
+        guard delay > 0 else { return false }
+        try? await Task.sleep(for: .seconds(delay))
+        return true
+    }
+
     private func run(processName: String? = nil, windowTitle: String? = nil,
+                     isRegionCapture: Bool = false,
                      _ operation: () async throws -> CGImage) async {
         do {
             let image = try await operation()
-            await AfterCapturePipeline.run(image: image, processName: processName, windowTitle: windowTitle)
+            await AfterCapturePipeline.run(image: image, processName: processName, windowTitle: windowTitle,
+                                           isRegionCapture: isRegionCapture)
         } catch {
             presentError(error)
         }
