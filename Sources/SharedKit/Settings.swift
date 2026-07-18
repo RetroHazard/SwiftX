@@ -45,6 +45,16 @@ public extension SettingsFile {
 
     /// Missing or unreadable file falls back to defaults; unknown JSON keys are ignored.
     static func load() -> Self {
+        loadRaw()
+    }
+
+    func save() throws {
+        try saveRaw()
+    }
+
+    /// Plain JSON decode with no secret handling. Types that keep secrets in the
+    /// Keychain build their `load()` on top of this.
+    static func loadRaw() -> Self {
         guard let data = try? Data(contentsOf: fileURL),
               let value = try? JSONDecoder().decode(Self.self, from: data) else {
             return Self()
@@ -52,11 +62,57 @@ public extension SettingsFile {
         return value
     }
 
-    func save() throws {
+    /// Plain JSON encode with no secret handling.
+    func saveRaw() throws {
         try FileManager.default.createDirectory(at: SettingsPaths.root, withIntermediateDirectories: true)
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         try encoder.encode(self).write(to: Self.fileURL, options: .atomic)
+    }
+}
+
+/// Shared machinery for the config types that keep some fields in the Keychain
+/// instead of on disk. A type lists its secret fields as `account -> key path`;
+/// the two helpers below move values between those fields and `SecretStore`.
+public protocol KeychainBackedSettings: SettingsFile {
+    /// Stable Keychain account name -> the String field that holds the secret.
+    static var secretKeyPaths: [String: WritableKeyPath<Self, String>] { get }
+}
+
+public extension KeychainBackedSettings {
+    /// Namespaces the Keychain account by file so two config types can reuse a
+    /// field name without colliding.
+    private static func account(_ key: String) -> String { "\(fileName)/\(key)" }
+
+    /// Load from JSON, then overlay any secrets held in the Keychain. A secret
+    /// still sitting in the JSON (e.g. a freshly imported Windows config) is
+    /// kept as-is and migrates to the Keychain on the next `save()`.
+    static func loadApplyingSecrets() -> Self {
+        var value = loadRaw()
+        for (key, keyPath) in secretKeyPaths {
+            if let secret = SecretStore.get(account(key)), !secret.isEmpty {
+                value[keyPath: keyPath] = secret
+            }
+        }
+        return value
+    }
+
+    /// Move each secret into the Keychain, then write JSON with those fields
+    /// blanked. The plaintext is dropped from disk ONLY when the Keychain
+    /// accepted the write, so a locked/unavailable Keychain degrades to the old
+    /// behavior instead of losing credentials. An empty field is left alone
+    /// rather than deleted, so a Keychain that failed to load at startup can't
+    /// cause a later save to wipe a valid secret.
+    func saveMigratingSecrets() throws {
+        var copy = self
+        for (key, keyPath) in Self.secretKeyPaths {
+            let value = copy[keyPath: keyPath]
+            guard !value.isEmpty else { continue }
+            if SecretStore.set(value, for: Self.account(key)) {
+                copy[keyPath: keyPath] = ""
+            }
+        }
+        try copy.saveRaw()
     }
 }
 
@@ -189,6 +245,16 @@ public struct ApplicationConfig: SettingsFile {
         autoCaptureRepeatTime = try c.decodeIfPresent(Double.self, forKey: .autoCaptureRepeatTime) ?? 60
         autoCaptureWaitUpload = try c.decodeIfPresent(Bool.self, forKey: .autoCaptureWaitUpload) ?? true
     }
+}
+
+extension ApplicationConfig: KeychainBackedSettings {
+    /// The AI provider API key is the only secret in this file.
+    public static let secretKeyPaths: [String: WritableKeyPath<ApplicationConfig, String>] = [
+        "AIAPIKey": \.aiAPIKey
+    ]
+
+    public static func load() -> ApplicationConfig { loadApplyingSecrets() }
+    public func save() throws { try saveMigratingSecrets() }
 }
 
 /// C# System.Drawing.Rectangle TypeConverter format: "X, Y, Width, Height".
@@ -614,6 +680,37 @@ public struct UploadersConfig: SettingsFile {
         pushbulletAPIKey = try c.decodeIfPresent(String.self, forKey: .pushbulletAPIKey) ?? ""
         oauthApps = try c.decodeIfPresent([String: OAuthAppCredentials].self, forKey: .oauthApps) ?? [:]
     }
+}
+
+extension UploadersConfig: KeychainBackedSettings {
+    /// Every persisted secret in this file: access secrets, host passwords and
+    /// API tokens. Non-secret identifiers (access-key IDs, usernames, hostnames,
+    /// bucket names) stay in the JSON. Keys are stable — renaming one orphans
+    /// the stored secret — so they are chosen to read clearly in the Keychain.
+    public static let secretKeyPaths: [String: WritableKeyPath<UploadersConfig, String>] = [
+        "AmazonS3.SecretAccessKey": \.amazonS3.secretAccessKey,
+        "BitlyAccessToken": \.bitlyAccessToken,
+        "PolrAPIKey": \.polrAPIKey,
+        "YourlsSignature": \.yourlsSignature,
+        "YourlsPassword": \.yourlsPassword,
+        "Kutt.APIKey": \.kutt.apiKey,
+        "Kutt.Password": \.kutt.password,
+        "ZeroWidthShortenerToken": \.zeroWidthShortenerToken,
+        "VgymeUserKey": \.vgymeUserKey,
+        "SulAPIKey": \.sulAPIKey,
+        "Lithiio.UserAPIKey": \.lithiio.userAPIKey,
+        "PuushAPIKey": \.puushAPIKey,
+        "Chevereto.APIKey": \.chevereto.apiKey,
+        "StreamablePassword": \.streamablePassword,
+        "B2ApplicationKey": \.b2ApplicationKey,
+        "AzureStorageAccountAccessKey": \.azureStorageAccountAccessKey,
+        "OwnCloudPassword": \.ownCloudPassword,
+        "SeafileAuthToken": \.seafileAuthToken,
+        "PushbulletAPIKey": \.pushbulletAPIKey
+    ]
+
+    public static func load() -> UploadersConfig { loadApplyingSecrets() }
+    public func save() throws { try saveMigratingSecrets() }
 }
 
 /// Field names match the C# PomfUploader JSON shape.

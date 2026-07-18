@@ -50,11 +50,28 @@ enum UploadCoordinator {
     /// Downloads a remote file into temp, then uploads it.
     static func downloadAndUpload(_ url: URL) async {
         guard let (data, response) = try? await URLSession.shared.data(from: url) else { return }
-        let name = response.suggestedFilename ?? (url.lastPathComponent.isEmpty ? "download" : url.lastPathComponent)
-        let temp = FileManager.default.temporaryDirectory.appendingPathComponent(name)
-        guard (try? data.write(to: temp)) != nil else { return }
-        uploadFile(at: temp)
+        // Cap the relay so a hostile or runaway URL can't spill a huge file to
+        // disk or push it on to the upload destination.
+        guard data.count <= maxDownloadBytes else {
+            Notifier.notify(title: "Download too large",
+                            body: "\(url.lastPathComponent) exceeds the \(maxDownloadBytes / (1024 * 1024)) MB limit.")
+            return
+        }
+        // suggestedFilename is attacker-influenced; keep only the last path
+        // component so it can't steer the write outside the temp directory.
+        let suggested = (response.suggestedFilename as NSString?)?.lastPathComponent
+        let fallback = url.lastPathComponent.isEmpty ? "download" : url.lastPathComponent
+        let name = (suggested?.isEmpty == false ? suggested! : fallback)
+        let temp = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try? FileManager.default.createDirectory(at: temp, withIntermediateDirectories: true)
+        let destination = temp.appendingPathComponent(name)
+        guard (try? data.write(to: destination)) != nil else { return }
+        uploadFile(at: destination)
     }
+
+    /// Ceiling for the browser/CLI download-and-upload relay (256 MB).
+    private static let maxDownloadBytes = 256 * 1024 * 1024
 
     enum RoutingError: LocalizedError {
         case noCustomUploader
