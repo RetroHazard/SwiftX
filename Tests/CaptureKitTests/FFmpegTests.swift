@@ -122,6 +122,32 @@ struct FFmpegArgumentTests {
         #expect(!FFmpeg.ConvertCodec.gif.usesCRF && !FFmpeg.ConvertCodec.gif.usesBitrate)
     }
 
+    @Test func twoPassArgumentsShareThePassLog() {
+        let passes = FFmpeg.twoPassArguments(input: "in.mp4", output: "out.webm",
+                                             format: .vp9, passLogFile: "/tmp/log")
+        #expect(passes.count == 2)
+
+        let first = passes[0], second = passes[1]
+        // pass 1 discards output and audio; pass 2 writes the real file
+        #expect(first.suffix(2) == ["null", "/dev/null"])
+        #expect(first.contains("-an"))
+        #expect(second.last == "out.webm")
+        for (pass, arguments) in [("1", first), ("2", second)] {
+            #expect(arguments.contains("libvpx-vp9"))
+            let passIndex = arguments.firstIndex(of: "-pass")
+            #expect(passIndex.map { arguments[$0 + 1] } == pass)
+            let logIndex = arguments.firstIndex(of: "-passlogfile")
+            #expect(logIndex.map { arguments[$0 + 1] } == "/tmp/log")
+        }
+    }
+
+    @Test func onlyLibvpxFormatsSupportTwoPass() {
+        #expect(FFmpeg.TranscodeFormat.vp9.supportsTwoPass)
+        #expect(FFmpeg.TranscodeFormat.vp8.supportsTwoPass)
+        #expect(!FFmpeg.TranscodeFormat.webp.supportsTwoPass)
+        #expect(!FFmpeg.TranscodeFormat.apng.supportsTwoPass)
+    }
+
     @Test func formatExtensionsMatchTheirContainers() {
         #expect(FFmpeg.TranscodeFormat.vp9.fileExtension == "webm")
         #expect(FFmpeg.TranscodeFormat.vp8.fileExtension == "webm")

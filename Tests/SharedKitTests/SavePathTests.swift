@@ -67,6 +67,48 @@ struct SavePathTests {
         }
     }
 
+    @Test func baseURLNeverAutoNumbers() throws {
+        try withTempFolder { folder in
+            var task = TaskSettings()
+            task.nameFormatPattern = "static-name"
+            let config = makeConfig(in: folder)
+
+            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+            try Data().write(to: folder.appendingPathComponent("static-name.png"))
+            let base = SavePath.screenshotBaseURL(config: config, task: task)
+            #expect(base.lastPathComponent == "static-name.png")
+        }
+    }
+
+    @Test func uniqueURLSkipsExistingCounters() throws {
+        try withTempFolder { folder in
+            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+            let url = folder.appendingPathComponent("shot.png")
+            #expect(SavePath.uniqueURL(url) == url) // free name passes through
+
+            try Data().write(to: url)
+            try Data().write(to: folder.appendingPathComponent("shot_1.png"))
+            #expect(SavePath.uniqueURL(url).lastPathComponent == "shot_2.png")
+        }
+    }
+
+    @Test func resolvedURLAppliesFileExistAction() throws {
+        try withTempFolder { folder in
+            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+            let url = folder.appendingPathComponent("shot.png")
+
+            // no collision: every action returns the URL untouched
+            #expect(SavePath.resolvedURL(url, onExisting: .cancel) == url)
+
+            try Data().write(to: url)
+            #expect(SavePath.resolvedURL(url, onExisting: .overwrite) == url)
+            #expect(SavePath.resolvedURL(url, onExisting: .cancel) == nil)
+            #expect(SavePath.resolvedURL(url, onExisting: .uniqueName)?.lastPathComponent == "shot_1.png")
+            // .ask must be resolved by UI first; unresolved it behaves like uniqueName
+            #expect(SavePath.resolvedURL(url, onExisting: .ask)?.lastPathComponent == "shot_1.png")
+        }
+    }
+
     @Test func emptyParsedNameFallsBack() {
         withTempFolder { folder in
             var task = TaskSettings()
