@@ -1,5 +1,5 @@
 ---
-module: ShareX.macOS
+module: SwiftX
 date: 2026-07-08
 problem_type: best_practice
 component: tooling
@@ -19,7 +19,7 @@ tags: [ffmpeg, homebrew, path, finder-launch, tcc-automation, terminal, command-
 Three reusable patterns collected while adding WebM/VP9 recording support (ffmpeg integration) to the ShareX macOS port.
 
 ## Environment
-- Module: ShareX.macOS (CaptureKit `FFmpeg.swift`, `RecordingCoordinator.swift`, Settings UI)
+- Module: SwiftX (CaptureKit `FFmpeg.swift`, `RecordingCoordinator.swift`, Settings UI)
 - Date: 2026-07-08
 
 ## Solution
@@ -45,7 +45,7 @@ Use `isExecutableFile`, not `fileExists` — a non-executable file at that path 
 
 ```swift
 let script = "#!/bin/zsh\n\(brewPath) install ffmpeg\n"
-let url = FileManager.default.temporaryDirectory.appendingPathComponent("sharex-install-ffmpeg.command")
+let url = FileManager.default.temporaryDirectory.appendingPathComponent("swiftx-install-ffmpeg.command")
 try script.write(to: url, atomically: true, encoding: .utf8)
 try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: url.path)
 NSWorkspace.shared.open(url)

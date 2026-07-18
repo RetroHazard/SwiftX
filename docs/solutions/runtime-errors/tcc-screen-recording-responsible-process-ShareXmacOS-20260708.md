@@ -1,5 +1,5 @@
 ---
-module: ShareX.macOS
+module: SwiftX
 date: 2026-07-08
 problem_type: runtime_error
 component: tooling
@@ -19,13 +19,13 @@ tags: [tcc, screen-recording, screencapturekit, codesign, permissions, macos]
 A capture binary spawned from a terminal session fails ScreenCaptureKit calls with "The user declined TCCs for application, window, display capture" — macOS attributed the permission request to the **terminal host app**, not to the app being developed.
 
 ## Environment
-- Module: ShareX.macOS — CaptureKit (ScreenCaptureKit)
+- Module: SwiftX — CaptureKit (ScreenCaptureKit)
 - Affected Component: `SCScreenshotManager.captureImage`, `SCShareableContent`
 - OS: macOS 26 (applies to 13+)
 - Date: 2026-07-08
 
 ## Symptoms
-- `./build/ShareX.app/Contents/MacOS/ShareX --capture-selftest` (run as child of a terminal) → declined-TCC error, no prompt visible for the app itself.
+- `./build/SwiftX.app/Contents/MacOS/SwiftX --capture-selftest` (run as child of a terminal) → declined-TCC error, no prompt visible for the app itself.
 
 ## What Didn't Work
 
@@ -37,9 +37,9 @@ Two parts:
 
 1. **Launch the app as a bundle via LaunchServices** so TCC attributes the request to the app itself:
 ```bash
-open /path/to/ShareX.app   # prompt now says "ShareX", grant sticks to the app
+open /path/to/SwiftX.app   # prompt now says "SwiftX", grant sticks to the app
 ```
-Running `ShareX.app/Contents/MacOS/ShareX` directly from a shell inherits the terminal's TCC identity ("responsible process").
+Running `SwiftX.app/Contents/MacOS/SwiftX` directly from a shell inherits the terminal's TCC identity ("responsible process").
 
 2. **Codesign the bundle with a certificate identity** (Apple Development or Developer ID) so the grant survives rebuilds:
 ```bash
@@ -48,7 +48,7 @@ codesign --force --options runtime --sign "${IDENTITY:--}" "$APP"
 ```
 **Ad-hoc signing (`--sign -`) is NOT enough:** TCC then pins the grant to the binary's CDHash, which changes on every rebuild — System Settings shows the toggle ON while capture silently fails. Recovery from that state:
 ```bash
-tccutil reset ScreenCapture com.getsharex.sharex-macos   # then relaunch and re-grant
+tccutil reset ScreenCapture com.retrohazard.swiftx   # then relaunch and re-grant
 ```
 
 Also note: a freshly granted Screen Recording permission only takes effect at **process start** — quit and relaunch the app once after granting.

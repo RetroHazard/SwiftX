@@ -1,5 +1,5 @@
 ---
-module: ShareX.macOS
+module: SwiftX
 date: 2026-07-08
 problem_type: developer_experience
 component: testing_framework
@@ -19,7 +19,7 @@ tags: [swift, spm, xctest, swift-testing, command-line-tools, xcode, developer-d
 `swift build` succeeds but `swift test` cannot compile any test target: macOS Command Line Tools ship **neither XCTest nor Swift Testing**, even on Swift 6.x toolchains.
 
 ## Environment
-- Module: ShareX.macOS (SPM package, Swift 6.2.4 / tools-version 5.10)
+- Module: SwiftX (SPM package, Swift 6.2.4 / tools-version 5.10)
 - Affected Component: all `swift test` runs
 - OS: macOS 26, `xcode-select` pointing at `/Library/Developer/CommandLineTools`
 - Date: 2026-07-08

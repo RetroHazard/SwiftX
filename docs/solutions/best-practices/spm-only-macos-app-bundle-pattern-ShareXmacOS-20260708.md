@@ -1,5 +1,5 @@
 ---
-module: ShareX.macOS
+module: SwiftX
 date: 2026-07-08
 problem_type: best_practice
 component: tooling
@@ -19,19 +19,19 @@ tags: [spm, app-bundle, info-plist, lsuielement, mainactor, screencapturekit, ma
 Patterns worth reusing when shipping a macOS app straight from a SwiftPM executable target — collected while scaffolding the ShareX macOS port.
 
 ## Environment
-- Module: ShareX.macOS (Swift 6.2.4, tools-version 5.10, language mode 5)
+- Module: SwiftX (Swift 6.2.4, tools-version 5.10, language mode 5)
 - Date: 2026-07-08
 
 ## Solution
 
-**1. Bundle by script, not Xcode.** `swift build -c release`, then assemble `ShareX.app/Contents/{MacOS,Resources}` + `Info.plist` by hand. Key plist entries for a menu bar app:
+**1. Bundle by script, not Xcode.** `swift build -c release`, then assemble `SwiftX.app/Contents/{MacOS,Resources}` + `Info.plist` by hand. Key plist entries for a menu bar app:
 - `LSUIElement = true` (no Dock icon; pair with `NSApp.setActivationPolicy(.accessory)`)
 - `CFBundleURLTypes` for a custom URL scheme
 - `codesign --force --sign -` at the end (see TCC doc)
 
 **2. SPM resource bundles must be copied into the .app.** SPM emits `<Package>_<Target>.bundle` next to the binary; `Bundle.module`'s generated accessor also searches `Bundle.main.resourceURL`, so:
 ```bash
-cp -R .build/release/ShareX_SharedKit.bundle "$APP/Contents/Resources/"
+cp -R .build/release/SwiftX_SharedKit.bundle "$APP/Contents/Resources/"
 ```
 Without this, `Bundle.module` traps at runtime inside the app bundle.
 
