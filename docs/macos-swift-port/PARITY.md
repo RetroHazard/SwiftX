@@ -2,6 +2,12 @@
 
 Statuses: **Ported** · **Partial** (works, known gaps) · **Planned** (phase noted) · **N/A** (Windows-only) · **Dead** (service defunct upstream)
 
+Baseline: the roadmap's inventory of upstream ShareX. For gaps found against
+**upstream v21.0.0** (2026-07) that no row below tracks — per-hotkey workflow
+overrides, text/file destination routing, capture delay, recording UX, URL
+post-processing, background remover, image comparer — see
+[`GAP-ANALYSIS.md`](GAP-ANALYSIS.md).
+
 ## Phase 0 — Foundation
 
 | Feature | Status | Notes |
@@ -142,7 +148,7 @@ Statuses: **Ported** · **Partial** (works, known gaps) · **Planned** (phase no
 | Scrolling capture | Ported — synthetic scroll-wheel events + C# CombineImages row-matching stitcher (side margins, auto bottom-edge trim, best-guess fallback); Windows-message scroll methods N/A |
 | Quick task menu (ShowQuickTaskMenu) + editor | Ported — C# QuickTaskPresets JSON incl. separators; menu at cursor |
 | After-capture / before-upload windows | Ported — filename + task toggles; destination override before upload (all sources) |
-| CLI verbs, workflows | Ported — -HotkeyTypeName [file], -workflow, -CustomUploader .sxcu, -ImageEffect .sxie, -NativeMessagingInput .json, bare path/URL upload; second instance forwards to primary |
+| CLI verbs, workflows | Partial — -HotkeyTypeName [file], -workflow, -CustomUploader .sxcu, -ImageEffect .sxie, -NativeMessagingInput .json, bare path/URL upload; second instance forwards to primary. Verb dispatch is ported, but hotkeys carry no per-workflow TaskSettings overrides (names, destinations, after-capture chains) — see GAP-ANALYSIS.md §1 |
 | Native messaging host (Chrome/Edge/Firefox) | Ported — SwiftXHost binary in bundle speaks the Chrome stdio protocol; manifest install toggle in General settings |
 | Safari extension | Deferred — needs an Xcode app-extension target + separate distribution; revisit after Phase 11 signing |
 
