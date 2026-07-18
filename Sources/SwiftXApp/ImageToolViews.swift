@@ -298,7 +298,7 @@ private struct BackgroundRemoverView: View {
                     ProgressView("Isolating subject…")
                 }
             }
-            .frame(minWidth: 480, minHeight: 360, maxWidth: .infinity, maxHeight: .infinity)
+            .frame(minWidth: 480, maxWidth: .infinity, minHeight: 360, maxHeight: .infinity)
             .background(CheckerboardBackground())
 
             HStack {
@@ -358,7 +358,7 @@ private struct ImageComparerView: View {
                         Divider()
                         fitted(second)
                     }
-                    .frame(minWidth: 640, minHeight: 400, maxWidth: .infinity, maxHeight: .infinity)
+                    .frame(minWidth: 640, maxWidth: .infinity, minHeight: 400, maxHeight: .infinity)
                 } else {
                     GeometryReader { geo in
                         ZStack(alignment: .topLeading) {
@@ -372,13 +372,13 @@ private struct ImageComparerView: View {
                         }
                         .frame(width: geo.size.width, height: geo.size.height)
                     }
-                    .frame(minWidth: 640, minHeight: 400, maxWidth: .infinity, maxHeight: .infinity)
+                    .frame(minWidth: 640, maxWidth: .infinity, minHeight: 400, maxHeight: .infinity)
                     Slider(value: $split)
                 }
             } else {
                 Text("Choose two images to compare.")
                     .foregroundStyle(.secondary)
-                    .frame(minWidth: 640, minHeight: 400, maxWidth: .infinity, maxHeight: .infinity)
+                    .frame(minWidth: 640, maxWidth: .infinity, minHeight: 400, maxHeight: .infinity)
             }
         }
         .padding(12)

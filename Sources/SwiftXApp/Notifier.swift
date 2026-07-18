@@ -116,7 +116,7 @@ enum Notifier {
         if let url {
             content.userInfo["url"] = url
             content.categoryIdentifier = urlCategory
-        } else if let filePath {
+        } else if filePath != nil {
             content.categoryIdentifier = fileCategory
         }
         if let filePath { content.userInfo["filePath"] = filePath }
