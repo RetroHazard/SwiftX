@@ -77,12 +77,20 @@ enum AfterCapturePipeline {
             image = ImageBeautifier.render(image, options: ImageEffectsStore.shared.beautifier)
         }
         if tasks.contains(.addImageEffects), !settings.imageEffectOnlyRegionCapture || isRegionCapture {
-            // C# UseRandomImageEffect draws a fresh preset per capture
-            let preset = settings.useRandomImageEffect
-                ? ImageEffectsStore.shared.presets.randomElement()
-                : ImageEffectsStore.shared.selectedPreset
-            if let preset {
-                image = preset.apply(image)
+            if settings.showImageEffectsWindowAfterCapture {
+                // C#: the effects window opens with the capture; closing it
+                // (or "Continue Without Effects") keeps the original image
+                if let edited = await ImageEffectsPickerWindow.present(image: image) {
+                    image = edited
+                }
+            } else {
+                // C# UseRandomImageEffect draws a fresh preset per capture
+                let preset = settings.useRandomImageEffect
+                    ? ImageEffectsStore.shared.presets.randomElement()
+                    : ImageEffectsStore.shared.selectedPreset
+                if let preset {
+                    image = preset.apply(image)
+                }
             }
         }
         if tasks.contains(.annotateImage) {
@@ -104,6 +112,12 @@ enum AfterCapturePipeline {
             autoUseJPEG: settings.imageAutoUseJPEG, autoUseJPEGSize: settings.imageAutoUseJPEGSize,
             width: image.width, height: image.height
         )
+        let jpegQuality = ImageWriter.effectiveJPEGQuality(
+            configuredFormatName: settings.imageFormat, effectiveFormat: format,
+            jpegQuality: settings.imageJPEGQuality, autoJPEGQuality: settings.imageAutoJPEGQuality
+        )
+        let pngBitDepth = PNGBitDepth(rawValue: settings.imagePNGBitDepth) ?? .default
+        let gifQuality = GIFQuality(rawValue: settings.imageGIFQuality) ?? .default
         var savedURL: URL?
 
         // after-capture window edits replace the generated name (same folder)
@@ -115,18 +129,24 @@ enum AfterCapturePipeline {
         }
 
         if tasks.contains(.saveImageToFile) {
-            let url = withNameOverride(SavePath.screenshotURL(
+            // FileExistAction resolves against the final name (after any
+            // after-capture-window rename), so renames are collision-checked too
+            let base = withNameOverride(SavePath.screenshotBaseURL(
                 config: config, task: settings,
                 windowTitle: windowTitle, processName: processName,
                 width: image.width, height: image.height,
                 fileExtension: format.fileExtension
             ))
-            do {
-                try ImageWriter.write(image, to: url, format: format, jpegQuality: settings.imageJPEGQuality)
-                savedURL = url
-                if !quiet { Notifier.captureSaved(url) }
-            } catch {
-                presentError(error)
+            let action = FileExistAction(rawValue: settings.fileExistAction) ?? .uniqueName
+            if let url = resolveExistingFile(base, action: action) {
+                do {
+                    try ImageWriter.write(image, to: url, format: format, jpegQuality: jpegQuality,
+                                          pngBitDepth: pngBitDepth, gifQuality: gifQuality)
+                    savedURL = url
+                    if !quiet { Notifier.captureSaved(url) }
+                } catch {
+                    presentError(error)
+                }
             }
         }
 
@@ -139,7 +159,8 @@ enum AfterCapturePipeline {
             NSApp.activate(ignoringOtherApps: true)
             if panel.runModal() == .OK, let url = panel.url {
                 do {
-                    try ImageWriter.write(image, to: url, format: format, jpegQuality: settings.imageJPEGQuality)
+                    try ImageWriter.write(image, to: url, format: format, jpegQuality: jpegQuality,
+                                          pngBitDepth: pngBitDepth, gifQuality: gifQuality)
                     savedURL = url
                 } catch {
                     presentError(error)
@@ -161,7 +182,8 @@ enum AfterCapturePipeline {
             let url = base.deletingLastPathComponent()
                 .appendingPathComponent(name).appendingPathExtension(format.fileExtension)
             do {
-                try ImageWriter.write(thumb, to: url, format: format, jpegQuality: settings.imageJPEGQuality)
+                try ImageWriter.write(thumb, to: url, format: format, jpegQuality: jpegQuality,
+                                      pngBitDepth: pngBitDepth, gifQuality: gifQuality)
             } catch {
                 presentError(error)
             }
@@ -228,7 +250,7 @@ enum AfterCapturePipeline {
                                                                        fileExtension: format.fileExtension))
                     .lastPathComponent
                 UploadCoordinator.uploadImage(image, fileName: fileName,
-                                              format: format, jpegQuality: settings.imageJPEGQuality,
+                                              format: format, jpegQuality: jpegQuality,
                                               settings: settings)
             }
         }
@@ -267,6 +289,28 @@ enum AfterCapturePipeline {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.setString(string, forType: .string)
+    }
+
+    /// FileExistAction: returns where to write, or nil to skip the save.
+    /// Ask shows the C# overwrite dialog (Keep Both / Overwrite / Cancel).
+    private static func resolveExistingFile(_ url: URL, action: FileExistAction) -> URL? {
+        guard FileManager.default.fileExists(atPath: url.path) else { return url }
+        var resolved = action
+        if action == .ask {
+            let alert = NSAlert()
+            alert.messageText = "“\(url.lastPathComponent)” already exists"
+            alert.informativeText = "Choose what to do with the new capture."
+            alert.addButton(withTitle: "Keep Both")
+            alert.addButton(withTitle: "Overwrite")
+            alert.addButton(withTitle: "Cancel")
+            NSApp.activate(ignoringOtherApps: true)
+            switch alert.runModal() {
+            case .alertFirstButtonReturn: resolved = .uniqueName
+            case .alertSecondButtonReturn: resolved = .overwrite
+            default: resolved = .cancel
+            }
+        }
+        return SavePath.resolvedURL(url, onExisting: resolved)
     }
 
     private static func presentError(_ error: Error) {

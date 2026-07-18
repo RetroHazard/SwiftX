@@ -22,6 +22,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var abortRecordingItem: NSMenuItem?
     private let screensSubmenu = NSMenu()
     private let windowsSubmenu = NSMenu()
+    private let delaySubmenu = NSMenu()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSAppleEventManager.shared().setEventHandler(
@@ -106,6 +107,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(NSMenuItem(title: "Capture Last Region", action: #selector(captureLastRegion), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Scrolling Capture…", action: #selector(showScrollingCapture), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Auto Capture…", action: #selector(showAutoCapture), keyEquivalent: ""))
+        // C# tray "screenshot delay" selector; applies to every capture verb
+        delaySubmenu.delegate = self
+        let delayPicker = NSMenuItem(title: "Screenshot Delay", action: nil, keyEquivalent: "")
+        delayPicker.submenu = delaySubmenu
+        menu.addItem(delayPicker)
 
         menu.addItem(.separator())
         let record = NSMenuItem(title: "Record Screen (Region)…", action: #selector(toggleRecording), keyEquivalent: "")
@@ -208,6 +214,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         AutoCaptureController.show()
     }
 
+    @objc private func setScreenshotDelay(_ sender: NSMenuItem) {
+        guard let seconds = sender.representedObject as? Double else { return }
+        var settings = TaskSettings.load()
+        settings.screenshotDelay = seconds
+        try? settings.save()
+    }
+
     @objc private func showScrollingCapture() {
         ScrollingCaptureController.show()
     }
@@ -231,7 +244,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func abortRecording() {
-        RecordingCoordinator.shared.abort()
+        RecordingCoordinator.shared.confirmAbort()
     }
 
     @objc private func togglePauseRecording() {
@@ -315,6 +328,16 @@ extension AppDelegate: NSMenuDelegate {
                 let item = NSMenuItem(title: title, action: #selector(captureScreenItem(_:)), keyEquivalent: "")
                 item.target = self
                 item.representedObject = screen
+                menu.addItem(item)
+            }
+        } else if menu == delaySubmenu {
+            let current = TaskSettings.load().screenshotDelay
+            for seconds in [0.0, 1, 2, 3, 4, 5] {
+                let title = seconds == 0 ? "Off" : "\(Int(seconds)) Second\(seconds == 1 ? "" : "s")"
+                let item = NSMenuItem(title: title, action: #selector(setScreenshotDelay(_:)), keyEquivalent: "")
+                item.target = self
+                item.representedObject = seconds
+                item.state = abs(current - seconds) < 0.001 ? .on : .off
                 menu.addItem(item)
             }
         } else if menu == windowsSubmenu {

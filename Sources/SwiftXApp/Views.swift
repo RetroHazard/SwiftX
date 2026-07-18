@@ -487,6 +487,17 @@ struct SettingsView: View {
         )
     }
 
+    private func clampedDoubleBinding(_ keyPath: WritableKeyPath<TaskSettings, Double>,
+                                      _ range: ClosedRange<Double>) -> Binding<Double> {
+        Binding(
+            get: { task[keyPath: keyPath] },
+            set: { value in
+                task[keyPath: keyPath] = min(max(value, range.lowerBound), range.upperBound)
+                try? task.save()
+            }
+        )
+    }
+
     private func taskBinding<T>(_ keyPath: WritableKeyPath<TaskSettings, T>) -> Binding<T> {
         Binding(
             get: { task[keyPath: keyPath] },
@@ -579,10 +590,24 @@ struct SettingsView: View {
 
     @ViewBuilder
     private var capturePane: some View {
+        Section("Capture") {
+            TextField("Screenshot delay (seconds, 0 = off)",
+                      value: clampedDoubleBinding(\.screenshotDelay, 0...60), format: .number)
+            Toggle("Show cursor in screenshots", isOn: taskBinding(\.showCursor))
+        }
         Section("After capture") {
             ForEach(Self.afterCaptureToggles, id: \.1) { flag, label in
                 Toggle(label, isOn: afterCaptureBinding(flag))
             }
+        }
+        Section("Image effects pipeline") {
+            Toggle("Open the effects window after capture", isOn: taskBinding(\.showImageEffectsWindowAfterCapture))
+            Toggle("Apply effects to region captures only", isOn: taskBinding(\.imageEffectOnlyRegionCapture))
+            Toggle("Use a random preset each capture", isOn: taskBinding(\.useRandomImageEffect))
+            Text("Applies when the “Add image effects” task runs (quick tasks, after-capture window). "
+                 + "Presets are managed in Tools → Image Effects.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
         Section("Image format") {
             Picker("Format", selection: taskBinding(\.imageFormat)) {
@@ -594,10 +619,33 @@ struct SettingsView: View {
                 TextField("JPEG quality (1–100)",
                           value: clampedBinding(\.imageJPEGQuality, 1...100), format: .number)
             }
+            if task.imageFormat == "PNG" {
+                Picker("PNG bit depth", selection: taskBinding(\.imagePNGBitDepth)) {
+                    Text("Automatic").tag("Default")
+                    Text("32-bit (keeps transparency)").tag("Bit32")
+                    Text("24-bit (flattens transparency)").tag("Bit24")
+                }
+            }
+            if task.imageFormat == "GIF" {
+                Picker("GIF palette", selection: taskBinding(\.imageGIFQuality)) {
+                    Text("Automatic").tag("Default")
+                    Text("256 colors").tag("Bit8")
+                    Text("16 colors (encodes as 256 on macOS)").tag("Bit4")
+                    Text("Grayscale").tag("Grayscale")
+                }
+            }
             Toggle("Use JPEG for large captures", isOn: taskBinding(\.imageAutoUseJPEG))
             if task.imageAutoUseJPEG {
                 TextField("JPEG when width or height exceeds (px)",
                           value: clampedBinding(\.imageAutoUseJPEGSize, 64...16384), format: .number)
+                TextField("Auto-JPEG quality (1–100)",
+                          value: clampedBinding(\.imageAutoJPEGQuality, 1...100), format: .number)
+            }
+            Picker("When the file name exists", selection: taskBinding(\.fileExistAction)) {
+                Text("Add a number (name_1)").tag("UniqueName")
+                Text("Ask").tag("Ask")
+                Text("Overwrite").tag("Overwrite")
+                Text("Skip saving").tag("Cancel")
             }
         }
         Section("Thumbnail") {
@@ -627,6 +675,20 @@ struct SettingsView: View {
                       value: clampedBinding(\.screenRecordFPS, 1...60), format: .number)
             TextField("GIF frame rate (1–30 fps)",
                       value: clampedBinding(\.gifFPS, 1...30), format: .number)
+            Toggle("Two-pass encoding (VP9/VP8, needs ffmpeg)",
+                   isOn: taskBinding(\.screenRecordTwoPassEncoding))
+        }
+        Section("Session") {
+            TextField("Start countdown (seconds, 0 = immediate)",
+                      value: clampedDoubleBinding(\.screenRecordStartDelay, 0...60), format: .number)
+            Toggle("Fixed duration", isOn: taskBinding(\.screenRecordFixedDuration))
+            if task.screenRecordFixedDuration {
+                TextField("Stop after (seconds)",
+                          value: clampedDoubleBinding(\.screenRecordDuration, 1...86400), format: .number)
+            }
+            Toggle("Confirm before aborting a recording",
+                   isOn: taskBinding(\.screenRecordAskConfirmationOnAbort))
+            Toggle("Show cursor in recordings", isOn: taskBinding(\.screenRecordShowCursor))
         }
         Section("Audio") {
             Toggle("Record system audio", isOn: taskBinding(\.screenRecordSystemAudio))

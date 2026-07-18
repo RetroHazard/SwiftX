@@ -132,7 +132,7 @@ enum HotkeyDispatcher {
         case .pauseScreenRecording:
             RecordingCoordinator.shared.togglePause()
         case .abortScreenRecording:
-            RecordingCoordinator.shared.abort()
+            RecordingCoordinator.shared.confirmAbort()
         case .openMainWindow, .openHistory, .openImageHistory:
             (NSApp.delegate as? AppDelegate)?.showMainWindow()
         case .openScreenshotsFolder:
