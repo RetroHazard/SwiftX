@@ -96,6 +96,49 @@ struct ImageWriterTests {
                                             width: 10, height: 10) == .png)
     }
 
+    @Test func effectiveJPEGQualityUsesAutoQualityOnlyWhenForced() {
+        // PNG forced to JPEG by the size rule -> the auto quality applies
+        #expect(ImageWriter.effectiveJPEGQuality(configuredFormatName: "PNG", effectiveFormat: .jpeg,
+                                                 jpegQuality: 90, autoJPEGQuality: 60) == 60)
+        // JPEG chosen explicitly -> the regular quality applies
+        #expect(ImageWriter.effectiveJPEGQuality(configuredFormatName: "JPEG", effectiveFormat: .jpeg,
+                                                 jpegQuality: 90, autoJPEGQuality: 60) == 90)
+        // not JPEG at all -> quality is irrelevant but stays the regular one
+        #expect(ImageWriter.effectiveJPEGQuality(configuredFormatName: "PNG", effectiveFormat: .png,
+                                                 jpegQuality: 90, autoJPEGQuality: 60) == 90)
+    }
+
+    @Test func pngBit24StripsTheAlphaChannel() throws {
+        let data = try #require(ImageWriter.data(makeImage(), format: .png, pngBitDepth: .bit24))
+        let source = try #require(CGImageSourceCreateWithData(data as CFData, nil))
+        let decoded = try #require(CGImageSourceCreateImageAtIndex(source, 0, nil))
+        #expect(decoded.alphaInfo == .none || decoded.alphaInfo == .noneSkipFirst
+                || decoded.alphaInfo == .noneSkipLast)
+
+        let withAlpha = try #require(ImageWriter.data(makeImage(), format: .png, pngBitDepth: .bit32))
+        let alphaSource = try #require(CGImageSourceCreateWithData(withAlpha as CFData, nil))
+        let alphaDecoded = try #require(CGImageSourceCreateImageAtIndex(alphaSource, 0, nil))
+        #expect(alphaDecoded.alphaInfo != .none && alphaDecoded.alphaInfo != .noneSkipFirst
+                && alphaDecoded.alphaInfo != .noneSkipLast)
+    }
+
+    @Test func gifGrayscaleDropsColor() throws {
+        // the red test image becomes gray: equal RGB in every decoded pixel
+        let data = try #require(ImageWriter.data(makeImage(), format: .gif, gifQuality: .grayscale))
+        let source = try #require(CGImageSourceCreateWithData(data as CFData, nil))
+        let decoded = try #require(CGImageSourceCreateImageAtIndex(source, 0, nil))
+
+        let context = try #require(CGContext(
+            data: nil, width: decoded.width, height: decoded.height,
+            bitsPerComponent: 8, bytesPerRow: decoded.width * 4,
+            space: CGColorSpace(name: CGColorSpace.sRGB)!,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ))
+        context.draw(decoded, in: CGRect(x: 0, y: 0, width: decoded.width, height: decoded.height))
+        let pixels = try #require(context.data?.assumingMemoryBound(to: UInt8.self))
+        #expect(pixels[0] == pixels[1] && pixels[1] == pixels[2])
+    }
+
     @Test func thumbnailScalesProportionally() throws {
         let image = makeImage(width: 400, height: 200)
         // width-only box (the C# default 200×0) derives height from aspect

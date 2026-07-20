@@ -30,9 +30,9 @@ upstream deltas as new versions ship.
 | Region select overlay — rectangle, dimming, crosshair, size label, multi-display, Esc cancel | Ported |
 | Region overlay — window snapping (hover highlight, click captures), last region (menu + hotkey) | Ported |
 | Region overlay extras — ellipse/freehand, magnifier, fixed size, snap sizes | Ported — Tab cycles shape, M toggles magnifier, F toggles fixed size, drags auto-snap to presets; ruler and screen color picker shipped as standalone tools (Phase 8) |
-| Save to file + subfolder patterns (name parser), clipboard copy | Ported — always auto-numbers on name collision; C# FileExistAction (Ask/Overwrite) planned (13) |
-| JPEG/GIF/BMP/TIFF encoders + quality, auto-JPEG for large captures | Ported — C# EImageFormat set; WebP is not a C# image format either; PNG bit depth / GIF quality / auto-JPEG quality knobs planned (13) |
-| Screenshot delay, cursor-capture toggle | Planned (13) — no delay support; cursor inclusion is hardcoded (display on, region off) |
+| Save to file + subfolder patterns (name parser), clipboard copy | Ported — FileExistAction honored (Ask/Overwrite/UniqueName/Cancel); default stays UniqueName auto-numbering (C# defaults to Ask) |
+| JPEG/GIF/BMP/TIFF encoders + quality, auto-JPEG for large captures | Ported — C# EImageFormat set; WebP is not a C# image format either; PNG bit depth, GIF palette and auto-JPEG quality knobs shipped (13) |
+| Screenshot delay, cursor-capture toggle | Ported (13) — ScreenshotDelay before every capture verb (incl. region picker) + tray Screenshot Delay submenu; ShowCursor toggle threaded into all capture paths |
 | Cross-display region selection (stitching) | Ported — per-display captures composited at the highest backing scale |
 | Transparent/shadow window capture | N/A — ScreenCaptureKit window capture includes native shadows |
 
@@ -105,7 +105,7 @@ upstream deltas as new versions ship.
 | Feature | Status |
 |---|---|
 | H.264/HEVC recording (region/window/screen, audio, pause) | Ported — SCStream → AVAssetWriter MP4; system audio + microphone as AAC tracks (mic needs macOS 15); pause/resume via menu or PauseScreenRecording hotkey drops the gap from the timeline |
-| Recording session UX (on-screen frame + controls, countdown, fixed duration, abort confirm, cursor toggle) | Planned (13) — control is menu-bar-only today; recording cursor hardcoded on |
+| Recording session UX (on-screen frame + controls, countdown, fixed duration, abort confirm, cursor toggle) | Ported (13) — dashed border + floating strip (elapsed, pause, stop, abort) excluded from the stream; start countdown, fixed-duration auto-stop, abort confirmation, ScreenRecordShowCursor |
 | GIF recording | Ported — ImageIO encoder, real per-frame delays, region/window/screen |
 | Recording through task pipeline (save, history, notify, path copy, upload) | Ported — uploads reuse the image destination |
 | WebM/VP9 via ffmpeg | Ported — detects Homebrew/MacPorts ffmpeg, records H.264 then transcodes; Settings shows install status + one-click Homebrew install; falls back to H.264 when ffmpeg is missing |
@@ -177,14 +177,14 @@ upstream deltas as new versions ship.
 
 | Feature | Status |
 |---|---|
-| Screenshot delay (ScreenshotDelay) + tray capture-with-delay submenu | Planned (13) |
-| Cursor-capture toggles (ShowCursor, ScreenRecordShowCursor) | Planned (13) — hardcoded today: display capture on, region off, recording on |
-| Recording frame + control strip (elapsed time, pause, stop) | Planned (13) |
-| Recording start countdown, fixed-duration mode, abort confirmation | Planned (13) |
-| Two-pass encoding (ffmpeg) | Planned (13) |
-| FileExistAction (Ask / Overwrite / UniqueName / Cancel) | Planned (13) — always auto-numbers today |
-| PNG bit depth, GIF quality, auto-JPEG quality | Planned (13) |
-| Effects-pipeline switches (effects window after capture, region-capture-only, random preset) | Planned (13) — single selected preset always applies today |
+| Screenshot delay (ScreenshotDelay) + tray capture-with-delay submenu | Ported — decimal seconds before every capture verb (incl. the region picker, like C#); tray Screenshot Delay submenu (Off/1–5 s); active-window capture resamples the frontmost app after the delay |
+| Cursor-capture toggles (ShowCursor, ScreenRecordShowCursor) | Ported — threaded into display/region/window screenshots and SCStream recordings; C# default (on) applies |
+| Recording frame + control strip (elapsed time, pause, stop) | Ported — dashed border around the recorded rect + floating strip (elapsed, pause/resume, stop, abort); both sharingType .none and SCStream-filter-excluded so they never appear in the file; window recordings show the strip only (the stream follows the window) |
+| Recording start countdown, fixed-duration mode, abort confirmation | Ported — countdown shown in the strip (cancellable; start verbs cancel too), ScreenRecordDuration auto-stop, ScreenRecordAskConfirmationOnAbort dialog on abort (menu, hotkey, strip) |
+| Two-pass encoding (ffmpeg) | Ported — VP9/VP8 preset transcodes run pass 1 (-f null) + pass 2 with a shared passlogfile; custom-args and WebP/APNG stay single-pass |
+| FileExistAction (Ask / Overwrite / UniqueName / Cancel) | Ported — resolved against the final name (after after-capture-window renames); default stays UniqueName to preserve existing behavior (C# defaults to Ask) |
+| PNG bit depth, GIF quality, auto-JPEG quality | Ported — Bit24 flattens onto white, Bit32 forces an alpha channel; GIF Grayscale converts, Bit8 = ImageIO's native 256-color palette, Bit4 falls back to it (ImageIO has no palette-size control); ImageAutoJPEGQuality applies only when the size rule forces JPEG |
+| Effects-pipeline switches (effects window after capture, region-capture-only, random preset) | Ported — effects window opens seeded with the capture (Apply / Continue Without Effects); ImageEffectOnlyRegionCapture gates on region-sourced captures; UseRandomImageEffect draws a preset per capture |
 | In-overlay annotation, overlay cosmetic options | Deferred — post-capture editor covers the job; revisit only if demanded |
 
 ## Phase 14 — Upload robustness, URL post-processing & shell UX
