@@ -67,6 +67,11 @@ public enum FFmpeg {
             case .apng: return ["-f", "apng", "-plays", "0", "-an"]
             }
         }
+
+        /// Only the libvpx codecs implement -pass; WebP/APNG are single-pass.
+        public var supportsTwoPass: Bool {
+            self == .vp9 || self == .vp8
+        }
     }
 
     /// The full argument list a transcode runs with. Non-empty custom args
@@ -83,15 +88,52 @@ public enum FFmpeg {
         return arguments
     }
 
+    /// Analysis pass + encode pass sharing a stats file (C#
+    /// ScreenRecordTwoPassEncoding). Pass 1 discards output (-f null) and
+    /// audio; pass 2 writes the real file.
+    static func twoPassArguments(
+        input: String, output: String, format: TranscodeFormat, passLogFile: String
+    ) -> [[String]] {
+        let base = ["-y", "-i", input] + format.arguments
+        return [
+            base + ["-pass", "1", "-passlogfile", passLogFile, "-an", "-f", "null", "/dev/null"],
+            base + ["-pass", "2", "-passlogfile", passLogFile, output]
+        ]
+    }
+
     /// Re-encodes a finished MP4 recording. Runs after the recording stops -
     /// transcoding preserves frame timing exactly, unlike piping realtime
     /// frames into ffmpeg.
+    /// `twoPass` applies to VP9/VP8 preset encodes only; custom args and the
+    /// single-pass-only formats fall back to one pass.
     public static func transcode(
-        input: URL, output: URL, format: TranscodeFormat, customArgs: String = ""
+        input: URL, output: URL, format: TranscodeFormat, customArgs: String = "",
+        twoPass: Bool = false
     ) async throws {
+        if twoPass, format.supportsTwoPass, customArgs.isEmpty {
+            let logBase = FileManager.default.temporaryDirectory
+                .appendingPathComponent("swiftx-ffmpeg2pass-\(UUID().uuidString)")
+            defer { removeTemporaryFiles(prefix: logBase.lastPathComponent) }
+            for passArguments in twoPassArguments(
+                input: input.path, output: output.path, format: format, passLogFile: logBase.path
+            ) {
+                try await run(arguments: passArguments)
+            }
+            return
+        }
         try await run(arguments: transcodeArguments(
             input: input.path, output: output.path, format: format, customArgs: customArgs
         ))
+    }
+
+    /// ffmpeg derives its stats file names from -passlogfile ("<base>-0.log",
+    /// ...); sweep everything with the prefix.
+    private static func removeTemporaryFiles(prefix: String) {
+        let temporary = FileManager.default.temporaryDirectory
+        guard let items = try? FileManager.default.contentsOfDirectory(atPath: temporary.path) else { return }
+        for item in items where item.hasPrefix(prefix) {
+            try? FileManager.default.removeItem(at: temporary.appendingPathComponent(item))
+        }
     }
 
     /// Codecs the Video Converter tool offers. Mirrors C# ConverterVideoCodecs,

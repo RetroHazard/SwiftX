@@ -246,11 +246,16 @@ public final class ScreenRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
         self.defaultFrameDelay = 1.0 / Double(max(1, fps))
     }
 
+    /// `excludingWindowIDs` keeps our own recording HUD (border + control
+    /// strip) out of display/region recordings; the HUD windows also set
+    /// sharingType == .none as a second line of defense.
     public static func start(
         target: Target, format: RecordingFormat, fps: Int, outputURL: URL, showsCursor: Bool = true,
-        systemAudio: Bool = false, microphone: Bool = false
+        systemAudio: Bool = false, microphone: Bool = false,
+        excludingWindowIDs: [CGWindowID] = []
     ) async throws -> ScreenRecorder {
         let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
+        let excludedWindows = content.windows.filter { excludingWindowIDs.contains($0.windowID) }
         let configuration = SCStreamConfiguration()
         configuration.minimumFrameInterval = CMTime(value: 1, timescale: CMTimeScale(max(1, fps)))
         configuration.showsCursor = showsCursor
@@ -283,7 +288,8 @@ public final class ScreenRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
         let filter: SCContentFilter
         switch target {
         case .display(let screen):
-            filter = SCContentFilter(display: try scDisplay(for: screen, in: content), excludingWindows: [])
+            filter = SCContentFilter(display: try scDisplay(for: screen, in: content),
+                                     excludingWindows: excludedWindows)
             let scale = screen.backingScaleFactor
             configuration.width = Int(screen.frame.width * scale)
             configuration.height = Int(screen.frame.height * scale)
@@ -294,7 +300,8 @@ public final class ScreenRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
                 .max(by: { $0.frame.intersection(cocoaRect).area < $1.frame.intersection(cocoaRect).area })
             else { throw RecordingError.noDisplay }
             let clamped = cocoaRect.intersection(screen.frame)
-            filter = SCContentFilter(display: try scDisplay(for: screen, in: content), excludingWindows: [])
+            filter = SCContentFilter(display: try scDisplay(for: screen, in: content),
+                                     excludingWindows: excludedWindows)
             // sourceRect is in points, local to the display, top-left origin
             configuration.sourceRect = CGRect(
                 x: clamped.minX - screen.frame.minX,

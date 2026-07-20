@@ -39,6 +39,9 @@ enum ImageEffectsWindows {
 
 struct ImageEffectsEditorView: View {
     @ObservedObject var store: ImageEffectsStore
+    /// When set (effects window after capture), the preview runs the chain on
+    /// the real capture instead of the built-in sample.
+    var previewSource: CGImage? = nil
     @State private var selectedEffectIndex: Int?
     @State private var preview: CGImage?
 
@@ -246,10 +249,86 @@ struct ImageEffectsEditorView: View {
 
     private func refreshPreview() {
         // ponytail: synchronous apply on a small sample; background it if a chain ever feels slow
-        preview = store.selectedPreset?.apply(Self.sample) ?? Self.sample
+        let source = previewSource ?? Self.sample
+        preview = store.selectedPreset?.apply(source) ?? source
     }
 
     private static let sample: CGImage = EffectSample.make()
+}
+
+/// C# ShowImageEffectsWindowAfterCapture: the after-capture chain opens the
+/// effects editor seeded with the capture. Apply continues the chain with the
+/// selected preset applied; Continue Without Effects (or closing the window)
+/// keeps the original image.
+@MainActor
+enum ImageEffectsPickerWindow {
+    private final class WindowDelegate: NSObject, NSWindowDelegate {
+        var onClose: (() -> Void)?
+        func windowWillClose(_ notification: Notification) { onClose?() }
+    }
+
+    private static var activeDelegates: [WindowDelegate] = []
+
+    /// Resolves with the processed image, or nil to skip effects.
+    static func present(image: CGImage) async -> CGImage? {
+        await withCheckedContinuation { continuation in
+          MainActor.assumeIsolated {
+            var finished = false
+            let delegate = WindowDelegate()
+            activeDelegates.append(delegate)
+
+            let window = NSWindow(contentRect: .zero,
+                                  styleMask: [.titled, .closable, .resizable],
+                                  backing: .buffered, defer: false)
+            window.title = "Image Effects"
+            window.isReleasedWhenClosed = false
+            window.delegate = delegate
+
+            func finish(_ result: CGImage?) {
+                MainActor.assumeIsolated {
+                    guard !finished else { return }
+                    finished = true
+                    activeDelegates.removeAll { $0 === delegate }
+                    if window.isVisible {
+                        window.delegate = nil
+                        window.close()
+                    }
+                    continuation.resume(returning: result)
+                }
+            }
+
+            delegate.onClose = { finish(nil) }
+            window.contentView = NSHostingView(rootView: ImageEffectsPickerView(
+                store: ImageEffectsStore.shared, image: image
+            ) { finish($0) })
+            window.setContentSize(window.contentView?.fittingSize ?? NSSize(width: 900, height: 620))
+            window.center()
+            NSApp.activate(ignoringOtherApps: true)
+            window.makeKeyAndOrderFront(nil)
+          }
+        }
+    }
+}
+
+private struct ImageEffectsPickerView: View {
+    @ObservedObject var store: ImageEffectsStore
+    let image: CGImage
+    let onFinish: (CGImage?) -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            ImageEffectsEditorView(store: store, previewSource: image)
+            Divider()
+            HStack {
+                Spacer()
+                Button("Continue Without Effects") { onFinish(nil) }
+                    .keyboardShortcut(.cancelAction)
+                Button("Apply") { onFinish(store.selectedPreset?.apply(image) ?? image) }
+                    .keyboardShortcut(.defaultAction)
+            }
+            .padding(10)
+        }
+    }
 }
 
 /// A small screenshot-like sample the preview runs the chain on.
