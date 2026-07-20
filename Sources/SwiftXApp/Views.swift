@@ -59,6 +59,7 @@ struct MainWindowView: View {
                 .fixedSize()
                 Menu {
                     Button("Import History…") { importHistory() }
+                    Button("Import Folder…") { importFolder() }
                     Button("Statistics…") { showStats() }
                 } label: {
                     Image(systemName: "ellipsis.circle")
@@ -151,6 +152,18 @@ struct MainWindowView: View {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.setString(string, forType: .string)
+    }
+
+    /// Upstream v21 "import folder": ingest a directory of images/media into history.
+    private func importFolder() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.message = "Choose a folder of images or recordings to add to history"
+        NSApp.activate(ignoringOtherApps: true)
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        let imported = HistoryStore.shared.appendAll(HistoryImport.items(fromFolder: url))
+        Notifier.notify(title: "Folder import", body: "Imported \(imported) items.")
     }
 
     /// C# History.json/xml migration (HistoryManagerJSON/XML loaders).
@@ -540,6 +553,50 @@ struct SettingsView: View {
         }
     }
 
+    private func exportSettings() {
+        let panel = NSSavePanel()
+        let stamp = DateFormatter()
+        stamp.dateFormat = "yyyy-MM-dd"
+        panel.nameFieldStringValue = "SwiftX-Backup-\(stamp.string(from: Date())).zip"
+        NSApp.activate(ignoringOtherApps: true)
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        do {
+            try SettingsBackup.export(to: url)
+            NSWorkspace.shared.activateFileViewerSelecting([url])
+        } catch {
+            Notifier.notify(title: "Settings export failed", body: error.localizedDescription,
+                            event: .error)
+        }
+    }
+
+    private func importSettings() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.zip]
+        panel.message = "Choose a SwiftX settings backup"
+        NSApp.activate(ignoringOtherApps: true)
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+
+        let alert = NSAlert()
+        alert.messageText = "Replace current settings?"
+        alert.informativeText = "Settings, hotkeys and custom uploaders will be replaced with "
+            + "the backup's contents. Keychain secrets are not part of backups and must be re-entered."
+        alert.addButton(withTitle: "Replace")
+        alert.addButton(withTitle: "Cancel")
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+
+        do {
+            try SettingsBackup.restore(from: url)
+            config = ApplicationConfig.load()
+            task = TaskSettings.load()
+            HotkeyRegistrar.applyAll()
+            WatchFolderCenter.shared.applySettings()
+            Notifier.notify(title: "Settings restored", body: url.lastPathComponent)
+        } catch {
+            Notifier.notify(title: "Settings import failed", body: error.localizedDescription,
+                            event: .error)
+        }
+    }
+
     private func moveToolbarItem(_ index: Int, by delta: Int) {
         let target = index + delta
         guard config.actionsToolbarList.indices.contains(index),
@@ -706,6 +763,18 @@ struct SettingsView: View {
         }
         Section("Browser extension") {
             NativeMessagingSection()
+        }
+        Section("Backup") {
+            HStack {
+                Button("Export Settings…") { exportSettings() }
+                Button("Import Settings…") { importSettings() }
+            }
+            Text("Backups contain settings, hotkeys, effects presets and custom uploaders. "
+                 + "API keys and OAuth tokens live in the Keychain and are never exported — "
+                 + "re-enter or reconnect them after restoring on another Mac. History is "
+                 + "not included; use the main window's import tools for it.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
         Section("Paths") {
             LabeledContent("Screenshots folder") {
@@ -1178,7 +1247,7 @@ struct FFmpegStatusView: View {
             try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: url.path)
             NSWorkspace.shared.open(url)
         } catch {
-            NSLog("Could not launch ffmpeg install: %@", error.localizedDescription)
+            AppLog.app.error("Could not launch ffmpeg install: \(error.localizedDescription, privacy: .public)")
         }
     }
 }

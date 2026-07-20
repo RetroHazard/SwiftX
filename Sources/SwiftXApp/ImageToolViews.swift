@@ -33,6 +33,23 @@ extension ToolWindows {
         present(title: "Image Thumbnailer", resizable: true, content: ImageThumbnailerView())
     }
 
+    /// Upstream v21 background remover (Vision subject lifting here).
+    static func showBackgroundRemover() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.image]
+        NSApp.activate(ignoringOtherApps: true)
+        guard panel.runModal() == .OK, let url = panel.url,
+              let image = NSImage(contentsOf: url)?.cgImage(forProposedRect: nil, context: nil, hints: nil)
+        else { return }
+        present(title: "Background Remover — \(url.lastPathComponent)", resizable: true,
+                content: BackgroundRemoverView(source: image))
+    }
+
+    /// Upstream v21 image comparer (side-by-side / slider diff).
+    static func showImageComparer() {
+        present(title: "Image Comparer", resizable: true, content: ImageComparerView())
+    }
+
     static func savePanel(suggestedName: String) -> URL? {
         let panel = NSSavePanel()
         panel.nameFieldStringValue = suggestedName
@@ -259,5 +276,136 @@ private struct ImageThumbnailerView: View {
         }
         Notifier.notify(title: "Image thumbnailer", body: "\(written) of \(files.count) thumbnails saved.")
         NSWorkspace.shared.open(folder)
+    }
+}
+
+/// Upstream v21 background remover: preview on a checkerboard, Copy / Save.
+private struct BackgroundRemoverView: View {
+    let source: CGImage
+    @State private var result: CGImage?
+    @State private var errorMessage: String?
+
+    var body: some View {
+        VStack(spacing: 8) {
+            Group {
+                if let result {
+                    Image(decorative: result, scale: NSScreen.main?.backingScaleFactor ?? 2)
+                        .resizable()
+                        .scaledToFit()
+                } else if let errorMessage {
+                    Text(errorMessage).foregroundStyle(.secondary)
+                } else {
+                    ProgressView("Isolating subject…")
+                }
+            }
+            .frame(minWidth: 480, maxWidth: .infinity, minHeight: 360, maxHeight: .infinity)
+            .background(CheckerboardBackground())
+
+            HStack {
+                Spacer()
+                Button("Copy") {
+                    if let result { ImageWriter.copyToClipboard(result) }
+                }
+                .disabled(result == nil)
+                Button("Save As…") {
+                    guard let result,
+                          let url = ToolWindows.savePanel(suggestedName: "subject.png") else { return }
+                    try? ImageWriter.writePNG(result, to: url)
+                }
+                .disabled(result == nil)
+            }
+        }
+        .padding(12)
+        .task {
+            let source = source
+            // Vision inference is slow; keep the window responsive
+            let outcome = await Task.detached(priority: .userInitiated) {
+                Result { try BackgroundRemover.removeBackground(from: source) }
+            }.value
+            switch outcome {
+            case .success(let image): result = image
+            case .failure(let error): errorMessage = error.localizedDescription
+            }
+        }
+    }
+}
+
+/// Upstream v21 image comparer: side-by-side, or an overlay split by a slider.
+private struct ImageComparerView: View {
+    @State private var first: NSImage?
+    @State private var second: NSImage?
+    @State private var mode = "Slider"
+    @State private var split = 0.5
+
+    var body: some View {
+        VStack(spacing: 8) {
+            HStack {
+                Button(first == nil ? "First Image…" : "First Image ✓") { pick { first = $0 } }
+                Button(second == nil ? "Second Image…" : "Second Image ✓") { pick { second = $0 } }
+                Spacer()
+                Picker("", selection: $mode) {
+                    Text("Slider").tag("Slider")
+                    Text("Side by Side").tag("SideBySide")
+                }
+                .pickerStyle(.segmented)
+                .fixedSize()
+            }
+
+            if let first, let second {
+                if mode == "SideBySide" {
+                    HStack(spacing: 4) {
+                        fitted(first)
+                        Divider()
+                        fitted(second)
+                    }
+                    .frame(minWidth: 640, maxWidth: .infinity, minHeight: 400, maxHeight: .infinity)
+                } else {
+                    GeometryReader { geo in
+                        ZStack(alignment: .topLeading) {
+                            fitted(first)
+                            fitted(second)
+                                .clipShape(LeadingSplit(fraction: split))
+                            Rectangle()
+                                .fill(Color.accentColor)
+                                .frame(width: 2)
+                                .offset(x: geo.size.width * split - 1)
+                        }
+                        .frame(width: geo.size.width, height: geo.size.height)
+                    }
+                    .frame(minWidth: 640, maxWidth: .infinity, minHeight: 400, maxHeight: .infinity)
+                    Slider(value: $split)
+                }
+            } else {
+                Text("Choose two images to compare.")
+                    .foregroundStyle(.secondary)
+                    .frame(minWidth: 640, maxWidth: .infinity, minHeight: 400, maxHeight: .infinity)
+            }
+        }
+        .padding(12)
+    }
+
+    private func fitted(_ image: NSImage) -> some View {
+        Image(nsImage: image)
+            .resizable()
+            .scaledToFit()
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private func pick(_ assign: @escaping (NSImage) -> Void) {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.image]
+        NSApp.activate(ignoringOtherApps: true)
+        guard panel.runModal() == .OK, let url = panel.url,
+              let image = NSImage(contentsOf: url) else { return }
+        assign(image)
+    }
+}
+
+/// The left `fraction` of the rect; clips the top image in slider mode.
+private struct LeadingSplit: Shape {
+    var fraction: Double
+
+    func path(in rect: CGRect) -> Path {
+        Path(CGRect(x: rect.minX, y: rect.minY, width: rect.width * fraction, height: rect.height))
     }
 }

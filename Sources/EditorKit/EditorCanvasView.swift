@@ -19,6 +19,9 @@ public final class EditorCanvasView: NSView {
     public private(set) var currentFillColor: NSColor = .clear
     public private(set) var currentShadow = false
     public private(set) var currentLineWidth: CGFloat = 3
+    /// Empty = system font.
+    public private(set) var currentFontFamily = ""
+    public private(set) var currentArrowStyle: ArrowHeadStyle = .classic
     public var onHistoryChanged: (() -> Void)?
     /// Fired when crop changes the canvas dimensions (SwiftUI must re-frame).
     public var onCanvasSizeChanged: ((NSSize) -> Void)?
@@ -240,6 +243,37 @@ public final class EditorCanvasView: NSView {
         }
     }
 
+    public func setFontFamily(_ family: String) {
+        guard family != currentFontFamily else { return }
+        currentFontFamily = family
+        if let index = selectedIndex,
+           shapes[index].tool == .text || shapes[index].tool == .speechBalloon {
+            pushHistory()
+            shapes[index].fontFamily = family
+            needsDisplay = true
+        }
+    }
+
+    public func setArrowStyle(_ style: ArrowHeadStyle) {
+        guard style != currentArrowStyle else { return }
+        currentArrowStyle = style
+        if let index = selectedIndex, shapes[index].tool == .arrow {
+            pushHistory()
+            shapes[index].arrowStyle = style
+            needsDisplay = true
+        }
+    }
+
+    /// Shape font honoring the family override; falls back to the system font.
+    private func font(for shape: AnnotationShape, size: CGFloat, weight: NSFont.Weight) -> NSFont {
+        if !shape.fontFamily.isEmpty,
+           let custom = NSFontManager.shared.font(withFamily: shape.fontFamily, traits: [],
+                                                  weight: 5, size: size) {
+            return custom
+        }
+        return .systemFont(ofSize: size, weight: weight)
+    }
+
     private var selectedIndex: Int? {
         shapes.firstIndex { $0.id == selectedShapeID }
     }
@@ -291,7 +325,7 @@ public final class EditorCanvasView: NSView {
 
     private func textBounds(_ shape: AnnotationShape) -> CGRect {
         let attributes: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: shape.fontSize, weight: .semibold)
+            .font: font(for: shape, size: shape.fontSize, weight: .semibold)
         ]
         let size = NSString(string: shape.text).size(withAttributes: attributes)
         return CGRect(origin: shape.rect.origin, size: size)
@@ -399,6 +433,8 @@ public final class EditorCanvasView: NSView {
         shape.fillColor = currentFillColor
         shape.shadow = currentShadow
         shape.lineWidth = currentLineWidth
+        shape.fontFamily = currentFontFamily
+        shape.arrowStyle = currentArrowStyle
         shape.points = [point, point]
         draft = shape
     }
@@ -710,7 +746,10 @@ public final class EditorCanvasView: NSView {
         textEntryTarget = target
         // the field is a subview, so its frame lives in zoomed view coordinates
         let field = NSTextField(frame: NSRect(x: point.x * zoom, y: point.y * zoom, width: 240, height: 26))
-        field.font = .systemFont(ofSize: 18)
+        field.font = currentFontFamily.isEmpty
+            ? .systemFont(ofSize: 18)
+            : NSFontManager.shared.font(withFamily: currentFontFamily, traits: [], weight: 5, size: 18)
+                ?? .systemFont(ofSize: 18)
         field.textColor = color ?? currentColor
         field.stringValue = prefilled
         field.backgroundColor = NSColor.black.withAlphaComponent(0.25)
@@ -746,6 +785,7 @@ public final class EditorCanvasView: NSView {
         shape.rect = CGRect(origin: origin, size: .zero)
         shape.color = color
         shape.shadow = currentShadow
+        shape.fontFamily = currentFontFamily
         addShape(shape)
     }
 
@@ -862,7 +902,7 @@ public final class EditorCanvasView: NSView {
             drawEffectRegion(shape.rect, from: pixelatedBase)
         case .text:
             let attributes: [NSAttributedString.Key: Any] = [
-                .font: NSFont.systemFont(ofSize: shape.fontSize, weight: .semibold),
+                .font: font(for: shape, size: shape.fontSize, weight: .semibold),
                 .foregroundColor: shape.color
             ]
             NSString(string: shape.text).draw(at: shape.rect.origin, withAttributes: attributes)
@@ -928,7 +968,7 @@ public final class EditorCanvasView: NSView {
             paragraph.alignment = .center
             paragraph.lineBreakMode = .byWordWrapping
             let attributes: [NSAttributedString.Key: Any] = [
-                .font: NSFont.systemFont(ofSize: shape.fontSize, weight: .medium),
+                .font: font(for: shape, size: shape.fontSize, weight: .medium),
                 .foregroundColor: NSColor.black,
                 .paragraphStyle: paragraph
             ]
@@ -1003,13 +1043,49 @@ public final class EditorCanvasView: NSView {
         let angle = atan2(end.y - start.y, end.x - start.x)
         let length = max(12, shape.lineWidth * 4)
         let spread: CGFloat = .pi / 7
+        let back1 = CGPoint(x: end.x - length * cos(angle - spread), y: end.y - length * sin(angle - spread))
+        let back2 = CGPoint(x: end.x - length * cos(angle + spread), y: end.y - length * sin(angle + spread))
 
         let head = NSBezierPath()
-        head.move(to: end)
-        head.line(to: CGPoint(x: end.x - length * cos(angle - spread), y: end.y - length * sin(angle - spread)))
-        head.line(to: CGPoint(x: end.x - length * cos(angle + spread), y: end.y - length * sin(angle + spread)))
-        head.close()
-        head.fill()
+        switch shape.arrowStyle {
+        case .classic:
+            head.move(to: end)
+            head.line(to: back1)
+            head.line(to: back2)
+            head.close()
+            head.fill()
+        case .modern:
+            // open chevron stroked at the line width (upstream v21 "Modern")
+            head.lineWidth = shape.lineWidth
+            head.lineCapStyle = .round
+            head.lineJoinStyle = .round
+            head.move(to: back1)
+            head.line(to: end)
+            head.line(to: back2)
+            head.stroke()
+        }
+    }
+
+    // MARK: - Middle-click panning (upstream v21)
+
+    public override func otherMouseDown(with event: NSEvent) {
+        guard event.buttonNumber == 2 else { return super.otherMouseDown(with: event) }
+        NSCursor.closedHand.push()
+    }
+
+    public override func otherMouseDragged(with event: NSEvent) {
+        guard event.buttonNumber == 2, let scrollView = enclosingScrollView else {
+            return super.otherMouseDragged(with: event)
+        }
+        let origin = scrollView.contentView.bounds.origin
+        scrollView.contentView.scroll(to: NSPoint(x: origin.x - event.deltaX,
+                                                  y: origin.y - event.deltaY))
+        scrollView.reflectScrolledClipView(scrollView.contentView)
+    }
+
+    public override func otherMouseUp(with event: NSEvent) {
+        guard event.buttonNumber == 2 else { return super.otherMouseUp(with: event) }
+        NSCursor.pop()
     }
 
     private func drawEffectRegion(_ rect: CGRect, from variant: CGImage?) {

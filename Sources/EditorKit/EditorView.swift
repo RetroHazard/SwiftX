@@ -13,6 +13,9 @@ final class EditorState: ObservableObject {
     @Published var lineWidth: CGFloat = 3
     @Published var fillColor: Color = .clear
     @Published var shadow = false
+    /// Empty = system font (upstream v20.1 font-family option).
+    @Published var fontFamily = ""
+    @Published var arrowStyle: ArrowHeadStyle = .classic
     @Published var canUndo = false
     @Published var canRedo = false
     @Published var zoom: CGFloat = 1
@@ -69,6 +72,27 @@ public struct EditorView: View {
                 }
                 .frame(width: 100)
                 .help("Line width")
+
+                if state.tool == .arrow {
+                    Picker("", selection: $state.arrowStyle) {
+                        ForEach(ArrowHeadStyle.allCases, id: \.self) { style in
+                            Text(style.rawValue).tag(style)
+                        }
+                    }
+                    .fixedSize()
+                    .help("Arrow head style")
+                }
+
+                if state.tool == .text || state.tool == .speechBalloon {
+                    Picker("", selection: $state.fontFamily) {
+                        Text("System Font").tag("")
+                        ForEach(NSFontManager.shared.availableFontFamilies, id: \.self) { family in
+                            Text(family).tag(family)
+                        }
+                    }
+                    .frame(maxWidth: 160)
+                    .help("Font family")
+                }
 
                 Spacer()
 
@@ -172,6 +196,8 @@ private struct CanvasRepresentable: NSViewRepresentable {
         canvas.setFillColor(NSColor(state.fillColor))
         canvas.setShadow(state.shadow)
         canvas.setLineWidth(state.lineWidth)
+        canvas.setFontFamily(state.fontFamily)
+        canvas.setArrowStyle(state.arrowStyle)
         canvas.setZoom(state.zoom)
     }
 }

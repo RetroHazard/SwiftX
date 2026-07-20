@@ -61,6 +61,9 @@ public enum HotkeyType: String, Codable, CaseIterable {
     case imageBeautifier = "ImageBeautifier"
     case imageEffects = "ImageEffects"
     case imageViewer = "ImageViewer"
+    // upstream v21 additions
+    case backgroundRemover = "BackgroundRemover"
+    case imageComparer = "ImageComparer"
     case imageCombiner = "ImageCombiner"
     case imageSplitter = "ImageSplitter"
     case imageThumbnailer = "ImageThumbnailer"

@@ -63,7 +63,7 @@ final class ImageEffectsStore: ObservableObject {
             try JSONSerialization.data(withJSONObject: dict, options: [.prettyPrinted, .sortedKeys])
                 .write(to: Self.fileURL, options: .atomic)
         } catch {
-            NSLog("ImageEffectsStore save failed: %@", error.localizedDescription)
+            AppLog.app.error("ImageEffectsStore save failed: \(error.localizedDescription, privacy: .public)")
         }
     }
 }

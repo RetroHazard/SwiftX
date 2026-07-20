@@ -3,6 +3,7 @@
 // Licensed under GPL v3 - see /LICENSE.txt
 
 import Foundation
+import SQLite3
 import Testing
 @testable import HistoryKit
 
@@ -213,6 +214,51 @@ struct HistoryKitTests {
         #expect(report.contains("[2] Imgur"))
         #expect(report.contains("[1] (empty)"))
         #expect(report.contains("[2] Safari"))
+    }
+
+    /// Guard against drift from the upstream v21 SQLite writer
+    /// (ShareX.HistoryLib/Managers/HistoryManagerSQLite.cs, verified 2026-07):
+    /// same table, column set/order and Id primary key.
+    @Test func schemaMatchesUpstreamV21Writer() throws {
+        let folder = FileManager.default.temporaryDirectory
+            .appendingPathComponent("ShareXTests-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let url = folder.appendingPathComponent("History.db")
+        let store = HistoryStore(url: url)
+        store.append(makeItem(fileName: "schema.png"))
+
+        var db: OpaquePointer?
+        try #require(sqlite3_open(url.path, &db) == SQLITE_OK)
+        defer { sqlite3_close(db) }
+        var statement: OpaquePointer?
+        try #require(sqlite3_prepare_v2(db, "PRAGMA table_info(History);", -1, &statement, nil) == SQLITE_OK)
+        defer { sqlite3_finalize(statement) }
+
+        var columns: [String] = []
+        while sqlite3_step(statement) == SQLITE_ROW {
+            columns.append(String(cString: sqlite3_column_text(statement, 1)))
+        }
+        #expect(columns == ["Id", "FileName", "FilePath", "DateTime", "Type", "Host",
+                            "URL", "ThumbnailURL", "DeletionURL", "ShortenedURL", "Tags"])
+    }
+
+    @Test func importsFolderOfMediaFiles() throws {
+        let folder = FileManager.default.temporaryDirectory
+            .appendingPathComponent("ShareXTests-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        try FileManager.default.createDirectory(
+            at: folder.appendingPathComponent("sub"), withIntermediateDirectories: true)
+        for name in ["a.png", "b.jpg", "sub/c.mp4", "notes.txt", ".hidden.png"] {
+            try Data([0]).write(to: folder.appendingPathComponent(name))
+        }
+
+        let items = HistoryImport.items(fromFolder: folder)
+        let names = Set(items.map(\.fileName))
+        // media only, recursive, hidden skipped
+        #expect(names == ["a.png", "b.jpg", "c.mp4"])
+        #expect(items.first { $0.fileName == "a.png" }?.type == "Image")
+        #expect(items.first { $0.fileName == "c.mp4" }?.type == "File")
+        #expect(items.allSatisfy { $0.host == "File" })
     }
 
     @Test func parsesCSharpRoundTripDates() {
