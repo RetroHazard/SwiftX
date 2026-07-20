@@ -21,6 +21,38 @@ enum StatusIcon {
         return image
     }()
 
+    /// Upload progress variant (C# TrayIconProgressEnabled): the swift mark
+    /// with a progress ring where the aperture blades sit. Template rendering
+    /// keeps it legible in light/dark menu bars.
+    static func progress(_ fraction: Double) -> NSImage {
+        let clamped = max(0, min(1, fraction))
+        let image = NSImage(size: NSSize(width: 18, height: 18), flipped: false) { rect in
+            guard let ctx = NSGraphicsContext.current?.cgContext else { return false }
+            let S = rect.width
+            let center = CGPoint(x: S / 2, y: S / 2)
+            ctx.setStrokeColor(CGColor(gray: 0, alpha: 0.25))
+            ctx.setLineWidth(0.11 * S)
+            ctx.addArc(center: center, radius: 0.40 * S, startAngle: 0, endAngle: 2 * .pi, clockwise: false)
+            ctx.strokePath()
+            ctx.setStrokeColor(.black)
+            ctx.setLineCap(.round)
+            // 12 o'clock start, clockwise sweep like a clock
+            ctx.addArc(center: center, radius: 0.40 * S,
+                       startAngle: .pi / 2, endAngle: .pi / 2 - 2 * .pi * clamped, clockwise: true)
+            ctx.strokePath()
+            ctx.setFillColor(.black)
+            let scale = 0.22 * S
+            var transform = CGAffineTransform(translationX: center.x, y: center.y)
+                .scaledBy(x: scale, y: scale)
+            ctx.addPath(birdPath().copy(using: &transform)!)
+            ctx.fillPath()
+            return true
+        }
+        image.isTemplate = true
+        image.accessibilityDescription = "SwiftX uploading"
+        return image
+    }
+
     private static func draw(in ctx: CGContext, size S: CGFloat) {
         let center = CGPoint(x: S / 2, y: S / 2)
         ctx.setStrokeColor(.black)

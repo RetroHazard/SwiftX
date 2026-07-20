@@ -193,6 +193,34 @@ public struct ApplicationConfig: SettingsFile {
     public var aiAPIKey = ""
     public var aiModel = "gpt-5-mini"
     public var aiPrompt = "What is in this image?"
+    // Upload guards (C# ApplicationSettings keys).
+    /// Maximum simultaneous uploads; further tasks queue.
+    public var uploadLimit = 5
+    /// Retries after a failed upload when RetryUpload is on.
+    public var maxUploadFailRetry = 1
+    /// Master switch: upload tasks no-op while set.
+    public var disableUpload = false
+    /// Confirm before uploading more than 10 files at once.
+    public var showMultiUploadWarning = true
+    /// Confirm before uploading files larger than 100 MB.
+    public var showLargeFileSizeWarning = true
+
+    // Tray & shell (C# ApplicationSettings keys).
+    public var recentTasksShowInTrayMenu = true
+    public var recentTasksMaxCount = 10
+    /// HotkeyType raw value run on a left click; "ToggleTrayMenu" keeps the
+    /// menu-on-click default (C# TrayLeftClickAction).
+    public var trayLeftClickAction = "ToggleTrayMenu"
+    /// Draw upload progress onto the status icon (C# TrayIconProgressEnabled).
+    public var trayIconProgressEnabled = true
+    public var disableHotkeysOnFullscreen = false
+    /// Minimum milliseconds between repeats of the same hotkey (0 = off).
+    public var hotkeyRepeatLimit = 500
+    /// HotkeyType raw values shown in the actions toolbar (C# ActionsToolbarList).
+    public var actionsToolbarList = ActionsToolbarDefaults.list
+    public var actionsToolbarLockPosition = false
+    public var actionsToolbarRunAtStartup = false
+
     /// Quick task menu entries (C# ApplicationSettings.QuickTaskPresets).
     public var quickTaskPresets = QuickTaskPreset.defaultPresets
     /// Auto capture region as a C# Rectangle string "X, Y, Width, Height";
@@ -222,6 +250,20 @@ public struct ApplicationConfig: SettingsFile {
         case aiAPIKey = "AIAPIKey"
         case aiModel = "AIModel"
         case aiPrompt = "AIPrompt"
+        case uploadLimit = "UploadLimit"
+        case maxUploadFailRetry = "MaxUploadFailRetry"
+        case disableUpload = "DisableUpload"
+        case showMultiUploadWarning = "ShowMultiUploadWarning"
+        case showLargeFileSizeWarning = "ShowLargeFileSizeWarning"
+        case recentTasksShowInTrayMenu = "RecentTasksShowInTrayMenu"
+        case recentTasksMaxCount = "RecentTasksMaxCount"
+        case trayLeftClickAction = "TrayLeftClickAction"
+        case trayIconProgressEnabled = "TrayIconProgressEnabled"
+        case disableHotkeysOnFullscreen = "DisableHotkeysOnFullscreen"
+        case hotkeyRepeatLimit = "HotkeyRepeatLimit"
+        case actionsToolbarList = "ActionsToolbarList"
+        case actionsToolbarLockPosition = "ActionsToolbarLockPosition"
+        case actionsToolbarRunAtStartup = "ActionsToolbarRunAtStartup"
         case quickTaskPresets = "QuickTaskPresets"
         case autoCaptureRegion = "AutoCaptureRegion"
         case autoCaptureRepeatTime = "AutoCaptureRepeatTime"
@@ -239,6 +281,21 @@ public struct ApplicationConfig: SettingsFile {
         aiAPIKey = try c.decodeIfPresent(String.self, forKey: .aiAPIKey) ?? ""
         aiModel = try c.decodeIfPresent(String.self, forKey: .aiModel) ?? "gpt-5-mini"
         aiPrompt = try c.decodeIfPresent(String.self, forKey: .aiPrompt) ?? "What is in this image?"
+        uploadLimit = try c.decodeIfPresent(Int.self, forKey: .uploadLimit) ?? 5
+        maxUploadFailRetry = try c.decodeIfPresent(Int.self, forKey: .maxUploadFailRetry) ?? 1
+        disableUpload = try c.decodeIfPresent(Bool.self, forKey: .disableUpload) ?? false
+        showMultiUploadWarning = try c.decodeIfPresent(Bool.self, forKey: .showMultiUploadWarning) ?? true
+        showLargeFileSizeWarning = try c.decodeIfPresent(Bool.self, forKey: .showLargeFileSizeWarning) ?? true
+        recentTasksShowInTrayMenu = try c.decodeIfPresent(Bool.self, forKey: .recentTasksShowInTrayMenu) ?? true
+        recentTasksMaxCount = try c.decodeIfPresent(Int.self, forKey: .recentTasksMaxCount) ?? 10
+        trayLeftClickAction = try c.decodeIfPresent(String.self, forKey: .trayLeftClickAction) ?? "ToggleTrayMenu"
+        trayIconProgressEnabled = try c.decodeIfPresent(Bool.self, forKey: .trayIconProgressEnabled) ?? true
+        disableHotkeysOnFullscreen = try c.decodeIfPresent(Bool.self, forKey: .disableHotkeysOnFullscreen) ?? false
+        hotkeyRepeatLimit = try c.decodeIfPresent(Int.self, forKey: .hotkeyRepeatLimit) ?? 500
+        actionsToolbarList = try c.decodeIfPresent([String].self, forKey: .actionsToolbarList)
+            ?? ActionsToolbarDefaults.list
+        actionsToolbarLockPosition = try c.decodeIfPresent(Bool.self, forKey: .actionsToolbarLockPosition) ?? false
+        actionsToolbarRunAtStartup = try c.decodeIfPresent(Bool.self, forKey: .actionsToolbarRunAtStartup) ?? false
         quickTaskPresets = try c.decodeIfPresent([QuickTaskPreset].self, forKey: .quickTaskPresets)
             ?? QuickTaskPreset.defaultPresets
         autoCaptureRegion = try c.decodeIfPresent(String.self, forKey: .autoCaptureRegion) ?? ""
@@ -255,6 +312,15 @@ extension ApplicationConfig: KeychainBackedSettings {
 
     public static func load() -> ApplicationConfig { loadApplyingSecrets() }
     public func save() throws { try saveMigratingSecrets() }
+}
+
+/// The pre-Phase-14 fixed actions-toolbar button set, now the default for the
+/// configurable C# ActionsToolbarList.
+public enum ActionsToolbarDefaults {
+    public static let list = [
+        "RectangleRegion", "ActiveWindow", "PrintScreen", "ScreenRecorder",
+        "ScreenRecorderGIF", "ImageEditor", "ColorPicker", "OpenHistory"
+    ]
 }
 
 /// C# System.Drawing.Rectangle TypeConverter format: "X, Y, Width, Height".
@@ -341,11 +407,59 @@ public struct TaskSettings: SettingsFile {
     /// Only save the thumbnail when the image is larger than the thumbnail box.
     public var thumbnailCheckSize = false
 
+    // URL post-processing (C# TaskSettingsUpload / TaskSettingsAdvanced keys).
+    /// $result template for what lands on the clipboard (e.g. "![]($result)").
+    public var clipboardContentFormat = "$result"
+    /// $result template for the URL opened in the browser.
+    public var openURLFormat = "$result"
+    /// $result template for the completion banner body.
+    public var balloonTipContentFormat = "$result"
+    /// Copy the raw URL the moment the upload finishes, before shortening.
+    public var earlyCopyURL = false
+    public var urlRegexReplace = false
+    public var urlRegexReplacePattern = ""
+    public var urlRegexReplaceReplacement = ""
+    public var resultForceHTTPS = false
+    /// Shorten automatically when the URL is longer than this (0 = off).
+    public var autoShortenURLLength = 0
+
+    // Clipboard upload intelligence (C# TaskSettingsUpload keys).
+    /// Clipboard URL: download its contents and upload that file.
+    public var clipboardUploadURLContents = false
+    /// Clipboard URL: shorten it instead of uploading the text.
+    public var clipboardUploadShortenURL = false
+    /// Clipboard URL: open the sharing service instead of uploading.
+    public var clipboardUploadShareURL = false
+    /// Clipboard folder: upload a generated folder index instead of the text.
+    public var clipboardUploadAutoIndexFolder = false
+    /// Clear the clipboard after a clipboard upload is dispatched.
+    public var autoClearClipboard = false
+
+    // File upload naming (C# TaskSettingsUpload keys).
+    /// Rename uploaded files with the name pattern instead of their own name.
+    public var fileUploadUseNamePattern = false
+    /// Replace URL-hostile characters in upload names (spaces -> underscores).
+    public var fileUploadReplaceProblematicCharacters = false
+    public var useCustomTimeZone = false
+    /// TimeZone identifier ("UTC", "America/New_York"); C# stores a full
+    /// TimeZoneInfo, which has no macOS equivalent, hence the macOS-only key.
+    public var customTimeZoneIdentifier = "UTC"
+
     /// Actions: external programs run on the captured file (C# ExternalPrograms).
     public var externalPrograms: [ExternalProgramSettings] = []
 
     public var playSoundAfterCapture = true
     public var playSoundAfterUpload = true
+    // Notification granularity (C# TaskSettingsGeneral keys).
+    /// Master banner switch; sounds still follow the PlaySound keys.
+    public var showToastNotificationAfterTaskCompleted = true
+    public var disableNotificationsOnFullscreen = false
+    public var useCustomCaptureSound = false
+    public var customCaptureSoundPath = ""
+    public var useCustomTaskCompletedSound = false
+    public var customTaskCompletedSoundPath = ""
+    public var useCustomErrorSound = false
+    public var customErrorSoundPath = ""
 
     /// Watch folders: upload files that appear in monitored directories.
     public var watchFolderEnabled = false
@@ -398,9 +512,35 @@ public struct TaskSettings: SettingsFile {
         case thumbnailHeight = "ThumbnailHeight"
         case thumbnailName = "ThumbnailName"
         case thumbnailCheckSize = "ThumbnailCheckSize"
+        case clipboardContentFormat = "ClipboardContentFormat"
+        case openURLFormat = "OpenURLFormat"
+        case balloonTipContentFormat = "BalloonTipContentFormat"
+        case earlyCopyURL = "EarlyCopyURL"
+        case urlRegexReplace = "URLRegexReplace"
+        case urlRegexReplacePattern = "URLRegexReplacePattern"
+        case urlRegexReplaceReplacement = "URLRegexReplaceReplacement"
+        case resultForceHTTPS = "ResultForceHTTPS"
+        case autoShortenURLLength = "AutoShortenURLLength"
+        case clipboardUploadURLContents = "ClipboardUploadURLContents"
+        case clipboardUploadShortenURL = "ClipboardUploadShortenURL"
+        case clipboardUploadShareURL = "ClipboardUploadShareURL"
+        case clipboardUploadAutoIndexFolder = "ClipboardUploadAutoIndexFolder"
+        case autoClearClipboard = "AutoClearClipboard"
+        case fileUploadUseNamePattern = "FileUploadUseNamePattern"
+        case fileUploadReplaceProblematicCharacters = "FileUploadReplaceProblematicCharacters"
+        case useCustomTimeZone = "UseCustomTimeZone"
+        case customTimeZoneIdentifier = "CustomTimeZoneIdentifier"
         case externalPrograms = "ExternalPrograms"
         case playSoundAfterCapture = "PlaySoundAfterCapture"
         case playSoundAfterUpload = "PlaySoundAfterUpload"
+        case showToastNotificationAfterTaskCompleted = "ShowToastNotificationAfterTaskCompleted"
+        case disableNotificationsOnFullscreen = "DisableNotificationsOnFullscreen"
+        case useCustomCaptureSound = "UseCustomCaptureSound"
+        case customCaptureSoundPath = "CustomCaptureSoundPath"
+        case useCustomTaskCompletedSound = "UseCustomTaskCompletedSound"
+        case customTaskCompletedSoundPath = "CustomTaskCompletedSoundPath"
+        case useCustomErrorSound = "UseCustomErrorSound"
+        case customErrorSoundPath = "CustomErrorSoundPath"
         case watchFolderEnabled = "WatchFolderEnabled"
         case watchFolderList = "WatchFolderList"
         case scrollingCapture = "ScrollingCaptureOptions"
@@ -446,9 +586,35 @@ public struct TaskSettings: SettingsFile {
         thumbnailHeight = try c.decodeIfPresent(Int.self, forKey: .thumbnailHeight) ?? 0
         thumbnailName = try c.decodeIfPresent(String.self, forKey: .thumbnailName) ?? "-thumbnail"
         thumbnailCheckSize = try c.decodeIfPresent(Bool.self, forKey: .thumbnailCheckSize) ?? false
+        clipboardContentFormat = try c.decodeIfPresent(String.self, forKey: .clipboardContentFormat) ?? "$result"
+        openURLFormat = try c.decodeIfPresent(String.self, forKey: .openURLFormat) ?? "$result"
+        balloonTipContentFormat = try c.decodeIfPresent(String.self, forKey: .balloonTipContentFormat) ?? "$result"
+        earlyCopyURL = try c.decodeIfPresent(Bool.self, forKey: .earlyCopyURL) ?? false
+        urlRegexReplace = try c.decodeIfPresent(Bool.self, forKey: .urlRegexReplace) ?? false
+        urlRegexReplacePattern = try c.decodeIfPresent(String.self, forKey: .urlRegexReplacePattern) ?? ""
+        urlRegexReplaceReplacement = try c.decodeIfPresent(String.self, forKey: .urlRegexReplaceReplacement) ?? ""
+        resultForceHTTPS = try c.decodeIfPresent(Bool.self, forKey: .resultForceHTTPS) ?? false
+        autoShortenURLLength = try c.decodeIfPresent(Int.self, forKey: .autoShortenURLLength) ?? 0
+        clipboardUploadURLContents = try c.decodeIfPresent(Bool.self, forKey: .clipboardUploadURLContents) ?? false
+        clipboardUploadShortenURL = try c.decodeIfPresent(Bool.self, forKey: .clipboardUploadShortenURL) ?? false
+        clipboardUploadShareURL = try c.decodeIfPresent(Bool.self, forKey: .clipboardUploadShareURL) ?? false
+        clipboardUploadAutoIndexFolder = try c.decodeIfPresent(Bool.self, forKey: .clipboardUploadAutoIndexFolder) ?? false
+        autoClearClipboard = try c.decodeIfPresent(Bool.self, forKey: .autoClearClipboard) ?? false
+        fileUploadUseNamePattern = try c.decodeIfPresent(Bool.self, forKey: .fileUploadUseNamePattern) ?? false
+        fileUploadReplaceProblematicCharacters = try c.decodeIfPresent(Bool.self, forKey: .fileUploadReplaceProblematicCharacters) ?? false
+        useCustomTimeZone = try c.decodeIfPresent(Bool.self, forKey: .useCustomTimeZone) ?? false
+        customTimeZoneIdentifier = try c.decodeIfPresent(String.self, forKey: .customTimeZoneIdentifier) ?? "UTC"
         externalPrograms = try c.decodeIfPresent([ExternalProgramSettings].self, forKey: .externalPrograms) ?? []
         playSoundAfterCapture = try c.decodeIfPresent(Bool.self, forKey: .playSoundAfterCapture) ?? true
         playSoundAfterUpload = try c.decodeIfPresent(Bool.self, forKey: .playSoundAfterUpload) ?? true
+        showToastNotificationAfterTaskCompleted = try c.decodeIfPresent(Bool.self, forKey: .showToastNotificationAfterTaskCompleted) ?? true
+        disableNotificationsOnFullscreen = try c.decodeIfPresent(Bool.self, forKey: .disableNotificationsOnFullscreen) ?? false
+        useCustomCaptureSound = try c.decodeIfPresent(Bool.self, forKey: .useCustomCaptureSound) ?? false
+        customCaptureSoundPath = try c.decodeIfPresent(String.self, forKey: .customCaptureSoundPath) ?? ""
+        useCustomTaskCompletedSound = try c.decodeIfPresent(Bool.self, forKey: .useCustomTaskCompletedSound) ?? false
+        customTaskCompletedSoundPath = try c.decodeIfPresent(String.self, forKey: .customTaskCompletedSoundPath) ?? ""
+        useCustomErrorSound = try c.decodeIfPresent(Bool.self, forKey: .useCustomErrorSound) ?? false
+        customErrorSoundPath = try c.decodeIfPresent(String.self, forKey: .customErrorSoundPath) ?? ""
         watchFolderEnabled = try c.decodeIfPresent(Bool.self, forKey: .watchFolderEnabled) ?? false
         watchFolderList = try c.decodeIfPresent([WatchFolderSettings].self, forKey: .watchFolderList) ?? []
         scrollingCapture = try c.decodeIfPresent(ScrollingCaptureOptions.self, forKey: .scrollingCapture)
