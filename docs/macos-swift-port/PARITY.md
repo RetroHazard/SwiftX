@@ -45,7 +45,7 @@ upstream deltas as new versions ship.
 | After-upload tasks (6) | Ported — shorten, copy URL, open URL, share URL, QR code window, after-upload window (link formats + copy buttons) |
 | Global hotkey engine (Carbon), defaults ⌃⇧3/4/5, DisableHotkeys toggle | Ported — recorder UI in Settings, live re-registration |
 | HotkeyType vocabulary (C#-compatible raw values) | Ported — every verb dispatches: upload sources (file/folder/clipboard/text/URL/drag-drop), custom region/window, stop uploads, standalone image editor, actions toolbar, tray menu toggle |
-| Capture notifications | Partial — banner + optional sound (C# PlaySound keys); click reveals file or opens URL. No app-level off-switch, fullscreen suppression, custom sounds or action buttons — planned (14); toast geometry is N/A under Notification Center |
+| Capture notifications | Ported — banner + optional sound (C# PlaySound keys); app-level off-switch, fullscreen suppression, custom per-event sounds and action buttons shipped (14); toast geometry is N/A under Notification Center |
 | Actions (external commands) | Ported — C# ExternalProgram JSON, $input/$output placeholders, output-extension chaining, Settings pane |
 
 ## Phase 3 — Upload engine & core destinations
@@ -53,7 +53,7 @@ upstream deltas as new versions ship.
 | Feature | Status |
 |---|---|
 | Upload core — multipart, form-urlencoded, JSON/XML body, binary | Ported |
-| Upload core — progress UI, retry | Ported — live rows in main window (bar, retry state, URL/error); RetryUpload retries once. Configurable retry count, concurrency cap, DisableUpload switch and size warnings planned (14) |
+| Upload core — progress UI, retry | Ported — live rows in main window (bar, retry state, URL/error); configurable retry count (RetryUpload × MaxUploadFailRetry), UploadLimit concurrency cap, DisableUpload switch and batch/size warnings shipped (14) |
 | Upload core — chunked/resumable, secondary fallback | Planned — chunked only serves the benched OAuth hosts; fallback needs multi-destination config |
 | Custom uploader engine (.sxcu) — syntax parser (json/xml/regex/base64/random/select/filename/header/response), import, destination picker | Ported — legacy pre-13.7.1 `$var$` files migrate at load; interactive select takes first option |
 | Custom uploader editor (create/edit/duplicate/delete in settings) | Ported — Settings → Custom Uploader pane; edits write Windows-compatible .sxcu files |
@@ -191,17 +191,17 @@ upstream deltas as new versions ship.
 
 | Feature | Status |
 |---|---|
-| Upload concurrency cap (UploadLimit), configurable retry count, DisableUpload, multi-upload/large-file warnings | Planned (14) — fixed retry-once toggle today |
-| ClipboardContentFormat / OpenURLFormat $result templates, EarlyCopyURL | Planned (14) |
-| URLRegexReplace, ResultForceHTTPS, AutoShortenURLLength | Planned (14) |
-| Clipboard-upload intelligence (URL contents, shorten-instead, auto-index folder), AutoClearClipboard | Planned (14) |
-| Upload naming (FileUploadUseNamePattern, problematic-character replacement, custom time zone) | Planned (14) — NameParser already supports a custom time zone, unwired |
-| Notification granularity (off-switch, fullscreen suppression, custom per-event sounds, action buttons) | Planned (14) — UNUserNotification banner + default sound today |
+| Upload concurrency cap (UploadLimit), configurable retry count, DisableUpload, multi-upload/large-file warnings | Ported — FIFO gate bounds simultaneous uploads; RetryUpload × MaxUploadFailRetry attempts; DisableUpload togglable from the tray Upload section; confirm dialogs for >10-file batches and >100 MB files |
+| ClipboardContentFormat / OpenURLFormat $result templates, EarlyCopyURL | Ported — BalloonTipContentFormat too; EarlyCopyURL copies the raw URL at upload completion, before shortening/formatting (no pre-completion URL prediction — no ported host has deterministic URLs) |
+| URLRegexReplace, ResultForceHTTPS, AutoShortenURLLength | Ported — C# order (regex → HTTPS → shorten); invalid user regex passes the URL through instead of failing the task |
+| Clipboard-upload intelligence (URL contents, shorten-instead, auto-index folder), AutoClearClipboard | Ported — C# precedence for URLs (contents → shorten → share); copied folders upload an HTML index; AutoClearClipboard clears after dispatch |
+| Upload naming (FileUploadUseNamePattern, problematic-character replacement, custom time zone) | Ported — upload name follows the pattern (file on disk untouched); UseCustomTimeZone + CustomTimeZoneIdentifier (macOS key — C# serializes TimeZoneInfo) wired into every name parse via NameParser.forTask |
+| Notification granularity (off-switch, fullscreen suppression, custom per-event sounds, action buttons) | Ported — ShowToastNotificationAfterTaskCompleted, DisableNotificationsOnFullscreen (CGWindowList fullscreen heuristic); custom capture/completion/error sounds play via NSSound (banner goes silent to avoid doubling); banner buttons: Copy URL/Open for uploads, Show in Finder/Annotate/Delete for files |
 | Toast geometry (duration, placement, size, fade) | N/A — Notification Center owns presentation |
-| Recent-links tray submenu + main-window recent strip (RecentTasks*) | Planned (14) |
-| Tray Upload section, configurable left-click action, status-icon upload progress | Planned (14) — upload verbs are hotkey/CLI/drop-window-only today |
-| DisableHotkeysOnFullscreen, HotkeyRepeatLimit | Planned (14) |
-| Configurable actions toolbar (button list, position lock, run at startup) | Planned (14) — fixed 8-button strip today |
+| Recent-links tray submenu + main-window recent strip (RecentTasks*) | Ported — Recent submenu reads the last N history entries (click copies the URL, or reveals the file); the main window's live task rows + searchable history already serve as the recent strip |
+| Tray Upload section, configurable left-click action, status-icon upload progress | Ported — Upload submenu (file/folder/clipboard/text/URL/shorten/drop window/stop/disable); TrayLeftClickAction picker (right click always menus); TrayIconProgressEnabled draws a progress ring on the status icon |
+| DisableHotkeysOnFullscreen, HotkeyRepeatLimit | Ported — both enforced in HotkeyCenter.fire; the DisableHotkeys toggle hotkey stays live |
+| Configurable actions toolbar (button list, position lock, run at startup) | Ported — ActionsToolbarList (HotkeyType names) with add/remove/reorder editor, ActionsToolbarLockPosition, ActionsToolbarRunAtStartup |
 
 ## Phase 15 — Upstream v21 additions & supportability
 

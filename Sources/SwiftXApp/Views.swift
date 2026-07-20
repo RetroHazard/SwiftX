@@ -498,6 +498,65 @@ struct SettingsView: View {
         )
     }
 
+    private func configBinding<T>(_ keyPath: WritableKeyPath<ApplicationConfig, T>) -> Binding<T> {
+        Binding(
+            get: { config[keyPath: keyPath] },
+            set: { value in
+                config[keyPath: keyPath] = value
+                try? config.save()
+            }
+        )
+    }
+
+    private func clampedConfigBinding(_ keyPath: WritableKeyPath<ApplicationConfig, Int>,
+                                      _ range: ClosedRange<Int>) -> Binding<Int> {
+        Binding(
+            get: { config[keyPath: keyPath] },
+            set: { value in
+                config[keyPath: keyPath] = min(max(value, range.lowerBound), range.upperBound)
+                try? config.save()
+            }
+        )
+    }
+
+    /// Toggle + file picker pair for the C# custom notification sound slots.
+    @ViewBuilder
+    private func customSoundRows(_ label: String,
+                                 use: WritableKeyPath<TaskSettings, Bool>,
+                                 path: WritableKeyPath<TaskSettings, String>) -> some View {
+        Toggle(label, isOn: taskBinding(use))
+        if task[keyPath: use] {
+            LabeledContent("Sound file") {
+                HStack {
+                    Text(task[keyPath: path].isEmpty
+                         ? "None chosen"
+                         : (task[keyPath: path] as NSString).lastPathComponent)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                    Button("Choose…") { chooseSoundFile(path) }
+                }
+            }
+        }
+    }
+
+    private func moveToolbarItem(_ index: Int, by delta: Int) {
+        let target = index + delta
+        guard config.actionsToolbarList.indices.contains(index),
+              config.actionsToolbarList.indices.contains(target) else { return }
+        config.actionsToolbarList.swapAt(index, target)
+        try? config.save()
+    }
+
+    private func chooseSoundFile(_ keyPath: WritableKeyPath<TaskSettings, String>) {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.audio]
+        NSApp.activate(ignoringOtherApps: true)
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        task[keyPath: keyPath] = url.path
+        try? task.save()
+    }
+
     private func taskBinding<T>(_ keyPath: WritableKeyPath<TaskSettings, T>) -> Binding<T> {
         Binding(
             get: { task[keyPath: keyPath] },
@@ -560,9 +619,88 @@ struct SettingsView: View {
             PermissionsView()
         }
         Section("Notifications") {
+            Toggle("Show notification banners", isOn: taskBinding(\.showToastNotificationAfterTaskCompleted))
+            Toggle("Suppress while a fullscreen app is active",
+                   isOn: taskBinding(\.disableNotificationsOnFullscreen))
             Toggle("Play sound after capture", isOn: taskBinding(\.playSoundAfterCapture))
+            customSoundRows("Custom capture sound",
+                            use: \.useCustomCaptureSound, path: \.customCaptureSoundPath)
             Toggle("Play sound after upload", isOn: taskBinding(\.playSoundAfterUpload))
-            Text("Clicking a capture banner reveals the file; an upload banner opens the URL.")
+            customSoundRows("Custom completion sound",
+                            use: \.useCustomTaskCompletedSound, path: \.customTaskCompletedSoundPath)
+            customSoundRows("Custom error sound",
+                            use: \.useCustomErrorSound, path: \.customErrorSoundPath)
+            Text("Upload banners offer Copy URL / Open buttons; file banners offer "
+                 + "Show in Finder / Annotate / Delete. Clicking the banner itself opens the "
+                 + "URL or reveals the file.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        Section("Menu bar") {
+            Picker("Left click", selection: configBinding(\.trayLeftClickAction)) {
+                Text("Open the menu").tag("ToggleTrayMenu")
+                Text("Open main window").tag("OpenMainWindow")
+                Text("Capture region").tag("RectangleRegion")
+                Text("Capture full screen").tag("PrintScreen")
+                Text("Capture active window").tag("ActiveWindow")
+                Text("Upload from clipboard").tag("ClipboardUpload")
+                Text("Upload file…").tag("FileUpload")
+                Text("Image editor").tag("ImageEditor")
+                Text("Open screenshots folder").tag("OpenScreenshotsFolder")
+            }
+            Text("Right click always opens the menu.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Toggle("Show upload progress in the icon", isOn: configBinding(\.trayIconProgressEnabled))
+            Toggle("Show Recent submenu", isOn: configBinding(\.recentTasksShowInTrayMenu))
+            if config.recentTasksShowInTrayMenu {
+                TextField("Recent entries shown (1–30)",
+                          value: clampedConfigBinding(\.recentTasksMaxCount, 1...30), format: .number)
+            }
+        }
+        Section("Hotkey guards") {
+            Toggle("Disable hotkeys while a fullscreen app is active",
+                   isOn: configBinding(\.disableHotkeysOnFullscreen))
+            TextField("Ignore hotkey repeats within (ms, 0 = off)",
+                      value: clampedConfigBinding(\.hotkeyRepeatLimit, 0...5000), format: .number)
+        }
+        Section("Actions toolbar") {
+            ForEach(config.actionsToolbarList.indices, id: \.self) { index in
+                let type = HotkeyType(rawValue: config.actionsToolbarList[index])
+                HStack {
+                    Image(systemName: type.flatMap { ActionsToolbar.symbols[$0] } ?? "bolt")
+                        .frame(width: 20)
+                    Text(type.map { HotkeysSettingsView.displayName(for: $0) }
+                         ?? config.actionsToolbarList[index])
+                    Spacer()
+                    Button { moveToolbarItem(index, by: -1) } label: { Image(systemName: "chevron.up") }
+                        .buttonStyle(.borderless)
+                        .disabled(index == 0)
+                    Button { moveToolbarItem(index, by: 1) } label: { Image(systemName: "chevron.down") }
+                        .buttonStyle(.borderless)
+                        .disabled(index == config.actionsToolbarList.count - 1)
+                    Button {
+                        config.actionsToolbarList.remove(at: index)
+                        try? config.save()
+                    } label: { Image(systemName: "minus.circle.fill") }
+                        .buttonStyle(.borderless)
+                }
+            }
+            Menu("Add Button") {
+                ForEach(ActionsToolbar.symbols.keys.sorted { $0.rawValue < $1.rawValue },
+                        id: \.rawValue) { type in
+                    Button {
+                        config.actionsToolbarList.append(type.rawValue)
+                        try? config.save()
+                    } label: {
+                        Label(HotkeysSettingsView.displayName(for: type),
+                              systemImage: ActionsToolbar.symbols[type] ?? "bolt")
+                    }
+                }
+            }
+            Toggle("Lock toolbar position", isOn: configBinding(\.actionsToolbarLockPosition))
+            Toggle("Open toolbar at launch", isOn: configBinding(\.actionsToolbarRunAtStartup))
+            Text("Reopen the toolbar to apply button and lock changes.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -727,10 +865,6 @@ struct SettingsView: View {
                     Text(oauthPickerLabel(provider)).tag(provider.rawValue)
                 }
             }
-            Toggle("Retry once when an upload fails", isOn: Binding(
-                get: { config.retryUpload },
-                set: { config.retryUpload = $0; try? config.save() }
-            ))
             simpleHostFields
             cloudHostFields
 
@@ -757,6 +891,37 @@ struct SettingsView: View {
             }
             oauthFields
         }
+        Section("Upload behavior") {
+            Toggle("Disable all uploads", isOn: configBinding(\.disableUpload))
+            TextField("Maximum simultaneous uploads (1–25)",
+                      value: clampedConfigBinding(\.uploadLimit, 1...25), format: .number)
+            Toggle("Retry failed uploads", isOn: configBinding(\.retryUpload))
+            if config.retryUpload {
+                TextField("Retry attempts (1–10)",
+                          value: clampedConfigBinding(\.maxUploadFailRetry, 1...10), format: .number)
+            }
+            Toggle("Warn before uploading more than 10 files", isOn: configBinding(\.showMultiUploadWarning))
+            Toggle("Warn before uploading files over 100 MB", isOn: configBinding(\.showLargeFileSizeWarning))
+        }
+        Section("File upload naming") {
+            Toggle("Rename uploads with the name pattern", isOn: taskBinding(\.fileUploadUseNamePattern))
+            Toggle("Replace problematic characters (spaces → underscores)",
+                   isOn: taskBinding(\.fileUploadReplaceProblematicCharacters))
+            Toggle("Use custom time zone in name patterns", isOn: taskBinding(\.useCustomTimeZone))
+            if task.useCustomTimeZone {
+                TextField("Time zone identifier", text: taskBinding(\.customTimeZoneIdentifier))
+                Text("Examples: UTC, America/New_York, Asia/Tokyo. Unknown identifiers fall back to local time.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        Section("Clipboard upload") {
+            Toggle("Copied URL: upload its contents", isOn: taskBinding(\.clipboardUploadURLContents))
+            Toggle("Copied URL: shorten instead of uploading", isOn: taskBinding(\.clipboardUploadShortenURL))
+            Toggle("Copied URL: share instead of uploading", isOn: taskBinding(\.clipboardUploadShareURL))
+            Toggle("Copied folder: upload an HTML index", isOn: taskBinding(\.clipboardUploadAutoIndexFolder))
+            Toggle("Clear clipboard after clipboard upload", isOn: taskBinding(\.autoClearClipboard))
+        }
         Section("After upload") {
             Toggle("Copy URL to clipboard", isOn: afterUploadBinding(.copyURLToClipboard))
             Toggle("Open URL in browser", isOn: afterUploadBinding(.openURL))
@@ -774,6 +939,28 @@ struct SettingsView: View {
                     Text(service.displayName).tag(service.rawValue)
                 }
             }
+        }
+        Section("URL processing") {
+            TextField("Clipboard format", text: taskBinding(\.clipboardContentFormat))
+                .font(.body.monospaced())
+            TextField("Open-URL format", text: taskBinding(\.openURLFormat))
+                .font(.body.monospaced())
+            TextField("Notification format", text: taskBinding(\.balloonTipContentFormat))
+                .font(.body.monospaced())
+            Text("$result is replaced with the final URL — e.g. ![]($result) for Markdown.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Toggle("Copy URL early (before shortening and formatting)", isOn: taskBinding(\.earlyCopyURL))
+            Toggle("Force HTTPS in result URLs", isOn: taskBinding(\.resultForceHTTPS))
+            Toggle("Regex-replace result URLs", isOn: taskBinding(\.urlRegexReplace))
+            if task.urlRegexReplace {
+                TextField("Pattern", text: taskBinding(\.urlRegexReplacePattern))
+                    .font(.body.monospaced())
+                TextField("Replacement ($1 for groups)", text: taskBinding(\.urlRegexReplaceReplacement))
+                    .font(.body.monospaced())
+            }
+            TextField("Auto-shorten URLs longer than (characters, 0 = off)",
+                      value: clampedBinding(\.autoShortenURLLength, 0...4096), format: .number)
         }
     }
 
