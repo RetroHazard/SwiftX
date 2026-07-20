@@ -228,8 +228,7 @@ enum UploadCoordinator {
                 // transport/host failures earn a retry (C# MaxUploadFailRetry)
                 let retryLimit = appConfig.retryUpload ? max(0, appConfig.maxUploadFailRetry) : 0
                 if attempt < retryLimit, !(error is RoutingError) {
-                    NSLog("Upload failed (%@); retry %d of %d",
-                          error.localizedDescription, attempt + 1, retryLimit)
+                    AppLog.upload.warning("Upload failed (\(error.localizedDescription, privacy: .public)); retry \(attempt + 1) of \(retryLimit)")
                     await MainActor.run {
                         UploadTaskCenter.shared.finish(entryID, state: .retrying)
                     }

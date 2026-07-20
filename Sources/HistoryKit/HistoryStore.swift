@@ -43,10 +43,13 @@ public final class HistoryStore {
     public init(url: URL) {
         try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
         guard sqlite3_open(url.path, &db) == SQLITE_OK else {
-            NSLog("HistoryStore: cannot open %@", url.path)
+            AppLog.history.error("Cannot open \(url.path, privacy: .public)")
             db = nil
             return
         }
+        // upstream v21 HistoryManagerSQLite sets this; matters if a second
+        // writer (e.g. a migration tool) ever holds the file
+        execute("PRAGMA busy_timeout = 5000;")
         execute("""
         CREATE TABLE IF NOT EXISTS History (
             Id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -238,7 +241,7 @@ public final class HistoryStore {
     private func execute(_ sql: String) {
         var errorMessage: UnsafeMutablePointer<CChar>?
         if sqlite3_exec(db, sql, nil, nil, &errorMessage) != SQLITE_OK, let errorMessage {
-            NSLog("HistoryStore: %@", String(cString: errorMessage))
+            AppLog.history.error("\(String(cString: errorMessage), privacy: .public)")
             sqlite3_free(errorMessage)
         }
     }

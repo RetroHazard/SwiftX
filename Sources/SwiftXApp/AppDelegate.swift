@@ -80,14 +80,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             let path = CommandLine.arguments[flagIndex + 1]
             UploadCoordinator.uploadFile(at: URL(fileURLWithPath: path))
             DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
-                NSLog("upload-test pasteboard: %@", NSPasteboard.general.string(forType: .string) ?? "<empty>")
+                AppLog.app.debug("upload-test pasteboard: \(NSPasteboard.general.string(forType: .string) ?? "<empty>", privacy: .public)")
             }
         }
 
         if CommandLine.arguments.contains("--notify-test") {
             UNUserNotificationCenter.current().getNotificationSettings { settings in
-                NSLog("Notification settings: authorizationStatus=%ld alertSetting=%ld",
-                      settings.authorizationStatus.rawValue, settings.alertSetting.rawValue)
+                AppLog.notifications.debug("Notification settings: authorizationStatus=\(settings.authorizationStatus.rawValue) alertSetting=\(settings.alertSetting.rawValue)")
             }
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                 Notifier.notify(title: "SwiftX test", body: "Notifications are working.")
@@ -168,6 +167,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         menu.addItem(.separator())
         menu.addItem(NSMenuItem(title: "Main Window…", action: #selector(showMainWindow), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: "Show Log…", action: #selector(showLog), keyEquivalent: ""))
         let settings = NSMenuItem(title: "Settings…", action: #selector(showSettingsWindow), keyEquivalent: ",")
         menu.addItem(settings)
         menu.addItem(.separator())
@@ -194,6 +194,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             ("Image Thumbnailer…", .imageThumbnailer),
             ("Image Effects…", .imageEffects),
             ("Image Beautifier…", .imageBeautifier),
+            ("Background Remover…", .backgroundRemover),
+            ("Image Comparer…", .imageComparer),
             nil,
             ("Video Converter…", .videoConverter),
             ("Video Thumbnailer…", .videoThumbnailer),
@@ -350,6 +352,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    @objc private func showLog() {
+        ToolWindows.showLog()
+    }
+
     @objc func showMainWindow() {
         if mainWindow == nil {
             mainWindow = makeWindow(title: "SwiftX", size: NSSize(width: 640, height: 420), view: AnyView(MainWindowView()))
@@ -390,7 +396,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // hotkey verbs, .sxcu/.sxie imports) — one dispatch path for both
         let args = CLIParser.arguments(fromURL: url)
         guard !args.isEmpty else {
-            NSLog("SwiftX received URL with no verb: %@", urlString)
+            AppLog.app.warning("Received URL with no verb: \(urlString, privacy: .public)")
             return
         }
         // Any web page can open a swiftx:// URL, so this is untrusted input:

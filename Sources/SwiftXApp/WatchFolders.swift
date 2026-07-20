@@ -35,7 +35,7 @@ final class WatchFolderCenter {
             if let watcher {
                 watchers.append(watcher)
             } else {
-                NSLog("Watch folder skipped, directory missing: %@", folder.folderPath)
+                AppLog.upload.warning("Watch folder skipped, directory missing: \(folder.folderPath, privacy: .public)")
             }
         }
     }
@@ -61,7 +61,7 @@ final class WatchFolderCenter {
                     try FileManager.default.moveItem(at: url, to: destination)
                     url = destination
                 } catch {
-                    NSLog("Watch folder move failed: %@", error.localizedDescription)
+                    AppLog.upload.error("Watch folder move failed: \(error.localizedDescription, privacy: .public)")
                     return
                 }
             }

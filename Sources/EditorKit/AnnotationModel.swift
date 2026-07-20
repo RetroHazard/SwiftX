@@ -98,6 +98,13 @@ public enum AnnotationTool: String, CaseIterable, Identifiable {
     }
 }
 
+/// Upstream v21 arrow style: Classic is the filled triangle head, Modern is
+/// an open chevron stroked at the line width.
+public enum ArrowHeadStyle: String, CaseIterable, Sendable {
+    case classic = "Classic"
+    case modern = "Modern"
+}
+
 public struct AnnotationShape: Identifiable {
     public var id = UUID()
     public var tool: AnnotationTool
@@ -113,6 +120,9 @@ public struct AnnotationShape: Identifiable {
     public var shadow = false
     public var lineWidth: CGFloat = 3
     public var fontSize: CGFloat = 18
+    /// Font family for text/speech-balloon; empty = system font (upstream v20.1 option).
+    public var fontFamily: String = ""
+    public var arrowStyle: ArrowHeadStyle = .classic
     /// Stamp content for the image tool (CGImages are immutable, copies are cheap).
     public var stampImage: CGImage?
 
