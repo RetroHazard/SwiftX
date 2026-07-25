@@ -1,9 +1,8 @@
 "use client";
 
 import { motion } from "motion/react";
-import { ArrowRight, Terminal } from "lucide-react";
-import { links } from "@/lib/content";
-import { GithubMark } from "@/components/icons/github-mark";
+import { release } from "@/lib/content";
+import { InstallActions } from "@/components/install";
 
 export function Cta() {
   return (
@@ -28,41 +27,13 @@ export function Cta() {
             Try it on your own screen
           </h2>
           <p className="mx-auto mt-5 max-w-[52ch] text-[16px] leading-relaxed text-muted">
-            SwiftX is pre-release, so there is no signed download yet — but the
-            source builds and runs today with Swift Package Manager on macOS 14
-            or later.
+            {release.status === "released"
+              ? `Free and open source, for ${release.minMacOS}.`
+              : `SwiftX is pre-release, so there is no signed download yet — but the source builds and runs today with Swift Package Manager on ${release.minMacOS}.`}
           </p>
 
-          <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-            <a
-              href={links.github}
-              target="_blank"
-              rel="noreferrer"
-              className="group flex items-center gap-2 rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-ink transition-transform hover:scale-[1.025] active:scale-[0.98]"
-            >
-              <GithubMark size={16} />
-              Clone the repository
-              <ArrowRight
-                size={14}
-                className="transition-transform group-hover:translate-x-0.5"
-              />
-            </a>
-            <a
-              href={links.releases}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-2 rounded-full border border-line px-6 py-3 text-sm font-medium text-ink-soft transition-colors hover:border-line-strong hover:text-ink"
-            >
-              <Terminal size={15} />
-              Watch for releases
-            </a>
-          </div>
-
-          <div className="readout mx-auto mt-9 flex w-fit items-center gap-2 rounded-lg border border-line bg-panel-2 px-4 py-2.5 text-[12px] text-muted">
-            <span className="text-accent">$</span>
-            <span className="text-ink-soft">
-              git clone https://github.com/RetroHazard/SwiftX.git
-            </span>
+          <div className="mt-9">
+            <InstallActions />
           </div>
         </div>
       </motion.div>
