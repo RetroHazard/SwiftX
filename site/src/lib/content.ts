@@ -42,7 +42,7 @@ export const features: Feature[] = [
   {
     title: "20+ Upload Destinations",
     description:
-      "Amazon S3, Backblaze B2, Azure, ownCloud/Nextcloud, Imgur, and a full custom-uploader engine that reads your existing .sxcu files.",
+      "Amazon S3, Backblaze B2, Azure, ownCloud/Nextcloud, Seafile, and a full custom-uploader engine that reads your existing .sxcu files.",
     icon: "UploadCloud",
   },
   {

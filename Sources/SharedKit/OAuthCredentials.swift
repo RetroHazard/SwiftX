@@ -15,22 +15,18 @@ import Foundation
 /// ShareX destination names for Windows config import).
 public enum OAuthProviderID: String, CaseIterable, Codable, Sendable {
     case googleDrive = "GoogleDrive"
-    case dropbox = "Dropbox"
     case oneDrive = "OneDrive"
-    case box = "Box"
     case youTube = "YouTube"
-    case imgur = "Imgur"
     // ponytail: Photobucket dropped (defunct API), Flickr deferred (OAuth1,
     // niche) — add an OAuth1Flow layer only if Flickr is ever wanted.
+    // Imgur dropped (no longer issues app client IDs), Box dropped (developer
+    // API gated behind a paid plan), Dropbox dropped by choice.
 
     public var displayName: String {
         switch self {
         case .googleDrive: return "Google Drive"
-        case .dropbox: return "Dropbox"
         case .oneDrive: return "OneDrive"
-        case .box: return "Box"
         case .youTube: return "YouTube"
-        case .imgur: return "Imgur"
         }
     }
 }
@@ -68,8 +64,8 @@ public struct OAuthAppCredentials: Codable, Equatable, Sendable {
 /// so real keys stay out of the open-source tree (see OAuthApps.example.plist).
 ///
 /// A desktop app can't truly hide a client secret, so PKCE is the real
-/// protection; hosts that support public clients (Dropbox/OneDrive/Box) need no
-/// secret at all. Google and Imgur ship a semi-public secret, as ShareX does.
+/// protection; hosts that support public clients (OneDrive) need no secret at
+/// all. Google ships a semi-public desktop-client secret, as ShareX does.
 public enum OAuthAppRegistry {
     private static let builtins: [String: OAuthAppCredentials] = load()
 
