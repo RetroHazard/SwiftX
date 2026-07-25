@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { links } from "@/lib/content";
 import { GithubMark } from "@/components/icons/github-mark";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -11,31 +12,58 @@ const navItems = [
   { href: "#faq", label: "FAQ" },
 ];
 
-export function Nav() {
+/**
+ * `variant="sub"` is for pages that are not the landing page — the section
+ * anchors point at sections those pages do not have, so they are replaced by a
+ * route back to the site, and the wordmark becomes a real link rather than a
+ * scroll-to-top.
+ */
+export function Nav({ variant = "home" }: { variant?: "home" | "sub" }) {
+  const sub = variant === "sub";
+
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-ground/85 backdrop-blur-xl">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-6 px-5 sm:px-8">
-        <a href="#top" className="flex shrink-0 items-center gap-2.5">
-          <Image
-            src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/icons/swiftx-192.png`}
-            alt=""
-            width={24}
-            height={24}
-            className="rounded-md"
-          />
-          <span className="display-sm text-[17px] tracking-tight">SwiftX</span>
-        </a>
+        {sub ? (
+          <Link href="/" className="flex shrink-0 items-center gap-2.5">
+            <Image
+              src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/icons/swiftx-192.png`}
+              alt=""
+              width={24}
+              height={24}
+              className="rounded-md"
+            />
+            <span className="display-sm text-[17px] tracking-tight">SwiftX</span>
+          </Link>
+        ) : (
+          <a href="#top" className="flex shrink-0 items-center gap-2.5">
+            <Image
+              src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/icons/swiftx-192.png`}
+              alt=""
+              width={24}
+              height={24}
+              className="rounded-md"
+            />
+            <span className="display-sm text-[17px] tracking-tight">SwiftX</span>
+          </a>
+        )}
 
         <nav className="hidden items-center gap-7 text-sm text-muted md:flex">
-          {navItems.map((item) => (
-            <a
-              key={item.href}
-              href={item.href}
-              className="transition-colors hover:text-ink"
-            >
-              {item.label}
-            </a>
-          ))}
+          {sub ? (
+            <Link href="/" className="transition-colors hover:text-ink">
+              ← Back to SwiftX
+            </Link>
+          ) : (
+            navItems.map((item) => (
+              <a
+                key={item.href}
+                href={item.href}
+                className="transition-colors hover:text-ink"
+              >
+                {item.label}
+              </a>
+            ))
+          )}
         </nav>
 
         <div className="flex items-center gap-2.5">

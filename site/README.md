@@ -31,6 +31,20 @@ capture dimensions, timers, hotkeys and file sizes.
 colours are deliberately *not* themed: it stands in for someone else's screen,
 not for our own surface.
 
+## Legal pages
+
+`/privacy/` and `/terms/` exist because Google and Microsoft both require a
+published privacy policy — and Microsoft a terms-of-service URL — before they
+approve the OAuth app registrations behind the Google Drive, YouTube and
+OneDrive destinations. Those URLs are recorded in the app registrations, so
+**the routes must not move** while the registrations exist.
+
+The copy lives in `src/lib/legal.ts` as plain data and is rendered by
+`LegalDoc`. Google's OAuth verification reads the policy closely, so everything
+it asserts has to stay true of the code: when a destination, OAuth scope,
+locally stored file or outbound network call changes in `Sources/`, update
+`src/lib/legal.ts` in the same commit and move its `effective` date.
+
 ## Developing
 
 ```bash
