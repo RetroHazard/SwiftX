@@ -1,0 +1,214 @@
+# SwiftX release pipeline: build → sign → notarize → publish → distribute.
+#
+# Triggered by pushing a tag like v0.2.0, or manually via workflow_dispatch
+# with a version input (which creates the tag as part of the release).
+#
+# Required repository secrets (Settings → Secrets and variables → Actions):
+#   APPLE_CERTIFICATE_P12       base64 of the "Developer ID Application" .p12
+#   APPLE_CERTIFICATE_PASSWORD  password protecting that .p12
+#   APPLE_ID                    Apple ID email used for notarization
+#   APPLE_TEAM_ID               10-char Apple Developer Team ID
+#   APPLE_APP_PASSWORD          app-specific password for notarytool
+#
+# Optional secrets (skipped gracefully when absent):
+#   OAUTH_GOOGLE_CLIENT_ID      Google Cloud desktop OAuth client (Drive + YouTube)
+#   OAUTH_GOOGLE_CLIENT_SECRET  its (semi-public) desktop-client secret
+#   OAUTH_ONEDRIVE_CLIENT_ID    Azure app registration (public client, PKCE)
+#   TAP_REPO_TOKEN              PAT with write access to RetroHazard/homebrew-swiftx
+
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release, without the v prefix (e.g. 0.2.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+# One release at a time; never cancel a half-published release.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: github.repository == 'RetroHazard/SwiftX'
+    runs-on: macos-15
+    steps:
+      - name: Determine version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            VERSION="$INPUT_VERSION"
+          else
+            VERSION="${GITHUB_REF_NAME#v}"
+          fi
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.]+)?$ ]]; then
+            echo "::error::'$VERSION' is not a valid version (expected e.g. 0.2.0)"
+            exit 1
+          fi
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "Releasing SwiftX $VERSION"
+
+      - name: Check required secrets
+        env:
+          APPLE_CERTIFICATE_P12: ${{ secrets.APPLE_CERTIFICATE_P12 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+          OAUTH_GOOGLE_CLIENT_ID: ${{ secrets.OAUTH_GOOGLE_CLIENT_ID }}
+          OAUTH_ONEDRIVE_CLIENT_ID: ${{ secrets.OAUTH_ONEDRIVE_CLIENT_ID }}
+          TAP_REPO_TOKEN: ${{ secrets.TAP_REPO_TOKEN }}
+        run: |
+          MISSING=()
+          for s in APPLE_CERTIFICATE_P12 APPLE_CERTIFICATE_PASSWORD APPLE_ID APPLE_TEAM_ID APPLE_APP_PASSWORD; do
+            [ -n "${!s}" ] || MISSING+=("$s")
+          done
+          if [ "${#MISSING[@]}" -gt 0 ]; then
+            echo "::error::Missing required repository secrets: ${MISSING[*]} — see .github/workflows/release.yml header and docs/macos-swift-port/DISTRIBUTION.md"
+            exit 1
+          fi
+          [ -n "$OAUTH_GOOGLE_CLIENT_ID" ] || echo "::warning::OAUTH_GOOGLE_CLIENT_ID not set — Google Drive & YouTube will be disabled in this build"
+          [ -n "$OAUTH_ONEDRIVE_CLIENT_ID" ] || echo "::warning::OAUTH_ONEDRIVE_CLIENT_ID not set — OneDrive will be disabled in this build"
+          [ -n "$TAP_REPO_TOKEN" ] || echo "::warning::TAP_REPO_TOKEN not set — Homebrew tap will not be updated automatically"
+
+      - uses: actions/checkout@v5
+
+      - name: Run tests
+        run: swift test
+
+      - name: Import Developer ID certificate
+        env:
+          APPLE_CERTIFICATE_P12: ${{ secrets.APPLE_CERTIFICATE_P12 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          KEYCHAIN="$RUNNER_TEMP/swiftx-signing.keychain-db"
+          KEYCHAIN_PW="$(uuidgen)"
+          security create-keychain -p "$KEYCHAIN_PW" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PW" "$KEYCHAIN"
+
+          echo "$APPLE_CERTIFICATE_P12" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security import "$RUNNER_TEMP/cert.p12" -k "$KEYCHAIN" \
+            -P "$APPLE_CERTIFICATE_PASSWORD" -f pkcs12 -T /usr/bin/codesign
+          rm -f "$RUNNER_TEMP/cert.p12"
+
+          security list-keychains -d user -s "$KEYCHAIN" login.keychain-db
+          # let codesign use the key without a UI password prompt
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PW" "$KEYCHAIN" >/dev/null
+
+          security find-identity -v -p codesigning "$KEYCHAIN" | grep -q "Developer ID Application" || {
+            echo "::error::APPLE_CERTIFICATE_P12 does not contain a 'Developer ID Application' identity"
+            exit 1
+          }
+
+      - name: Bake OAuth app credentials
+        env:
+          OAUTH_GOOGLE_CLIENT_ID: ${{ secrets.OAUTH_GOOGLE_CLIENT_ID }}
+          OAUTH_GOOGLE_CLIENT_SECRET: ${{ secrets.OAUTH_GOOGLE_CLIENT_SECRET }}
+          OAUTH_ONEDRIVE_CLIENT_ID: ${{ secrets.OAUTH_ONEDRIVE_CLIENT_ID }}
+        run: ./Scripts/write-oauth-plist.sh
+
+      - name: Build, bundle and sign SwiftX.app
+        env:
+          SWIFTX_UNIVERSAL: "1"
+          SWIFTX_REQUIRE_IDENTITY: "1"
+        run: ./Scripts/make-app.sh "$VERSION"
+
+      - name: Verify signature
+        run: |
+          codesign --verify --deep --strict --verbose=2 build/SwiftX.app
+          codesign -dv build/SwiftX.app 2>&1 | grep -q "Authority=Developer ID Application" || {
+            echo "::error::App is not signed with a Developer ID Application certificate"
+            exit 1
+          }
+          lipo -info build/SwiftX.app/Contents/MacOS/SwiftX
+
+      - name: Package and sign DMG
+        run: |
+          ./Scripts/make-dmg.sh "$VERSION"
+          IDENTITY=$(security find-identity -v -p codesigning | awk -F'"' '/Developer ID Application/ {print $2; exit}')
+          codesign --force --timestamp --sign "$IDENTITY" "build/SwiftX-$VERSION.dmg"
+
+      - name: Notarize and staple
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+        run: ./Scripts/notarize.sh "build/SwiftX-$VERSION.dmg"
+
+      - name: Gatekeeper assessment
+        run: spctl --assess --type open --context context:primary-signature -v "build/SwiftX-$VERSION.dmg"
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          DMG="build/SwiftX-$VERSION.dmg"
+          shasum -a 256 "$DMG" | awk '{print $1}' > "$DMG.sha256"
+          echo "SHA256=$(cat "$DMG.sha256")" >> "$GITHUB_ENV"
+          ARGS=(--title "SwiftX $VERSION" --generate-notes)
+          # manual dispatch runs from a branch head; create the tag with the release
+          [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ] && ARGS+=(--target "$GITHUB_SHA")
+          gh release create "v$VERSION" "$DMG" "$DMG.sha256" "${ARGS[@]}"
+
+      - name: Bump cask and site version on master
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin master
+          git checkout -B master origin/master
+          sed -i '' -E "s/^  version \"[^\"]*\"/  version \"$VERSION\"/" Casks/swiftx.rb
+          sed -i '' -E "s/^  sha256 \"[^\"]*\"/  sha256 \"$SHA256\"/" Casks/swiftx.rb
+          sed -i '' -E "s/^const version = \"[^\"]*\";/const version = \"$VERSION\";/" site/src/lib/content.ts
+          # a published release now exists, so the site can point at real downloads
+          sed -i '' 's/status: "pre-release"/status: "released"/' site/src/lib/content.ts
+          if git diff --quiet; then
+            echo "cask/site already at $VERSION; nothing to commit"
+          else
+            git commit -am "Bump cask and site to $VERSION"
+            for i in 1 2 3; do
+              git push origin master && break
+              git pull --rebase origin master
+            done
+          fi
+
+      - name: Publish cask to Homebrew tap
+        env:
+          TAP_REPO_TOKEN: ${{ secrets.TAP_REPO_TOKEN }}
+        run: |
+          if [ -z "$TAP_REPO_TOKEN" ]; then
+            echo "TAP_REPO_TOKEN not set; skipping tap update. Copy Casks/swiftx.rb to RetroHazard/homebrew-swiftx manually."
+            exit 0
+          fi
+          git clone "https://x-access-token:${TAP_REPO_TOKEN}@github.com/RetroHazard/homebrew-swiftx.git" "$RUNNER_TEMP/tap"
+          mkdir -p "$RUNNER_TEMP/tap/Casks"
+          cp Casks/swiftx.rb "$RUNNER_TEMP/tap/Casks/swiftx.rb"
+          cd "$RUNNER_TEMP/tap"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "tap already up to date"
+          else
+            git commit -m "swiftx $VERSION"
+            git push
+          fi
+
+      - name: Clean up signing keychain
+        if: always()
+        run: |
+          KEYCHAIN="$RUNNER_TEMP/swiftx-signing.keychain-db"
+          if [ -f "$KEYCHAIN" ]; then
+            security delete-keychain "$KEYCHAIN" || true
+          fi
