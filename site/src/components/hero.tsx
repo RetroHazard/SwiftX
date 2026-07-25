@@ -1,93 +1,127 @@
 "use client";
 
 import { motion } from "motion/react";
-import { ArrowRight, Terminal } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { links } from "@/lib/content";
-import { MockWindow } from "@/components/mock-window";
+import { CaptureOverlay } from "@/components/capture-overlay";
 import { GithubMark } from "@/components/icons/github-mark";
+
+const rise = {
+  hidden: { opacity: 0, y: 14 },
+  show: { opacity: 1, y: 0 },
+};
 
 export function Hero() {
   return (
-    <section
-      id="top"
-      className="relative flex flex-col items-center px-4 pb-16 pt-40 text-center sm:pt-48"
-    >
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3.5 py-1.5 text-xs text-white/60"
-      >
-        <span className="relative flex h-1.5 w-1.5">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
-        </span>
-        Native menu bar app &middot; Swift &amp; SwiftUI
-      </motion.div>
+    <section id="top" className="relative overflow-hidden">
+      {/* one soft warm bloom behind the capture, so the accent has somewhere
+          to come from without turning into a gradient wash */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute right-[-10%] top-[-25%] h-[42rem] w-[42rem] rounded-full opacity-[0.14] blur-3xl"
+        style={{
+          background:
+            "radial-gradient(circle at center, var(--accent-hot), transparent 62%)",
+        }}
+      />
 
-      <motion.h1
-        initial={{ opacity: 0, y: 18 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, delay: 0.1 }}
-        className="mt-6 max-w-3xl text-balance text-5xl font-semibold tracking-tight text-white sm:text-6xl md:text-7xl"
-      >
-        Capture, annotate, and share
-        <span className="bg-gradient-to-r from-indigo-400 via-sky-300 to-fuchsia-400 bg-clip-text text-transparent">
-          {" "}
-          — built for the Mac.
-        </span>
-      </motion.h1>
-
-      <motion.p
-        initial={{ opacity: 0, y: 18 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, delay: 0.2 }}
-        className="mt-6 max-w-xl text-balance text-lg text-white/60"
-      >
-        SwiftX is a native macOS menu bar app for screen capture, recording,
-        annotation, and uploads — built from the ground up in Swift on
-        ScreenCaptureKit, SwiftUI, and Vision, with a workflow inspired by
-        ShareX.
-      </motion.p>
-
-      <motion.div
-        initial={{ opacity: 0, y: 18 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, delay: 0.3 }}
-        className="mt-9 flex flex-wrap items-center justify-center gap-3"
-      >
-        <a
-          href={links.github}
-          target="_blank"
-          rel="noreferrer"
-          className="group flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-medium text-black transition-transform hover:scale-[1.03] active:scale-[0.98]"
+      <div className="relative mx-auto grid max-w-6xl items-center gap-14 px-5 pb-20 pt-16 sm:px-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1.1fr)] lg:gap-14 lg:pb-28 lg:pt-24">
+        <motion.div
+          initial="hidden"
+          animate="show"
+          transition={{ staggerChildren: 0.09 }}
         >
-          <GithubMark size={16} />
-          Star on GitHub
-          <ArrowRight
-            size={14}
-            className="transition-transform group-hover:translate-x-0.5"
-          />
-        </a>
-        <a
-          href={links.roadmap}
-          target="_blank"
-          rel="noreferrer"
-          className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-medium text-white/80 backdrop-blur transition-colors hover:border-white/25 hover:bg-white/10 hover:text-white"
-        >
-          <Terminal size={15} />
-          Read the roadmap
-        </a>
-      </motion.div>
+          <motion.div
+            variants={rise}
+            transition={{ duration: 0.5 }}
+            className="mb-6 inline-flex items-center gap-2 rounded-full border border-line bg-panel px-3 py-1.5"
+          >
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full animate-rec rounded-full bg-accent" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent" />
+            </span>
+            <span className="eyebrow !text-[10px] !tracking-[0.14em] text-ink-soft">
+              Native macOS menu bar app
+            </span>
+          </motion.div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 32, scale: 0.97 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.8, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className="mt-20 w-full max-w-4xl"
-      >
-        <MockWindow />
-      </motion.div>
+          <motion.h1
+            variants={rise}
+            transition={{ duration: 0.6 }}
+            className="display text-[clamp(2.3rem,4.3vw,3.5rem)]"
+          >
+            <span className="block whitespace-nowrap">Capture it.</span>
+            <span className="block whitespace-nowrap">Mark it up.</span>
+            <span className="block whitespace-nowrap text-accent">
+              Paste the link.
+            </span>
+          </motion.h1>
+
+          <motion.p
+            variants={rise}
+            transition={{ duration: 0.6 }}
+            className="mt-6 max-w-[46ch] text-[17px] leading-relaxed text-muted"
+          >
+            SwiftX takes a screenshot from hotkey to shareable URL without you
+            touching another app. Annotation, effects, recording and your own
+            upload destinations — one pass, no round trips.
+          </motion.p>
+
+          <motion.div
+            variants={rise}
+            transition={{ duration: 0.6 }}
+            className="mt-9 flex flex-wrap items-center gap-3"
+          >
+            <a
+              href={links.github}
+              target="_blank"
+              rel="noreferrer"
+              className="group flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-accent-ink transition-transform hover:scale-[1.025] active:scale-[0.98]"
+            >
+              <GithubMark size={15} />
+              Build it from source
+              <ArrowRight
+                size={14}
+                className="transition-transform group-hover:translate-x-0.5"
+              />
+            </a>
+            <a
+              href="#workflow"
+              className="rounded-full border border-line px-5 py-2.5 text-sm font-medium text-ink-soft transition-colors hover:border-line-strong hover:text-ink"
+            >
+              See how it works
+            </a>
+          </motion.div>
+
+          {/* The honest status line — everything the old roadmap section was
+              actually telling people, in one sentence. */}
+          <motion.p
+            variants={rise}
+            transition={{ duration: 0.6 }}
+            className="mt-6 text-[13px] leading-relaxed text-muted"
+          >
+            Pre-release. Capture, editing, recording and uploads all work
+            today; signed and notarized builds arrive with 1.0 —{" "}
+            <a
+              href={links.roadmap}
+              target="_blank"
+              rel="noreferrer"
+              className="text-ink-soft underline decoration-line-strong underline-offset-4 transition-colors hover:text-accent hover:decoration-accent"
+            >
+              track what&rsquo;s left
+            </a>
+            .
+          </motion.p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 22, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.8, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <CaptureOverlay />
+        </motion.div>
+      </div>
     </section>
   );
 }

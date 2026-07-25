@@ -1,23 +1,23 @@
-import { AuroraBackground } from "@/components/aurora-background";
 import { Nav } from "@/components/nav";
 import { Hero } from "@/components/hero";
-import { StatsBand } from "@/components/stats-band";
-import { FeatureGrid } from "@/components/feature-grid";
-import { Roadmap } from "@/components/roadmap";
+import { WorkflowStrip } from "@/components/workflow-strip";
+import { Features } from "@/components/features";
+import { MenuBar } from "@/components/menubar";
+import { Compat } from "@/components/compat";
 import { Faq } from "@/components/faq";
 import { Cta } from "@/components/cta";
 import { Footer } from "@/components/footer";
 
 export default function Home() {
   return (
-    <div className="relative flex min-h-screen flex-col overflow-x-clip">
-      <AuroraBackground />
+    <div className="flex min-h-screen flex-col overflow-x-clip">
       <Nav />
       <main className="flex-1">
         <Hero />
-        <StatsBand />
-        <FeatureGrid />
-        <Roadmap />
+        <WorkflowStrip />
+        <Features />
+        <MenuBar />
+        <Compat />
         <Faq />
         <Cta />
       </main>
