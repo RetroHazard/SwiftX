@@ -273,7 +273,9 @@ export const privacy: LegalDoc = {
             "Secrets are held in the macOS Keychain rather than in plain-text configuration files.",
             "Every OAuth flow uses PKCE with a loopback redirect, so no authorization code passes through a third-party redirect service.",
             "Uploads use HTTPS wherever the destination offers it. If you point a custom uploader at a plain-text endpoint, that is your decision to make.",
-            "Builds run under the macOS hardened runtime with no entitlement exceptions.",
+            "Release builds are signed with an Apple Developer ID certificate and notarized by Apple, and the notarization ticket is stapled to the disk image — so macOS can verify the build is genuine and unaltered even with no network connection.",
+            "They run under the macOS hardened runtime with no entitlement exceptions, so every protection it offers — library validation, no unsigned executable memory, no debugger attach — stays at its strictest setting.",
+            "Releases are built and signed by a public automated workflow from tagged source in the repository, not assembled by hand on a maintainer's machine. What the release contains is what the public commit says it contains.",
           ],
         },
         {
