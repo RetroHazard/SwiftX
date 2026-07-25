@@ -4,13 +4,23 @@ Releases are fully automated by **`.github/workflows/release.yml`**: push a
 `v<version>` tag (or run the workflow manually with a version input) and the
 pipeline builds a universal (arm64 + x86_64) app, signs it with the Developer
 ID certificate, bakes in the OAuth app credentials, packages a DMG,
-notarizes + staples it, publishes a GitHub Release, bumps `Casks/swiftx.rb`
-and the site version on `master`, and pushes the cask to the
-`RetroHazard/homebrew-swiftx` tap.
+notarizes + staples it, publishes a GitHub Release, and bumps
+`Casks/swiftx.rb` and the site version on `master`.
+
+**This repo doubles as the Homebrew tap** — no separate `homebrew-swiftx`
+repo. `Casks/swiftx.rb` at the repo root is what `brew` reads, so the cask
+bump on `master` *is* the Homebrew release. Because the repo name lacks the
+`homebrew-` prefix, the shorthand auto-tap doesn't apply; users tap by URL
+once, then install:
 
 ```
-brew install --cask retrohazard/swiftx/swiftx
+brew tap retrohazard/swiftx https://github.com/RetroHazard/SwiftX
+brew install --cask swiftx
 ```
+
+Known tradeoff, accepted for now: `brew tap` full-clones the repo, so
+Homebrew users pull the whole source tree for one cask file. This goes away
+when SwiftX lands in the official `homebrew/cask` repo (see below).
 
 ## Cutting a release
 
@@ -24,9 +34,8 @@ with the version (no `v` prefix) — that path creates the tag for you.
 
 The pipeline is all-or-nothing on signing: if the Developer ID certificate or
 notary credentials are missing or wrong, the workflow **fails** rather than
-shipping an unsigned artifact. OAuth credentials and the tap token are
-optional — missing ones only produce warnings (OAuth destinations disabled in
-that build / tap not updated).
+shipping an unsigned artifact. OAuth credentials are optional — missing ones
+only produce warnings (those destinations are disabled in that build).
 
 ## Repository secrets
 
@@ -73,17 +82,6 @@ One-time provider registration:
   under Authentication → Advanced set **Allow public client flows: Yes**. Do
   not create a client secret.
 
-### Optional — Homebrew tap
-
-| Secret | Contents |
-|---|---|
-| `TAP_REPO_TOKEN` | a fine-grained PAT with **Contents: Read and write** on `RetroHazard/homebrew-swiftx` |
-
-One-time: create the public repo **`RetroHazard/homebrew-swiftx`** (the
-`homebrew-` prefix is what makes `brew tap` find it). The workflow copies
-`Casks/swiftx.rb` into `Casks/` there on every release; this repo's copy stays
-the source of truth.
-
 ## What the pipeline does, step by step
 
 1. Resolves + validates the version from the tag (or dispatch input).
@@ -100,7 +98,8 @@ the source of truth.
 9. `gh release create v<version>` with the DMG + a `.sha256` file and
    generated notes.
 10. Commits the version + sha256 bump to `Casks/swiftx.rb` and
-    `site/src/lib/content.ts` on `master`, and pushes the cask to the tap.
+    `site/src/lib/content.ts` on `master` — which, since this repo is the
+    tap, is what ships the update to `brew upgrade` users.
 
 Everything the workflow runs is also runnable locally (`make-app.sh`,
 `make-dmg.sh`, `notarize.sh` with a `swiftx-notary` keychain profile), so a
@@ -112,7 +111,8 @@ Now that releases are notarized and the cask carries no quarantine
 workaround, the remaining blocker for the official repo is the `brew audit
 --new` notability check (GitHub stars/forks/watchers on a young repo). Path:
 accumulate some traction → submit a new-cask PR and let `brew audit --new`
-pass clean. Until then the personal tap is identical UX for users.
+pass clean. Landing there upgrades the UX to a plain `brew install --cask
+swiftx` (no tap-by-URL step) and ends the full-clone tradeoff above.
 
 ## Updates
 

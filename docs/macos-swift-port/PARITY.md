@@ -162,7 +162,7 @@ upstream deltas as new versions ship.
 
 | Feature | Status |
 |---|---|
-| DMG packaging + Homebrew cask | Ported — `Scripts/make-dmg.sh` builds a drag-to-install DMG (hdiutil); `Casks/swiftx.rb` (personal tap `retrohazard/swiftx`, `brew style` clean) with a real sha256; `docs/macos-swift-port/DISTRIBUTION.md` runbook. Official `homebrew/cask` is a follow-up (needs notarization + traction) |
+| DMG packaging + Homebrew cask | Ported — `Scripts/make-dmg.sh` builds a drag-to-install DMG (hdiutil); `Casks/swiftx.rb` (this repo doubles as the tap — `brew tap retrohazard/swiftx <repo url>` — `brew style` clean) with a real sha256; `docs/macos-swift-port/DISTRIBUTION.md` runbook. Official `homebrew/cask` is a follow-up (needs notarization + traction) |
 | Developer ID signing, notarization | Partial — `Scripts/notarize.sh` (notarytool submit + staple) ready but dormant; needs the paid Apple Developer Program (only an "Apple Development" cert exists). Interim builds ship unsigned; the cask's `postflight` strips `com.apple.quarantine` so they launch |
 | Sparkle auto-update (Release/PreRelease) | N/A — `brew upgrade --cask` is the update channel; revisit only if a direct-download channel is added |
 | Login item, settings import from Windows backup, localization infra | Planned (11) |
