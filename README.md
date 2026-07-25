@@ -25,8 +25,9 @@ preserved alongside the SwiftX copyright — see [License &amp; credits](#licens
 
 SwiftX is under active development. Most of the ShareX feature set already runs on macOS; see the
 [feature parity tracker](docs/macos-swift-port/PARITY.md) for what's ported, partial, or still
-planned. There is no signed/notarized release yet — build from source (below) until Phase 11
-(distribution) lands.
+planned. Releases are built, signed, and notarized by the
+[release pipeline](docs/macos-swift-port/DISTRIBUTION.md); until the first tagged release lands,
+build from source (below).
 
 ## Features
 
