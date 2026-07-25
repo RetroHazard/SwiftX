@@ -3,7 +3,7 @@
 // Licensed under GPL v3 - see /LICENSE.txt
 //
 // Catches the OAuth redirect on http://127.0.0.1:<port>/. We use a loopback
-// listener rather than a custom URL scheme because Google/Dropbox/Microsoft
+// listener rather than a custom URL scheme because Google and Microsoft
 // reject non-loopback redirect URIs for desktop clients — this mirrors what
 // C# ShareX does with its HttpListener.
 
