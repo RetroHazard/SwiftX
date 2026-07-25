@@ -14,7 +14,9 @@
 #   OAUTH_GOOGLE_CLIENT_ID      Google Cloud desktop OAuth client (Drive + YouTube)
 #   OAUTH_GOOGLE_CLIENT_SECRET  its (semi-public) desktop-client secret
 #   OAUTH_ONEDRIVE_CLIENT_ID    Azure app registration (public client, PKCE)
-#   TAP_REPO_TOKEN              PAT with write access to RetroHazard/homebrew-swiftx
+#
+# Homebrew: this repo IS the tap (brew tap retrohazard/swiftx <repo url>), so
+# the cask bump on master is the whole Homebrew release — no separate tap repo.
 
 name: Release
 
@@ -66,7 +68,6 @@ jobs:
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
           OAUTH_GOOGLE_CLIENT_ID: ${{ secrets.OAUTH_GOOGLE_CLIENT_ID }}
           OAUTH_ONEDRIVE_CLIENT_ID: ${{ secrets.OAUTH_ONEDRIVE_CLIENT_ID }}
-          TAP_REPO_TOKEN: ${{ secrets.TAP_REPO_TOKEN }}
         run: |
           MISSING=()
           for s in APPLE_CERTIFICATE_P12 APPLE_CERTIFICATE_PASSWORD APPLE_ID APPLE_TEAM_ID APPLE_APP_PASSWORD; do
@@ -78,7 +79,6 @@ jobs:
           fi
           [ -n "$OAUTH_GOOGLE_CLIENT_ID" ] || echo "::warning::OAUTH_GOOGLE_CLIENT_ID not set — Google Drive & YouTube will be disabled in this build"
           [ -n "$OAUTH_ONEDRIVE_CLIENT_ID" ] || echo "::warning::OAUTH_ONEDRIVE_CLIENT_ID not set — OneDrive will be disabled in this build"
-          [ -n "$TAP_REPO_TOKEN" ] || echo "::warning::TAP_REPO_TOKEN not set — Homebrew tap will not be updated automatically"
 
       - uses: actions/checkout@v5
 
@@ -160,6 +160,8 @@ jobs:
           [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ] && ARGS+=(--target "$GITHUB_SHA")
           gh release create "v$VERSION" "$DMG" "$DMG.sha256" "${ARGS[@]}"
 
+      # This repo doubles as the Homebrew tap, so landing the cask bump on
+      # master is what ships the release to `brew upgrade` users.
       - name: Bump cask and site version on master
         env:
           GH_TOKEN: ${{ github.token }}
@@ -181,28 +183,6 @@ jobs:
               git push origin master && break
               git pull --rebase origin master
             done
-          fi
-
-      - name: Publish cask to Homebrew tap
-        env:
-          TAP_REPO_TOKEN: ${{ secrets.TAP_REPO_TOKEN }}
-        run: |
-          if [ -z "$TAP_REPO_TOKEN" ]; then
-            echo "TAP_REPO_TOKEN not set; skipping tap update. Copy Casks/swiftx.rb to RetroHazard/homebrew-swiftx manually."
-            exit 0
-          fi
-          git clone "https://x-access-token:${TAP_REPO_TOKEN}@github.com/RetroHazard/homebrew-swiftx.git" "$RUNNER_TEMP/tap"
-          mkdir -p "$RUNNER_TEMP/tap/Casks"
-          cp Casks/swiftx.rb "$RUNNER_TEMP/tap/Casks/swiftx.rb"
-          cd "$RUNNER_TEMP/tap"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          if git diff --cached --quiet; then
-            echo "tap already up to date"
-          else
-            git commit -m "swiftx $VERSION"
-            git push
           fi
 
       - name: Clean up signing keychain
