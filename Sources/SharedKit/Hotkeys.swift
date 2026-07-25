@@ -8,8 +8,8 @@
 
 import Foundation
 
-/// Every action ShareX can bind to a hotkey (or invoke from the CLI).
-/// Unimplemented cases are dispatched as no-ops until their phase lands.
+/// Every action SwiftX can bind to a hotkey (or invoke from the CLI).
+/// Raw values match C# HotkeyType names so Windows configs import cleanly.
 public enum HotkeyType: String, Codable, CaseIterable {
     case none = "None"
     // Upload

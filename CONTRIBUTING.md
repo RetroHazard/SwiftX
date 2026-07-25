@@ -19,7 +19,7 @@ Always exercise SwiftX through the built `.app` bundle, never the raw binary fro
 `.build/debug/swiftx` — Screen Recording and Accessibility permission grants are tied to the
 bundle path, and a terminal launch never gets prompted. If a TCC-gated feature (screen capture,
 recording, window inspection) misbehaves, check
-[`docs/solutions/runtime-errors/tcc-screen-recording-responsible-process-ShareXmacOS-20260708.md`](docs/solutions/runtime-errors/tcc-screen-recording-responsible-process-ShareXmacOS-20260708.md)
+[`docs/solutions/runtime-errors/tcc-screen-recording-responsible-process-SwiftX-20260708.md`](docs/solutions/runtime-errors/tcc-screen-recording-responsible-process-SwiftX-20260708.md)
 before debugging further.
 
 ## Where things live
@@ -54,8 +54,13 @@ before debugging further.
   // Licensed under GPL v3 - see /LICENSE.txt
   ```
 
-  When in doubt, check whether the logic traces back to a specific C# file (a name-parser code, an
+  When in doubt, check whether the logic traces back to a specific C# file (a name-parser macro, an
   effect kernel, an uploader syntax) — if it does, use the "derived from" header.
+
+- Known limitations and deliberately deferred work are marked with a `ponytail:` comment (this
+  repo's equivalent of `TODO:`, chosen because it never collides with markers in vendored or
+  generated code — `grep -rn "ponytail:" Sources` lists every open item). Use it for "works, but…"
+  notes and intentional simplifications; don't add bare `TODO`/`FIXME` markers.
 
 - Where a C# behavior has a well-defined shape (settings JSON keys, `.sxcu`/`.sxie` file formats,
   hotkey verb names, history schema), match it exactly so files and configs stay portable between

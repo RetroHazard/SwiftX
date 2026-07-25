@@ -143,8 +143,8 @@ public struct CustomUploaderItem: Codable, Equatable {
     }
 }
 
-/// .sxcu files live in Application Support/ShareX/CustomUploaders/,
-/// same layout as Windows ShareX.
+/// .sxcu files live in Application Support/SwiftX/CustomUploaders/ —
+/// the same relative layout Windows ShareX uses under its own folder.
 public enum CustomUploaderStore {
     public static var directory: URL {
         SettingsPaths.root.appendingPathComponent("CustomUploaders", isDirectory: true)
