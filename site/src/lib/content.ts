@@ -26,7 +26,10 @@ export const release: Release = {
   version,
   minMacOS: "macOS 14 Sonoma or later",
   dmgUrl: `https://github.com/RetroHazard/SwiftX/releases/download/v${version}/SwiftX-${version}.dmg`,
-  brewCommand: "brew install --cask retrohazard/swiftx/swiftx",
+  // The SwiftX repo doubles as the Homebrew tap (no homebrew- prefix), so the
+  // shorthand auto-tap doesn't apply — tap by URL first, then install.
+  brewCommand:
+    "brew tap retrohazard/swiftx https://github.com/RetroHazard/SwiftX && brew install --cask swiftx",
 };
 
 export const links = {
@@ -141,7 +144,7 @@ export const faqs: FaqItem[] = [
   {
     question: "How will I install it?",
     answer:
-      "Two ways, once the first build ships: download the .dmg straight from the GitHub releases page, or install the Homebrew cask with `brew install --cask retrohazard/swiftx/swiftx` and get updates through `brew upgrade`. Builds will be signed with an Apple Developer ID and notarized, so Gatekeeper opens them without a right-click or a trip to System Settings. Building from source is only the stopgap while that pipeline is being set up.",
+      "Two ways, once the first build ships: download the .dmg straight from the GitHub releases page, or tap the SwiftX repo with `brew tap retrohazard/swiftx https://github.com/RetroHazard/SwiftX`, install with `brew install --cask swiftx`, and get updates through `brew upgrade`. Builds will be signed with an Apple Developer ID and notarized, so Gatekeeper opens them without a right-click or a trip to System Settings. Building from source is only the stopgap while that pipeline is being set up.",
   },
   {
     question: "What does it need to run?",
