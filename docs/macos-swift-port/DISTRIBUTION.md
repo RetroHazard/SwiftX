@@ -32,6 +32,17 @@ git push origin v0.2.0
 That's the whole runbook. Alternatively: Actions → Release → "Run workflow"
 with the version (no `v` prefix) — that path creates the tag for you.
 
+### Dry run
+
+The manual trigger has a **dry-run** checkbox: everything real happens —
+tests, universal build, Developer ID signing, DMG, notarization, stapling,
+Gatekeeper assessment — but nothing is published (no tag, no GitHub Release,
+no cask/site bump). The notarized DMG and its `.sha256` are uploaded as a
+workflow artifact instead; download it, mount it, and launch the app to
+verify Gatekeeper accepts it silently. Use this to validate the signing
+secrets before the first real release. Notarization submissions have no
+public side effect, so dry runs are safe to repeat.
+
 The pipeline is all-or-nothing on signing: if the Developer ID certificate or
 notary credentials are missing or wrong, the workflow **fails** rather than
 shipping an unsigned artifact. OAuth credentials are optional — missing ones
