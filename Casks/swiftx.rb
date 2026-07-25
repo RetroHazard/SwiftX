@@ -9,7 +9,10 @@ cask "swiftx" do
 
   # Menu-bar (LSUIElement) app. No auto_updates stanza: `brew upgrade --cask` is
   # the update channel, so Sparkle is unnecessary.
-  depends_on macos: :ventura # Info.plist LSMinimumSystemVersion 13.0; :ventura means ">= 13"
+  # Matches Package.swift's .macOS(.v14) and the bundle's LSMinimumSystemVersion
+  # 14.0. SwiftX calls SCScreenshotManager, which is macOS 14+, so a Ventura
+  # install would place an app that cannot run.
+  depends_on macos: :sonoma # ">= 14"
 
   app "SwiftX.app"
 
