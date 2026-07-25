@@ -3,51 +3,53 @@
 import Image from "next/image";
 import { links } from "@/lib/content";
 import { GithubMark } from "@/components/icons/github-mark";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const navItems = [
+  { href: "#workflow", label: "How it works" },
   { href: "#features", label: "Features" },
-  { href: "#roadmap", label: "Roadmap" },
   { href: "#faq", label: "FAQ" },
 ];
 
 export function Nav() {
   return (
-    <header className="fixed inset-x-0 top-0 z-50 flex justify-center px-4 pt-4">
-      <div className="flex w-full max-w-5xl items-center justify-between rounded-full border border-white/10 bg-black/40 px-4 py-2.5 backdrop-blur-xl supports-[backdrop-filter]:bg-black/30">
-        <a href="#top" className="flex items-center gap-2">
+    <header className="sticky top-0 z-50 border-b border-line bg-ground/85 backdrop-blur-xl">
+      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-6 px-5 sm:px-8">
+        <a href="#top" className="flex shrink-0 items-center gap-2.5">
           <Image
             src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/icons/swiftx-192.png`}
-            alt="SwiftX"
-            width={26}
-            height={26}
-            className="rounded-lg"
+            alt=""
+            width={24}
+            height={24}
+            className="rounded-md"
           />
-          <span className="text-sm font-semibold tracking-tight text-white">
-            SwiftX
-          </span>
+          <span className="display-sm text-[17px] tracking-tight">SwiftX</span>
         </a>
 
-        <nav className="hidden items-center gap-6 text-sm text-white/70 md:flex">
+        <nav className="hidden items-center gap-7 text-sm text-muted md:flex">
           {navItems.map((item) => (
             <a
               key={item.href}
               href={item.href}
-              className="transition-colors hover:text-white"
+              className="transition-colors hover:text-ink"
             >
               {item.label}
             </a>
           ))}
         </nav>
 
-        <a
-          href={links.github}
-          target="_blank"
-          rel="noreferrer"
-          className="flex items-center gap-1.5 rounded-full bg-white px-3.5 py-1.5 text-sm font-medium text-black transition-transform hover:scale-[1.03] active:scale-[0.98]"
-        >
-          <GithubMark size={15} />
-          GitHub
-        </a>
+        <div className="flex items-center gap-2.5">
+          <ThemeToggle />
+          <a
+            href={links.github}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-1.5 rounded-full border border-line px-3.5 py-1.5 text-sm font-medium text-ink-soft transition-colors hover:border-line-strong hover:text-ink"
+          >
+            <GithubMark size={14} />
+            GitHub
+          </a>
+        </div>
       </div>
     </header>
   );
