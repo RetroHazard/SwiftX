@@ -107,14 +107,16 @@ export type Destination = {
   kind: string;
 };
 
+/* Every name here must have a real uploader in Sources/UploadKit — this grid
+   is a sample of what ships, not a wish list. */
 export const destinations: Destination[] = [
   { name: "Amazon S3", kind: "Storage" },
   { name: "Backblaze B2", kind: "Storage" },
   { name: "Azure Blob", kind: "Storage" },
   { name: "Nextcloud", kind: "Self-hosted" },
   { name: "ownCloud", kind: "Self-hosted" },
-  { name: "SFTP", kind: "Self-hosted" },
-  { name: "Imgur", kind: "Image host" },
+  { name: "Seafile", kind: "Self-hosted" },
+  { name: "Chevereto", kind: "Image host" },
   { name: "Custom", kind: ".sxcu" },
 ];
 

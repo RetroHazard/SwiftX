@@ -42,8 +42,12 @@ struct OAuthTests {
         #expect(dict["state"] == "xyz")
     }
 
-    @Test func imgurAuthorizeURLOmitsPKCE() {
-        let provider = OAuthProvider.provider(.imgur)
+    @Test func authorizeURLOmitsPKCEWhenTheHostRejectsIt() {
+        // every shipping host supports PKCE, so exercise the opt-out with a
+        // synthetic descriptor — the flag exists for hosts that reject it
+        let provider = OAuthProvider(id: .oneDrive, authorizeURL: "https://example.com/authorize",
+                                     tokenURL: "https://example.com/token", scopes: [],
+                                     usesPKCE: false, extraAuthorizeParams: [:])
         let creds = OAuthAppCredentials(clientID: "id", clientSecret: "secret")
         let url = OAuth2Flow.authorizeURL(provider: provider, credentials: creds,
                                           redirectURI: "http://127.0.0.1:5000/", state: "s", pkce: PKCE.generate())
@@ -54,7 +58,7 @@ struct OAuthTests {
     // MARK: - Token requests
 
     @Test func tokenExchangeBodyIsFormEncoded() throws {
-        let provider = OAuthProvider.provider(.dropbox)
+        let provider = OAuthProvider.provider(.oneDrive)
         let creds = OAuthAppCredentials(clientID: "cid", clientSecret: "csecret")
         let pkce = PKCE(verifier: "verifier123")
         let request = OAuth2Flow.tokenExchangeRequest(provider: provider, credentials: creds,
@@ -99,23 +103,33 @@ struct OAuthTests {
         // no OAuthApps.plist in the test bundle, so builtins are empty; a user
         // override is the only path to configured here
         var config = UploadersConfig()
-        config.oauthApps["Dropbox"] = OAuthAppCredentials(clientID: "cid")
-        #expect(config.isConfigured(.dropbox))
-        #expect(config.oauthUserOverride(for: .dropbox)?.clientID == "cid")
-        #expect(config.oauthCredentials(for: .dropbox)?.clientID == "cid")   // override is used
+        config.oauthApps["OneDrive"] = OAuthAppCredentials(clientID: "cid")
+        #expect(config.isConfigured(.oneDrive))
+        #expect(config.oauthUserOverride(for: .oneDrive)?.clientID == "cid")
+        #expect(config.oauthCredentials(for: .oneDrive)?.clientID == "cid")   // override is used
         #expect(config.isConfigured(.googleDrive) == false)   // others stay off
         // blank/whitespace client ID does not count as configured
-        config.oauthApps["Box"] = OAuthAppCredentials(clientID: "   ")
-        #expect(config.isConfigured(.box) == false)
-        #expect(config.oauthUserOverride(for: .box) == nil)
+        config.oauthApps["YouTube"] = OAuthAppCredentials(clientID: "   ")
+        #expect(config.isConfigured(.youTube) == false)
+        #expect(config.oauthUserOverride(for: .youTube) == nil)
     }
 
     @Test func oauthAppsSurviveARoundTrip() throws {
         var config = UploadersConfig()
-        config.oauthApps["Imgur"] = OAuthAppCredentials(clientID: "cid", clientSecret: "sec")
+        config.oauthApps["GoogleDrive"] = OAuthAppCredentials(clientID: "cid", clientSecret: "sec")
         let data = try JSONEncoder().encode(config)
         let restored = try JSONDecoder().decode(UploadersConfig.self, from: data)
-        #expect(restored.oauthCredentials(for: .imgur)?.clientID == "cid")
+        #expect(restored.oauthCredentials(for: .googleDrive)?.clientID == "cid")
+    }
+
+    @Test func droppedHostsAreNoLongerDestinations() {
+        // Imgur no longer issues app client IDs, Box gates its developer API
+        // behind a paid plan, Dropbox dropped by choice. A stale imageDestination
+        // from an older config must not resolve to a provider — UploadCoordinator
+        // then reports it as unimplemented instead of routing nowhere.
+        for raw in ["Imgur", "Box", "Dropbox"] {
+            #expect(OAuthProviderID(rawValue: raw) == nil)
+        }
     }
 
     // MARK: - Loopback callback parsing
