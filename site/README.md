@@ -44,34 +44,50 @@ npm run dev
 npm run build
 ```
 
-Outputs a static site to `out/`, rooted at `/` — the site is served from the
-custom domain `swiftx.retrohazard.jp` (see `public/CNAME`), not a
-`/SwiftX/` subpath. If the domain isn't live yet and you need the fallback
-`https://<owner>.github.io/SwiftX/` URL instead, build with
-`NEXT_PUBLIC_USE_REPO_BASE_PATH=true npm run build` to prefix every
-asset/link with `/SwiftX`.
+Outputs a static site to `out/`, rooted at `/SwiftX/` — the GitHub Pages
+*project site* path for this repo. That prefix is the default in
+`next.config.ts`, so the build you run locally is byte-for-byte the build that
+deploys; a root-served build would hide broken sub-path links until production.
+
+Serving from the root of a custom domain instead takes two steps:
+
+```bash
+SITE_BASE_PATH="" npm run build
+```
+
+and a `public/CNAME` file containing the domain.
+
+> `next/image` does not apply `basePath` to `src`, so components prefix it
+> themselves from `process.env.NEXT_PUBLIC_BASE_PATH`. Use that variable for
+> anything you reference out of `public/`.
 
 ## Deploying
 
-Handled by `.github/workflows/pages.yml`: on every push to `develop` that
-touches `site/**`, it builds the export and publishes it via
-`actions/deploy-pages`. Trigger it manually from the Actions tab if needed
-(`workflow_dispatch`).
+The site publishes to **https://retrohazard.github.io/SwiftX/**.
 
-### Custom domain checklist (one-time, done in GitHub/DNS settings — not in this repo)
+Two workflows cover it:
 
-1. Repo **Settings → Pages → Build and deployment → Source** must be set to
-   **GitHub Actions** (not "Deploy from a branch").
-2. Add a DNS **CNAME** record for `swiftx` under `retrohazard.jp` pointing at
-   `retrohazard.github.io`.
-3. In **Settings → Pages → Custom domain**, enter `swiftx.retrohazard.jp` and
-   save — GitHub will show an **unverified** badge until step 4 is done.
-4. Verify domain ownership under your GitHub account/org
-   **Settings → Pages → Custom domains** (adds a `_github-pages-challenge-*`
-   TXT record you create at your DNS provider).
-5. Once DNS + verification resolve, check **Enforce HTTPS** on the Pages
-   settings page.
+| Workflow | Runs on | Does |
+| --- | --- | --- |
+| `.github/workflows/site-ci.yml` | pull requests touching `site/**` | lint, build, sanity-check the export |
+| `.github/workflows/pages.yml` | push to `develop` touching `site/**`, or manual dispatch | build and publish via `actions/deploy-pages` |
 
-Until all of this is done, pushes still deploy successfully — GitHub just
-serves the build at the default `github.io` URL (or 404s until a domain is
-configured) rather than the custom domain.
+### Before the first deploy
+
+1. **Settings → Pages → Build and deployment → Source** must be **GitHub
+   Actions**, not "Deploy from a branch".
+2. The repo must be **public**, or the account needs GitHub Pro/Team — Pages is
+   unavailable on private repos on the free plan. Until then `pages.yml` builds
+   fine but the deploy step fails at the Pages API.
+3. **The `develop` branch does not exist yet.** Until it is created, the push
+   trigger never fires and the only way to publish is `workflow_dispatch` from
+   the Actions tab. Create `develop`, or point the trigger at whichever branch
+   should publish.
+
+### Why not `swiftx.github.io`
+
+That URL form is only served from a repo named `<account>.github.io` owned by an
+account of the same name, and the GitHub account `Swiftx` is already taken. A
+project site under `retrohazard.github.io/SwiftX/` is what this repo can serve.
+To move to a custom domain later, see the `SITE_BASE_PATH` note under
+[Building](#building) and add `public/CNAME`.
