@@ -57,8 +57,10 @@ cat > "$APP/Contents/Info.plist" <<PLIST
     <string>${VERSION}</string>
     <key>CFBundleVersion</key>
     <string>${VERSION}</string>
+    <!-- Must match Package.swift's platforms: [.macOS(.v14)] — SwiftX calls
+         SCScreenshotManager, which does not exist before macOS 14. -->
     <key>LSMinimumSystemVersion</key>
-    <string>13.0</string>
+    <string>14.0</string>
     <key>NSHumanReadableCopyright</key>
     <!-- full ShareX attribution lives in the About pane (GPL v3 §5d notice) -->
     <string>Copyright © 2026 RetroHazard. Licensed under GPL v3.</string>

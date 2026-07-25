@@ -1,3 +1,34 @@
+/**
+ * How people get the app.
+ *
+ * Building from source is the interim route, not the plan: once a Developer ID
+ * build is notarized, SwiftX ships as a .dmg on GitHub Releases and through a
+ * Homebrew cask. Flip `status` to "released" on launch day and the download
+ * path replaces the build-from-source path everywhere — hero, closing call to
+ * action and FAQ all read from here.
+ *
+ * Keep `version` and `minMacOS` in step with Casks/swiftx.rb and
+ * Package.swift's platform baseline.
+ */
+export type Release = {
+  status: "pre-release" | "released";
+  version: string;
+  minMacOS: string;
+  /** Matches the url stanza in Casks/swiftx.rb. */
+  dmgUrl: string;
+  brewCommand: string;
+};
+
+const version = "0.1.0";
+
+export const release: Release = {
+  status: "pre-release",
+  version,
+  minMacOS: "macOS 14 Sonoma or later",
+  dmgUrl: `https://github.com/RetroHazard/SwiftX/releases/download/v${version}/SwiftX-${version}.dmg`,
+  brewCommand: "brew install --cask retrohazard/swiftx/swiftx",
+};
+
 export const links = {
   github: "https://github.com/RetroHazard/SwiftX",
   releases: "https://github.com/RetroHazard/SwiftX/releases",
@@ -8,100 +39,97 @@ export const links = {
   upstream: "https://github.com/ShareX/ShareX",
 };
 
-export type Feature = {
+/* The after-capture pipeline is a real sequence, so it is the one place on
+   the page where step ordering carries information the reader needs. */
+export type Step = {
+  id: string;
+  label: string;
   title: string;
-  description: string;
+  detail: string;
   icon: string;
 };
 
-export const features: Feature[] = [
+export const workflow: Step[] = [
   {
-    title: "Screen Capture",
-    description:
-      "Fullscreen, window, and freeform region capture with a native overlay — magnifier, fixed sizes, snap presets, and multi-display stitching built on ScreenCaptureKit.",
+    id: "capture",
+    label: "Press",
+    title: "Capture",
+    detail:
+      "A hotkey dims the screen. Drag out a region, or hover a window to snap to its edges.",
     icon: "Crop",
   },
   {
-    title: "Screen Recording",
-    description:
-      "H.264/HEVC and GIF recording with pause/resume, system + microphone audio, and WebM/VP9/VP8/APNG export via a detected local ffmpeg.",
-    icon: "Video",
-  },
-  {
-    title: "Annotation Editor",
-    description:
-      "A Screenshot.app-style canvas — shapes, step numbers, blur/pixelate regions, speech balloons, smart eraser, magnify, spotlight, and undoable crop.",
+    id: "mark",
+    label: "Mark",
+    title: "Annotate",
+    detail:
+      "Arrows, step numbers and blur land straight on the shot — no trip through another app.",
     icon: "PenTool",
   },
   {
-    title: "51 Image Effects",
-    description:
-      "Every adjustment, filter, manipulation, and drawing from the original, reproduced with C#-exact matrices and kernels, plus live-preview presets.",
-    icon: "Sparkles",
-  },
-  {
-    title: "20+ Upload Destinations",
-    description:
-      "Amazon S3, Backblaze B2, Azure, ownCloud/Nextcloud, Seafile, and a full custom-uploader engine that reads your existing .sxcu files.",
+    id: "send",
+    label: "Send",
+    title: "Upload",
+    detail:
+      "It goes to your own bucket or host in the background while you carry on working.",
     icon: "UploadCloud",
   },
   {
-    title: "Searchable History",
-    description:
-      "A Windows-compatible SQLite history store with thumbnail grid view, tag filters, favorites, and live upload progress rows.",
-    icon: "History",
-  },
-  {
-    title: "Automation",
-    description:
-      "Watch folders, auto capture, scrolling capture, global hotkeys, CLI verbs, and a sharex:// URL scheme that behaves like the original.",
-    icon: "Workflow",
-  },
-  {
-    title: "AI & Vision Tools",
-    description:
-      "Vision-powered OCR and QR scanning, plus an OpenAI-compatible AI analysis pipeline for OpenAI, OpenRouter, and Gemini.",
-    icon: "BrainCircuit",
-  },
-  {
-    title: "Menu Bar Native",
-    description:
-      "A true NSStatusItem menu bar app with Carbon global hotkeys, TCC-aware permission onboarding, and single-instance enforcement.",
-    icon: "AppWindow",
+    id: "paste",
+    label: "Paste",
+    title: "Link is ready",
+    detail:
+      "The URL is on your clipboard before the window closes. Paste it and move on.",
+    icon: "Link",
   },
 ];
 
-export type Stat = {
-  value: string;
-  label: string;
+/* Effect names paired with the CSS that approximates them in the preview
+   strip. The app renders these properly; the page only has to suggest them. */
+export type EffectSwatch = {
+  name: string;
+  css: string;
 };
 
-export const stats: Stat[] = [
-  { value: "12", label: "Build phases, foundation to distribution" },
-  { value: "51", label: "Image effects ported bit-for-bit" },
-  { value: "20+", label: "Upload destinations wired up" },
-  { value: "100%", label: "Swift & SwiftUI — zero Electron" },
+export const effectSwatches: EffectSwatch[] = [
+  { name: "Original", css: "none" },
+  { name: "Grayscale", css: "grayscale(1) contrast(1.05)" },
+  { name: "Sepia", css: "sepia(0.85) saturate(1.3)" },
+  { name: "Invert", css: "invert(1) hue-rotate(180deg)" },
+  { name: "Gaussian blur", css: "blur(2.5px) saturate(1.1)" },
+  { name: "Hue shift", css: "hue-rotate(140deg) saturate(1.5)" },
+  { name: "Contrast", css: "contrast(1.85) saturate(1.15)" },
+  { name: "Bloom", css: "brightness(1.22) saturate(1.6) blur(0.5px)" },
 ];
 
-export type ParityRow = {
-  phase: string;
-  title: string;
-  detail: string;
+export type Destination = {
+  name: string;
+  kind: string;
 };
 
-export const parityPhases: ParityRow[] = [
-  { phase: "0", title: "Foundation", detail: "Menu bar shell, settings engine, TCC onboarding, CI — Ported" },
-  { phase: "1", title: "Screen capture", detail: "Region overlay, window snapping, multi-display stitching — Ported" },
-  { phase: "2", title: "Task pipeline & hotkeys", detail: "22-flag after-capture pipeline, global hotkeys, actions — Ported" },
-  { phase: "3", title: "Upload engine", detail: "Custom uploaders, OAuth2 + PKCE, S3, URL shorteners — Ported" },
-  { phase: "4", title: "History & main window", detail: "SQLite history, thumbnail grid, live task queue — Ported" },
-  { phase: "5", title: "Annotation editor", detail: "Shapes, effects regions, speech balloons, cut-out — Ported" },
-  { phase: "6", title: "Image effects", detail: "51 adjustments/filters/manipulations/drawings — Ported" },
-  { phase: "7", title: "Screen recording", detail: "H.264/HEVC/GIF, pause/resume, ffmpeg transcodes — Ported" },
-  { phase: "8", title: "Tools", detail: "Color picker, OCR, QR, hash checker, AI analysis — Ported" },
-  { phase: "9", title: "Destination long tail", detail: "Uguu/Pomf clones, B2, Azure, shorteners — Ported" },
-  { phase: "10", title: "Automation & integration", detail: "Watch folders, CLI verbs, native messaging host — Ported" },
-  { phase: "11", title: "Distribution", detail: "Signing, notarization, Sparkle updates — Planned" },
+/* Every name here must have a real uploader in Sources/UploadKit — this grid
+   is a sample of what ships, not a wish list. */
+export const destinations: Destination[] = [
+  { name: "Amazon S3", kind: "Storage" },
+  { name: "Backblaze B2", kind: "Storage" },
+  { name: "Azure Blob", kind: "Storage" },
+  { name: "Nextcloud", kind: "Self-hosted" },
+  { name: "ownCloud", kind: "Self-hosted" },
+  { name: "Seafile", kind: "Self-hosted" },
+  { name: "Chevereto", kind: "Image host" },
+  { name: "Custom", kind: ".sxcu" },
+];
+
+export type Hotkey = {
+  keys: string[];
+  action: string;
+};
+
+export const hotkeys: Hotkey[] = [
+  { keys: ["⌘", "⇧", "4"], action: "Capture region" },
+  { keys: ["⌘", "⇧", "5"], action: "Record screen" },
+  { keys: ["⌘", "⇧", "O"], action: "Grab text on screen" },
+  { keys: ["⌘", "⇧", "C"], action: "Pick a colour" },
 ];
 
 export type FaqItem = {
@@ -111,28 +139,33 @@ export type FaqItem = {
 
 export const faqs: FaqItem[] = [
   {
-    question: "Is SwiftX affiliated with ShareX?",
+    question: "How will I install it?",
     answer:
-      "No. SwiftX is an independent macOS app, written from the ground up in Swift and SwiftUI. Its capture-to-upload workflow takes inspiration from ShareX, but it isn't a build of ShareX, and it isn't affiliated with or endorsed by the ShareX project.",
+      "Two ways, once the first build ships: download the .dmg straight from the GitHub releases page, or install the Homebrew cask with `brew install --cask retrohazard/swiftx/swiftx` and get updates through `brew upgrade`. Builds will be signed with an Apple Developer ID and notarized, so Gatekeeper opens them without a right-click or a trip to System Settings. Building from source is only the stopgap while that pipeline is being set up.",
   },
   {
-    question: "Why native instead of a wrapper or emulator?",
+    question: "What does it need to run?",
     answer:
-      "A compatibility layer can't give you real global hotkeys, screen recording of arbitrary apps, or watch folders inside App Sandbox. SwiftX targets ScreenCaptureKit, Carbon hotkeys, and Vision directly instead, so those features behave like a first-party Mac app.",
+      "macOS 14 Sonoma or later, on Apple silicon or Intel. That is the baseline for the ScreenCaptureKit APIs the capture and recording pipeline is built on.",
   },
   {
-    question: "Can I bring over my existing ShareX custom uploaders?",
+    question: "Do my screenshots pass through your servers?",
     answer:
-      "Yes — SwiftX's custom uploader (.sxcu) and image effect preset (.sxie) formats, plus its history store, are compatible with ShareX's, and it works with ShareX's existing browser extensions. Files and workflows you already have carry over directly.",
+      "No. There is no SwiftX account and no SwiftX backend. Uploads go straight from your Mac to whichever destination you set up — your own S3 bucket, your Nextcloud, an image host, or nowhere at all if you only save locally.",
   },
   {
-    question: "What macOS version does it need?",
+    question: "I already use ShareX on Windows. Does my setup come with me?",
     answer:
-      "macOS 14 or later — the baseline for the ScreenCaptureKit screenshot APIs the capture pipeline is built on.",
+      "Largely, yes. SwiftX reads the same custom uploader (.sxcu) and image effect preset (.sxie) files, keeps a compatible history database, and works with the existing browser extensions — so destinations and presets you have already tuned carry over.",
   },
   {
-    question: "Where do I get it?",
+    question: "Is this the official ShareX for Mac?",
     answer:
-      "SwiftX is still pre-release. Signed builds, notarization, and a Homebrew cask are tracked in Phase 11 of the roadmap. Until then, build it from source with Swift Package Manager.",
+      "No. SwiftX is an independent app, written from scratch in Swift and SwiftUI. It follows the capture-to-upload workflow ShareX made popular and stays compatible with its config files, but it is not a build of ShareX and is not affiliated with or endorsed by that project.",
+  },
+  {
+    question: "Why not just wrap the Windows app?",
+    answer:
+      "A compatibility layer cannot give you real global hotkeys, recording of arbitrary windows, or folder watching inside the macOS sandbox. Building directly against ScreenCaptureKit, Vision and AVFoundation is what makes it behave like a Mac app instead of a port.",
   },
 ];
