@@ -14,6 +14,12 @@
 #   OAUTH_GOOGLE_CLIENT_ID      Google Cloud desktop OAuth client (Drive + YouTube)
 #   OAUTH_GOOGLE_CLIENT_SECRET  its (semi-public) desktop-client secret
 #   OAUTH_ONEDRIVE_CLIENT_ID    Azure app registration (public client, PKCE)
+#   RELEASE_PUSH_TOKEN          fine-grained PAT (Contents: RW on this repo) used
+#                               for the version-bump push to master. Strongly
+#                               recommended: the default GITHUB_TOKEN's pushes
+#                               never trigger other workflows, so the bump would
+#                               NOT redeploy the site (pages.yml), and it cannot
+#                               bypass branch protection on master once enabled.
 #
 # Homebrew: this repo IS the tap (brew tap retrohazard/swiftx <repo url>), so
 # the cask bump on master is the whole Homebrew release — no separate tap repo.
@@ -68,6 +74,7 @@ jobs:
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
           OAUTH_GOOGLE_CLIENT_ID: ${{ secrets.OAUTH_GOOGLE_CLIENT_ID }}
           OAUTH_ONEDRIVE_CLIENT_ID: ${{ secrets.OAUTH_ONEDRIVE_CLIENT_ID }}
+          RELEASE_PUSH_TOKEN: ${{ secrets.RELEASE_PUSH_TOKEN }}
         run: |
           MISSING=()
           for s in APPLE_CERTIFICATE_P12 APPLE_CERTIFICATE_PASSWORD APPLE_ID APPLE_TEAM_ID APPLE_APP_PASSWORD; do
@@ -79,8 +86,14 @@ jobs:
           fi
           [ -n "$OAUTH_GOOGLE_CLIENT_ID" ] || echo "::warning::OAUTH_GOOGLE_CLIENT_ID not set — Google Drive & YouTube will be disabled in this build"
           [ -n "$OAUTH_ONEDRIVE_CLIENT_ID" ] || echo "::warning::OAUTH_ONEDRIVE_CLIENT_ID not set — OneDrive will be disabled in this build"
+          [ -n "$RELEASE_PUSH_TOKEN" ] || echo "::warning::RELEASE_PUSH_TOKEN not set — the version bump will not redeploy the site, and will fail outright once master is branch-protected"
 
+      # RELEASE_PUSH_TOKEN (when set) is persisted as the push credential so the
+      # bump-to-master commit triggers pages.yml and clears branch protection;
+      # GITHUB_TOKEN pushes do neither.
       - uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.RELEASE_PUSH_TOKEN || github.token }}
 
       - name: Run tests
         run: swift test

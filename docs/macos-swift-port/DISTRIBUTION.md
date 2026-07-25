@@ -82,6 +82,40 @@ One-time provider registration:
   under Authentication → Advanced set **Allow public client flows: Yes**. Do
   not create a client secret.
 
+### Recommended — release push token
+
+| Secret | Contents |
+|---|---|
+| `RELEASE_PUSH_TOKEN` | a fine-grained PAT (github.com → Settings → Developer settings → Fine-grained tokens) scoped to this repo with **Contents: Read and write** |
+
+Technically optional (the workflow falls back to the built-in `GITHUB_TOKEN`),
+but the fallback has two real costs:
+
+1. **The site never redeploys.** Pushes made with `GITHUB_TOKEN` deliberately
+   don't trigger other workflows, so the version-bump commit — which updates
+   `site/src/lib/content.ts` — would not run `pages.yml`, leaving the live
+   site pointing at the previous release.
+2. **Branch protection blocks it.** Once `master` requires PRs, the direct
+   bump push from `GITHUB_TOKEN` fails; a PAT can be given bypass rights.
+
+Fine-grained PATs expire (1 year max) — put the expiry date somewhere you'll
+see it, or the release after it lapses will warn/fail on the bump step.
+
+## Branch protection on master
+
+When enabling protection, use a **ruleset** (Settings → Rules → Rulesets),
+not classic branch protection — rulesets support bypass lists. Add a ruleset
+targeting `master` with your required rules (e.g. require a PR), then under
+**Bypass list** add **Repository admin**. The bump push authenticates as the
+`RELEASE_PUSH_TOKEN` PAT — i.e. as you, an admin — so it bypasses cleanly
+while everyone else goes through PRs.
+
+Equivalent with classic branch protection: leave "Do not allow bypassing the
+above settings" (a.k.a. "Include administrators") unchecked.
+
+Note the release itself is tag-driven and untouched by branch rules on
+`master`; only the version-bump commit needs the bypass.
+
 ## What the pipeline does, step by step
 
 1. Resolves + validates the version from the tag (or dispatch input).
