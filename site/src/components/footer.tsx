@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { links } from "@/lib/content";
 
 export function Footer() {
@@ -19,6 +20,14 @@ export function Footer() {
         </div>
 
         <nav className="flex flex-wrap items-center gap-6 text-sm text-muted">
+          {/* Google's OAuth verification requires the privacy policy to be
+              reachable from the homepage, so these two lead the list. */}
+          <Link href="/privacy/" className="transition-colors hover:text-ink">
+            Privacy
+          </Link>
+          <Link href="/terms/" className="transition-colors hover:text-ink">
+            Terms
+          </Link>
           <a
             href={links.github}
             target="_blank"
