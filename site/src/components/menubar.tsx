@@ -4,13 +4,16 @@ import { motion } from "motion/react";
 import { Camera, Crop, ScanText, Video, Pipette, FolderClock } from "lucide-react";
 import { SectionHead } from "@/components/section-head";
 
+/* ⌃⇧3/4/5 are the app's real seeded defaults; the rest are the custom-binding
+   flavour the panel implies. ⌃⇧ throughout so the mock never shows macOS's own
+   ⌘⇧ screenshot shortcuts as SwiftX bindings. */
 const menuItems = [
-  { icon: Crop, label: "Capture region", keys: "⌘⇧4" },
-  { icon: Camera, label: "Capture window", keys: "⌘⇧5" },
-  { icon: Video, label: "Record screen", keys: "⌘⇧6" },
-  { icon: ScanText, label: "Grab text on screen", keys: "⌘⇧O" },
-  { icon: Pipette, label: "Pick a colour", keys: "⌘⇧C" },
-  { icon: FolderClock, label: "Open history", keys: "⌘⇧H" },
+  { icon: Crop, label: "Capture region", keys: "⌃⇧4" },
+  { icon: Camera, label: "Capture window", keys: "⌃⇧5" },
+  { icon: Video, label: "Record screen", keys: "⌃⇧6" },
+  { icon: ScanText, label: "Grab text on screen", keys: "⌃⇧O" },
+  { icon: Pipette, label: "Pick a colour", keys: "⌃⇧C" },
+  { icon: FolderClock, label: "Open history", keys: "⌃⇧H" },
 ];
 
 export function MenuBar() {
@@ -33,7 +36,7 @@ export function MenuBar() {
             {[
               "Real global hotkeys that fire from any app",
               "Watch a folder and upload anything dropped in it",
-              "Drive it from the command line or a swiftx:// link",
+              "Drive it from the command line or a swiftx:// link — sharex:// links work too",
             ].map((line) => (
               <li key={line} className="flex items-start gap-3">
                 <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
