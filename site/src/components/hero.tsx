@@ -1,10 +1,9 @@
 "use client";
 
 import { motion } from "motion/react";
-import { ArrowRight } from "lucide-react";
 import { links } from "@/lib/content";
 import { CaptureOverlay } from "@/components/capture-overlay";
-import { GithubMark } from "@/components/icons/github-mark";
+import { PrimaryAction } from "@/components/install";
 
 const rise = {
   hidden: { opacity: 0, y: 14 },
@@ -72,19 +71,7 @@ export function Hero() {
             transition={{ duration: 0.6 }}
             className="mt-9 flex flex-wrap items-center gap-3"
           >
-            <a
-              href={links.github}
-              target="_blank"
-              rel="noreferrer"
-              className="group flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-accent-ink transition-transform hover:scale-[1.025] active:scale-[0.98]"
-            >
-              <GithubMark size={15} />
-              Build it from source
-              <ArrowRight
-                size={14}
-                className="transition-transform group-hover:translate-x-0.5"
-              />
-            </a>
+            <PrimaryAction />
             <a
               href="#workflow"
               className="rounded-full border border-line px-5 py-2.5 text-sm font-medium text-ink-soft transition-colors hover:border-line-strong hover:text-ink"
@@ -101,7 +88,7 @@ export function Hero() {
             className="mt-6 text-[13px] leading-relaxed text-muted"
           >
             Pre-release. Capture, editing, recording and uploads all work
-            today; signed and notarized builds arrive with 1.0 —{" "}
+            today; signed builds and a Homebrew cask land with 1.0 —{" "}
             <a
               href={links.roadmap}
               target="_blank"

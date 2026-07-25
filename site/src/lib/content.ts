@@ -1,3 +1,34 @@
+/**
+ * How people get the app.
+ *
+ * Building from source is the interim route, not the plan: once a Developer ID
+ * build is notarized, SwiftX ships as a .dmg on GitHub Releases and through a
+ * Homebrew cask. Flip `status` to "released" on launch day and the download
+ * path replaces the build-from-source path everywhere — hero, closing call to
+ * action and FAQ all read from here.
+ *
+ * Keep `version` and `minMacOS` in step with Casks/swiftx.rb and
+ * Package.swift's platform baseline.
+ */
+export type Release = {
+  status: "pre-release" | "released";
+  version: string;
+  minMacOS: string;
+  /** Matches the url stanza in Casks/swiftx.rb. */
+  dmgUrl: string;
+  brewCommand: string;
+};
+
+const version = "0.1.0";
+
+export const release: Release = {
+  status: "pre-release",
+  version,
+  minMacOS: "macOS 14 Sonoma or later",
+  dmgUrl: `https://github.com/RetroHazard/SwiftX/releases/download/v${version}/SwiftX-${version}.dmg`,
+  brewCommand: "brew install --cask retrohazard/swiftx/swiftx",
+};
+
 export const links = {
   github: "https://github.com/RetroHazard/SwiftX",
   releases: "https://github.com/RetroHazard/SwiftX/releases",
@@ -106,9 +137,9 @@ export type FaqItem = {
 
 export const faqs: FaqItem[] = [
   {
-    question: "Can I download it today?",
+    question: "How will I install it?",
     answer:
-      "Not as a signed build yet. SwiftX is pre-release — code signing, notarization and a Homebrew cask are the last pieces before a public download. Until then you can clone the repository and build it with Swift Package Manager.",
+      "Two ways, once the first build ships: download the .dmg straight from the GitHub releases page, or install the Homebrew cask with `brew install --cask retrohazard/swiftx/swiftx` and get updates through `brew upgrade`. Builds will be signed with an Apple Developer ID and notarized, so Gatekeeper opens them without a right-click or a trip to System Settings. Building from source is only the stopgap while that pipeline is being set up.",
   },
   {
     question: "What does it need to run?",
