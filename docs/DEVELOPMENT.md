@@ -58,7 +58,7 @@ swift Scripts/make-icon.swift
 
 ## OAuth credentials for optional upload destinations
 
-Google Drive, YouTube, Dropbox, OneDrive, Box, and Imgur use OAuth2 and need app credentials to be
+Google Drive, YouTube, and OneDrive use OAuth2 and need app credentials to be
 usable. Copy [`Resources/OAuthApps.example.plist`](../Resources/OAuthApps.example.plist) to
 `Resources/OAuthApps.plist` and fill in your own registered app's client ID/secret (the redirect
 URI to register is the loopback address `http://127.0.0.1`). `OAuthApps.plist` is git-ignored, so

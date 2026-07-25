@@ -14,11 +14,11 @@ public struct OAuthProvider: Sendable {
     public let authorizeURL: String
     public let tokenURL: String
     public let scopes: [String]
-    /// PKCE is used by every host here except Imgur, whose server rejects the
-    /// `code_challenge` parameters.
+    /// Every host here supports PKCE; the flag stays so a future host whose
+    /// server rejects the `code_challenge` parameters can opt out.
     public let usesPKCE: Bool
-    /// Extra authorize-query params (e.g. Google/Dropbox need these to return
-    /// a refresh token for a desktop app).
+    /// Extra authorize-query params (e.g. Google needs these to return a
+    /// refresh token for a desktop app).
     public let extraAuthorizeParams: [String: String]
 
     public var displayName: String { id.displayName }
@@ -39,34 +39,12 @@ public struct OAuthProvider: Sendable {
             scopes: ["https://www.googleapis.com/auth/youtube.upload"],
             usesPKCE: true,
             extraAuthorizeParams: ["access_type": "offline", "prompt": "consent"]),
-        .dropbox: OAuthProvider(
-            id: .dropbox,
-            authorizeURL: "https://www.dropbox.com/oauth2/authorize",
-            tokenURL: "https://api.dropboxapi.com/oauth2/token",
-            scopes: ["files.content.write", "sharing.write"],
-            usesPKCE: true,
-            // offline access → refresh token (Dropbox tokens are short-lived)
-            extraAuthorizeParams: ["token_access_type": "offline"]),
         .oneDrive: OAuthProvider(
             id: .oneDrive,
             authorizeURL: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
             tokenURL: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
             scopes: ["Files.ReadWrite", "offline_access"],
             usesPKCE: true,
-            extraAuthorizeParams: [:]),
-        .box: OAuthProvider(
-            id: .box,
-            authorizeURL: "https://account.box.com/api/oauth2/authorize",
-            tokenURL: "https://api.box.com/oauth2/token",
-            scopes: [],
-            usesPKCE: true,
-            extraAuthorizeParams: [:]),
-        .imgur: OAuthProvider(
-            id: .imgur,
-            authorizeURL: "https://api.imgur.com/oauth2/authorize",
-            tokenURL: "https://api.imgur.com/oauth2/token",
-            scopes: [],
-            usesPKCE: false,
             extraAuthorizeParams: [:])
     ]
 
