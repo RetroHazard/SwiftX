@@ -9,19 +9,29 @@ cd "$(dirname "$0")/.."
 
 VERSION="${1:-0.1.0}"
 
-swift build -c release
+# SWIFTX_UNIVERSAL=1 (release pipeline) builds arm64 + x86_64 into one binary;
+# the default single-arch build keeps local iteration fast. SPM puts
+# multi-arch products under .build/apple/Products/Release instead of
+# .build/release.
+if [ "${SWIFTX_UNIVERSAL:-0}" = "1" ]; then
+    swift build -c release --arch arm64 --arch x86_64
+    BIN=".build/apple/Products/Release"
+else
+    swift build -c release
+    BIN=".build/release"
+fi
 
 APP="build/SwiftX.app"
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
-cp .build/release/swiftx "$APP/Contents/MacOS/SwiftX"
+cp "$BIN/swiftx" "$APP/Contents/MacOS/SwiftX"
 # browser native messaging host, launched by Chrome/Edge/Firefox
-cp .build/release/swiftx-host "$APP/Contents/MacOS/SwiftXHost"
+cp "$BIN/swiftx-host" "$APP/Contents/MacOS/SwiftXHost"
 
 # SPM resource bundle (word lists) must sit in Contents/Resources for Bundle.module lookup
-if [ -d .build/release/SwiftX_SharedKit.bundle ]; then
-    cp -R .build/release/SwiftX_SharedKit.bundle "$APP/Contents/Resources/"
+if [ -d "$BIN/SwiftX_SharedKit.bundle" ]; then
+    cp -R "$BIN/SwiftX_SharedKit.bundle" "$APP/Contents/Resources/"
 fi
 
 # SwiftX aperture icon — regenerate with Scripts/make-icon.swift
@@ -99,11 +109,31 @@ PLIST
 # Sign with a real identity when available: TCC anchors grants to the cert chain,
 # so permissions survive rebuilds. Ad-hoc fallback pins to the binary's CDHash,
 # which invalidates grants on EVERY rebuild (tccutil reset + re-grant needed).
-# Developer ID signing + notarization lands in Phase 11.
-IDENTITY=$(security find-identity -v -p codesigning 2>/dev/null | awk -F'"' '/Apple Development|Developer ID Application/ {print $2; exit}')
+#
+# Identity resolution: SWIFTX_SIGN_IDENTITY env override, else the first
+# "Developer ID Application" cert (distribution — required for notarization),
+# else the first "Apple Development" cert (local dev), else ad-hoc. The release
+# pipeline sets SWIFTX_REQUIRE_IDENTITY=1 so a missing cert fails the build
+# instead of silently producing an un-notarizable artifact.
+IDENTITY="${SWIFTX_SIGN_IDENTITY:-}"
+if [ -z "$IDENTITY" ]; then
+    IDENTITY=$(security find-identity -v -p codesigning 2>/dev/null | awk -F'"' '/Developer ID Application/ {print $2; exit}')
+fi
+if [ -z "$IDENTITY" ]; then
+    IDENTITY=$(security find-identity -v -p codesigning 2>/dev/null | awk -F'"' '/Apple Development/ {print $2; exit}')
+fi
+if [ -z "$IDENTITY" ] && [ "${SWIFTX_REQUIRE_IDENTITY:-0}" = "1" ]; then
+    echo "error: SWIFTX_REQUIRE_IDENTITY=1 but no codesigning identity is available" >&2
+    exit 1
+fi
+
+# notarization requires a secure timestamp; ad-hoc signatures can't carry one
+SIGN_FLAGS=(--force --options runtime)
+[ -n "$IDENTITY" ] && SIGN_FLAGS+=(--timestamp)
+
 # nested executables must be signed before the bundle seal
-codesign --force --options runtime --sign "${IDENTITY:--}" "$APP/Contents/MacOS/SwiftXHost"
-codesign --force --options runtime --sign "${IDENTITY:--}" "$APP"
+codesign "${SIGN_FLAGS[@]}" --sign "${IDENTITY:--}" "$APP/Contents/MacOS/SwiftXHost"
+codesign "${SIGN_FLAGS[@]}" --sign "${IDENTITY:--}" "$APP"
 echo "Signed as: ${IDENTITY:-ad-hoc}"
 
 echo "Built $APP"
@@ -113,7 +143,11 @@ echo "Built $APP"
 # com.getsharex.swiftx bundle ID during the rename, so capture requests from it
 # resolve to a dead ID that never shows in System Settings. A stable install
 # path resolves the current signature cleanly. Skips the copy if unwritable
-# (e.g. CI) — the build/ bundle still works for everything except fresh TCC.
+# or on CI — the build/ bundle still works for everything except fresh TCC.
+if [ -n "${CI:-}" ]; then
+    echo "CI detected; skipping /Applications install"
+    exit 0
+fi
 INSTALLED="/Applications/SwiftX.app"
 if rm -rf "$INSTALLED" 2>/dev/null && cp -R "$APP" "$INSTALLED" 2>/dev/null; then
     echo "Installed $INSTALLED"

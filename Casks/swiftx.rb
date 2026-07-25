@@ -16,14 +16,9 @@ cask "swiftx" do
 
   app "SwiftX.app"
 
-  # ponytail: interim — builds are not yet notarized (no paid Developer ID), so
-  # Gatekeeper quarantines the download. Strip the flag on install so it launches.
-  # DELETE this block once make-app.sh signs with Developer ID and notarize.sh runs.
-  postflight do
-    system_command "/usr/bin/xattr",
-                   args: ["-dr", "com.apple.quarantine", "#{appdir}/SwiftX.app"],
-                   sudo: false
-  end
+  # Releases are Developer ID-signed, notarized, and stapled by the release
+  # workflow (.github/workflows/release.yml), so no quarantine workaround is
+  # needed — Gatekeeper clears the DMG on its own.
 
   uninstall quit: "com.retrohazard.swiftx"
 
