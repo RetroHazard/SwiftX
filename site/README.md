@@ -9,6 +9,27 @@ React, Tailwind CSS, and Motion.
 - **Tailwind CSS v4** for styling
 - **[Motion](https://motion.dev)** (`motion/react`) for scroll-reveal and entrance animations
 - **lucide-react** for icons
+- **Fontsource + `next/font/local`** for type — the woff2 files come from the
+  `@fontsource-variable/*` packages and are served from our own origin, so the
+  build never reaches out to a font CDN
+
+## Design notes
+
+Colour, type and spacing all run through CSS custom properties declared in
+`src/app/globals.css`. Light is the default; dark comes from
+`prefers-color-scheme`, and the header toggle stamps `data-theme` on the root
+element to override either direction. Style components through the tokens
+(`bg-panel`, `text-muted`, `border-line`, …) rather than hard-coded colours, or
+they will not follow the theme.
+
+Three type roles are set up as utility classes: `.display` (Archivo, heavy and
+slightly expanded) for headings, the body default (Public Sans), and `.readout`
+(JetBrains Mono, tabular figures) — reserved for real instrument data such as
+capture dimensions, timers, hotkeys and file sizes.
+
+`ShotSample` is the fake on-screen content every product mock operates on. Its
+colours are deliberately *not* themed: it stands in for someone else's screen,
+not for our own surface.
 
 ## Developing
 

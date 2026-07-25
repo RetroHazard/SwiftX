@@ -1,51 +1,62 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
-import { ChevronDown } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import { Plus } from "lucide-react";
 import { faqs } from "@/lib/content";
+import { SectionHead } from "@/components/section-head";
 
 export function Faq() {
   const [open, setOpen] = useState<number | null>(0);
 
   return (
-    <section id="faq" className="relative px-4 py-28">
-      <div className="mx-auto max-w-2xl">
-        <h2 className="text-center text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-          Frequently asked
-        </h2>
+    <section
+      id="faq"
+      className="border-t border-line px-5 py-20 sm:px-8 lg:py-28"
+    >
+      <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[minmax(0,0.7fr)_minmax(0,1fr)] lg:gap-20">
+        <SectionHead
+          eyebrow="Questions"
+          title="The things people ask first"
+        />
 
-        <div className="mt-10 divide-y divide-white/10 rounded-2xl border border-white/10 bg-white/[0.03]">
+        <div className="divide-y divide-line border-y border-line">
           {faqs.map((item, i) => {
             const isOpen = open === i;
             return (
-              <div key={item.question} className="px-5">
-                <button
-                  onClick={() => setOpen(isOpen ? null : i)}
-                  className="flex w-full items-center justify-between gap-4 py-4 text-left text-sm font-medium text-white"
-                >
-                  {item.question}
-                  <ChevronDown
-                    size={16}
-                    className={`shrink-0 text-white/40 transition-transform ${
-                      isOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
+              <div key={item.question}>
+                <h3>
+                  <button
+                    type="button"
+                    onClick={() => setOpen(isOpen ? null : i)}
+                    aria-expanded={isOpen}
+                    className="flex w-full items-center justify-between gap-5 py-4 text-left"
+                  >
+                    <span className="text-[15px] font-medium text-ink">
+                      {item.question}
+                    </span>
+                    <Plus
+                      size={16}
+                      className={`shrink-0 text-muted transition-transform duration-200 ${
+                        isOpen ? "rotate-45 text-accent" : ""
+                      }`}
+                    />
+                  </button>
+                </h3>
                 <AnimatePresence initial={false}>
-                  {isOpen && (
+                  {isOpen ? (
                     <motion.div
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.25, ease: "easeInOut" }}
+                      transition={{ duration: 0.24, ease: "easeInOut" }}
                       className="overflow-hidden"
                     >
-                      <p className="pb-4 text-sm leading-relaxed text-white/55">
+                      <p className="max-w-[62ch] pb-5 text-[15px] leading-relaxed text-muted">
                         {item.answer}
                       </p>
                     </motion.div>
-                  )}
+                  ) : null}
                 </AnimatePresence>
               </div>
             );
