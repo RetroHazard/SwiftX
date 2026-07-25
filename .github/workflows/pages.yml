@@ -1,5 +1,18 @@
 name: Deploy landing site
 
+# Publishes site/out to GitHub Pages as a project site:
+#   https://retrohazard.github.io/SwiftX/
+# The /SwiftX base path comes from site/next.config.ts, which defaults to it —
+# no build-time environment variable is needed here.
+#
+# Requires Settings -> Pages -> Source = "GitHub Actions". Pages is unavailable
+# on a private repo unless the account has GitHub Pro/Team, so until this repo
+# is public, run this manually via workflow_dispatch to check it, or expect the
+# deploy job to fail at the API call.
+#
+# NOTE: the `develop` branch does not exist yet, so the push trigger below is
+# currently inert and only workflow_dispatch will fire. Create `develop`, or
+# change this to whichever branch should publish.
 on:
   push:
     branches:
@@ -40,8 +53,16 @@ jobs:
       - name: Build static export
         run: npm run build
 
+      # Stops Pages' Jekyll pass from discarding the _next directory.
       - name: Add .nojekyll
         run: touch out/.nojekyll
+
+      # Fail before publishing rather than deploying a broken export.
+      - name: Verify export output
+        run: |
+          test -f out/index.html || { echo "::error::out/index.html missing"; exit 1; }
+          grep -q '"/SwiftX/_next/' out/index.html \
+            || { echo "::error::assets are not prefixed with the /SwiftX base path"; exit 1; }
 
       - uses: actions/configure-pages@v5
 
