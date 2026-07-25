@@ -35,6 +35,11 @@ on:
         description: "Version to release, without the v prefix (e.g. 0.2.0)"
         required: true
         type: string
+      dry-run:
+        description: "Build, sign, notarize and staple — but publish nothing (no tag, no release, no cask/site bump). The DMG is uploaded as a workflow artifact instead."
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -63,7 +68,11 @@ jobs:
             exit 1
           fi
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
-          echo "Releasing SwiftX $VERSION"
+          if [ "${{ inputs.dry-run }}" = "true" ]; then
+            echo "DRY RUN — building SwiftX $VERSION; nothing will be published"
+          else
+            echo "Releasing SwiftX $VERSION"
+          fi
 
       - name: Check required secrets
         env:
@@ -161,13 +170,29 @@ jobs:
       - name: Gatekeeper assessment
         run: spctl --assess --type open --context context:primary-signature -v "build/SwiftX-$VERSION.dmg"
 
-      - name: Publish GitHub release
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Compute checksum
         run: |
           DMG="build/SwiftX-$VERSION.dmg"
           shasum -a 256 "$DMG" | awk '{print $1}' > "$DMG.sha256"
           echo "SHA256=$(cat "$DMG.sha256")" >> "$GITHUB_ENV"
+
+      # Dry run stops here: the notarized DMG becomes a downloadable workflow
+      # artifact for local verification instead of a published release.
+      - name: Upload DMG artifact (dry run)
+        if: ${{ inputs.dry-run }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: SwiftX-${{ env.VERSION }}-dry-run
+          path: |
+            build/SwiftX-*.dmg
+            build/SwiftX-*.dmg.sha256
+
+      - name: Publish GitHub release
+        if: ${{ !inputs.dry-run }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          DMG="build/SwiftX-$VERSION.dmg"
           ARGS=(--title "SwiftX $VERSION" --generate-notes)
           # manual dispatch runs from a branch head; create the tag with the release
           [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ] && ARGS+=(--target "$GITHUB_SHA")
@@ -176,6 +201,7 @@ jobs:
       # This repo doubles as the Homebrew tap, so landing the cask bump on
       # master is what ships the release to `brew upgrade` users.
       - name: Bump cask and site version on master
+        if: ${{ !inputs.dry-run }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
