@@ -131,7 +131,7 @@ Each is small and independent; batch them.
 
 ### Phase 9 — Destination long tail
 Ends with: every remaining C# destination either hand-ported, shipped as a bundled .sxcu, or documented as dead.
-- Remaining file/image/text hosts (Box, B2, Azure, GCS, YouTube, Streamable, Nextcloud/ownCloud, Seafile, MediaFire, Puush, Pushbullet, transfer.sh, Pomf variants…), remaining shorteners (Polr, Kutt, YOURLS, Firebase…), URL sharing services (mostly URL-scheme opens — trivial)
+- Remaining file/image/text hosts (B2, Azure, GCS, YouTube, Streamable, Nextcloud/ownCloud, Seafile, MediaFire, Puush, Pushbullet, transfer.sh, Pomf variants…), remaining shorteners (Polr, Kutt, YOURLS, Firebase…), URL sharing services (mostly URL-scheme opens — trivial). **Dropped OAuth hosts:** Imgur (no longer issues app client IDs), Box (developer API behind a paid plan), Dropbox (by choice) — recorded in the parity checklist
 - Audit pass: several C# destinations are dead services (Copy, StumbleUpon, Delicious, DropIO…) — verify and mark N/A rather than port corpses
 - Shared-folder (SMB) destination via mounted-volume paths
 

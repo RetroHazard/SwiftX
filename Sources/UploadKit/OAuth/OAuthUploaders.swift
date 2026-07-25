@@ -2,7 +2,7 @@
 // Copyright (c) 2026 RetroHazard
 // Licensed under GPL v3 - see /LICENSE.txt
 //
-// The six OAuth2 destination uploaders. Each fetches a bearer token via
+// The OAuth2 destination uploaders. Each fetches a bearer token via
 // OAuthSession (which enforces the configured/authenticated gate) and then
 // speaks the host's upload + public-link API.
 //
@@ -19,10 +19,7 @@ public enum OAuthUploaderRegistry {
         switch id {
         case .googleDrive: return try await GoogleDriveUploader.upload(file: file, config: config)
         case .youTube:     return try await YouTubeUploader.upload(file: file, config: config)
-        case .dropbox:     return try await DropboxUploader.upload(file: file, config: config)
         case .oneDrive:    return try await OneDriveUploader.upload(file: file, config: config)
-        case .box:         return try await BoxUploader.upload(file: file, config: config)
-        case .imgur:       return try await ImgurUploader.upload(file: file, config: config)
         }
     }
 }
@@ -97,37 +94,6 @@ enum YouTubeUploader {
     }
 }
 
-// MARK: - Dropbox
-
-enum DropboxUploader {
-    static func upload(file: UploadFile, config: UploadersConfig) async throws -> UploadResult {
-        let token = try await OAuthSession.validAccessToken(for: .dropbox, config: config)
-        let path = "/\(file.fileName)"
-        let apiArg = try JSONSerialization.data(withJSONObject: ["path": path, "mode": "add", "autorename": true])
-
-        var upload = URLRequest(url: URL(string: "https://content.dropboxapi.com/2/files/upload")!)
-        upload.httpMethod = "POST"
-        upload.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        upload.setValue(String(data: apiArg, encoding: .utf8), forHTTPHeaderField: "Dropbox-API-Arg")
-        upload.setValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
-        upload.httpBody = file.data
-        _ = try await checkedSend(upload, step: "Dropbox upload")
-
-        // create (or fetch existing) shared link
-        var share = URLRequest(url: URL(string: "https://api.dropboxapi.com/2/sharing/create_shared_link_with_settings")!)
-        share.httpMethod = "POST"
-        share.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        share.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        share.httpBody = try JSONSerialization.data(withJSONObject: ["path": path])
-        let (data, _) = try await checkedSend(share, step: "Dropbox share")
-        guard let url = ((try? JSONSerialization.jsonObject(with: data)) as? [String: Any])?["url"] as? String else {
-            throw UploadError.emptyResult
-        }
-        // ?dl=1 serves the file directly instead of the preview page
-        return UploadResult(url: url.replacingOccurrences(of: "?dl=0", with: "?dl=1"))
-    }
-}
-
 // MARK: - OneDrive (Microsoft Graph)
 
 enum OneDriveUploader {
@@ -156,61 +122,6 @@ enum OneDriveUploader {
         let json = (try? JSONSerialization.jsonObject(with: linkData)) as? [String: Any]
         let url = (json?["link"] as? [String: Any])?["webUrl"] as? String
         return UploadResult(url: url ?? "https://onedrive.live.com")
-    }
-}
-
-// MARK: - Box
-
-enum BoxUploader {
-    static func upload(file: UploadFile, config: UploadersConfig) async throws -> UploadResult {
-        let token = try await OAuthSession.validAccessToken(for: .box, config: config)
-        let attributes = try JSONSerialization.data(withJSONObject: ["name": file.fileName, "parent": ["id": "0"]])
-        let boundary = "----SwiftXBoundary\(UUID().uuidString)"
-        let body = SimpleHostUploader.multipartBody(
-            fields: [("attributes", String(data: attributes, encoding: .utf8) ?? "{}")],
-            fileField: "file", file: file, boundary: boundary)
-
-        var upload = URLRequest(url: URL(string: "https://upload.box.com/api/2.0/files/content")!)
-        upload.httpMethod = "POST"
-        upload.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        upload.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-        upload.httpBody = body
-        let (data, _) = try await checkedSend(upload, step: "Box upload")
-        let entries = ((try? JSONSerialization.jsonObject(with: data)) as? [String: Any])?["entries"] as? [[String: Any]]
-        guard let fileID = entries?.first?["id"] as? String else { throw UploadError.emptyResult }
-
-        var share = URLRequest(url: URL(string: "https://api.box.com/2.0/files/\(fileID)")!)
-        share.httpMethod = "PUT"
-        share.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        share.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        share.httpBody = try JSONSerialization.data(withJSONObject: ["shared_link": ["access": "open"]])
-        let (shareData, _) = try await checkedSend(share, step: "Box share")
-        let sharedLink = ((try? JSONSerialization.jsonObject(with: shareData)) as? [String: Any])?["shared_link"] as? [String: Any]
-        return UploadResult(url: sharedLink?["url"] as? String ?? "https://app.box.com/file/\(fileID)")
-    }
-}
-
-// MARK: - Imgur
-
-enum ImgurUploader {
-    static func upload(file: UploadFile, config: UploadersConfig) async throws -> UploadResult {
-        let token = try await OAuthSession.validAccessToken(for: .imgur, config: config)
-        let boundary = "----SwiftXBoundary\(UUID().uuidString)"
-        let body = SimpleHostUploader.multipartBody(fields: [], fileField: "image", file: file, boundary: boundary)
-
-        var request = URLRequest(url: URL(string: "https://api.imgur.com/3/image")!)
-        request.httpMethod = "POST"
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-        request.httpBody = body
-        let (data, _) = try await checkedSend(request, step: "Imgur upload")
-        let payload = ((try? JSONSerialization.jsonObject(with: data)) as? [String: Any])?["data"] as? [String: Any]
-        guard let link = payload?["link"] as? String else { throw UploadError.emptyResult }
-        var result = UploadResult(url: link)
-        if let hash = payload?["deletehash"] as? String {
-            result.deletionURL = "https://imgur.com/delete/\(hash)"
-        }
-        return result
     }
 }
 

@@ -13,12 +13,10 @@
 
   Client secrets: a desktop app can't keep a secret truly secret, so PKCE is the
   real protection. Public-client hosts need NO secret — leave ClientSecret empty:
-    - Dropbox, OneDrive, Box  -> PKCE only, ClientSecret blank
+    - OneDrive                -> PKCE only, ClientSecret blank
     - Google Drive, YouTube   -> desktop-client secret required (semi-public)
-    - Imgur                    -> no PKCE; ClientSecret required (semi-public)
 
-  Keys are the OAuthProviderID raw values: GoogleDrive, YouTube, Dropbox,
-  OneDrive, Box, Imgur.
+  Keys are the OAuthProviderID raw values: GoogleDrive, YouTube, OneDrive.
 -->
 <plist version="1.0">
 <dict>
@@ -36,28 +34,7 @@
         <key>ClientSecret</key>
         <string></string>
     </dict>
-    <key>Dropbox</key>
-    <dict>
-        <key>ClientID</key>
-        <string></string>
-        <key>ClientSecret</key>
-        <string></string>
-    </dict>
     <key>OneDrive</key>
-    <dict>
-        <key>ClientID</key>
-        <string></string>
-        <key>ClientSecret</key>
-        <string></string>
-    </dict>
-    <key>Box</key>
-    <dict>
-        <key>ClientID</key>
-        <string></string>
-        <key>ClientSecret</key>
-        <string></string>
-    </dict>
-    <key>Imgur</key>
     <dict>
         <key>ClientID</key>
         <string></string>
