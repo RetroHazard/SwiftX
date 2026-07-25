@@ -33,7 +33,7 @@ export function MenuBar() {
             {[
               "Real global hotkeys that fire from any app",
               "Watch a folder and upload anything dropped in it",
-              "Drive it from the command line or a sharex:// link",
+              "Drive it from the command line or a swiftx:// link",
             ].map((line) => (
               <li key={line} className="flex items-start gap-3">
                 <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />

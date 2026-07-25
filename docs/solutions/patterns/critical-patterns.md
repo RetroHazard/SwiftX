@@ -26,6 +26,6 @@ tccutil reset ScreenCapture com.retrohazard.swiftx   # then relaunch + re-grant
 
 **Placement/Context:** Any SwiftX feature touching Screen Recording (ScreenCaptureKit), Accessibility (AXUIElement), or Input Monitoring — capture, recording, window snapping, scrolling capture, pixel color, window inspection. Unit tests are unaffected; only live/manual verification is.
 
-**Documented in:** `docs/solutions/runtime-errors/tcc-screen-recording-responsible-process-ShareXmacOS-20260708.md`
+**Documented in:** `docs/solutions/runtime-errors/tcc-screen-recording-responsible-process-SwiftX-20260708.md`
 
 ---

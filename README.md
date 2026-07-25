@@ -35,7 +35,8 @@ build from source (below).
   overlay with rectangle/ellipse/freehand selection, window snapping, magnifier, fixed-size and
   snap-size modes, and cross-display stitching
 - **Screen recording** — H.264/HEVC via ScreenCaptureKit + AVAssetWriter, GIF recording, optional
-  WebM/VP9/VP8/APNG output through a local ffmpeg install, pause/resume, system + microphone audio
+  WebM (VP9/VP8), animated WebP, and APNG output through a local ffmpeg install, pause/resume,
+  system + microphone audio
 - **Annotation editor** — shapes, text, step numbers, blur/pixelate/highlight regions, speech
   balloons, crop, smart eraser, magnify, spotlight, cut-out, undo/redo
 - **Image effects** — 51 adjustments/filters/manipulations/drawings, `.sxie` preset import/export,
@@ -43,14 +44,14 @@ build from source (below).
 - **Uploads** — a multipart/JSON/XML upload core with progress and retry, the `.sxcu` custom
   uploader engine (and editor), OAuth2 with Keychain-backed tokens, Amazon S3, Backblaze B2, Azure
   Storage, ownCloud/Nextcloud, Seafile, keyless URL shorteners, and more
-- **History &amp; main window** — a Windows-compatible SQLite history store (import an existing
-  `History.db`/`History.json`/`History.xml`), searchable list and thumbnail grid, live upload
-  queue, favorites and tag filters
+- **History &amp; main window** — a Windows-compatible SQLite history store (an existing
+  `History.db` opens unchanged; `History.json`/`History.xml` import), searchable list and
+  thumbnail grid, live upload queue, favorites and tag filters
 - **Automation** — global hotkeys, watch folders, auto capture, scrolling capture, quick task menu,
   `swiftx://` URL scheme, CLI verbs, and a native messaging host for Chrome/Edge/Firefox
 - **Tools** — color/screen color picker, ruler, OCR (Vision), QR generate/decode/scan, hash
-  checker, metadata viewer/stripper, image and video converters, folder indexer, and AI-assisted
-  image analysis (OpenAI-compatible providers)
+  checker, metadata viewer/stripper, image and video converters, background remover, image
+  comparer, folder indexer, and AI-assisted image analysis (OpenAI-compatible providers)
 
 The full breakdown, including what's intentionally left out (Windows-only features, dead upstream
 services) lives in [`docs/macos-swift-port/PARITY.md`](docs/macos-swift-port/PARITY.md).
@@ -71,7 +72,7 @@ SwiftX is a plain Swift Package — there's no Xcode project to open.
 git clone https://github.com/RetroHazard/SwiftX.git
 cd SwiftX
 
-swift build              # debug build
+swift build               # debug build
 swift test                # requires a full Xcode install; see docs/DEVELOPMENT.md
 ./Scripts/make-app.sh     # bundles build/SwiftX.app
 open build/SwiftX.app
@@ -86,7 +87,7 @@ this and other gotchas discovered while porting.
 
 ## Project layout
 
-| Swift package | Covers |
+| Module | Covers |
 |---|---|
 | `SharedKit` | Settings engine, name parser, shared helpers |
 | `CaptureKit` | Screen/window/region capture, recording |
@@ -98,7 +99,8 @@ this and other gotchas discovered while porting.
 | `SwiftXApp` | The app itself — menu bar shell, settings, CLI |
 | `NativeMessagingHost` | `swiftx-host` — browser native messaging binary |
 
-Each package has a matching test target under `Tests/`.
+Each `*Kit` module has a matching test target under `Tests/`; `SwiftXApp` and
+`NativeMessagingHost` are the two executable targets.
 
 ## Documentation
 
@@ -106,6 +108,12 @@ Each package has a matching test target under `Tests/`.
   plan and the Windows→macOS API mapping it's built on
 - [`docs/macos-swift-port/PARITY.md`](docs/macos-swift-port/PARITY.md) — feature-by-feature parity
   status against upstream ShareX
+- [`docs/macos-swift-port/GAP-ANALYSIS.md`](docs/macos-swift-port/GAP-ANALYSIS.md) — the July 2026
+  audit against upstream v21 that produced Phases 12–15
+- [`docs/macos-swift-port/SECURITY-MODEL.md`](docs/macos-swift-port/SECURITY-MODEL.md) — trust
+  boundaries, credential storage, and the (deliberate) no-App-Sandbox posture
+- [`docs/macos-swift-port/DISTRIBUTION.md`](docs/macos-swift-port/DISTRIBUTION.md) — the
+  release/packaging runbook (DMG, Homebrew cask, signing status)
 - [`docs/solutions/`](docs/solutions/) — a running log of non-obvious patterns, gotchas, and fixes
   found while building SwiftX (TCC permissions, SPM app-bundle packaging, `swift test` setup, etc.)
 

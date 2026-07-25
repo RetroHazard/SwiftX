@@ -1,8 +1,18 @@
-# ShareX for macOS — Swift Port Roadmap
+# SwiftX (ShareX for macOS) — Swift Port Roadmap
 
 Feature-parity roadmap for a ground-up native macOS client written in Swift.
 Grounded in an inventory of the current codebase (1,202 C# files, 13 projects).
 Executed phase-by-phase across sessions; each phase ends runnable and testable.
+
+> **Plan vs. as-built.** This document is the plan the port was executed
+> against, kept as written; [`PARITY.md`](PARITY.md) is the live record of what
+> actually shipped. Where they differ, PARITY wins. Known divergences from the
+> text below: the project shipped under the name **SwiftX** (`swiftx` CLI,
+> `swiftx://` URL scheme with `sharex://` kept as a legacy alias, settings in
+> `~/Library/Application Support/SwiftX/`); the planned `MediaKit` and
+> `IndexerKit` packages were folded into `CaptureKit`/`ToolsKit`; Sparkle was
+> dropped in favor of `brew upgrade --cask`; and ffmpeg is detected from a
+> Homebrew/MacPorts install rather than downloaded on demand.
 
 **Targets:** macOS 14+ (SCScreenshotManager baseline), Swift 5.10+, SwiftUI + AppKit
 where SwiftUI falls short (region overlay, editor canvas). Distribution outside
@@ -41,7 +51,7 @@ packages mirroring the C# project boundaries:
 | WinForms/Avalonia UI                     | SwiftUI; AppKit `NSWindow`/`CALayer` for overlays & editor canvas |
 | Clipboard (Win32)                        | `NSPasteboard`                                     |
 | Toast notifications                      | `UserNotifications` framework                      |
-| Registry / JSON settings                 | Codable JSON in `~/Library/Application Support/ShareX/` (keeps .sxcu/.sxie portability) |
+| Registry / JSON settings                 | Codable JSON in `~/Library/Application Support/SwiftX/` (keeps .sxcu/.sxie portability) |
 | Windows OCR                              | Vision `VNRecognizeTextRequest`                    |
 | QR encode/decode (ZXing)                 | CoreImage `CIQRCodeGenerator` / Vision `VNDetectBarcodesRequest` |
 | Hash functions                           | CryptoKit                                          |

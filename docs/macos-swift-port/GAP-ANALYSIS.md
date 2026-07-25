@@ -18,7 +18,9 @@ JSON-import-compatible.
 §3/§4/§8 → Phase 13 (capture, recording & output options), §5–7 → Phase 14
 (upload robustness & shell UX), §9–11 → Phase 15 (upstream v21 additions &
 supportability). This document remains the detailed rationale behind those
-rows; §10 stays append-only as the upstream-delta log.
+rows; §10 stays append-only as the upstream-delta log. The "SwiftX today"
+descriptions below are a snapshot of the codebase at audit time (2026-07) —
+many have since shipped; [`PARITY.md`](PARITY.md) is the live status.
 
 ---
 
@@ -40,8 +42,9 @@ The CLI `-workflow` verb matches hotkeys **by job-type name**
 hotkeys bound to the same verb are indistinguishable and cannot behave
 differently.
 
-PARITY.md's "CLI verbs, workflows — Ported" row overstates this: the verb
-dispatch is ported, the per-workflow settings model is not.
+PARITY.md's "CLI verbs, workflows" row overstated this at audit time (it has
+since been corrected to Partial): the verb dispatch is ported, the
+per-workflow settings model is not.
 
 **Impact:** high. Multi-destination / multi-behavior setups — the reason many
 people run ShareX — are impossible.

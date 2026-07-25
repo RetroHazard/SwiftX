@@ -69,4 +69,4 @@ Failure handling: if the transcode fails, keep the MP4 and say so in the notific
 - Any SCStream → non-AVFoundation encoder pipeline: go through an intermediate timestamped container rather than a raw frame pipe.
 
 ## Related Issues
-- See also: [tcc-screen-recording-responsible-process-ShareXmacOS-20260708.md](../runtime-errors/tcc-screen-recording-responsible-process-ShareXmacOS-20260708.md) — the other TCC pitfall in this port (grants keyed to code signature)
+- See also: [tcc-screen-recording-responsible-process-SwiftX-20260708.md](../runtime-errors/tcc-screen-recording-responsible-process-SwiftX-20260708.md) — the other TCC pitfall in this port (grants keyed to code signature)

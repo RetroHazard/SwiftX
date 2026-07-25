@@ -382,7 +382,7 @@ public struct TaskSettings: SettingsFile {
     /// C# EImageFormat enum name: PNG/JPEG/GIF/BMP/TIFF.
     public var imageFormat = "PNG"
     public var imageJPEGQuality = 90
-    /// Captures larger than ImageAutoUseJPEGSize save as JPEG regardless of format.
+    /// Captures whose longest side exceeds ImageAutoUseJPEGSize pixels save as JPEG regardless of format.
     public var imageAutoUseJPEG = true
     public var imageAutoUseJPEGSize = 2048
     /// JPEG quality when the auto-JPEG rule kicks in (C# ImageAutoJPEGQuality).
@@ -687,7 +687,7 @@ public struct WatchFolderSettings: Codable, Equatable, Sendable {
 public struct HotkeySettings: SettingsFile {
     public static let fileName = "HotkeysConfig.json"
 
-    // Populated in Phase 2 when the hotkey engine lands
+    // Empty until defaults are seeded on first launch or the user records hotkeys
     public var hotkeys: [HotkeyConfig] = []
 
     public init() {}

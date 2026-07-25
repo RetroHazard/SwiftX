@@ -3,9 +3,8 @@
 // Contains code derived from ShareX, Copyright (c) 2007-2026 ShareX Team
 // Licensed under GPL v3 - see /LICENSE.txt
 //
-// Runs the configured AfterCaptureTasks chain on a captured image.
-// Unimplemented flags log and no-op until their phase lands (editor,
-// effects, OCR, upload, ...).
+// Runs the configured AfterCaptureTasks chain on a captured image. Every
+// flag is implemented; `implemented` is the set surfaced in the task-chain UI.
 
 import AppKit
 import CaptureKit

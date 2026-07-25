@@ -80,7 +80,7 @@ public enum ScreenCapture {
     }
 
     /// Captures the largest on-screen window of the frontmost application.
-    /// Sample the frontmost app BEFORE presenting any ShareX UI.
+    /// Sample the frontmost app BEFORE presenting any SwiftX UI.
     public static func captureFrontmostWindow(processID: pid_t? = nil, showsCursor: Bool = false) async throws -> CGImage {
         let pid = processID ?? NSWorkspace.shared.frontmostApplication?.processIdentifier
         guard let pid else { throw ScreenCaptureError.noWindow }
