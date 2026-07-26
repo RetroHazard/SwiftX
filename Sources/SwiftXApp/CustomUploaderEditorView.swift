@@ -52,6 +52,8 @@ struct CustomUploaderEditorView: View {
                 Button("Delete…", role: .destructive) { confirmDelete = true }
                     .disabled(selected.isEmpty)
                 Button("Import…") { importFile() }
+                Button("Export…") { exportFile() }
+                    .disabled(selected.isEmpty)
                 Spacer()
                 if !selected.isEmpty && selected != activeUploader {
                     Button("Set Active") {
@@ -231,5 +233,18 @@ struct CustomUploaderEditorView: View {
               let name = try? CustomUploaderStore.importFile(from: url) else { return }
         files = CustomUploaderStore.list()
         select(name)
+    }
+
+    private func exportFile() {
+        guard !selected.isEmpty else { return }
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.init(filenameExtension: "sxcu") ?? .json]
+        panel.nameFieldStringValue = selected
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        do {
+            try CustomUploaderStore.exportFile(named: selected, to: url)
+        } catch {
+            Notifier.notify(title: "Export failed", body: error.localizedDescription)
+        }
     }
 }
