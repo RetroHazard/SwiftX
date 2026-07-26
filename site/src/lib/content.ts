@@ -1,0 +1,178 @@
+/**
+ * How people get the app.
+ *
+ * Building from source is the interim route, not the plan: once a Developer ID
+ * build is notarized, SwiftX ships as a .dmg on GitHub Releases and through a
+ * Homebrew cask. Flip `status` to "released" on launch day and the download
+ * path replaces the build-from-source path everywhere — hero, closing call to
+ * action and FAQ all read from here.
+ *
+ * Keep `version` and `minMacOS` in step with Casks/swiftx.rb and
+ * Package.swift's platform baseline.
+ */
+export type Release = {
+  status: "pre-release" | "released";
+  version: string;
+  minMacOS: string;
+  /** Matches the url stanza in Casks/swiftx.rb. */
+  dmgUrl: string;
+  brewCommand: string;
+};
+
+const version = "0.1.0";
+
+export const release: Release = {
+  status: "pre-release",
+  version,
+  minMacOS: "macOS 14 Sonoma or later",
+  dmgUrl: `https://github.com/RetroHazard/SwiftX/releases/download/v${version}/SwiftX-${version}.dmg`,
+  // The SwiftX repo doubles as the Homebrew tap (no homebrew- prefix), so the
+  // shorthand auto-tap doesn't apply — tap by URL first, then install.
+  brewCommand:
+    "brew tap retrohazard/swiftx https://github.com/RetroHazard/SwiftX && brew install --cask swiftx",
+};
+
+export const links = {
+  github: "https://github.com/RetroHazard/SwiftX",
+  releases: "https://github.com/RetroHazard/SwiftX/releases",
+  roadmap:
+    "https://github.com/RetroHazard/SwiftX/blob/master/docs/macos-swift-port/ROADMAP.md",
+  parity:
+    "https://github.com/RetroHazard/SwiftX/blob/master/docs/macos-swift-port/PARITY.md",
+  upstream: "https://github.com/ShareX/ShareX",
+};
+
+/* The after-capture pipeline is a real sequence, so it is the one place on
+   the page where step ordering carries information the reader needs. */
+export type Step = {
+  id: string;
+  label: string;
+  title: string;
+  detail: string;
+  icon: string;
+};
+
+export const workflow: Step[] = [
+  {
+    id: "capture",
+    label: "Press",
+    title: "Capture",
+    detail:
+      "A hotkey dims the screen. Drag out a region, or hover a window to snap to its edges.",
+    icon: "Crop",
+  },
+  {
+    id: "mark",
+    label: "Mark",
+    title: "Annotate",
+    detail:
+      "Arrows, step numbers and blur land straight on the shot — no trip through another app.",
+    icon: "PenTool",
+  },
+  {
+    id: "send",
+    label: "Send",
+    title: "Upload",
+    detail:
+      "It goes to your own bucket or host in the background while you carry on working.",
+    icon: "UploadCloud",
+  },
+  {
+    id: "paste",
+    label: "Paste",
+    title: "Link is ready",
+    detail:
+      "The URL is on your clipboard before the window closes. Paste it and move on.",
+    icon: "Link",
+  },
+];
+
+/* Effect names paired with the CSS that approximates them in the preview
+   strip. The app renders these properly; the page only has to suggest them. */
+export type EffectSwatch = {
+  name: string;
+  css: string;
+};
+
+export const effectSwatches: EffectSwatch[] = [
+  { name: "Original", css: "none" },
+  { name: "Grayscale", css: "grayscale(1) contrast(1.05)" },
+  { name: "Sepia", css: "sepia(0.85) saturate(1.3)" },
+  { name: "Inverse", css: "invert(1) hue-rotate(180deg)" },
+  { name: "Gaussian blur", css: "blur(2.5px) saturate(1.1)" },
+  { name: "Hue", css: "hue-rotate(140deg) saturate(1.5)" },
+  { name: "Contrast", css: "contrast(1.85) saturate(1.15)" },
+  { name: "Glow", css: "brightness(1.22) saturate(1.6) blur(0.5px)" },
+];
+
+export type Destination = {
+  name: string;
+  kind: string;
+};
+
+/* Every name here must have a real uploader in Sources/UploadKit — this grid
+   is a sample of what ships, not a wish list. */
+export const destinations: Destination[] = [
+  { name: "Amazon S3", kind: "Storage" },
+  { name: "Backblaze B2", kind: "Storage" },
+  { name: "Azure Blob", kind: "Storage" },
+  { name: "Nextcloud", kind: "Self-hosted" },
+  { name: "ownCloud", kind: "Self-hosted" },
+  { name: "Seafile", kind: "Self-hosted" },
+  { name: "Chevereto", kind: "Image host" },
+  { name: "Custom", kind: ".sxcu" },
+];
+
+export type Hotkey = {
+  keys: string[];
+  action: string;
+};
+
+/* The first three are the app's actual defaults (⌃⇧ so they never fight
+   macOS's own ⌘⇧3/4/5 shortcuts); the last is a custom binding of the kind
+   the panel is inviting. Keep this list in step with the defaults seeded in
+   Sources/SwiftXApp/AppDelegate.swift. */
+export const hotkeys: Hotkey[] = [
+  { keys: ["⌃", "⇧", "3"], action: "Capture full screen" },
+  { keys: ["⌃", "⇧", "4"], action: "Capture region" },
+  { keys: ["⌃", "⇧", "5"], action: "Capture active window" },
+  { keys: ["⌃", "⇧", "O"], action: "Grab text on screen" },
+];
+
+export type FaqItem = {
+  question: string;
+  answer: string;
+};
+
+export const faqs: FaqItem[] = [
+  {
+    question: "How will I install it?",
+    answer:
+      "Two ways, once the first build ships: download the .dmg straight from the GitHub releases page, or tap the SwiftX repo with `brew tap retrohazard/swiftx https://github.com/RetroHazard/SwiftX`, install with `brew install --cask swiftx`, and get updates through `brew upgrade`. Builds will be signed with an Apple Developer ID and notarized, so Gatekeeper opens them without a right-click or a trip to System Settings. Building from source is only the stopgap while that pipeline is being set up.",
+  },
+  {
+    question: "What does it need to run?",
+    answer:
+      "macOS 14 Sonoma or later, on Apple silicon or Intel. That is the baseline for the ScreenCaptureKit APIs the capture and recording pipeline is built on.",
+  },
+  {
+    question: "Do my screenshots pass through your servers?",
+    answer:
+      "No. There is no SwiftX account and no SwiftX backend. Uploads go straight from your Mac to whichever destination you set up — your own S3 bucket, your Nextcloud, an image host, or nowhere at all if you only save locally.",
+  },
+  {
+    question: "I already use ShareX on Windows. Does my setup come with me?",
+    answer:
+      "Largely, yes. SwiftX reads the same custom uploader (.sxcu) and image effect preset (.sxie) files, keeps a compatible history database, and works with the existing browser extensions — so destinations and presets you have already tuned carry over.",
+  },
+  {
+    question: "Is this the official ShareX for Mac?",
+    answer:
+      "No. SwiftX is an independent app, written from scratch in Swift and SwiftUI. It follows the capture-to-upload workflow ShareX made popular and stays compatible with its config files, but it is not a build of ShareX and is not affiliated with or endorsed by that project.",
+  },
+  {
+    question: "Why not just wrap the Windows app?",
+    answer:
+      "A compatibility layer cannot give you real global hotkeys, recording of arbitrary windows, or folder watching inside the macOS sandbox. Building directly against ScreenCaptureKit, Vision and AVFoundation is what makes it behave like a Mac app instead of a port.",
+  },
+];
