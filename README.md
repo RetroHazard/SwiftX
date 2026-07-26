@@ -26,7 +26,7 @@ preserved alongside the SwiftX copyright — see [License &amp; credits](#licens
 SwiftX is under active development. Most of the ShareX feature set already runs on macOS; see the
 [feature parity tracker](docs/macos-swift-port/PARITY.md) for what's ported, partial, or still
 planned. Releases are built, signed, and notarized by the
-[release pipeline](docs/macos-swift-port/DISTRIBUTION.md); until the first tagged release lands,
+[release pipeline](.github/workflows/release.yml); until the first tagged release lands,
 build from source (below).
 
 ## Features
@@ -106,16 +106,10 @@ Each `*Kit` module has a matching test target under `Tests/`; `SwiftXApp` and
 
 ## Documentation
 
-- [`docs/macos-swift-port/ROADMAP.md`](docs/macos-swift-port/ROADMAP.md) — the phase-by-phase port
-  plan and the Windows→macOS API mapping it's built on
 - [`docs/macos-swift-port/PARITY.md`](docs/macos-swift-port/PARITY.md) — feature-by-feature parity
   status against upstream ShareX
-- [`docs/macos-swift-port/GAP-ANALYSIS.md`](docs/macos-swift-port/GAP-ANALYSIS.md) — the July 2026
-  audit against upstream v21 that produced Phases 12–15
 - [`docs/macos-swift-port/SECURITY-MODEL.md`](docs/macos-swift-port/SECURITY-MODEL.md) — trust
   boundaries, credential storage, and the (deliberate) no-App-Sandbox posture
-- [`docs/macos-swift-port/DISTRIBUTION.md`](docs/macos-swift-port/DISTRIBUTION.md) — the
-  release/packaging runbook (DMG, Homebrew cask, signing status)
 - [`docs/solutions/`](docs/solutions/) — a running log of non-obvious patterns, gotchas, and fixes
   found while building SwiftX (TCC permissions, SPM app-bundle packaging, `swift test` setup, etc.)
 

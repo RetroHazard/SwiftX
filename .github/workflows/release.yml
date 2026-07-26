@@ -90,7 +90,7 @@ jobs:
             [ -n "${!s}" ] || MISSING+=("$s")
           done
           if [ "${#MISSING[@]}" -gt 0 ]; then
-            echo "::error::Missing required repository secrets: ${MISSING[*]} — see .github/workflows/release.yml header and docs/macos-swift-port/DISTRIBUTION.md"
+            echo "::error::Missing required repository secrets: ${MISSING[*]} — see .github/workflows/release.yml header"
             exit 1
           fi
           [ -n "$OAUTH_GOOGLE_CLIENT_ID" ] || echo "::warning::OAUTH_GOOGLE_CLIENT_ID not set — Google Drive & YouTube will be disabled in this build"

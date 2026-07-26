@@ -92,7 +92,7 @@ export function Hero() {
                 Signed, notarized and on Homebrew. Capture, editing,
                 recording and uploads all work today —{" "}
                 <a
-                  href={links.roadmap}
+                  href={links.parity}
                   target="_blank"
                   rel="noreferrer"
                   className="text-ink-soft underline decoration-line-strong underline-offset-4 transition-colors hover:text-accent hover:decoration-accent"
@@ -107,7 +107,7 @@ export function Hero() {
                 today; signed builds and a Homebrew cask land with the first
                 release —{" "}
                 <a
-                  href={links.roadmap}
+                  href={links.parity}
                   target="_blank"
                   rel="noreferrer"
                   className="text-ink-soft underline decoration-line-strong underline-offset-4 transition-colors hover:text-accent hover:decoration-accent"

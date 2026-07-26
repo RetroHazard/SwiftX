@@ -24,8 +24,6 @@ before debugging further.
 
 ## Where things live
 
-- [`docs/macos-swift-port/ROADMAP.md`](docs/macos-swift-port/ROADMAP.md) — the phase plan and the
-  Windows→macOS API mapping each package is built against
 - [`docs/macos-swift-port/PARITY.md`](docs/macos-swift-port/PARITY.md) — per-feature status
   (Ported/Partial/Planned/N/A/Dead); update the relevant row when you land a feature
 - [`docs/solutions/`](docs/solutions/) — a knowledge base of non-obvious patterns and gotchas found

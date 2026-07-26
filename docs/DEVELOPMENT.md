@@ -88,7 +88,7 @@ Sources/
   NativeMessagingHost/  swiftx-host, the browser native messaging binary
 Tests/                  one test target per *Kit module above
 Scripts/                make-app.sh, make-dmg.sh, make-icon.swift, notarize.sh
-Casks/                  swiftx.rb Homebrew cask (see macos-swift-port/DISTRIBUTION.md)
+Casks/                  swiftx.rb Homebrew cask
 Resources/              SwiftX.icns, OAuthApps.example.plist
 Assets/icons/           exported PNG icon ladder
 site/                   the landing site (own README)
@@ -96,8 +96,6 @@ site/                   the landing site (own README)
 
 ## Documentation
 
-- [`macos-swift-port/ROADMAP.md`](macos-swift-port/ROADMAP.md) — phase plan and
-  Windows→macOS API mapping
 - [`macos-swift-port/PARITY.md`](macos-swift-port/PARITY.md) — feature parity
   status against upstream ShareX
 - [`solutions/`](solutions/) — patterns and gotchas found while building this

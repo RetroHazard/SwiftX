@@ -35,8 +35,6 @@ export const release: Release = {
 export const links = {
   github: "https://github.com/RetroHazard/SwiftX",
   releases: "https://github.com/RetroHazard/SwiftX/releases",
-  roadmap:
-    "https://github.com/RetroHazard/SwiftX/blob/master/docs/macos-swift-port/ROADMAP.md",
   parity:
     "https://github.com/RetroHazard/SwiftX/blob/master/docs/macos-swift-port/PARITY.md",
   upstream: "https://github.com/ShareX/ShareX",

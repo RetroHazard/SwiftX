@@ -37,12 +37,12 @@ export function Footer() {
             GitHub
           </a>
           <a
-            href={links.roadmap}
+            href={links.parity}
             target="_blank"
             rel="noreferrer"
             className="transition-colors hover:text-ink"
           >
-            Roadmap
+            Status
           </a>
           <a
             href={links.releases}
