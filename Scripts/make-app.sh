@@ -139,13 +139,13 @@ echo "Signed as: ${IDENTITY:-ad-hoc}"
 echo "Built $APP"
 
 # Install into /Applications and run from there. TCC keys its identity cache on
-# the bundle PATH, not just the signature: on a dev machine that rebuilt
-# build/SwiftX.app in place across the com.getsharex.swiftx -> com.retrohazard.swiftx
-# rename, that exact path can stay pinned to the dead old ID, with capture
-# requests resolving to an identity that never shows in System Settings. A
-# fresh clone's first build has no such history and won't hit this, but a
-# stable install path sidesteps it either way. Skips the copy if unwritable
-# or on CI — the build/ bundle still works for everything except that.
+# the bundle PATH, not just the signature: a dev machine that changes the
+# bundle ID and rebuilds build/SwiftX.app in place at the same path can find
+# that path pinned to the dead old identity, with capture requests resolving
+# to nothing visible in System Settings. A fresh clone's first build has no
+# such history and won't hit this, but a stable install path sidesteps it
+# either way. Skips the copy if unwritable or on CI — the build/ bundle still
+# works for everything except that.
 if [ -n "${CI:-}" ]; then
     echo "CI detected; skipping /Applications install"
     exit 0

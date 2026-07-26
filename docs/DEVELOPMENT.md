@@ -41,11 +41,10 @@ Apple Development identity if one is available (falling back to ad-hoc), and ins
 (`./.build/debug/swiftx`) **and never `build/SwiftX.app` directly.** Screen Recording and
 Accessibility permissions are granted per bundle path — launching the bare executable from a
 terminal makes the terminal the "responsible process" and SwiftX never gets its own prompt. A dev
-machine that rebuilt `build/SwiftX.app` in place across the pre-rename `com.getsharex.swiftx` →
-`com.retrohazard.swiftx` bundle ID change can also find that exact path pinned to the dead old
-identity, with capture requests resolving to nothing visible in System Settings — a fresh clone's
-first build has no such history and won't hit this, but installing to a stable path sidesteps it
-either way. If permissions get stuck, see
+machine that changes the bundle ID and rebuilds `build/SwiftX.app` in place at the same path can
+also find that path pinned to the dead old identity, with capture requests resolving to nothing
+visible in System Settings — a fresh clone's first build has no such history and won't hit this,
+but installing to a stable path sidesteps it either way. If permissions get stuck, see
 [`docs/solutions/runtime-errors/tcc-screen-recording-responsible-process-SwiftX-20260708.md`](solutions/runtime-errors/tcc-screen-recording-responsible-process-SwiftX-20260708.md).
 
 If SwiftX is already running, `make-app.sh` will warn you — a running instance won't pick up a new
