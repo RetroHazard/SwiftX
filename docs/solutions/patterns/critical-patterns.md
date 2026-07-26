@@ -15,14 +15,14 @@ swift build && ./.build/debug/swiftx --capture-selftest
 
 ### ✅ CORRECT
 ```bash
-./Scripts/make-app.sh          # bundles AND signs with a certificate identity
-open build/SwiftX.app          # LaunchServices makes the app its own TCC identity
+./Scripts/make-app.sh          # bundles, signs with a certificate identity, installs to /Applications
+open /Applications/SwiftX.app  # LaunchServices makes the app its own TCC identity
 # after granting a permission: quit and relaunch once — TCC applies at process start
 # if capture fails with the toggle ON after a rebuild (stale identity):
 tccutil reset ScreenCapture com.retrohazard.swiftx   # then relaunch + re-grant
 ```
 
-**Why:** macOS TCC attributes permission requests to the *responsible process* — for a shell-spawned binary that's the terminal app, so SwiftX never gets (or shows) its own prompt. Grants are keyed to bundle ID + the signature's *designated requirement*: with a certificate identity (Apple Development / Developer ID) that requirement is stable across rebuilds, but an **ad-hoc signature pins to the binary's CDHash**, so every rebuild invalidates the grant — System Settings still shows the toggle ON while capture silently fails. `make-app.sh` auto-selects a certificate identity and only falls back to ad-hoc.
+**Why:** macOS TCC attributes permission requests to the *responsible process* — for a shell-spawned binary that's the terminal app, so SwiftX never gets (or shows) its own prompt. Grants are keyed to bundle ID + the signature's *designated requirement*: with a certificate identity (Apple Development / Developer ID) that requirement is stable across rebuilds, but an **ad-hoc signature pins to the binary's CDHash**, so every rebuild invalidates the grant — System Settings still shows the toggle ON while capture silently fails. `make-app.sh` auto-selects a certificate identity and only falls back to ad-hoc. Launch the *installed* `/Applications/SwiftX.app`, not `build/SwiftX.app` directly — the `build/` path is permanently associated with the old pre-rename `com.getsharex.swiftx` bundle ID, so capture requests from it resolve to a dead identity that never shows in System Settings either.
 
 **Placement/Context:** Any SwiftX feature touching Screen Recording (ScreenCaptureKit), Accessibility (AXUIElement), or Input Monitoring — capture, recording, window snapping, scrolling capture, pixel color, window inspection. Unit tests are unaffected; only live/manual verification is.
 

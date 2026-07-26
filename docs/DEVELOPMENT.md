@@ -29,7 +29,7 @@ swift build -c release               # release build
 DEVELOPER_DIR=/Applications/Xcode.app swift test
 
 ./Scripts/make-app.sh [version]      # bundles build/SwiftX.app (version defaults to 0.1.0)
-open build/SwiftX.app
+open /Applications/SwiftX.app
 ```
 
 `Scripts/make-app.sh` assembles the `.app` bundle by hand (copies the built executables, icon,
@@ -37,14 +37,21 @@ license text, and an inline-generated `Info.plist`), code-signs it with a local 
 Apple Development identity if one is available (falling back to ad-hoc), and installs it to
 `/Applications` so TCC permission grants persist across rebuilds.
 
-**Always run the built `.app`, never the raw binary** (`./.build/debug/swiftx`). Screen Recording
-and Accessibility permissions are granted per bundle path — launching the bare executable from a
-terminal makes the terminal the "responsible process" and SwiftX never gets its own prompt. If
-permissions get stuck, see
+**Always run the installed `/Applications/SwiftX.app`, never the raw binary**
+(`./.build/debug/swiftx`) **and never `build/SwiftX.app` directly.** Screen Recording and
+Accessibility permissions are granted per bundle path — launching the bare executable from a
+terminal makes the terminal the "responsible process" and SwiftX never gets its own prompt, and
+the `build/` path is permanently associated with the old pre-rename `com.getsharex.swiftx` bundle
+ID, so capture requests from it resolve to a dead identity that never shows in System Settings
+either. If permissions get stuck, see
 [`docs/solutions/runtime-errors/tcc-screen-recording-responsible-process-SwiftX-20260708.md`](solutions/runtime-errors/tcc-screen-recording-responsible-process-SwiftX-20260708.md).
 
 If SwiftX is already running, `make-app.sh` will warn you — a running instance won't pick up a new
-build; quit it first (`pkill -x SwiftX && open build/SwiftX.app`).
+build; quit it first (`pkill -x SwiftX && open /Applications/SwiftX.app`).
+
+If `/Applications` isn't writable (or `CI` is set), `make-app.sh` skips the install step and prints
+the `build/SwiftX.app` fallback path to run from instead — that path works for everything except
+fresh TCC grants.
 
 ## Regenerating the app icon
 
