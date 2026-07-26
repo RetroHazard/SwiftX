@@ -199,6 +199,13 @@ public enum CustomUploaderStore {
         return fileName
     }
 
+    /// Copies a stored uploader's .sxcu file to an external destination,
+    /// byte-for-byte, so exported files match what Windows ShareX would read.
+    public static func exportFile(named name: String, to destination: URL, in directory: URL = directory) throws {
+        let data = try Data(contentsOf: directory.appendingPathComponent(name))
+        try data.write(to: destination, options: .atomic)
+    }
+
     public static func delete(named name: String, in directory: URL = directory) throws {
         guard !name.isEmpty else { return }
         try FileManager.default.removeItem(at: directory.appendingPathComponent(name))
