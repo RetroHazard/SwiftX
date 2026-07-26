@@ -13,6 +13,47 @@ import SharedKit
 import UploadKit
 import UserNotifications
 
+/// Hideable status-bar menu entries (ApplicationConfig.trayMenuHiddenItems).
+/// Settings… and Quit are deliberately absent — hiding them would strand the
+/// user with no way back into the app.
+enum TrayMenuItemID: String, CaseIterable {
+    case captureRegion = "CaptureRegion"
+    case captureFullScreen = "CaptureFullScreen"
+    case captureActiveWindow = "CaptureActiveWindow"
+    case captureScreen = "CaptureScreen"
+    case captureWindow = "CaptureWindow"
+    case captureLastRegion = "CaptureLastRegion"
+    case scrollingCapture = "ScrollingCapture"
+    case autoCapture = "AutoCapture"
+    case screenshotDelay = "ScreenshotDelay"
+    case recording = "Recording"
+    case upload = "Upload"
+    case tools = "Tools"
+    case recent = "Recent"
+    case mainWindow = "MainWindow"
+    case log = "Log"
+
+    var displayName: String {
+        switch self {
+        case .captureRegion: return "Capture Region"
+        case .captureFullScreen: return "Capture Full Screen"
+        case .captureActiveWindow: return "Capture Active Window"
+        case .captureScreen: return "Capture Screen…"
+        case .captureWindow: return "Capture Window…"
+        case .captureLastRegion: return "Capture Last Region"
+        case .scrollingCapture: return "Scrolling Capture…"
+        case .autoCapture: return "Auto Capture…"
+        case .screenshotDelay: return "Screenshot Delay"
+        case .recording: return "Recording"
+        case .upload: return "Upload"
+        case .tools: return "Tools"
+        case .recent: return "Recent"
+        case .mainWindow: return "Main Window…"
+        case .log: return "Show Log…"
+        }
+    }
+}
+
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
@@ -29,6 +70,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let uploadSubmenu = NSMenu()
     private let recentSubmenu = NSMenu()
     private var uploadProgressCancellable: AnyCancellable?
+    /// Receives "Upload with SwiftX" service invocations (kept strongly:
+    /// NSApp.servicesProvider is unretained).
+    private let servicesProvider = ServicesProvider()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSAppleEventManager.shared().setEventHandler(
@@ -59,6 +103,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // watermark text (%h, %mi, ...) runs through the ShareX pattern parser
         EffectsEnvironment.textParser = { NameParser(.text).parse($0) }
+
+        // "Upload with SwiftX" in the system-wide Services context menu; the
+        // service definition lives in Info.plist (only present in .app builds)
+        NSApp.servicesProvider = servicesProvider
+        NSUpdateDynamicServices()
 
         setupHotkeys()
         Notifier.setup()
@@ -107,34 +156,61 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         HotkeyRegistrar.applyAll()
     }
 
+    /// Builds the status menu, skipping entries the user hid in Settings →
+    /// General → Menu bar. Rebuilt on every open so edits apply immediately.
     private func buildMenu() -> NSMenu {
         let menu = NSMenu()
+        let hidden = Set(ApplicationConfig.load().trayMenuHiddenItems)
+        func visible(_ id: TrayMenuItemID) -> Bool { !hidden.contains(id.rawValue) }
 
-        menu.addItem(NSMenuItem(title: "Capture Region", action: #selector(captureRegion), keyEquivalent: ""))
-        menu.addItem(NSMenuItem(title: "Capture Full Screen", action: #selector(captureFullScreen), keyEquivalent: ""))
-        menu.addItem(NSMenuItem(title: "Capture Active Window", action: #selector(captureActiveWindow), keyEquivalent: ""))
+        if visible(.captureRegion) {
+            menu.addItem(NSMenuItem(title: "Capture Region", action: #selector(captureRegion), keyEquivalent: ""))
+        }
+        if visible(.captureFullScreen) {
+            menu.addItem(NSMenuItem(title: "Capture Full Screen", action: #selector(captureFullScreen), keyEquivalent: ""))
+        }
+        if visible(.captureActiveWindow) {
+            menu.addItem(NSMenuItem(title: "Capture Active Window", action: #selector(captureActiveWindow), keyEquivalent: ""))
+        }
 
         // pickers populate on open: displays and windows change constantly
         screensSubmenu.delegate = self
         windowsSubmenu.delegate = self
-        let screenPicker = NSMenuItem(title: "Capture Screen…", action: nil, keyEquivalent: "")
-        screenPicker.submenu = screensSubmenu
-        menu.addItem(screenPicker)
-        let windowPicker = NSMenuItem(title: "Capture Window…", action: nil, keyEquivalent: "")
-        windowPicker.submenu = windowsSubmenu
-        menu.addItem(windowPicker)
-        menu.addItem(NSMenuItem(title: "Capture Last Region", action: #selector(captureLastRegion), keyEquivalent: ""))
-        menu.addItem(NSMenuItem(title: "Scrolling Capture…", action: #selector(showScrollingCapture), keyEquivalent: ""))
-        menu.addItem(NSMenuItem(title: "Auto Capture…", action: #selector(showAutoCapture), keyEquivalent: ""))
+        if visible(.captureScreen) {
+            let screenPicker = NSMenuItem(title: "Capture Screen…", action: nil, keyEquivalent: "")
+            screenPicker.submenu = screensSubmenu
+            menu.addItem(screenPicker)
+        }
+        if visible(.captureWindow) {
+            let windowPicker = NSMenuItem(title: "Capture Window…", action: nil, keyEquivalent: "")
+            windowPicker.submenu = windowsSubmenu
+            menu.addItem(windowPicker)
+        }
+        if visible(.captureLastRegion) {
+            menu.addItem(NSMenuItem(title: "Capture Last Region", action: #selector(captureLastRegion), keyEquivalent: ""))
+        }
+        if visible(.scrollingCapture) {
+            menu.addItem(NSMenuItem(title: "Scrolling Capture…", action: #selector(showScrollingCapture), keyEquivalent: ""))
+        }
+        if visible(.autoCapture) {
+            menu.addItem(NSMenuItem(title: "Auto Capture…", action: #selector(showAutoCapture), keyEquivalent: ""))
+        }
         // C# tray "screenshot delay" selector; applies to every capture verb
         delaySubmenu.delegate = self
-        let delayPicker = NSMenuItem(title: "Screenshot Delay", action: nil, keyEquivalent: "")
-        delayPicker.submenu = delaySubmenu
-        menu.addItem(delayPicker)
+        if visible(.screenshotDelay) {
+            let delayPicker = NSMenuItem(title: "Screenshot Delay", action: nil, keyEquivalent: "")
+            delayPicker.submenu = delaySubmenu
+            menu.addItem(delayPicker)
+        }
 
+        // hiding "Recording" hides the start verbs, never the live recording
+        // controls — a running recording must stay stoppable from the menu
         menu.addItem(.separator())
         let record = NSMenuItem(title: "Record Screen (Region)…", action: #selector(toggleRecording), keyEquivalent: "")
         let recordGIF = NSMenuItem(title: "Record GIF (Region)…", action: #selector(toggleGIFRecording), keyEquivalent: "")
+        let recording = RecordingCoordinator.shared.isRecording
+        record.isHidden = !visible(.recording) && !recording
+        recordGIF.isHidden = !visible(.recording)
         let pause = NSMenuItem(title: "Pause Recording", action: #selector(togglePauseRecording), keyEquivalent: "")
         pause.isHidden = true
         let abort = NSMenuItem(title: "Abort Recording", action: #selector(abortRecording), keyEquivalent: "")
@@ -151,23 +227,33 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(.separator())
         // C# tray Upload section; populated on open so the Disable checkmark is live
         uploadSubmenu.delegate = self
-        let upload = NSMenuItem(title: "Upload", action: nil, keyEquivalent: "")
-        upload.submenu = uploadSubmenu
-        menu.addItem(upload)
+        if visible(.upload) {
+            let upload = NSMenuItem(title: "Upload", action: nil, keyEquivalent: "")
+            upload.submenu = uploadSubmenu
+            menu.addItem(upload)
+        }
 
-        let tools = NSMenuItem(title: "Tools", action: nil, keyEquivalent: "")
-        tools.submenu = buildToolsMenu()
-        menu.addItem(tools)
+        if visible(.tools) {
+            let tools = NSMenuItem(title: "Tools", action: nil, keyEquivalent: "")
+            tools.submenu = buildToolsMenu()
+            menu.addItem(tools)
+        }
 
         // C# RecentTasksShowInTrayMenu: last N history entries
         recentSubmenu.delegate = self
-        let recent = NSMenuItem(title: "Recent", action: nil, keyEquivalent: "")
-        recent.submenu = recentSubmenu
-        menu.addItem(recent)
+        if visible(.recent) {
+            let recent = NSMenuItem(title: "Recent", action: nil, keyEquivalent: "")
+            recent.submenu = recentSubmenu
+            menu.addItem(recent)
+        }
 
         menu.addItem(.separator())
-        menu.addItem(NSMenuItem(title: "Main Window…", action: #selector(showMainWindow), keyEquivalent: ""))
-        menu.addItem(NSMenuItem(title: "Show Log…", action: #selector(showLog), keyEquivalent: ""))
+        if visible(.mainWindow) {
+            menu.addItem(NSMenuItem(title: "Main Window…", action: #selector(showMainWindow), keyEquivalent: ""))
+        }
+        if visible(.log) {
+            menu.addItem(NSMenuItem(title: "Show Log…", action: #selector(showLog), keyEquivalent: ""))
+        }
         let settings = NSMenuItem(title: "Settings…", action: #selector(showSettingsWindow), keyEquivalent: ",")
         menu.addItem(settings)
         menu.addItem(.separator())
@@ -176,7 +262,35 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // only claim selectors we implement; the rest (e.g. terminate) stay
         // targetless so the responder chain delivers them to NSApp
         menu.items.forEach { $0.target = $0.action.map(responds(to:)) == true ? self : nil }
+        pruneSeparators(menu)
         return menu
+    }
+
+    /// Hidden entries can leave doubled or leading separators behind; AppKit
+    /// only collapses them in some contexts, so tidy explicitly. Items that are
+    /// merely hidden (the dormant recording controls) count as absent.
+    private func pruneSeparators(_ menu: NSMenu) {
+        var previousWasSeparator = true // drops a leading separator too
+        var index = 0
+        while index < menu.items.count {
+            let item = menu.items[index]
+            if item.isHidden {
+                index += 1 // invisible: does not break up a separator run
+            } else if item.isSeparatorItem {
+                if previousWasSeparator {
+                    menu.removeItem(at: index)
+                } else {
+                    previousWasSeparator = true
+                    index += 1
+                }
+            } else {
+                previousWasSeparator = false
+                index += 1
+            }
+        }
+        while let last = menu.items.last(where: { !$0.isHidden }), last.isSeparatorItem {
+            menu.removeItem(last)
+        }
     }
 
     /// Mirrors the C# Tools menu; every item routes through HotkeyDispatcher
@@ -287,8 +401,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func updateRecordingUI() {
         let recording = RecordingCoordinator.shared.isRecording
+        let startVerbsVisible = !ApplicationConfig.load().trayMenuHiddenItems
+            .contains(TrayMenuItemID.recording.rawValue)
         recordItem?.title = recording ? "Stop Recording" : "Record Screen (Region)…"
-        recordGIFItem?.isHidden = recording
+        recordItem?.isHidden = !startVerbsVisible && !recording
+        recordGIFItem?.isHidden = recording || !startVerbsVisible
         pauseRecordingItem?.isHidden = !recording
         pauseRecordingItem?.title = RecordingCoordinator.shared.isPaused ? "Resume Recording" : "Pause Recording"
         abortRecordingItem?.isHidden = !recording
@@ -316,8 +433,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     /// Attach the menu just for the click, then detach so the next left click
     /// reaches statusItemClicked again (standard custom-click pattern).
+    /// Rebuilt every open so menu-item visibility edits apply immediately.
     private func showStatusMenu() {
         guard let statusItem else { return }
+        statusMenu = buildMenu()
+        updateRecordingUI()
         statusItem.menu = statusMenu
         statusItem.button?.performClick(nil)
         statusItem.menu = nil

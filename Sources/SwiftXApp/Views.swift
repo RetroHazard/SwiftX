@@ -438,11 +438,11 @@ struct SettingsView: View {
         (.deleteFile, "Delete file locally (moves to Trash)")
     ]
 
-    private func destinationBinding() -> Binding<String> {
+    private func destinationBinding(_ keyPath: WritableKeyPath<TaskSettings, String>) -> Binding<String> {
         Binding(
-            get: { task.imageDestination },
+            get: { task[keyPath: keyPath] },
             set: { value in
-                task.imageDestination = value
+                task[keyPath: keyPath] = value
                 try? task.save()
             }
         )
@@ -477,12 +477,13 @@ struct SettingsView: View {
         )
     }
 
-    private func uploaderBinding() -> Binding<String> {
+    private func uploaderBinding(_ keyPath: WritableKeyPath<UploadersConfig, String>
+                                    = \.activeCustomUploader) -> Binding<String> {
         Binding(
-            get: { UploadersConfig.load().activeCustomUploader },
+            get: { UploadersConfig.load()[keyPath: keyPath] },
             set: { name in
                 var config = UploadersConfig.load()
-                config.activeCustomUploader = name
+                config[keyPath: keyPath] = name
                 try? config.save()
             }
         )
@@ -571,10 +572,28 @@ struct SettingsView: View {
 
     private func importSettings() {
         let panel = NSOpenPanel()
-        panel.allowedContentTypes = [.zip]
-        panel.message = "Choose a SwiftX settings backup"
+        panel.allowedContentTypes = [.zip, .init(filenameExtension: "sxb") ?? .zip]
+        panel.message = "Choose a SwiftX settings backup or a Windows ShareX .sxb backup"
         NSApp.activate(ignoringOtherApps: true)
         guard panel.runModal() == .OK, let url = panel.url else { return }
+
+        // Both backup flavors are plain zips; extract once and sniff which one
+        // this is (Windows nests task settings under DefaultTaskSettings).
+        let staging = FileManager.default.temporaryDirectory
+            .appendingPathComponent("swiftx-import-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: staging) }
+        do {
+            try SettingsBackup.extract(url, to: staging)
+        } catch {
+            Notifier.notify(title: "Settings import failed", body: error.localizedDescription,
+                            event: .error)
+            return
+        }
+
+        if SettingsBackup.isWindowsShareXBackup(extractedAt: staging) {
+            importWindowsBackup(extractedAt: staging, named: url.lastPathComponent)
+            return
+        }
 
         let alert = NSAlert()
         alert.messageText = "Replace current settings?"
@@ -586,15 +605,79 @@ struct SettingsView: View {
 
         do {
             try SettingsBackup.restore(from: url)
-            config = ApplicationConfig.load()
-            task = TaskSettings.load()
-            HotkeyRegistrar.applyAll()
-            WatchFolderCenter.shared.applySettings()
+            reloadAfterImport()
             Notifier.notify(title: "Settings restored", body: url.lastPathComponent)
         } catch {
             Notifier.notify(title: "Settings import failed", body: error.localizedDescription,
                             event: .error)
         }
+    }
+
+    /// Windows ShareX .sxb: maps what has a macOS equivalent onto the current
+    /// settings (a merge, unlike the native replace) and offers to bring the
+    /// backup's upload history along.
+    private func importWindowsBackup(extractedAt staging: URL, named name: String) {
+        let alert = NSAlert()
+        alert.messageText = "Import Windows ShareX backup?"
+        alert.informativeText = "Settings, hotkeys and custom uploaders from \(name) will be "
+            + "merged into your current configuration. Values with no macOS equivalent "
+            + "(Windows paths, OAuth accounts, Windows-only hotkeys) are skipped. "
+            + "Upload history can be imported too — repeating the import later would duplicate it."
+        alert.addButton(withTitle: "Import")
+        alert.addButton(withTitle: "Import Without History")
+        alert.addButton(withTitle: "Cancel")
+        let response = alert.runModal()
+        guard response != .alertThirdButtonReturn else { return }
+
+        do {
+            let summary = try ShareXBackupImport.apply(extractedAt: staging)
+            var importedHistory = 0
+            if response == .alertFirstButtonReturn, let database = summary.historyDatabase {
+                importedHistory = HistoryStore.shared.appendAll(
+                    HistoryImport.items(fromSQLiteDatabase: database))
+            }
+            reloadAfterImport()
+
+            var parts = ["Settings imported."]
+            if !summary.importedUploaders.isEmpty {
+                parts.append("\(summary.importedUploaders.count) custom uploader(s).")
+            }
+            if summary.importedHotkeys > 0 || summary.skippedHotkeys > 0 {
+                parts.append("\(summary.importedHotkeys) hotkey(s)"
+                    + (summary.skippedHotkeys > 0
+                       ? ", \(summary.skippedHotkeys) without a macOS key skipped." : "."))
+            }
+            if importedHistory > 0 {
+                parts.append("\(importedHistory) history entries.")
+            }
+            Notifier.notify(title: "ShareX backup imported", body: parts.joined(separator: " "))
+        } catch {
+            Notifier.notify(title: "ShareX import failed", body: error.localizedDescription,
+                            event: .error)
+        }
+    }
+
+    private func reloadAfterImport() {
+        config = ApplicationConfig.load()
+        task = TaskSettings.load()
+        HotkeyRegistrar.applyAll()
+        WatchFolderCenter.shared.applySettings()
+    }
+
+    /// Visibility toggle for one status-bar menu entry (stored inverted:
+    /// the config keeps the hidden list so new items default to visible).
+    private func trayItemVisibleBinding(_ id: TrayMenuItemID) -> Binding<Bool> {
+        Binding(
+            get: { !config.trayMenuHiddenItems.contains(id.rawValue) },
+            set: { visible in
+                if visible {
+                    config.trayMenuHiddenItems.removeAll { $0 == id.rawValue }
+                } else if !config.trayMenuHiddenItems.contains(id.rawValue) {
+                    config.trayMenuHiddenItems.append(id.rawValue)
+                }
+                try? config.save()
+            }
+        )
     }
 
     private func moveToolbarItem(_ index: Int, by delta: Int) {
@@ -714,6 +797,15 @@ struct SettingsView: View {
                 TextField("Recent entries shown (1–30)",
                           value: clampedConfigBinding(\.recentTasksMaxCount, 1...30), format: .number)
             }
+            DisclosureGroup("Menu items") {
+                ForEach(TrayMenuItemID.allCases, id: \.rawValue) { id in
+                    Toggle(id.displayName, isOn: trayItemVisibleBinding(id))
+                }
+                Text("Unchecked items are hidden from the menu bar menu. Settings and Quit "
+                     + "always stay, and a running recording keeps its stop controls visible.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
         }
         Section("Hotkey guards") {
             Toggle("Disable hotkeys while a fullscreen app is active",
@@ -772,7 +864,8 @@ struct SettingsView: View {
             Text("Backups contain settings, hotkeys, effects presets and custom uploaders. "
                  + "API keys and OAuth tokens live in the Keychain and are never exported — "
                  + "re-enter or reconnect them after restoring on another Mac. History is "
-                 + "not included; use the main window's import tools for it.")
+                 + "not included; use the main window's import tools for it. Import also "
+                 + "accepts Windows ShareX .sxb backups, including their upload history.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -916,49 +1009,81 @@ struct SettingsView: View {
         }
     }
 
+    /// The three per-type "custom uploader" sentinels (C# enum member names).
+    private static let customUploaderTags: Set<String> = [
+        "CustomImageUploader", "CustomTextUploader", "CustomFileUploader"
+    ]
+
+    /// Distinct destinations selected across the three pickers, so each host's
+    /// credential fields render once even when types share a destination.
+    private var configurableDestinations: [String] {
+        var seen = Set<String>()
+        return [task.imageDestination, task.textDestination, task.fileDestination].filter { destination in
+            guard !Self.customUploaderTags.contains(destination) else { return false }
+            return seen.insert(destination).inserted
+        }
+    }
+
+    private func destinationDisplayName(_ destination: String) -> String {
+        switch destination {
+        case "AmazonS3": return "Amazon S3"
+        case "BackblazeB2": return "Backblaze B2"
+        case "AzureStorage": return "Azure Storage"
+        case "OwnCloud": return "ownCloud / Nextcloud"
+        case "Seafile": return "Seafile"
+        case "Pushbullet": return "Pushbullet"
+        default:
+            return SimpleHostDestination(rawValue: destination)?.displayName
+                ?? OAuthProviderID(rawValue: destination)?.displayName
+                ?? destination
+        }
+    }
+
+    @ViewBuilder
+    private func destinationPicker(_ label: String, customTag: String,
+                                   selection: Binding<String>) -> some View {
+        Picker(label, selection: selection) {
+            Text("Custom uploader").tag(customTag)
+            Text("Amazon S3").tag("AmazonS3")
+            Text("Backblaze B2").tag("BackblazeB2")
+            Text("Azure Storage").tag("AzureStorage")
+            Text("ownCloud / Nextcloud").tag("OwnCloud")
+            Text("Seafile").tag("Seafile")
+            Text("Pushbullet").tag("Pushbullet")
+            ForEach(SimpleHostDestination.allCases, id: \.rawValue) { destination in
+                Text(destination.displayName).tag(destination.rawValue)
+            }
+            ForEach(OAuthProviderID.allCases, id: \.rawValue) { provider in
+                Text(oauthPickerLabel(provider)).tag(provider.rawValue)
+            }
+        }
+    }
+
     @ViewBuilder
     private var destinationsPane: some View {
-        Section("Upload destination") {
-            Picker("Destination", selection: destinationBinding()) {
-                Text("Custom uploader").tag("CustomImageUploader")
-                Text("Amazon S3").tag("AmazonS3")
-                Text("Backblaze B2").tag("BackblazeB2")
-                Text("Azure Storage").tag("AzureStorage")
-                Text("ownCloud / Nextcloud").tag("OwnCloud")
-                Text("Seafile").tag("Seafile")
-                Text("Pushbullet").tag("Pushbullet")
-                ForEach(SimpleHostDestination.allCases, id: \.rawValue) { destination in
-                    Text(destination.displayName).tag(destination.rawValue)
-                }
-                ForEach(OAuthProviderID.allCases, id: \.rawValue) { provider in
-                    Text(oauthPickerLabel(provider)).tag(provider.rawValue)
-                }
+        Section("Upload destinations") {
+            destinationPicker("Image uploads", customTag: "CustomImageUploader",
+                              selection: destinationBinding(\.imageDestination))
+            destinationPicker("Text uploads", customTag: "CustomTextUploader",
+                              selection: destinationBinding(\.textDestination))
+            destinationPicker("File & video uploads", customTag: "CustomFileUploader",
+                              selection: destinationBinding(\.fileDestination))
+            Text("Screenshots use the image destination; recordings and other files the "
+                 + "file destination. Until a separate custom uploader is chosen below, text "
+                 + "and file uploads follow the image destination.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        if [task.imageDestination, task.textDestination, task.fileDestination]
+            .contains(where: { Self.customUploaderTags.contains($0) }) {
+            customUploaderSection
+        }
+        ForEach(configurableDestinations, id: \.self) { destination in
+            Section(destinationDisplayName(destination)) {
+                simpleHostFields(for: destination)
+                cloudHostFields(for: destination)
+                oauthFields(for: destination)
             }
-            simpleHostFields
-            cloudHostFields
-
-            if task.imageDestination == "CustomImageUploader" {
-                let uploaders = CustomUploaderStore.list()
-                if uploaders.isEmpty {
-                    Text("No custom uploaders imported. Use Import… in Settings → Custom Uploader — any community .sxcu file works.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                } else {
-                    Picker("Custom uploader", selection: uploaderBinding()) {
-                        ForEach(uploaders, id: \.self) { name in
-                            Text(name).tag(name)
-                        }
-                    }
-                }
-            } else if task.imageDestination == "AmazonS3" {
-                TextField("Access key ID", text: s3Binding(\.accessKeyID))
-                SecureField("Secret access key", text: s3Binding(\.secretAccessKey))
-                TextField("Region", text: s3Binding(\.region))
-                TextField("Bucket", text: s3Binding(\.bucket))
-                TextField("Object prefix", text: s3Binding(\.objectPrefix))
-                TextField("Custom endpoint (optional, for S3-compatible hosts)", text: s3Binding(\.endpoint))
-            }
-            oauthFields
         }
         Section("Upload behavior") {
             Toggle("Disable all uploads", isOn: configBinding(\.disableUpload))
@@ -1052,12 +1177,50 @@ struct SettingsView: View {
         )
     }
 
+    /// Per-type custom uploader pickers. Text and file uploads can follow the
+    /// image uploader (empty selection) or pin their own .sxcu.
+    @ViewBuilder
+    private var customUploaderSection: some View {
+        Section("Custom uploaders") {
+            let uploaders = CustomUploaderStore.list()
+            if uploaders.isEmpty {
+                Text("No custom uploaders imported. Use Import… in Settings → Custom Uploader — any community .sxcu file works.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else {
+                if task.imageDestination == "CustomImageUploader" {
+                    Picker("Image uploader", selection: uploaderBinding()) {
+                        ForEach(uploaders, id: \.self) { name in
+                            Text(name).tag(name)
+                        }
+                    }
+                }
+                if task.textDestination == "CustomTextUploader" {
+                    Picker("Text uploader", selection: uploaderBinding(\.activeTextCustomUploader)) {
+                        Text("Same as image").tag("")
+                        ForEach(uploaders, id: \.self) { name in
+                            Text(name).tag(name)
+                        }
+                    }
+                }
+                if task.fileDestination == "CustomFileUploader" {
+                    Picker("File uploader", selection: uploaderBinding(\.activeFileCustomUploader)) {
+                        Text("Same as image").tag("")
+                        ForEach(uploaders, id: \.self) { name in
+                            Text(name).tag(name)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     /// End-user OAuth setup is one-click: SwiftX ships the app credentials, so
     /// the user only signs in and approves. The client ID/secret fields are for
     /// developers / power users and stay hidden in an Advanced disclosure.
     @ViewBuilder
-    private var oauthFields: some View {
-        if let id = OAuthProviderID(rawValue: task.imageDestination) {
+    private func oauthFields(for destination: String) -> some View {
+        if let id = OAuthProviderID(rawValue: destination) {
             let configured = UploadersConfig.load().isConfigured(id)
             let connected = OAuthTokenStore.isConnected(id)
 
@@ -1098,8 +1261,15 @@ struct SettingsView: View {
 
     /// Credential fields for the cloud storage and token-auth destinations.
     @ViewBuilder
-    private var cloudHostFields: some View {
-        switch task.imageDestination {
+    private func cloudHostFields(for destination: String) -> some View {
+        switch destination {
+        case "AmazonS3":
+            TextField("Access key ID", text: s3Binding(\.accessKeyID))
+            SecureField("Secret access key", text: s3Binding(\.secretAccessKey))
+            TextField("Region", text: s3Binding(\.region))
+            TextField("Bucket", text: s3Binding(\.bucket))
+            TextField("Object prefix", text: s3Binding(\.objectPrefix))
+            TextField("Custom endpoint (optional, for S3-compatible hosts)", text: s3Binding(\.endpoint))
         case "BackblazeB2":
             TextField("B2 application key ID", text: uploadersBinding(\.b2ApplicationKeyId))
             SecureField("B2 application key", text: uploadersBinding(\.b2ApplicationKey))
@@ -1136,8 +1306,8 @@ struct SettingsView: View {
 
     /// Credential fields for the selected simple file host; keyless hosts need none.
     @ViewBuilder
-    private var simpleHostFields: some View {
-        switch SimpleHostDestination(rawValue: task.imageDestination) {
+    private func simpleHostFields(for destination: String) -> some View {
+        switch SimpleHostDestination(rawValue: destination) {
         case .pomf:
             TextField("Pomf upload URL (https://yourhost/upload.php)", text: uploadersBinding(\.pomf.uploadURL))
             TextField("Pomf result URL (prepended to relative file names)", text: uploadersBinding(\.pomf.resultURL))
