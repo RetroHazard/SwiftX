@@ -148,8 +148,11 @@ jobs:
       - name: Verify signature
         run: |
           codesign --verify --deep --strict --verbose=2 build/SwiftX.app
-          codesign -dv build/SwiftX.app 2>&1 | grep -q "Authority=Developer ID Application" || {
+          # -d only emits the Authority= chain at verbosity >= 2; at the default
+          # level this grep can never match, no matter how the app is signed.
+          codesign -d --verbose=4 build/SwiftX.app 2>&1 | grep -q "Authority=Developer ID Application" || {
             echo "::error::App is not signed with a Developer ID Application certificate"
+            codesign -d --verbose=4 build/SwiftX.app 2>&1 || true
             exit 1
           }
           lipo -info build/SwiftX.app/Contents/MacOS/SwiftX
