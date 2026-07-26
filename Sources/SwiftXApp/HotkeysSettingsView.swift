@@ -1,6 +1,6 @@
 // SwiftX - screenshot capture and sharing for macOS
 // Copyright (c) 2026 RetroHazard
-// Licensed under GPL v3 - see /LICENSE.txt
+// Licensed under GPL v3 - see /LICENSE
 //
 // Hotkey editor: pick an action, click the combo button, press the keys.
 // While recording, global registrations are suspended so the pressed combo

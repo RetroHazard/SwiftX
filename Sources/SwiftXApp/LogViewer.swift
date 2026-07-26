@@ -1,6 +1,6 @@
 // SwiftX - screenshot capture and sharing for macOS
 // Copyright (c) 2026 RetroHazard
-// Licensed under GPL v3 - see /LICENSE.txt
+// Licensed under GPL v3 - see /LICENSE
 //
 // "Show Log" window (upstream DebugForm equivalent): reads this process's
 // entries for the SwiftX subsystem back out of the unified log. Storage and

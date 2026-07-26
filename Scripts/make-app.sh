@@ -1,7 +1,7 @@
 #!/bin/bash
 # SwiftX - screenshot capture and sharing for macOS
 # Copyright (c) 2026 RetroHazard
-# Licensed under GPL v3 - see /LICENSE.txt
+# Licensed under GPL v3 - see /LICENSE
 #
 # Builds SwiftX.app from the SPM executable. No Xcode project required.
 set -euo pipefail
@@ -39,7 +39,7 @@ cp Resources/SwiftX.icns "$APP/Contents/Resources/"
 
 # GPL v3 requires conveying the license text with the program; the About
 # panel's "GNU GPL v3" link opens this copy
-cp LICENSE.txt "$APP/Contents/Resources/LICENSE.txt"
+cp LICENSE "$APP/Contents/Resources/LICENSE"
 
 # Baked-in OAuth app credentials, if this build has them (git-ignored). Absent
 # in the open-source tree -> OAuth hosts stay unavailable until a build ships it.

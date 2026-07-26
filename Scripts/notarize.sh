@@ -1,7 +1,7 @@
 #!/bin/bash
 # SwiftX - screenshot capture and sharing for macOS
 # Copyright (c) 2026 RetroHazard
-# Licensed under GPL v3 - see /LICENSE.txt
+# Licensed under GPL v3 - see /LICENSE
 #
 # Notarize + staple a DMG so Gatekeeper clears it with no warning and the cask
 # needs no quarantine workaround.

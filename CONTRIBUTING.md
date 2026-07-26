@@ -40,7 +40,7 @@ before debugging further.
   ```swift
   // SwiftX - screenshot capture and sharing for macOS
   // Copyright (c) 2026 RetroHazard
-  // Licensed under GPL v3 - see /LICENSE.txt
+  // Licensed under GPL v3 - see /LICENSE
   ```
 
   **Ported or translated from the C# ShareX codebase** — preserve the upstream notice per GPLv3
@@ -49,7 +49,7 @@ before debugging further.
   // SwiftX - screenshot capture and sharing for macOS
   // Copyright (c) 2026 RetroHazard
   // Contains code derived from ShareX, Copyright (c) 2007-2026 ShareX Team
-  // Licensed under GPL v3 - see /LICENSE.txt
+  // Licensed under GPL v3 - see /LICENSE
   ```
 
   When in doubt, check whether the logic traces back to a specific C# file (a name-parser macro, an
@@ -69,7 +69,7 @@ before debugging further.
 
 ## Legal
 
-SwiftX is licensed under [GPL v3](./LICENSE.txt). By contributing, you agree your contribution is
+SwiftX is licensed under [GPL v3](./LICENSE). By contributing, you agree your contribution is
 licensed under the same terms. Please don't submit code you don't have the rights to license this
 way (including code copied from other GPL-incompatible projects).
 

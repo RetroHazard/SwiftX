@@ -1,6 +1,6 @@
 // SwiftX - screenshot capture and sharing for macOS
 // Copyright (c) 2026 RetroHazard
-// Licensed under GPL v3 - see /LICENSE.txt
+// Licensed under GPL v3 - see /LICENSE
 //
 // The OAuth2 destination uploaders. Each fetches a bearer token via
 // OAuthSession (which enforces the configured/authenticated gate) and then

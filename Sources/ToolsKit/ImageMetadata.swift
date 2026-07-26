@@ -1,6 +1,6 @@
 // SwiftX - screenshot capture and sharing for macOS
 // Copyright (c) 2026 RetroHazard
-// Licensed under GPL v3 - see /LICENSE.txt
+// Licensed under GPL v3 - see /LICENSE
 //
 // Image metadata viewer/stripper. C# shells out to exiftool; Image I/O
 // reads the same property groups and can drop them on rewrite.

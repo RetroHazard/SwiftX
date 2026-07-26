@@ -1,7 +1,7 @@
 // SwiftX - screenshot capture and sharing for macOS
 // Copyright (c) 2026 RetroHazard
 // Contains code derived from ShareX, Copyright (c) 2007-2026 ShareX Team
-// Licensed under GPL v3 - see /LICENSE.txt
+// Licensed under GPL v3 - see /LICENSE
 //
 // SQLite history store. Table name, columns, ISO-8601 date strings and
 // JSON-encoded Tags mirror ShareX.HistoryLib/HistoryManagerSQLite.cs, so a

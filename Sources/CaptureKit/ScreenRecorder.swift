@@ -1,6 +1,6 @@
 // SwiftX - screenshot capture and sharing for macOS
 // Copyright (c) 2026 RetroHazard
-// Licensed under GPL v3 - see /LICENSE.txt
+// Licensed under GPL v3 - see /LICENSE
 //
 // Screen recording: SCStream frames feed either an AVAssetWriter (MP4,
 // H.264/HEVC, optional AAC audio tracks) or a GIF encoder (ImageIO).

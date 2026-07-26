@@ -1,7 +1,7 @@
 #!/bin/bash
 # SwiftX - screenshot capture and sharing for macOS
 # Copyright (c) 2026 RetroHazard
-# Licensed under GPL v3 - see /LICENSE.txt
+# Licensed under GPL v3 - see /LICENSE
 #
 # Writes Resources/OAuthApps.plist (git-ignored) from environment variables so
 # release builds ship with working OAuth destinations baked in. Run by the

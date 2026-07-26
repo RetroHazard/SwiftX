@@ -1,7 +1,7 @@
 // SwiftX - screenshot capture and sharing for macOS
 // Copyright (c) 2026 RetroHazard
 // Contains code derived from ShareX, Copyright (c) 2007-2026 ShareX Team
-// Licensed under GPL v3 - see /LICENSE.txt
+// Licensed under GPL v3 - see /LICENSE
 //
 // AI image analysis window (C# AIForm). The provider settings live inline;
 // they persist to ApplicationConfig so hotkey and pipeline runs reuse them.

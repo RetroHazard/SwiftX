@@ -1,7 +1,7 @@
 // swift-tools-version:5.10
 // SwiftX - screenshot capture and sharing for macOS
 // Copyright (c) 2026 RetroHazard
-// Licensed under GPL v3 - see /LICENSE.txt
+// Licensed under GPL v3 - see /LICENSE
 
 import PackageDescription
 

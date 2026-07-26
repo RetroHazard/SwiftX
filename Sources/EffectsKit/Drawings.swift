@@ -1,7 +1,7 @@
 // SwiftX - screenshot capture and sharing for macOS
 // Copyright (c) 2026 RetroHazard
 // Contains code derived from ShareX, Copyright (c) 2007-2026 ShareX Team
-// Licensed under GPL v3 - see /LICENSE.txt
+// Licensed under GPL v3 - see /LICENSE
 //
 // Drawing effects: backgrounds, borders, checkerboards and watermarks
 // (image, text, particles). Text runs through EffectsEnvironment.textParser
