@@ -62,6 +62,26 @@ struct CustomUploaderStoreTests {
         }
     }
 
+    @Test func exportCopiesStoredFileVerbatim() throws {
+        try withTempDirectory { dir in
+            var item = CustomUploaderItem()
+            item.name = "My Host"
+            item.requestURL = "https://img.example/upload"
+            try CustomUploaderStore.save(item, as: "my-host.sxcu", in: dir)
+
+            let destination = dir.appendingPathComponent("exported.sxcu")
+            try CustomUploaderStore.exportFile(named: "my-host.sxcu", to: destination, in: dir)
+            let original = try Data(contentsOf: dir.appendingPathComponent("my-host.sxcu"))
+            let exported = try Data(contentsOf: destination)
+            #expect(exported == original)
+
+            // a missing uploader must throw, not write an empty file
+            #expect(throws: (any Error).self) {
+                try CustomUploaderStore.exportFile(named: "missing.sxcu", to: destination, in: dir)
+            }
+        }
+    }
+
     @Test func deleteRemovesFile() throws {
         try withTempDirectory { dir in
             let name = try CustomUploaderStore.create(named: "Temp", in: dir)
