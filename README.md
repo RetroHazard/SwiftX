@@ -1,148 +1,135 @@
-<p align="center"><a href="https://getsharex.com"><img src="https://getsharex.com/img/ShareX_Banner.png" alt="ShareX Banner"/></a></p>
-<h3 align="center">Screen capture, file sharing and productivity tool</h3>
+<p align="center"><img src="Assets/icons/swiftx-256.png" width="128" height="128" alt="SwiftX icon"/></p>
+<h1 align="center">SwiftX</h1>
+<h3 align="center">A native macOS screenshot, screen recording &amp; file-sharing tool</h3>
 <br>
 <div align="center">
-  <a href="https://github.com/ShareX/ShareX/actions/workflows/build.yml"><img src="https://img.shields.io/github/actions/workflow/status/ShareX/ShareX/build.yml?branch=develop&label=Build&cacheSeconds=3600" alt="GitHub Workflow Status"/></a>
-  <a href="./LICENSE.txt"><img src="https://img.shields.io/github/license/ShareX/ShareX?label=License&color=brightgreen&cacheSeconds=3600" alt="License"/></a>
-  <a href="https://github.com/ShareX/ShareX/releases/latest"><img src="https://img.shields.io/github/v/release/ShareX/ShareX?label=Release&color=brightgreen&cacheSeconds=3600" alt="Release"/></a>
-  <a href="https://getsharex.com/downloads"><img src="https://img.shields.io/github/downloads/ShareX/ShareX/total?label=Downloads&cacheSeconds=3600" alt="Downloads"/></a>
-  <a href="https://discord.gg/ShareX"><img src="https://img.shields.io/discord/194170124859736065?label=Discord&cacheSeconds=3600" alt="Discord"/></a>
-  <a href="https://twitter.com/intent/follow?screen_name=ShareX"><img src="https://img.shields.io/twitter/follow/ShareX?cacheSeconds=3600" alt="Twitter"/></a>
+  <a href="https://github.com/RetroHazard/SwiftX/actions/workflows/macos-swift.yml"><img src="https://img.shields.io/github/actions/workflow/status/RetroHazard/SwiftX/macos-swift.yml?label=Build&cacheSeconds=3600" alt="Build status"/></a>
+  <a href="./LICENSE.txt"><img src="https://img.shields.io/github/license/RetroHazard/SwiftX?label=License&color=brightgreen&cacheSeconds=3600" alt="License"/></a>
+  <img src="https://img.shields.io/badge/macOS-14%2B-lightgrey" alt="macOS 14+"/>
+  <img src="https://img.shields.io/badge/Swift-5.10%2B-orange" alt="Swift 5.10+"/>
 </div>
 <br>
-<p align="center"><a href="https://getsharex.com"><img src="https://getsharex.com/img/ShareX_Screenshot.png" alt="ShareX Screenshot"/></a></p>
-<p align="center">For further information please check our <a href="https://getsharex.com">website</a></p>
 
-# ShareX - Free Screen Capture, Screenshot, File Sharing and Productivity Tool
+SwiftX is a ground-up rewrite of [ShareX](https://github.com/ShareX/ShareX) as a native macOS app,
+built entirely in Swift on top of ScreenCaptureKit, SwiftUI, and AppKit. It keeps the parts of
+ShareX's workflow that make it worth using — instant region/window/screen capture, a full
+annotation editor, dozens of upload destinations, a custom uploader engine, screen recording, and
+scriptable automation — while adopting macOS-native APIs and conventions instead of emulating a
+Windows app.
 
-ShareX is a free and open source screenshot tool, screen recorder, file sharing tool and productivity application for Windows. It is designed for users who need fast screen capture, powerful screenshot editing, automated sharing, custom upload destinations and practical utilities in one lightweight desktop app.
+SwiftX is an independent project and is **not affiliated with or endorsed by the ShareX Team**.
+Where code is directly ported from the original C# codebase, the upstream ShareX Team copyright is
+preserved alongside the SwiftX copyright — see [License &amp; credits](#license--credits) below.
 
-With ShareX, you can capture any area of your screen, record video or GIFs, annotate screenshots, upload files, copy shareable links, extract text with OCR, scan QR codes, pick colors and run custom workflows from hotkeys. ShareX is built for speed and control: capture a screenshot, edit it, save it, copy it, upload it or pass it through your own task chain with minimal manual work.
+## Status
 
-## Why ShareX?
+SwiftX is under active development. Most of the ShareX feature set already runs on macOS; see the
+[feature parity tracker](docs/macos-swift-port/PARITY.md) for what's ported, partial, or still
+planned. Releases are built, signed, and notarized by the
+[release pipeline](docs/macos-swift-port/DISTRIBUTION.md); until the first tagged release lands,
+build from source (below).
 
-ShareX combines screen capture, screen recording, image editing, file uploading and automation features that are often split across multiple applications. It is completely free, open source, lightweight, privacy focused and has no advertisements. No account is required to use ShareX.
+## Features
 
-ShareX is especially useful for developers, designers, support teams, content creators, technical writers, QA testers and power users who frequently create screenshots, record short clips, share files or document workflows. It can be used as a simple screenshot app, but it also supports advanced workflows for users who want precise control over capture methods, after-capture tasks, upload destinations and hotkeys.
+- **Screen capture** — fullscreen, active window, monitor and window picker capture; a region
+  overlay with rectangle/ellipse/freehand selection, window snapping, magnifier, fixed-size and
+  snap-size modes, and cross-display stitching
+- **Screen recording** — H.264/HEVC via ScreenCaptureKit + AVAssetWriter, GIF recording, optional
+  WebM (VP9/VP8), animated WebP, and APNG output through a local ffmpeg install, pause/resume,
+  system + microphone audio
+- **Annotation editor** — shapes, text, step numbers, blur/pixelate/highlight regions, speech
+  balloons, crop, smart eraser, magnify, spotlight, cut-out, undo/redo
+- **Image effects** — 51 adjustments/filters/manipulations/drawings, `.sxie` preset import/export,
+  and an image beautifier (padding, rounded corners, shadows, gradient backgrounds)
+- **Uploads** — a multipart/JSON/XML upload core with progress and retry, the `.sxcu` custom
+  uploader engine (and editor), OAuth2 with Keychain-backed tokens, Amazon S3, Backblaze B2, Azure
+  Storage, ownCloud/Nextcloud, Seafile, keyless URL shorteners, and more
+- **History &amp; main window** — a Windows-compatible SQLite history store (an existing
+  `History.db` opens unchanged; `History.json`/`History.xml` import), searchable list and
+  thumbnail grid, live upload queue, favorites and tag filters
+- **Automation** — global hotkeys, watch folders, auto capture, scrolling capture, quick task menu,
+  `swiftx://` URL scheme, CLI verbs, and a native messaging host for Chrome/Edge/Firefox
+- **Tools** — color/screen color picker, ruler, OCR (Vision), QR generate/decode/scan, hash
+  checker, metadata viewer/stripper, image and video converters, background remover, image
+  comparer, folder indexer, and AI-assisted image analysis (OpenAI-compatible providers)
 
-## Screenshot and Screen Recording Features
+The full breakdown, including what's intentionally left out (Windows-only features, dead upstream
+services) lives in [`docs/macos-swift-port/PARITY.md`](docs/macos-swift-port/PARITY.md).
 
-ShareX supports many ways to capture your screen:
+## Requirements
 
-* Fullscreen capture
-* Active window capture
-* Active monitor capture
-* Region capture
-* Scrolling screenshot capture
-* Last region capture
-* Custom region capture
-* Screen recording
-* GIF screen recording
-* Auto capture
+- macOS 14 or later (Sonoma) — the ScreenCaptureKit APIs SwiftX builds on require it
+- Swift 5.10+ / Xcode 15.4+ (a full Xcode install is needed to run the test suite; the Command Line
+  Tools alone don't ship XCTest)
+- [Homebrew](https://brew.sh) `ffmpeg` — optional, only used for encodes ScreenCaptureKit's
+  VideoToolbox path can't produce (WebM, animated WebP, APNG)
 
-After capturing a screenshot or recording, ShareX can automatically copy the result to the clipboard, save it to a file, open it in the image editor, upload it, print it, show it in Windows Explorer, run an action, scan a QR code or recognize text with OCR. These after-capture tasks make ShareX a flexible screenshot workflow tool instead of only a basic snipping utility.
+## Building from source
 
-## Region Capture and Annotation
+SwiftX is a plain Swift Package — there's no Xcode project to open.
 
-ShareX region capture includes tools for selecting exactly what you want to capture and marking it before saving, copying or uploading. You can draw rectangles, ellipses, freehand lines, arrows, text, speech balloons, step numbers, highlights, blur effects, pixelation, magnification and spotlight effects.
+```sh
+git clone https://github.com/RetroHazard/SwiftX.git
+cd SwiftX
 
-These annotation tools help create clear screenshots for bug reports, documentation, tutorials, support replies, pull requests and release notes. Sensitive information can be hidden with blur, pixelate or smart eraser tools before a screenshot is shared.
+swift build               # debug build
+swift test                # requires a full Xcode install; see docs/DEVELOPMENT.md
+./Scripts/make-app.sh     # bundles build/SwiftX.app
+open build/SwiftX.app
+```
 
-## Built-in Image Editor
+Always launch SwiftX through the `.app` bundle (`open build/SwiftX.app`), not the raw binary —
+macOS ties Screen Recording/Accessibility permission grants to the bundle, and a bare terminal
+launch never gets its own prompt. See
+[`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) for the full developer workflow, and
+[`docs/solutions/patterns/critical-patterns.md`](docs/solutions/patterns/critical-patterns.md) for
+this and other gotchas discovered while porting.
 
-The ShareX image editor lets you crop, annotate, redact, highlight and prepare screenshots after capture. It includes common editing tools such as shapes, arrows, text, freehand drawing, image insertion, cursor insertion, blur, pixelate, magnify, spotlight, crop, cut out, background editing and image effects.
+## Project layout
 
-Because the editor is part of the capture workflow, you can take a screenshot, mark the important area, hide private details and then copy, save or upload the edited image without switching between separate apps.
+| Module | Covers |
+|---|---|
+| `SharedKit` | Settings engine, name parser, shared helpers |
+| `CaptureKit` | Screen/window/region capture, recording |
+| `UploadKit` | Upload core, custom uploader engine, OAuth2 |
+| `EditorKit` | Annotation editor |
+| `EffectsKit` | Image effects and beautifier |
+| `HistoryKit` | SQLite history store |
+| `ToolsKit` | Color picker, ruler, OCR/QR, hash checker, converters, indexer |
+| `SwiftXApp` | The app itself — menu bar shell, settings, CLI |
+| `NativeMessagingHost` | `swiftx-host` — browser native messaging binary |
 
-## File Sharing and Upload Automation
+Each `*Kit` module has a matching test target under `Tests/`; `SwiftXApp` and
+`NativeMessagingHost` are the two executable targets.
 
-ShareX can upload images, text, files, folders, clipboard content and URLs to many different destinations. After uploading, it can automatically copy the URL to the clipboard, open the URL, shorten the URL, show a QR code or run other configured tasks.
+## Documentation
 
-Advanced users can create custom uploaders for services that are not built in. ShareX also provides guides for destinations such as Amazon S3, Google Cloud Storage and Cloudflare R2, making it suitable for both personal screenshot sharing and team workflows where files need to be uploaded to controlled storage.
+- [`docs/macos-swift-port/ROADMAP.md`](docs/macos-swift-port/ROADMAP.md) — the phase-by-phase port
+  plan and the Windows→macOS API mapping it's built on
+- [`docs/macos-swift-port/PARITY.md`](docs/macos-swift-port/PARITY.md) — feature-by-feature parity
+  status against upstream ShareX
+- [`docs/macos-swift-port/GAP-ANALYSIS.md`](docs/macos-swift-port/GAP-ANALYSIS.md) — the July 2026
+  audit against upstream v21 that produced Phases 12–15
+- [`docs/macos-swift-port/SECURITY-MODEL.md`](docs/macos-swift-port/SECURITY-MODEL.md) — trust
+  boundaries, credential storage, and the (deliberate) no-App-Sandbox posture
+- [`docs/macos-swift-port/DISTRIBUTION.md`](docs/macos-swift-port/DISTRIBUTION.md) — the
+  release/packaging runbook (DMG, Homebrew cask, signing status)
+- [`docs/solutions/`](docs/solutions/) — a running log of non-obvious patterns, gotchas, and fixes
+  found while building SwiftX (TCC permissions, SPM app-bundle packaging, `swift test` setup, etc.)
 
-## Productivity Tools
+## Contributing
 
-ShareX includes many utilities that support everyday desktop work:
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the development workflow, coding conventions
+(including the two-tier copyright header used on ported files), and how to submit changes.
 
-* Color picker
-* Screen color picker
-* Ruler
-* Pin to screen
-* Image editor
-* Image beautifier
-* Image effects
-* Image viewer
-* Background remover
-* Image comparer
-* Image combiner
-* Image splitter
-* Image thumbnailer
-* Video converter
-* Video thumbnailer
-* Analyze image
-* OCR for recognizing text in images
-* QR code
-* Hash checker
-* Metadata viewer
-* Directory indexer
-* Clipboard viewer
-* Borderless window
-* Inspect window
-* Monitor test
+## License &amp; credits
 
-These tools make ShareX useful beyond screenshots. It can help inspect images, prepare assets, extract information, verify files and speed up repetitive tasks.
+SwiftX is free software, licensed under the [GNU GPL v3](./LICENSE.txt).
 
-## Custom Workflows and Hotkeys
+- macOS port and all original code: © 2026 [RetroHazard](https://github.com/RetroHazard)
+- Files ported or translated from the original codebase carry a preserved
+  `Copyright (c) 2007-2026 ShareX Team` notice alongside the SwiftX copyright, per GPLv3 §5(d)
+- Based on [ShareX](https://github.com/ShareX/ShareX) — SwiftX is an independent project and is not
+  affiliated with or endorsed by the ShareX Team
 
-ShareX is built around configurable workflows. You can assign hotkeys to capture methods, choose what happens after capture, decide what happens after upload and create actions that run external tools or scripts. This makes it possible to build a workflow such as capture region, annotate image, save locally, upload to a destination, shorten the URL and copy the final link to the clipboard.
-
-The workflow system is one of the main reasons ShareX is popular with power users. Simple tasks can stay simple, while advanced users can automate detailed screenshot, screen recording and file sharing processes.
-
-## Download ShareX
-
-ShareX is available from the official website, GitHub releases, Microsoft Store and Steam. You can install the regular setup version, use a portable version or try development builds if you want the newest changes before a stable release.
-
-For the safest download options, use the official links below.
-
-## Links
-* Official website: https://getsharex.com
-* Downloads: https://getsharex.com/downloads
-* GitHub: https://github.com/ShareX/ShareX
-* Changelog: https://getsharex.com/changelog
-* Screenshots: https://getsharex.com/screenshots
-* Privacy policy: https://getsharex.com/privacy-policy
-* Donate: https://getsharex.com/donate
-* X: https://x.com/ShareX
-* Discord: https://discord.gg/ShareX
-* Reddit: https://www.reddit.com/r/sharex
-* Steam page: https://store.steampowered.com/app/400040/ShareX/
-* Microsoft Store page: https://apps.microsoft.com/detail/9nblggh4z1sp
-* ShareX related projects on GitHub: https://github.com/topics/sharex
-
-## Documents
-* Image effects: https://getsharex.com/image-effects
-* Actions: https://getsharex.com/actions
-* Dev builds: https://getsharex.com/docs/dev-builds
-* Keybinds: https://getsharex.com/docs/keybinds
-* Region capture: https://getsharex.com/docs/region-capture
-* Image editor: https://getsharex.com/docs/image-editor
-* Background remover: https://getsharex.com/docs/background-remover
-* Pin to screen: https://getsharex.com/docs/pin-to-screen
-* Scrolling screenshot: https://getsharex.com/docs/scrolling-screenshot
-* Command line arguments: https://getsharex.com/docs/command-line-arguments
-* Translation: https://getsharex.com/docs/translation
-* OCR: https://getsharex.com/docs/ocr
-* Custom uploader: https://getsharex.com/docs/custom-uploader
-* Amazon S3 guide: https://getsharex.com/docs/amazon-s3
-* Google Cloud Storage guide: https://getsharex.com/docs/google-cloud-storage
-* Cloudflare R2 guide: https://getsharex.com/docs/cloudflare-r2
-* Brand assets: https://getsharex.com/brand-assets
-
-## Star History
-<a href="https://www.star-history.com/?repos=ShareX%2FShareX&type=date&legend=bottom-right">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=ShareX/ShareX&type=date&theme=dark&legend=bottom-right" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=ShareX/ShareX&type=date&legend=bottom-right" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=ShareX/ShareX&type=date&legend=bottom-right" />
- </picture>
-</a>
+Found a security issue? See [`SECURITY.md`](.github/SECURITY.md).
