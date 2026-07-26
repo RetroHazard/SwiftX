@@ -23,11 +23,11 @@ preserved alongside the SwiftX copyright — see [License &amp; credits](#licens
 
 ## Status
 
-SwiftX is under active development. Most of the ShareX feature set already runs on macOS; see the
+SwiftX is under active development, with [signed, notarized releases](https://github.com/RetroHazard/SwiftX/releases)
+built by the [release pipeline](.github/workflows/release.yml) and available via Homebrew. Most of
+the ShareX feature set already runs on macOS; see the
 [feature parity tracker](docs/macos-swift-port/PARITY.md) for what's ported, partial, or still
-planned. Releases are built, signed, and notarized by the
-[release pipeline](.github/workflows/release.yml); until the first tagged release lands,
-build from source (below).
+planned. To build a development copy from source instead, see below.
 
 ## Features
 

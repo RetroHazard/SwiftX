@@ -159,8 +159,8 @@ audit are tracked below as Phases 12–15.
 
 | Feature | Status |
 |---|---|
-| DMG packaging + Homebrew cask | Ported — `Scripts/make-dmg.sh` builds a drag-to-install DMG (hdiutil); `Casks/swiftx.rb` (this repo doubles as the tap — `brew tap retrohazard/swiftx <repo url>` — `brew style` clean) with a real sha256. Official `homebrew/cask` is a follow-up (needs notarization + traction) |
-| Developer ID signing, notarization | Partial — `Scripts/notarize.sh` (notarytool submit + staple) ready but dormant; needs the paid Apple Developer Program (only an "Apple Development" cert exists). Unsigned interim shipping is retired: releases wait for signing + notarization via the automated release pipeline (see `.github/workflows/release.yml`), matching the published privacy policy |
+| DMG packaging + Homebrew cask | Ported — `Scripts/make-dmg.sh` builds a drag-to-install DMG (hdiutil); `Casks/swiftx.rb` (this repo doubles as the tap — `brew tap retrohazard/swiftx <repo url>` — `brew style` clean) with a real sha256, bumped automatically by the release pipeline. Official `homebrew/cask` is a follow-up (needs traction) |
+| Developer ID signing, notarization | Ported — the release pipeline (`.github/workflows/release.yml`) signs with a Developer ID Application cert, notarizes and staples the DMG, and runs a Gatekeeper assessment before publishing; v0.1.0 shipped this way |
 | Sparkle auto-update (Release/PreRelease) | N/A — `brew upgrade --cask` is the update channel; revisit only if a direct-download channel is added |
 | Login item, settings import from Windows backup, localization infra | Planned (11) |
 | Steam build, Windows installer, DevBuilds channel | N/A |

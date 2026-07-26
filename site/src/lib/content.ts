@@ -1,17 +1,14 @@
 /**
  * How people get the app.
  *
- * Building from source is the interim route, not the plan: once a Developer ID
- * build is notarized, SwiftX ships as a .dmg on GitHub Releases and through a
- * Homebrew cask. Flip `status` to "released" on launch day and the download
- * path replaces the build-from-source path everywhere — hero, closing call to
- * action and FAQ all read from here.
+ * SwiftX ships as a Developer ID-signed, notarized .dmg on GitHub Releases and
+ * through a Homebrew cask, built by the automated release pipeline
+ * (.github/workflows/release.yml).
  *
  * Keep `version` and `minMacOS` in step with Casks/swiftx.rb and
  * Package.swift's platform baseline.
  */
 export type Release = {
-  status: "released" | "released";
   version: string;
   minMacOS: string;
   /** Matches the url stanza in Casks/swiftx.rb. */
@@ -22,7 +19,6 @@ export type Release = {
 const version = "0.1.0";
 
 export const release: Release = {
-  status: "released",
   version,
   minMacOS: "macOS 14 Sonoma or later",
   dmgUrl: `https://github.com/RetroHazard/SwiftX/releases/download/v${version}/SwiftX-${version}.dmg`,
@@ -146,7 +142,7 @@ export const faqs: FaqItem[] = [
   {
     question: "How will I install it?",
     answer:
-      "Two ways, once the first build ships: download the .dmg straight from the GitHub releases page, or tap the SwiftX repo with `brew tap retrohazard/swiftx https://github.com/RetroHazard/SwiftX`, install with `brew install --cask swiftx`, and get updates through `brew upgrade`. Builds will be signed with an Apple Developer ID and notarized, so Gatekeeper opens them without a right-click or a trip to System Settings. Building from source is only the stopgap while that pipeline is being set up.",
+      "Two ways: download the .dmg straight from the GitHub releases page, or tap the SwiftX repo with `brew tap retrohazard/swiftx https://github.com/RetroHazard/SwiftX`, install with `brew install --cask swiftx`, and get updates through `brew upgrade`. Builds are signed with an Apple Developer ID and notarized, so Gatekeeper opens them without a right-click or a trip to System Settings. Building from source works too, if you'd rather compile it yourself.",
   },
   {
     question: "What does it need to run?",

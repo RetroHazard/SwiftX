@@ -86,16 +86,10 @@ Two workflows cover it:
 | `.github/workflows/site-ci.yml` | pull requests touching `site/**` | lint, build, sanity-check the export |
 | `.github/workflows/pages.yml` | push to `master` touching `site/**`, or manual dispatch | build and publish via `actions/deploy-pages` |
 
-### Before the first deploy
-
-1. **Settings → Pages → Build and deployment → Source** must be **GitHub
-   Actions**, not "Deploy from a branch".
-2. The repo must be **public**, or the account needs GitHub Pro/Team — Pages is
-   unavailable on private repos on the free plan. Until then `pages.yml` builds
-   fine but the deploy step fails at the Pages API.
-3. The site publishes from **`master`**. Until `site/` is merged there, the
-   push trigger has nothing to fire on — use `workflow_dispatch` from the
-   Actions tab to publish a branch manually in the meantime.
+**Settings → Pages → Build and deployment → Source** must be **GitHub
+Actions**, not "Deploy from a branch". The site publishes from **`master`**;
+use `workflow_dispatch` from the Actions tab to publish a branch manually
+outside that push trigger.
 
 ### Why not `swiftx.github.io`
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
-import { links, release } from "@/lib/content";
+import { links } from "@/lib/content";
 import { CaptureOverlay } from "@/components/capture-overlay";
 import { PrimaryAction } from "@/components/install";
 
@@ -87,36 +87,17 @@ export function Hero() {
             transition={{ duration: 0.6 }}
             className="mt-6 text-[13px] leading-relaxed text-muted"
           >
-            {release.status === "released" ? (
-              <>
-                Signed, notarized and on Homebrew. Capture, editing,
-                recording and uploads all work today —{" "}
-                <a
-                  href={links.parity}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-ink-soft underline decoration-line-strong underline-offset-4 transition-colors hover:text-accent hover:decoration-accent"
-                >
-                  see what&rsquo;s next
-                </a>
-                .
-              </>
-            ) : (
-              <>
-                Pre-release. Capture, editing, recording and uploads all work
-                today; signed builds and a Homebrew cask land with the first
-                release —{" "}
-                <a
-                  href={links.parity}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-ink-soft underline decoration-line-strong underline-offset-4 transition-colors hover:text-accent hover:decoration-accent"
-                >
-                  track what&rsquo;s left
-                </a>
-                .
-              </>
-            )}
+            Signed, notarized and on Homebrew. Capture, editing, recording and
+            uploads all work today —{" "}
+            <a
+              href={links.parity}
+              target="_blank"
+              rel="noreferrer"
+              className="text-ink-soft underline decoration-line-strong underline-offset-4 transition-colors hover:text-accent hover:decoration-accent"
+            >
+              see what&rsquo;s next
+            </a>
+            .
           </motion.p>
         </motion.div>
 
