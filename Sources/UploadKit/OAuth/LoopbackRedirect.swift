@@ -1,6 +1,6 @@
 // SwiftX - screenshot capture and sharing for macOS
 // Copyright (c) 2026 RetroHazard
-// Licensed under GPL v3 - see /LICENSE.txt
+// Licensed under GPL v3 - see /LICENSE
 //
 // Catches the OAuth redirect on http://127.0.0.1:<port>/. We use a loopback
 // listener rather than a custom URL scheme because Google and Microsoft

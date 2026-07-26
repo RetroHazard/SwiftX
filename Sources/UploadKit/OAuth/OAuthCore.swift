@@ -1,6 +1,6 @@
 // SwiftX - screenshot capture and sharing for macOS
 // Copyright (c) 2026 RetroHazard
-// Licensed under GPL v3 - see /LICENSE.txt
+// Licensed under GPL v3 - see /LICENSE
 //
 // OAuth2 primitives shared by the flow, token store and uploaders: the error
 // set, the persisted token model, and the small crypto used by PKCE. All of

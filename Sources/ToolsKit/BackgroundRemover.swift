@@ -1,6 +1,6 @@
 // SwiftX - screenshot capture and sharing for macOS
 // Copyright (c) 2026 RetroHazard
-// Licensed under GPL v3 - see /LICENSE.txt
+// Licensed under GPL v3 - see /LICENSE
 //
 // Background removal via Vision's subject-lifting mask (macOS 14+).
 // Upstream v21 ships this with a user-downloaded ONNX model; Vision needs no

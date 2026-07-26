@@ -1,6 +1,6 @@
 // SwiftX - screenshot capture and sharing for macOS
 // Copyright (c) 2026 RetroHazard
-// Licensed under GPL v3 - see /LICENSE.txt
+// Licensed under GPL v3 - see /LICENSE
 //
 // Drives the interactive OAuth2 consent flow: open the authorize URL in the
 // default browser, catch the loopback redirect, exchange the code for tokens,

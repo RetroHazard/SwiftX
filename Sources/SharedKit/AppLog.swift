@@ -1,6 +1,6 @@
 // SwiftX - screenshot capture and sharing for macOS
 // Copyright (c) 2026 RetroHazard
-// Licensed under GPL v3 - see /LICENSE.txt
+// Licensed under GPL v3 - see /LICENSE
 //
 // os.Logger subsystem (upstream keeps a rotating log file + viewer; on macOS
 // the unified log owns storage/rotation, and the in-app Show Log window reads

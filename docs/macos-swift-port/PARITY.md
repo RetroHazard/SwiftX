@@ -3,10 +3,7 @@
 Statuses: **Ported** · **Partial** (works, known gaps) · **Planned** (phase noted) · **N/A** (Windows-only) · **Dead** (service defunct upstream)
 
 Baseline: **upstream v21.0.0** (2026-07). The gaps found by the July 2026
-audit are tracked below as Phases 12–15;
-[`GAP-ANALYSIS.md`](GAP-ANALYSIS.md) holds the detailed rationale, C# setting
-names and code references for each row, and its §10 is the append-only log of
-upstream deltas as new versions ship.
+audit are tracked below as Phases 12–15.
 
 ## Phase 0 — Foundation
 
@@ -162,8 +159,8 @@ upstream deltas as new versions ship.
 
 | Feature | Status |
 |---|---|
-| DMG packaging + Homebrew cask | Ported — `Scripts/make-dmg.sh` builds a drag-to-install DMG (hdiutil); `Casks/swiftx.rb` (this repo doubles as the tap — `brew tap retrohazard/swiftx <repo url>` — `brew style` clean) with a real sha256; `docs/macos-swift-port/DISTRIBUTION.md` runbook. Official `homebrew/cask` is a follow-up (needs notarization + traction) |
-| Developer ID signing, notarization | Partial — `Scripts/notarize.sh` (notarytool submit + staple) ready but dormant; needs the paid Apple Developer Program (only an "Apple Development" cert exists). Unsigned interim shipping is retired: releases wait for signing + notarization via the automated release pipeline (see `DISTRIBUTION.md`), matching the published privacy policy |
+| DMG packaging + Homebrew cask | Ported — `Scripts/make-dmg.sh` builds a drag-to-install DMG (hdiutil); `Casks/swiftx.rb` (this repo doubles as the tap — `brew tap retrohazard/swiftx <repo url>` — `brew style` clean) with a real sha256, bumped automatically by the release pipeline. Official `homebrew/cask` is a follow-up (needs traction) |
+| Developer ID signing, notarization | Ported — the release pipeline (`.github/workflows/release.yml`) signs with a Developer ID Application cert, notarizes and staples the DMG, and runs a Gatekeeper assessment before publishing; v0.1.0 shipped this way |
 | Sparkle auto-update (Release/PreRelease) | N/A — `brew upgrade --cask` is the update channel; revisit only if a direct-download channel is added |
 | Login item, settings import from Windows backup, localization infra | Planned (11) |
 | Steam build, Windows installer, DevBuilds channel | N/A |

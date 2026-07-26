@@ -90,7 +90,7 @@ jobs:
             [ -n "${!s}" ] || MISSING+=("$s")
           done
           if [ "${#MISSING[@]}" -gt 0 ]; then
-            echo "::error::Missing required repository secrets: ${MISSING[*]} — see .github/workflows/release.yml header and docs/macos-swift-port/DISTRIBUTION.md"
+            echo "::error::Missing required repository secrets: ${MISSING[*]} — see .github/workflows/release.yml header"
             exit 1
           fi
           [ -n "$OAUTH_GOOGLE_CLIENT_ID" ] || echo "::warning::OAUTH_GOOGLE_CLIENT_ID not set — Google Drive & YouTube will be disabled in this build"
@@ -215,8 +215,6 @@ jobs:
           sed -i '' -E "s/^  version \"[^\"]*\"/  version \"$VERSION\"/" Casks/swiftx.rb
           sed -i '' -E "s/^  sha256 \"[^\"]*\"/  sha256 \"$SHA256\"/" Casks/swiftx.rb
           sed -i '' -E "s/^const version = \"[^\"]*\";/const version = \"$VERSION\";/" site/src/lib/content.ts
-          # a published release now exists, so the site can point at real downloads
-          sed -i '' 's/status: "pre-release"/status: "released"/' site/src/lib/content.ts
           if git diff --quiet; then
             echo "cask/site already at $VERSION; nothing to commit"
           else

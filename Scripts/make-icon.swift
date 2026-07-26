@@ -1,7 +1,7 @@
 #!/usr/bin/env swift
 // SwiftX - screenshot capture and sharing for macOS
 // Copyright (c) 2026 RetroHazard
-// Licensed under GPL v3 - see /LICENSE.txt
+// Licensed under GPL v3 - see /LICENSE
 //
 // Generates the SwiftX app icon: a camera aperture (nod to the ShareX logo)
 // with a swift in flight (nod to the Swift language) inside the opening.

@@ -1,6 +1,6 @@
 // SwiftX - screenshot capture and sharing for macOS
 // Copyright (c) 2026 RetroHazard
-// Licensed under GPL v3 - see /LICENSE.txt
+// Licensed under GPL v3 - see /LICENSE
 //
 // File hashing for the Hash Checker tool. Same algorithm set as the C#
 // HashType enum. Files stream in 1 MB chunks so size doesn't matter.

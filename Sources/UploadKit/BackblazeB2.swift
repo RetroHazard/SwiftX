@@ -1,6 +1,6 @@
 // SwiftX - screenshot capture and sharing for macOS
 // Copyright (c) 2026 RetroHazard
-// Licensed under GPL v3 - see /LICENSE.txt
+// Licensed under GPL v3 - see /LICENSE
 //
 // Backblaze B2 native API: authorize -> resolve bucket ID -> get upload URL ->
 // upload. B2 documents that upload URLs go stale, so failed uploads retry with
