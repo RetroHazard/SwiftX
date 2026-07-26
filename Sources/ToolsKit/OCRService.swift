@@ -1,6 +1,6 @@
 // SwiftX - screenshot capture and sharing for macOS
 // Copyright (c) 2026 RetroHazard
-// Licensed under GPL v3 - see /LICENSE.txt
+// Licensed under GPL v3 - see /LICENSE
 //
 // OCR via the Vision framework. C# uses Windows.Media.Ocr with a language
 // picker; Vision detects the language itself, so no OCROptions.Language port.

@@ -1,7 +1,7 @@
 #!/bin/bash
 # SwiftX - screenshot capture and sharing for macOS
 # Copyright (c) 2026 RetroHazard
-# Licensed under GPL v3 - see /LICENSE.txt
+# Licensed under GPL v3 - see /LICENSE
 #
 # Packages an already-built build/SwiftX.app into a compressed, drag-to-install
 # DMG for the Homebrew cask. This ONLY packages — run Scripts/make-app.sh first.

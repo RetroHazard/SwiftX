@@ -1,7 +1,7 @@
 // SwiftX - screenshot capture and sharing for macOS
 // Copyright (c) 2026 RetroHazard
 // Contains code derived from ShareX, Copyright (c) 2007-2026 ShareX Team
-// Licensed under GPL v3 - see /LICENSE.txt
+// Licensed under GPL v3 - see /LICENSE
 //
 // Optional ffmpeg integration for formats VideoToolbox can't encode
 // (WebM VP9/VP8, animated WebP, APNG). ffmpeg is never bundled - we use an

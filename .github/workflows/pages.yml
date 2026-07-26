@@ -5,10 +5,7 @@ name: Deploy landing site
 # The /SwiftX base path comes from site/next.config.ts, which defaults to it —
 # no build-time environment variable is needed here.
 #
-# Requires Settings -> Pages -> Source = "GitHub Actions". Pages is unavailable
-# on a private repo unless the account has GitHub Pro/Team, so until this repo
-# is public, run this manually via workflow_dispatch to check it, or expect the
-# deploy job to fail at the API call.
+# Requires Settings -> Pages -> Source = "GitHub Actions".
 on:
   push:
     branches:

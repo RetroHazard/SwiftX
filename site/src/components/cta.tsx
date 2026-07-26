@@ -27,9 +27,7 @@ export function Cta() {
             Try it on your own screen
           </h2>
           <p className="mx-auto mt-5 max-w-[52ch] text-[16px] leading-relaxed text-muted">
-            {release.status === "released"
-              ? `Free and open source, for ${release.minMacOS}.`
-              : `SwiftX is pre-release, so there is no signed download yet — but the source builds and runs today with Swift Package Manager on ${release.minMacOS}.`}
+            {`Free and open source, for ${release.minMacOS}.`}
           </p>
 
           <div className="mt-9">

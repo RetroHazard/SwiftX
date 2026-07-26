@@ -1,7 +1,7 @@
 #!/bin/bash
 # SwiftX - screenshot capture and sharing for macOS
 # Copyright (c) 2026 RetroHazard
-# Licensed under GPL v3 - see /LICENSE.txt
+# Licensed under GPL v3 - see /LICENSE
 #
 # Builds SwiftX.app from the SPM executable. No Xcode project required.
 set -euo pipefail
@@ -39,7 +39,7 @@ cp Resources/SwiftX.icns "$APP/Contents/Resources/"
 
 # GPL v3 requires conveying the license text with the program; the About
 # panel's "GNU GPL v3" link opens this copy
-cp LICENSE.txt "$APP/Contents/Resources/LICENSE.txt"
+cp LICENSE "$APP/Contents/Resources/LICENSE"
 
 # Baked-in OAuth app credentials, if this build has them (git-ignored). Absent
 # in the open-source tree -> OAuth hosts stay unavailable until a build ships it.
@@ -139,11 +139,13 @@ echo "Signed as: ${IDENTITY:-ad-hoc}"
 echo "Built $APP"
 
 # Install into /Applications and run from there. TCC keys its identity cache on
-# the bundle PATH: the dev build/ path got permanently associated with the old
-# com.getsharex.swiftx bundle ID during the rename, so capture requests from it
-# resolve to a dead ID that never shows in System Settings. A stable install
-# path resolves the current signature cleanly. Skips the copy if unwritable
-# or on CI — the build/ bundle still works for everything except fresh TCC.
+# the bundle PATH, not just the signature: a dev machine that changes the
+# bundle ID and rebuilds build/SwiftX.app in place at the same path can find
+# that path pinned to the dead old identity, with capture requests resolving
+# to nothing visible in System Settings. A fresh clone's first build has no
+# such history and won't hit this, but a stable install path sidesteps it
+# either way. Skips the copy if unwritable or on CI — the build/ bundle still
+# works for everything except that.
 if [ -n "${CI:-}" ]; then
     echo "CI detected; skipping /Applications install"
     exit 0

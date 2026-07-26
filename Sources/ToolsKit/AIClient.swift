@@ -1,6 +1,6 @@
 // SwiftX - screenshot capture and sharing for macOS
 // Copyright (c) 2026 RetroHazard
-// Licensed under GPL v3 - see /LICENSE.txt
+// Licensed under GPL v3 - see /LICENSE
 //
 // AI image analysis over the OpenAI chat-completions wire format. C# ships
 // separate OpenAI/Gemini/OpenRouter providers; all three speak this format

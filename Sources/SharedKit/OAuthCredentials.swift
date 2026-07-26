@@ -1,6 +1,6 @@
 // SwiftX - screenshot capture and sharing for macOS
 // Copyright (c) 2026 RetroHazard
-// Licensed under GPL v3 - see /LICENSE.txt
+// Licensed under GPL v3 - see /LICENSE
 //
 // OAuth destination identity + the app-credential gate. An OAuth host is
 // enabled as soon as app credentials exist for it — either baked in from the

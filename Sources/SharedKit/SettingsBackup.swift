@@ -1,6 +1,6 @@
 // SwiftX - screenshot capture and sharing for macOS
 // Copyright (c) 2026 RetroHazard
-// Licensed under GPL v3 - see /LICENSE.txt
+// Licensed under GPL v3 - see /LICENSE
 //
 // Native settings backup (the C# .sxb equivalent, as a plain zip): settings
 // files, hotkeys and custom uploaders. Keychain-held secrets (API keys, OAuth

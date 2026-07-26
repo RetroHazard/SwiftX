@@ -1,7 +1,7 @@
 // SwiftX - screenshot capture and sharing for macOS
 // Copyright (c) 2026 RetroHazard
 // Contains code derived from ShareX, Copyright (c) 2007-2026 ShareX Team
-// Licensed under GPL v3 - see /LICENSE.txt
+// Licensed under GPL v3 - see /LICENSE
 //
 // Simple file hosts: one multipart POST with a file field, then parse the
 // response. Raw values match the C# ImageDestination/FileDestination enum

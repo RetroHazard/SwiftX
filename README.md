@@ -4,7 +4,7 @@
 <br>
 <div align="center">
   <a href="https://github.com/RetroHazard/SwiftX/actions/workflows/macos-swift.yml"><img src="https://img.shields.io/github/actions/workflow/status/RetroHazard/SwiftX/macos-swift.yml?label=Build&cacheSeconds=3600" alt="Build status"/></a>
-  <a href="./LICENSE.txt"><img src="https://img.shields.io/github/license/RetroHazard/SwiftX?label=License&color=brightgreen&cacheSeconds=3600" alt="License"/></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/github/license/RetroHazard/SwiftX?label=License&color=brightgreen&cacheSeconds=3600" alt="License"/></a>
   <img src="https://img.shields.io/badge/macOS-14%2B-lightgrey" alt="macOS 14+"/>
   <img src="https://img.shields.io/badge/Swift-5.10%2B-orange" alt="Swift 5.10+"/>
 </div>
@@ -23,11 +23,11 @@ preserved alongside the SwiftX copyright — see [License &amp; credits](#licens
 
 ## Status
 
-SwiftX is under active development. Most of the ShareX feature set already runs on macOS; see the
+SwiftX is under active development, with [signed, notarized releases](https://github.com/RetroHazard/SwiftX/releases)
+built by the [release pipeline](.github/workflows/release.yml) and available via Homebrew. Most of
+the ShareX feature set already runs on macOS; see the
 [feature parity tracker](docs/macos-swift-port/PARITY.md) for what's ported, partial, or still
-planned. Releases are built, signed, and notarized by the
-[release pipeline](docs/macos-swift-port/DISTRIBUTION.md); until the first tagged release lands,
-build from source (below).
+planned. To build a development copy from source instead, see below.
 
 ## Features
 
@@ -74,13 +74,16 @@ cd SwiftX
 
 swift build               # debug build
 swift test                # requires a full Xcode install; see docs/DEVELOPMENT.md
-./Scripts/make-app.sh     # bundles build/SwiftX.app
-open build/SwiftX.app
+./Scripts/make-app.sh     # bundles build/SwiftX.app and installs it to /Applications
+open /Applications/SwiftX.app
 ```
 
-Always launch SwiftX through the `.app` bundle (`open build/SwiftX.app`), not the raw binary —
-macOS ties Screen Recording/Accessibility permission grants to the bundle, and a bare terminal
-launch never gets its own prompt. See
+Always launch SwiftX through the *installed* `.app` bundle (`open /Applications/SwiftX.app`), not
+the raw binary and not `build/SwiftX.app` directly — macOS ties Screen Recording/Accessibility
+permission grants to the bundle's path and signature, and a bare terminal launch never gets its own
+prompt. (A dev machine that rebuilt `build/SwiftX.app` in place across a bundle ID change can also
+find that exact path pinned to the old, now-dead identity — not an issue on a fresh clone, but the
+installed path sidesteps it either way.) See
 [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) for the full developer workflow, and
 [`docs/solutions/patterns/critical-patterns.md`](docs/solutions/patterns/critical-patterns.md) for
 this and other gotchas discovered while porting.
@@ -104,16 +107,10 @@ Each `*Kit` module has a matching test target under `Tests/`; `SwiftXApp` and
 
 ## Documentation
 
-- [`docs/macos-swift-port/ROADMAP.md`](docs/macos-swift-port/ROADMAP.md) — the phase-by-phase port
-  plan and the Windows→macOS API mapping it's built on
 - [`docs/macos-swift-port/PARITY.md`](docs/macos-swift-port/PARITY.md) — feature-by-feature parity
   status against upstream ShareX
-- [`docs/macos-swift-port/GAP-ANALYSIS.md`](docs/macos-swift-port/GAP-ANALYSIS.md) — the July 2026
-  audit against upstream v21 that produced Phases 12–15
 - [`docs/macos-swift-port/SECURITY-MODEL.md`](docs/macos-swift-port/SECURITY-MODEL.md) — trust
   boundaries, credential storage, and the (deliberate) no-App-Sandbox posture
-- [`docs/macos-swift-port/DISTRIBUTION.md`](docs/macos-swift-port/DISTRIBUTION.md) — the
-  release/packaging runbook (DMG, Homebrew cask, signing status)
 - [`docs/solutions/`](docs/solutions/) — a running log of non-obvious patterns, gotchas, and fixes
   found while building SwiftX (TCC permissions, SPM app-bundle packaging, `swift test` setup, etc.)
 
@@ -124,7 +121,7 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the development workflow, coding co
 
 ## License &amp; credits
 
-SwiftX is free software, licensed under the [GNU GPL v3](./LICENSE.txt).
+SwiftX is free software, licensed under the [GNU GPL v3](./LICENSE).
 
 - macOS port and all original code: © 2026 [RetroHazard](https://github.com/RetroHazard)
 - Files ported or translated from the original codebase carry a preserved

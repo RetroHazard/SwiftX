@@ -1,6 +1,6 @@
 // SwiftX - screenshot capture and sharing for macOS
 // Copyright (c) 2026 RetroHazard
-// Licensed under GPL v3 - see /LICENSE.txt
+// Licensed under GPL v3 - see /LICENSE
 //
 // Amazon S3 (and S3-compatible) uploads with AWS Signature Version 4.
 // buildRequest is pure (date injectable) so signing is fully unit-testable.

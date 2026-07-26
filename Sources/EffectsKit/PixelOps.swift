@@ -1,7 +1,7 @@
 // SwiftX - screenshot capture and sharing for macOS
 // Copyright (c) 2026 RetroHazard
 // Contains code derived from ShareX, Copyright (c) 2007-2026 ShareX Team
-// Licensed under GPL v3 - see /LICENSE.txt
+// Licensed under GPL v3 - see /LICENSE
 //
 // CPU pixel operations mirroring the GDI+ semantics of the C# effects:
 // straight (unpremultiplied) RGBA like 32bppArgb, edge-clamped convolution,

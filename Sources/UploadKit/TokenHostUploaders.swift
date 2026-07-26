@@ -1,6 +1,6 @@
 // SwiftX - screenshot capture and sharing for macOS
 // Copyright (c) 2026 RetroHazard
-// Licensed under GPL v3 - see /LICENSE.txt
+// Licensed under GPL v3 - see /LICENSE
 //
 // Multi-step token/password hosts: ownCloud/Nextcloud (WebDAV PUT + OCS public
 // share), Seafile (upload-link + shared-link), Pushbullet (upload-request +
