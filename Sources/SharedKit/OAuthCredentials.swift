@@ -2,11 +2,12 @@
 // Copyright (c) 2026 RetroHazard
 // Licensed under GPL v3 - see /LICENSE.txt
 //
-// OAuth destination identity + the app-credential gate. Every OAuth host is
-// DISABLED until its client ID is supplied: `oauthApps` is empty by default,
-// so `isConfigured(_:)` returns false and the destination is greyed out /
-// refuses to route. Pasting credentials in Settings enables it with no code
-// change and no rebuild — the switch is data, not a compile flag.
+// OAuth destination identity + the app-credential gate. An OAuth host is
+// enabled as soon as app credentials exist for it — either baked in from the
+// bundled OAuthApps.plist (git-ignored; present in release builds) or pasted
+// by the user in Settings → Advanced, which overrides the bundled entry.
+// Without either, `isConfigured(_:)` returns false and the destination is
+// greyed out / refuses to route. The switch is data, not a compile flag.
 
 import Foundation
 

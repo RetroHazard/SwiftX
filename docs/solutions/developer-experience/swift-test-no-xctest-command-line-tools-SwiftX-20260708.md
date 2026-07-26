@@ -57,5 +57,5 @@ Note: the license error surfaces the first time `DEVELOPER_DIR` is used — acce
 - If Swift Testing is used, suites that mutate global state need `@Suite(.serialized)` — it parallelizes by default, unlike XCTest.
 
 ## Related Issues
-- See also: [tcc-screen-recording-responsible-process-ShareXmacOS-20260708.md](../runtime-errors/tcc-screen-recording-responsible-process-ShareXmacOS-20260708.md)
-- See also: [spm-only-macos-app-bundle-pattern-ShareXmacOS-20260708.md](../best-practices/spm-only-macos-app-bundle-pattern-ShareXmacOS-20260708.md)
+- See also: [tcc-screen-recording-responsible-process-SwiftX-20260708.md](../runtime-errors/tcc-screen-recording-responsible-process-SwiftX-20260708.md)
+- See also: [spm-only-macos-app-bundle-pattern-SwiftX-20260708.md](../best-practices/spm-only-macos-app-bundle-pattern-SwiftX-20260708.md)

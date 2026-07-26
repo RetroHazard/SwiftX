@@ -88,7 +88,8 @@ export function Hero() {
             className="mt-6 text-[13px] leading-relaxed text-muted"
           >
             Pre-release. Capture, editing, recording and uploads all work
-            today; signed builds and a Homebrew cask land with 1.0 —{" "}
+            today; signed builds and a Homebrew cask land with the first
+            release —{" "}
             <a
               href={links.roadmap}
               target="_blank"

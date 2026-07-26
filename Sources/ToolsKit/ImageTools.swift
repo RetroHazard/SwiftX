@@ -89,7 +89,7 @@ public enum ImageTools {
     }
 
     /// Row-major tiles (left→right, top→bottom). Remainder pixels go to the
-    /// last row/column, like integer-dividing users expect.
+    /// last row/column, as integer division implies.
     public static func split(_ image: CGImage, rows: Int, columns: Int) -> [CGImage] {
         guard rows > 0, columns > 0 else { return [] }
         let tileWidth = image.width / columns

@@ -4,7 +4,8 @@
 //
 // Drives the interactive OAuth2 consent flow: open the authorize URL in the
 // default browser, catch the loopback redirect, exchange the code for tokens,
-// and store them in the Keychain. Dormant until the user supplies a client ID.
+// and store them in the Keychain. Dormant until app credentials exist (the
+// bundled OAuthApps.plist or a user-supplied client ID).
 
 import AppKit
 import SharedKit

@@ -106,8 +106,8 @@ enum HotkeyRegistrar {
     }
 }
 
-/// Maps hotkey actions to implementations. Unimplemented types log and no-op
-/// until their phase lands.
+/// Maps hotkey actions to implementations. Every actionable HotkeyType has a
+/// branch; only `.none` falls through to the no-op default.
 @MainActor
 enum HotkeyDispatcher {
     static func execute(_ type: HotkeyType) {

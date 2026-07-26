@@ -190,7 +190,7 @@ enum FullscreenDetector {
 }
 
 /// Without this delegate, macOS suppresses banners while the posting app is
-/// frontmost - which ShareX often is right after the region overlay activates it.
+/// frontmost - which SwiftX often is right after the region overlay activates it.
 final class NotifierDelegate: NSObject, UNUserNotificationCenterDelegate {
     func userNotificationCenter(_ center: UNUserNotificationCenter,
                                 willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {

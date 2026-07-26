@@ -1207,7 +1207,8 @@ struct SettingsView: View {
 }
 
 /// ffmpeg availability, styled after the TCC permission rows. ffmpeg is only
-/// needed for formats VideoToolbox can't encode (WebM/VP9 today).
+/// needed for formats VideoToolbox can't encode (WebM VP9/VP8, animated WebP,
+/// APNG) and for the Video Converter tool.
 struct FFmpegStatusView: View {
     @State private var ffmpegPath = FFmpeg.installedPath
     private let refresh = Timer.publish(every: 2, on: .main, in: .common).autoconnect()

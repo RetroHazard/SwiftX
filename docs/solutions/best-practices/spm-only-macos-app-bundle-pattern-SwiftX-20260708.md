@@ -56,5 +56,5 @@ SwiftPM produces a plain Mach-O + resource bundles; an `.app` is just a director
 - When choosing the deployment target, check the *specific* APIs used, not the framework's headline availability.
 
 ## Related Issues
-- See also: [swift-test-no-xctest-command-line-tools-ShareXmacOS-20260708.md](../developer-experience/swift-test-no-xctest-command-line-tools-ShareXmacOS-20260708.md)
-- See also: [tcc-screen-recording-responsible-process-ShareXmacOS-20260708.md](../runtime-errors/tcc-screen-recording-responsible-process-ShareXmacOS-20260708.md)
+- See also: [swift-test-no-xctest-command-line-tools-SwiftX-20260708.md](../developer-experience/swift-test-no-xctest-command-line-tools-SwiftX-20260708.md)
+- See also: [tcc-screen-recording-responsible-process-SwiftX-20260708.md](../runtime-errors/tcc-screen-recording-responsible-process-SwiftX-20260708.md)

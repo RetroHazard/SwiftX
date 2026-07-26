@@ -16,9 +16,9 @@ in [`Scripts/`](../Scripts).
   ```sh
   DEVELOPER_DIR=/Applications/Xcode.app swift test
   ```
-- Optional: [Homebrew](https://brew.sh) `ffmpeg`, for WebM/VP9/VP8/APNG recording output. SwiftX
-  looks for it at the standard Homebrew (Apple Silicon/Intel) and MacPorts locations and falls back
-  to H.264 if it's missing.
+- Optional: [Homebrew](https://brew.sh) `ffmpeg`, for WebM (VP9/VP8), animated WebP, and APNG
+  recording output. SwiftX looks for it at the standard Homebrew (Apple Silicon/Intel) and MacPorts
+  locations and falls back to H.264 if it's missing.
 
 ## Build, test, package
 
@@ -41,7 +41,7 @@ Apple Development identity if one is available (falling back to ad-hoc), and ins
 and Accessibility permissions are granted per bundle path — launching the bare executable from a
 terminal makes the terminal the "responsible process" and SwiftX never gets its own prompt. If
 permissions get stuck, see
-[`docs/solutions/runtime-errors/tcc-screen-recording-responsible-process-ShareXmacOS-20260708.md`](solutions/runtime-errors/tcc-screen-recording-responsible-process-ShareXmacOS-20260708.md).
+[`docs/solutions/runtime-errors/tcc-screen-recording-responsible-process-SwiftX-20260708.md`](solutions/runtime-errors/tcc-screen-recording-responsible-process-SwiftX-20260708.md).
 
 If SwiftX is already running, `make-app.sh` will warn you — a running instance won't pick up a new
 build; quit it first (`pkill -x SwiftX && open build/SwiftX.app`).
@@ -71,18 +71,20 @@ keyless shorteners, etc.) works without any setup.
 ```
 Sources/
   SwiftXApp/            the app: menu bar shell, settings, CLI, hotkeys, pipeline
-  SharedKit/             settings engine, name parser, shared helpers
-  CaptureKit/             screen/window/region capture, recording
-  UploadKit/              upload core, custom uploader engine, OAuth2
-  EditorKit/              annotation editor
-  EffectsKit/             image effects and beautifier
-  HistoryKit/             SQLite history store
-  ToolsKit/               color picker, ruler, OCR/QR, hash checker, converters, indexer
-  NativeMessagingHost/    swiftx-host, the browser native messaging binary
-Tests/                    one test target per package above
-Scripts/                  make-app.sh, make-icon.swift
-Resources/                SwiftX.icns, OAuthApps.example.plist
-Assets/icons/              exported PNG icon ladder
+  SharedKit/            settings engine, name parser, shared helpers
+  CaptureKit/           screen/window/region capture, recording
+  UploadKit/            upload core, custom uploader engine, OAuth2
+  EditorKit/            annotation editor
+  EffectsKit/           image effects and beautifier
+  HistoryKit/           SQLite history store
+  ToolsKit/             color picker, ruler, OCR/QR, hash checker, converters, indexer
+  NativeMessagingHost/  swiftx-host, the browser native messaging binary
+Tests/                  one test target per *Kit module above
+Scripts/                make-app.sh, make-dmg.sh, make-icon.swift, notarize.sh
+Casks/                  swiftx.rb Homebrew cask (see macos-swift-port/DISTRIBUTION.md)
+Resources/              SwiftX.icns, OAuthApps.example.plist
+Assets/icons/           exported PNG icon ladder
+site/                   the landing site (own README)
 ```
 
 ## Documentation
