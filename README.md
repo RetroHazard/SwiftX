@@ -80,9 +80,10 @@ open /Applications/SwiftX.app
 
 Always launch SwiftX through the *installed* `.app` bundle (`open /Applications/SwiftX.app`), not
 the raw binary and not `build/SwiftX.app` directly — macOS ties Screen Recording/Accessibility
-permission grants to the bundle's path and signature, a bare terminal launch never gets its own
-prompt, and the `build/` path stays pinned to a stale pre-rename bundle identity that never gets
-its own permission prompts either. See
+permission grants to the bundle's path and signature, and a bare terminal launch never gets its own
+prompt. (A dev machine that rebuilt `build/SwiftX.app` in place across a bundle ID change can also
+find that exact path pinned to the old, now-dead identity — not an issue on a fresh clone, but the
+installed path sidesteps it either way.) See
 [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) for the full developer workflow, and
 [`docs/solutions/patterns/critical-patterns.md`](docs/solutions/patterns/critical-patterns.md) for
 this and other gotchas discovered while porting.
