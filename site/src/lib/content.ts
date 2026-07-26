@@ -36,9 +36,9 @@ export const links = {
   github: "https://github.com/RetroHazard/SwiftX",
   releases: "https://github.com/RetroHazard/SwiftX/releases",
   roadmap:
-    "https://github.com/RetroHazard/SwiftX/blob/feat/macos-swift-port/docs/macos-swift-port/ROADMAP.md",
+    "https://github.com/RetroHazard/SwiftX/blob/master/docs/macos-swift-port/ROADMAP.md",
   parity:
-    "https://github.com/RetroHazard/SwiftX/blob/feat/macos-swift-port/docs/macos-swift-port/PARITY.md",
+    "https://github.com/RetroHazard/SwiftX/blob/master/docs/macos-swift-port/PARITY.md",
   upstream: "https://github.com/ShareX/ShareX",
 };
 
@@ -98,11 +98,11 @@ export const effectSwatches: EffectSwatch[] = [
   { name: "Original", css: "none" },
   { name: "Grayscale", css: "grayscale(1) contrast(1.05)" },
   { name: "Sepia", css: "sepia(0.85) saturate(1.3)" },
-  { name: "Invert", css: "invert(1) hue-rotate(180deg)" },
+  { name: "Inverse", css: "invert(1) hue-rotate(180deg)" },
   { name: "Gaussian blur", css: "blur(2.5px) saturate(1.1)" },
-  { name: "Hue shift", css: "hue-rotate(140deg) saturate(1.5)" },
+  { name: "Hue", css: "hue-rotate(140deg) saturate(1.5)" },
   { name: "Contrast", css: "contrast(1.85) saturate(1.15)" },
-  { name: "Bloom", css: "brightness(1.22) saturate(1.6) blur(0.5px)" },
+  { name: "Glow", css: "brightness(1.22) saturate(1.6) blur(0.5px)" },
 ];
 
 export type Destination = {
@@ -128,11 +128,15 @@ export type Hotkey = {
   action: string;
 };
 
+/* The first three are the app's actual defaults (⌃⇧ so they never fight
+   macOS's own ⌘⇧3/4/5 shortcuts); the last is a custom binding of the kind
+   the panel is inviting. Keep this list in step with the defaults seeded in
+   Sources/SwiftXApp/AppDelegate.swift. */
 export const hotkeys: Hotkey[] = [
-  { keys: ["⌘", "⇧", "4"], action: "Capture region" },
-  { keys: ["⌘", "⇧", "5"], action: "Record screen" },
-  { keys: ["⌘", "⇧", "O"], action: "Grab text on screen" },
-  { keys: ["⌘", "⇧", "C"], action: "Pick a colour" },
+  { keys: ["⌃", "⇧", "3"], action: "Capture full screen" },
+  { keys: ["⌃", "⇧", "4"], action: "Capture region" },
+  { keys: ["⌃", "⇧", "5"], action: "Capture active window" },
+  { keys: ["⌃", "⇧", "O"], action: "Grab text on screen" },
 ];
 
 export type FaqItem = {

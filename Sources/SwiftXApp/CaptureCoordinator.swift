@@ -3,8 +3,8 @@
 // Contains code derived from ShareX, Copyright (c) 2007-2026 ShareX Team
 // Licensed under GPL v3 - see /LICENSE.txt
 //
-// Runs captures and applies the after-capture behavior. Until the task
-// pipeline lands (Phase 2), behavior is fixed: copy to clipboard + save to file.
+// Runs captures and hands each result to AfterCapturePipeline, which applies
+// the configured after-capture task chain.
 
 import AppKit
 import CaptureKit

@@ -148,7 +148,7 @@ export const privacy: LegalDoc = {
           kind: "list",
           items: [
             "**Your own storage** — Amazon S3, Backblaze B2, Azure Blob and S3-compatible endpoints, using credentials you supply.",
-            "**Your own servers** — Nextcloud, ownCloud, Seafile, SFTP and similar self-hosted destinations.",
+            "**Your own servers** — Nextcloud, ownCloud, Seafile and similar self-hosted destinations.",
             "**Third-party hosts** — image, file and video hosts, and any service reachable through a custom uploader (`.sxcu`) definition.",
             "**Connected accounts** — Google Drive, YouTube and OneDrive, covered in their own sections below.",
             "**URL shorteners** — when you shorten a link, the URL (not the file) is sent to the shortener you picked.",

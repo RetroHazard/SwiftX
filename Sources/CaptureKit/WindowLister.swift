@@ -24,7 +24,7 @@ public struct CapturableWindow: Sendable {
 
 public enum WindowLister {
     /// On-screen, normal-layer windows big enough to be worth capturing,
-    /// front-to-back. Pass the current process ID to hide ShareX's own windows.
+    /// front-to-back. Pass the current process ID to hide SwiftX's own windows.
     public static func onScreenWindows(excludingPID: pid_t? = nil) -> [CapturableWindow] {
         let options: CGWindowListOption = [.optionOnScreenOnly, .excludeDesktopElements]
         guard let list = CGWindowListCopyWindowInfo(options, kCGNullWindowID) as? [[CFString: Any]] else {
