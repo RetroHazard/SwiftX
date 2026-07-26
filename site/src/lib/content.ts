@@ -11,7 +11,7 @@
  * Package.swift's platform baseline.
  */
 export type Release = {
-  status: "pre-release" | "released";
+  status: "released" | "released";
   version: string;
   minMacOS: string;
   /** Matches the url stanza in Casks/swiftx.rb. */
@@ -22,7 +22,7 @@ export type Release = {
 const version = "0.1.0";
 
 export const release: Release = {
-  status: "pre-release",
+  status: "released",
   version,
   minMacOS: "macOS 14 Sonoma or later",
   dmgUrl: `https://github.com/RetroHazard/SwiftX/releases/download/v${version}/SwiftX-${version}.dmg`,
