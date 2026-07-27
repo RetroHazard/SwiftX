@@ -11,6 +11,8 @@ let package = Package(
     products: [
         .executable(name: "swiftx", targets: ["SwiftXApp"]),
         .executable(name: "swiftx-host", targets: ["NativeMessagingHost"]),
+        // Binary inside SwiftXShare.appex; make-app.sh wraps it in the bundle.
+        .executable(name: "swiftx-share", targets: ["ShareExtension"]),
         .library(name: "SharedKit", targets: ["SharedKit"]),
         .library(name: "CaptureKit", targets: ["CaptureKit"])
     ],
@@ -42,6 +44,10 @@ let package = Package(
         ),
         .executableTarget(
             name: "NativeMessagingHost"
+        ),
+        .executableTarget(
+            name: "ShareExtension",
+            dependencies: ["SharedKit"]
         ),
         .executableTarget(
             name: "SwiftXApp",

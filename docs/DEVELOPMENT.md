@@ -139,10 +139,11 @@ Sources/
   HistoryKit/           SQLite history store
   ToolsKit/             color picker, ruler, OCR/QR, hash checker, converters, indexer
   NativeMessagingHost/  swiftx-host, the browser native messaging binary
+  ShareExtension/       SwiftXShare.appex, the macOS Share… menu entry
 Tests/                  one test target per *Kit module above
 Scripts/                make-app.sh, make-dmg.sh, make-icon.swift, notarize.sh
 Casks/                  swiftx.rb Homebrew cask
-Resources/              SwiftX.icns, OAuthApps.example.plist
+Resources/              SwiftX.icns, OAuthApps.example.plist, ShareExtension.entitlements
 Assets/icons/           exported PNG icon ladder
 site/                   the landing site (own README)
 ```
