@@ -16,23 +16,50 @@ public final class LoopbackRedirect: @unchecked Sendable {
     private let listener: NWListener
     public let port: UInt16
     private var continuation: CheckedContinuation<[String: String], Error>?
+    /// A redirect that arrived before waitForCallback installed the
+    /// continuation — delivered immediately on the next waitForCallback.
+    private var pendingResult: Result<[String: String], Error>?
     private let queue = DispatchQueue(label: "com.retrohazard.swiftx.oauth.loopback")
 
     public init() throws {
         let params = NWParameters.tcp
-        params.requiredInterfaceType = .loopback
+        // Bind explicitly to 127.0.0.1 rather than requiredInterfaceType =
+        // .loopback: interface-type restriction on a listener can leave it
+        // stuck in .waiting and never .ready on some systems, which made
+        // Connect silently do nothing.
+        params.requiredLocalEndpoint = NWEndpoint.hostPort(host: "127.0.0.1", port: .any)
         let listener = try NWListener(using: params)
         self.listener = listener
         // resolve the OS-assigned port after start; 0 means "pick one"
         var assigned: UInt16 = 0
+        var failure: NWError?
         let ready = DispatchSemaphore(value: 0)
         listener.stateUpdateHandler = { state in
-            if case .ready = state { assigned = listener.port?.rawValue ?? 0; ready.signal() }
-            if case .failed = state { ready.signal() }
+            switch state {
+            case .ready:
+                assigned = listener.port?.rawValue ?? 0
+                ready.signal()
+            case .failed(let error):
+                failure = error
+                ready.signal()
+            case .waiting(let error):
+                // transient — may still recover to .ready before the timeout;
+                // keep the error so a timeout can report why binding stalled
+                failure = error
+            default:
+                break
+            }
         }
+        // handler installed before start so a fast redirect can't slip
+        // through unhandled; the result is buffered until waitForCallback
+        listener.newConnectionHandler = { [weak self] conn in self?.handle(conn) }
         listener.start(queue: queue)
         _ = ready.wait(timeout: .now() + 5)
-        guard assigned != 0 else { throw OAuthError.authorizationFailed("could not open a loopback port") }
+        guard assigned != 0 else {
+            listener.cancel()
+            let detail = failure.map { ": \($0.localizedDescription)" } ?? " (timed out)"
+            throw OAuthError.authorizationFailed("could not open a loopback port\(detail)")
+        }
         port = assigned
     }
 
@@ -43,10 +70,16 @@ public final class LoopbackRedirect: @unchecked Sendable {
     public func waitForCallback() async throws -> [String: String] {
         try await withTaskCancellationHandler {
             try await withCheckedThrowingContinuation { cont in
-                self.continuation = cont
-                self.listener.newConnectionHandler = { [weak self] conn in self?.handle(conn) }
-                self.queue.asyncAfter(deadline: .now() + 300) { [weak self] in
-                    self?.finish(.failure(OAuthError.authorizationFailed("timed out waiting for the browser")))
+                self.queue.async {
+                    if let pending = self.pendingResult {
+                        self.pendingResult = nil
+                        cont.resume(with: pending)
+                        return
+                    }
+                    self.continuation = cont
+                    self.queue.asyncAfter(deadline: .now() + 300) { [weak self] in
+                        self?.finish(.failure(OAuthError.authorizationFailed("timed out waiting for the browser")))
+                    }
                 }
             }
         } onCancel: {
@@ -85,7 +118,12 @@ public final class LoopbackRedirect: @unchecked Sendable {
 
     private func finish(_ result: Result<[String: String], Error>) {
         queue.async {
-            guard let cont = self.continuation else { return }
+            guard let cont = self.continuation else {
+                // redirect landed before waitForCallback — keep it for delivery
+                if self.pendingResult == nil { self.pendingResult = result }
+                self.listener.cancel()
+                return
+            }
             self.continuation = nil
             self.listener.cancel()
             cont.resume(with: result)
