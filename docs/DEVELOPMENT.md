@@ -126,6 +126,27 @@ Registering the apps, once each:
   redirect_uri` failure mid-flow. The port never needs registering: both hosts ignore it for
   loopback matching, which is what lets SwiftX bind an ephemeral port per connect.
 
+### Verification status
+
+Both of the apps behind the official releases are **unverified and pending review**. They are fully
+functional; the only symptom is the "unverified app" warning on the provider's sign-in screen, which
+[`.github/release-notice.md`](../.github/release-notice.md) explains in every release. Delete that
+file once the notice no longer applies.
+
+- **Google** — submitted for verification, awaiting review. `youtube.upload` is a sensitive scope,
+  so review covers a demo video and a privacy-policy URL. Two things to watch while it is pending:
+  an unverified app requesting sensitive scopes is capped at roughly 100 users who can ever grant
+  consent, and if the consent screen is ever moved back to **Testing**, the 7-day refresh-token
+  expiry above applies again and every user silently disconnects each week.
+- **Microsoft** — not submitted. Publisher verification needs a Microsoft Partner Center account
+  with a verified MPN ID whose email domain matches the app's publisher domain, so it is gated on
+  registering a business entity rather than on anything in this repo. The consent screen keeps
+  saying "unverified" until that is done; nothing else is affected.
+
+Neither warning blocks a user from connecting, and neither is a security finding — the client ID and
+Google's desktop client secret are public by construction in any native app (see
+`Resources/OAuthApps.example.plist`), which is why the flow uses PKCE.
+
 ## Layout
 
 ```

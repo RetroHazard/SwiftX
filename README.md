@@ -29,6 +29,13 @@ the ShareX feature set already runs on macOS; see the
 [feature parity tracker](docs/macos-swift-port/PARITY.md) for what's ported, partial, or still
 planned. To build a development copy from source instead, see below.
 
+**OAuth destinations are pending provider verification.** Google Drive, YouTube and OneDrive work,
+but connecting shows an "unverified app" warning: the Google registration is submitted and awaiting
+review, and the Microsoft one is not yet submitted (publisher verification needs a Microsoft Partner
+Center account). The warning describes SwiftX's registration status with the provider, not what the
+app does — uploads go straight from your Mac to your own account and tokens stay in your login
+Keychain, with no SwiftX server in the path. Every other destination is unaffected.
+
 ## Features
 
 - **Screen capture** — fullscreen, active window, monitor and window picker capture; a region
