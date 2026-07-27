@@ -10,31 +10,8 @@ import SharedKit
 import UniformTypeIdentifiers
 import UploadKit
 
-/// Which destination setting an upload routes through, mirroring the C#
-/// ImageDestination / TextDestination / FileDestination split.
-enum UploadKind {
-    case image, text, file
-
-    /// C# EDataType-style classification by extension: captures and pictures
-    /// route as images, text-y files as text, everything else (recordings,
-    /// archives, …) as files.
-    static func classify(fileExtension ext: String) -> UploadKind {
-        let lowered = ext.lowercased()
-        if imageExtensions.contains(lowered) { return .image }
-        if textExtensions.contains(lowered) { return .text }
-        return .file
-    }
-
-    /// C# TaskSettingsAdvanced.ImageExtensions / TextExtensions defaults.
-    private static let imageExtensions: Set<String> = [
-        "png", "jpg", "jpeg", "gif", "bmp", "ico", "tif", "tiff", "webp", "heic"
-    ]
-    private static let textExtensions: Set<String> = [
-        "txt", "log", "nfo", "md", "json", "xml", "csv", "html", "htm", "css",
-        "js", "ts", "c", "cpp", "cc", "h", "hpp", "cs", "java", "kt", "swift",
-        "py", "rb", "php", "pl", "sh", "zsh", "bash", "yaml", "yml", "toml", "ini"
-    ]
-}
+// UploadKind and the destination capability table live in UploadKit
+// (DestinationCatalog.swift), shared with the settings pickers.
 
 @MainActor
 enum UploadCoordinator {

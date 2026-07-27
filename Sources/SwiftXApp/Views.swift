@@ -1029,9 +1029,7 @@ struct SettingsView: View {
     }
 
     /// The three per-type "custom uploader" sentinels (C# enum member names).
-    private static let customUploaderTags: Set<String> = [
-        "CustomImageUploader", "CustomTextUploader", "CustomFileUploader"
-    ]
+    private static let customUploaderTags = DestinationCatalog.customUploaderTags
 
     /// Distinct destinations selected across the three pickers, so each host's
     /// credential fields render once even when types share a destination.
@@ -1044,48 +1042,45 @@ struct SettingsView: View {
     }
 
     private func destinationDisplayName(_ destination: String) -> String {
-        switch destination {
-        case "AmazonS3": return "Amazon S3"
-        case "BackblazeB2": return "Backblaze B2"
-        case "AzureStorage": return "Azure Storage"
-        case "OwnCloud": return "ownCloud / Nextcloud"
-        case "Seafile": return "Seafile"
-        case "Pushbullet": return "Pushbullet"
-        default:
-            return SimpleHostDestination(rawValue: destination)?.displayName
-                ?? OAuthProviderID(rawValue: destination)?.displayName
-                ?? destination
+        DestinationCatalog.displayName(for: destination)
+    }
+
+    /// Picker rows for a slot: only the hosts that accept that kind of upload,
+    /// so YouTube can't be chosen for text and image hosts can't take archives.
+    /// A stored destination that doesn't fit the slot (an imported Windows
+    /// config, or one set before this filtering existed) still gets a row —
+    /// dropping it would silently repoint the slot without saying so.
+    @ViewBuilder
+    private func destinationPicker(_ label: String, kind: UploadKind,
+                                   selection: Binding<String>) -> some View {
+        let available = DestinationCatalog.available(for: kind)
+        let current = selection.wrappedValue
+        Picker(label, selection: selection) {
+            ForEach(available) { destination in
+                Text(destinationPickerLabel(destination)).tag(destination.id)
+            }
+            if !available.contains(where: { $0.id == current }) {
+                Text("\(destinationDisplayName(current)) — not valid for \(kind.displayName) uploads")
+                    .tag(current)
+            }
         }
     }
 
-    @ViewBuilder
-    private func destinationPicker(_ label: String, customTag: String,
-                                   selection: Binding<String>) -> some View {
-        Picker(label, selection: selection) {
-            Text("Custom uploader").tag(customTag)
-            Text("Amazon S3").tag("AmazonS3")
-            Text("Backblaze B2").tag("BackblazeB2")
-            Text("Azure Storage").tag("AzureStorage")
-            Text("ownCloud / Nextcloud").tag("OwnCloud")
-            Text("Seafile").tag("Seafile")
-            Text("Pushbullet").tag("Pushbullet")
-            ForEach(SimpleHostDestination.allCases, id: \.rawValue) { destination in
-                Text(destination.displayName).tag(destination.rawValue)
-            }
-            ForEach(OAuthProviderID.allCases, id: \.rawValue) { provider in
-                Text(oauthPickerLabel(provider)).tag(provider.rawValue)
-            }
-        }
+    /// OAuth hosts without credentials read "unavailable"; everything else uses
+    /// its plain catalog name.
+    private func destinationPickerLabel(_ destination: UploadDestination) -> String {
+        guard let id = OAuthProviderID(rawValue: destination.id) else { return destination.displayName }
+        return oauthPickerLabel(id)
     }
 
     @ViewBuilder
     private var destinationsPane: some View {
         Section("Upload destinations") {
-            destinationPicker("Image uploads", customTag: "CustomImageUploader",
+            destinationPicker("Image uploads", kind: .image,
                               selection: destinationBinding(\.imageDestination))
-            destinationPicker("Text uploads", customTag: "CustomTextUploader",
+            destinationPicker("Text uploads", kind: .text,
                               selection: destinationBinding(\.textDestination))
-            destinationPicker("File & video uploads", customTag: "CustomFileUploader",
+            destinationPicker("File & video uploads", kind: .file,
                               selection: destinationBinding(\.fileDestination))
             Text("Screenshots use the image destination; recordings and other files the "
                  + "file destination. Until a separate custom uploader is chosen below, text "
