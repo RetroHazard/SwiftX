@@ -42,7 +42,9 @@ jobs:
           [ -n "$BASE_REF" ] || { echo "manual run — skipping diff check"; exit 0; }
           git fetch origin "$BASE_REF"
           base=$(git merge-base "origin/$BASE_REF" HEAD)
-          changed=$(git diff --name-only "$base"...HEAD -- VERSION || true)
+          # --diff-filter=M: only modifications count — the PR that first
+          # introduces the VERSION file must be able to add it
+          changed=$(git diff --diff-filter=M --name-only "$base"...HEAD -- VERSION || true)
           if [ -n "$changed" ]; then
             echo "::error::This PR edits the VERSION file. Versions are computed at release time (Scripts/version.sh next) and written only by release.yml — drop this change."
             exit 1
