@@ -31,7 +31,7 @@ struct SXCUImportTests {
     }
     """
 
-    private func withTempRoot(_ body: (URL) throws -> Void) rethrows {
+    private func withTempRoot(_ body: (URL) throws -> Void) throws {
         let original = SettingsPaths.root
         let temp = FileManager.default.temporaryDirectory
             .appendingPathComponent("SXCUImportTests-\(UUID().uuidString)", isDirectory: true)
