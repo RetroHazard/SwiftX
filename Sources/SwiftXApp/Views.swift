@@ -322,6 +322,8 @@ enum ThumbnailLoader {
 
 enum SettingsPane: String, CaseIterable, Identifiable {
     case general = "General"
+    case menuBar = "Menu Bar"
+    case notifications = "Notifications"
     case capture = "Capture"
     case recording = "Recording"
     case actions = "Actions"
@@ -336,6 +338,8 @@ enum SettingsPane: String, CaseIterable, Identifiable {
     var icon: String {
         switch self {
         case .general: "gearshape"
+        case .menuBar: "menubar.rectangle"
+        case .notifications: "bell.badge"
         case .capture: "camera.viewfinder"
         case .recording: "record.circle"
         case .actions: "terminal"
@@ -737,6 +741,8 @@ struct SettingsView: View {
             Form {
                 switch nav.pane ?? .general {
                 case .general: generalPane
+                case .menuBar: menuBarPane
+                case .notifications: notificationsPane
                 case .capture: capturePane
                 case .recording: recordingPane
                 case .actions: ActionsSettingsView()
@@ -757,55 +763,6 @@ struct SettingsView: View {
     private var generalPane: some View {
         Section("Permissions") {
             PermissionsView()
-        }
-        Section("Notifications") {
-            Toggle("Show notification banners", isOn: taskBinding(\.showToastNotificationAfterTaskCompleted))
-            Toggle("Suppress while a fullscreen app is active",
-                   isOn: taskBinding(\.disableNotificationsOnFullscreen))
-            Toggle("Play sound after capture", isOn: taskBinding(\.playSoundAfterCapture))
-            customSoundRows("Custom capture sound",
-                            use: \.useCustomCaptureSound, path: \.customCaptureSoundPath)
-            Toggle("Play sound after upload", isOn: taskBinding(\.playSoundAfterUpload))
-            customSoundRows("Custom completion sound",
-                            use: \.useCustomTaskCompletedSound, path: \.customTaskCompletedSoundPath)
-            customSoundRows("Custom error sound",
-                            use: \.useCustomErrorSound, path: \.customErrorSoundPath)
-            Text("Upload banners offer Copy URL / Open buttons; file banners offer "
-                 + "Show in Finder / Annotate / Delete. Clicking the banner itself opens the "
-                 + "URL or reveals the file.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
-        Section("Menu bar") {
-            Picker("Left click", selection: configBinding(\.trayLeftClickAction)) {
-                Text("Open the menu").tag("ToggleTrayMenu")
-                Text("Open main window").tag("OpenMainWindow")
-                Text("Capture region").tag("RectangleRegion")
-                Text("Capture full screen").tag("PrintScreen")
-                Text("Capture active window").tag("ActiveWindow")
-                Text("Upload from clipboard").tag("ClipboardUpload")
-                Text("Upload file…").tag("FileUpload")
-                Text("Image editor").tag("ImageEditor")
-                Text("Open screenshots folder").tag("OpenScreenshotsFolder")
-            }
-            Text("Right click always opens the menu.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            Toggle("Show upload progress in the icon", isOn: configBinding(\.trayIconProgressEnabled))
-            Toggle("Show Recent submenu", isOn: configBinding(\.recentTasksShowInTrayMenu))
-            if config.recentTasksShowInTrayMenu {
-                TextField("Recent entries shown (1–30)",
-                          value: clampedConfigBinding(\.recentTasksMaxCount, 1...30), format: .number)
-            }
-            DisclosureGroup("Menu items") {
-                ForEach(TrayMenuItemID.allCases, id: \.rawValue) { id in
-                    Toggle(id.displayName, isOn: trayItemVisibleBinding(id))
-                }
-                Text("Unchecked items are hidden from the menu bar menu. Settings and Quit "
-                     + "always stay, and a running recording keeps its stop controls visible.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
         }
         Section("Hotkey guards") {
             Toggle("Disable hotkeys while a fullscreen app is active",
@@ -885,6 +842,63 @@ struct SettingsView: View {
                     }
                 }
             }
+        }
+    }
+
+    @ViewBuilder
+    private var menuBarPane: some View {
+        Section("Menu bar") {
+            Picker("Left click", selection: configBinding(\.trayLeftClickAction)) {
+                Text("Open the menu").tag("ToggleTrayMenu")
+                Text("Open main window").tag("OpenMainWindow")
+                Text("Capture region").tag("RectangleRegion")
+                Text("Capture full screen").tag("PrintScreen")
+                Text("Capture active window").tag("ActiveWindow")
+                Text("Upload from clipboard").tag("ClipboardUpload")
+                Text("Upload file…").tag("FileUpload")
+                Text("Image editor").tag("ImageEditor")
+                Text("Open screenshots folder").tag("OpenScreenshotsFolder")
+            }
+            Text("Right click always opens the menu.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Toggle("Show upload progress in the icon", isOn: configBinding(\.trayIconProgressEnabled))
+            Toggle("Show Recent submenu", isOn: configBinding(\.recentTasksShowInTrayMenu))
+            if config.recentTasksShowInTrayMenu {
+                TextField("Recent entries shown (1–30)",
+                          value: clampedConfigBinding(\.recentTasksMaxCount, 1...30), format: .number)
+            }
+            DisclosureGroup("Menu items") {
+                ForEach(TrayMenuItemID.allCases, id: \.rawValue) { id in
+                    Toggle(id.displayName, isOn: trayItemVisibleBinding(id))
+                }
+                Text("Unchecked items are hidden from the menu bar menu. Settings and Quit "
+                     + "always stay, and a running recording keeps its stop controls visible.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var notificationsPane: some View {
+        Section("Notifications") {
+            Toggle("Show notification banners", isOn: taskBinding(\.showToastNotificationAfterTaskCompleted))
+            Toggle("Suppress while a fullscreen app is active",
+                   isOn: taskBinding(\.disableNotificationsOnFullscreen))
+            Toggle("Play sound after capture", isOn: taskBinding(\.playSoundAfterCapture))
+            customSoundRows("Custom capture sound",
+                            use: \.useCustomCaptureSound, path: \.customCaptureSoundPath)
+            Toggle("Play sound after upload", isOn: taskBinding(\.playSoundAfterUpload))
+            customSoundRows("Custom completion sound",
+                            use: \.useCustomTaskCompletedSound, path: \.customTaskCompletedSoundPath)
+            customSoundRows("Custom error sound",
+                            use: \.useCustomErrorSound, path: \.customErrorSoundPath)
+            Text("Upload banners offer Copy URL / Open buttons; file banners offer "
+                 + "Show in Finder / Annotate / Delete. Clicking the banner itself opens the "
+                 + "URL or reveals the file.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
     }
 
