@@ -49,6 +49,9 @@ planned. To build a development copy from source instead, see below.
   thumbnail grid, live upload queue, favorites and tag filters
 - **Automation** — global hotkeys, watch folders, auto capture, scrolling capture, quick task menu,
   `swiftx://` URL scheme, CLI verbs, and a native messaging host for Chrome/Edge/Firefox
+- **System integration** — SwiftX in the macOS **Share…** menu / share sheet (files, images, movies,
+  text and links) via an embedded share extension, plus an "Upload with SwiftX" right-click
+  Services entry
 - **Tools** — color/screen color picker, ruler, OCR (Vision), QR generate/decode/scan, hash
   checker, metadata viewer/stripper, image and video converters, background remover, image
   comparer, folder indexer, and AI-assisted image analysis (OpenAI-compatible providers)
@@ -101,9 +104,12 @@ this and other gotchas discovered while porting.
 | `ToolsKit` | Color picker, ruler, OCR/QR, hash checker, converters, indexer |
 | `SwiftXApp` | The app itself — menu bar shell, settings, CLI |
 | `NativeMessagingHost` | `swiftx-host` — browser native messaging binary |
+| `ShareExtension` | `SwiftXShare.appex` — the macOS Share menu entry |
 
-Each `*Kit` module has a matching test target under `Tests/`; `SwiftXApp` and
-`NativeMessagingHost` are the two executable targets.
+Each `*Kit` module has a matching test target under `Tests/`; `SwiftXApp`,
+`NativeMessagingHost` and `ShareExtension` are the three executable targets.
+`Scripts/make-app.sh` wraps the last one in an `.appex` bundle inside
+`SwiftX.app/Contents/PlugIns/`.
 
 ## Documentation
 

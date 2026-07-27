@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<!--
+  SwiftXShare.appex entitlements. Unlike the app (which is deliberately NOT
+  sandboxed - see docs/macos-swift-port/SECURITY-MODEL.md), macOS requires app
+  extensions to adopt the App Sandbox, and the extension has no trouble living
+  inside one: it reads the items the Share menu handed it, copies them into its
+  own container, and opens a swiftx:// URL. It never uploads, never runs an
+  external binary, and never touches the settings or the Keychain.
+-->
+<dict>
+    <key>com.apple.security.app-sandbox</key>
+    <true/>
+    <!-- read the files the sharing app passed in -->
+    <key>com.apple.security.files.user-selected.read-only</key>
+    <true/>
+</dict>
+</plist>
