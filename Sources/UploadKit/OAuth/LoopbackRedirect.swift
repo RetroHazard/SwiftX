@@ -14,7 +14,9 @@ import Network
 /// redirect URI, and resolves once the browser hits it with `?code=...`.
 public final class LoopbackRedirect: @unchecked Sendable {
     private let listener: NWListener
-    public let port: UInt16
+    // var with a default so init can install the connection handler (which
+    // captures self) before the OS assigns the real port
+    public private(set) var port: UInt16 = 0
     private var continuation: CheckedContinuation<[String: String], Error>?
     /// A redirect that arrived before waitForCallback installed the
     /// continuation — delivered immediately on the next waitForCallback.
@@ -60,7 +62,7 @@ public final class LoopbackRedirect: @unchecked Sendable {
             let detail = failure.map { ": \($0.localizedDescription)" } ?? " (timed out)"
             throw OAuthError.authorizationFailed("could not open a loopback port\(detail)")
         }
-        port = assigned
+        self.port = assigned
     }
 
     public var redirectURI: String { "http://127.0.0.1:\(port)/" }
