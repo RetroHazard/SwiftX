@@ -15,8 +15,8 @@ import UploadKit
 final class OAuthConnectCoordinator {
     static let shared = OAuthConnectCoordinator()
 
-    func connect(_ id: OAuthProviderID) {
-        Task { await run(id) }
+    func connect(_ id: OAuthProviderID) async {
+        await run(id)
     }
 
     private func run(_ id: OAuthProviderID) async {

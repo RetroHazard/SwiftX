@@ -420,6 +420,11 @@ struct SettingsView: View {
     @State private var config = ApplicationConfig.load()
     @State private var task = TaskSettings.load()
     @ObservedObject private var nav = SettingsNavigator.shared
+    // UploadersConfig/OAuthTokenStore are read straight from disk/Keychain on
+    // every body evaluation, so nothing marks the view dirty when they change
+    // out from under it (editing the Advanced client ID, connecting,
+    // disconnecting). Bumping this forces SwiftUI to re-evaluate oauthFields.
+    @State private var oauthRefresh = 0
 
     private static let afterCaptureToggles: [(AfterCaptureTasks, String)] = [
         (.annotateImage, "Annotate image (editor)"),
@@ -1048,6 +1053,7 @@ struct SettingsView: View {
                 creds[keyPath: keyPath] = value
                 config.oauthApps[id.rawValue] = creds
                 try? config.save()
+                oauthRefresh &+= 1
             }
         )
     }
@@ -1057,6 +1063,9 @@ struct SettingsView: View {
     /// developers / power users and stay hidden in an Advanced disclosure.
     @ViewBuilder
     private var oauthFields: some View {
+        // Read as a dependency so SwiftUI re-evaluates this section whenever
+        // the Advanced client ID or the connect/disconnect state changes.
+        let _ = oauthRefresh
         if let id = OAuthProviderID(rawValue: task.imageDestination) {
             let configured = UploadersConfig.load().isConfigured(id)
             let connected = OAuthTokenStore.isConnected(id)
@@ -1064,13 +1073,19 @@ struct SettingsView: View {
             if configured {
                 HStack {
                     Button(connected ? "Reconnect \(id.displayName)…" : "Connect \(id.displayName)…") {
-                        OAuthConnectCoordinator.shared.connect(id)
+                        Task {
+                            await OAuthConnectCoordinator.shared.connect(id)
+                            oauthRefresh &+= 1
+                        }
                     }
                     if connected {
                         Label("Connected", systemImage: "checkmark.seal.fill")
                             .foregroundStyle(.green)
                             .font(.caption)
-                        Button("Disconnect") { OAuthTokenStore.delete(for: id) }
+                        Button("Disconnect") {
+                            OAuthTokenStore.delete(for: id)
+                            oauthRefresh &+= 1
+                        }
                     }
                 }
                 Text(connected
