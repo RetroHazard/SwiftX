@@ -1,6 +1,6 @@
 cask "swiftx" do
-  version "0.1.0"
-  sha256 "5c6c9fd2091e5209b66ded554d9b5eea80be7f23b4b41862f697d2564e42d843"
+  version "2026.7.1"
+  sha256 "4f6e5510689bd0d581910f720d55e661ff5ad2566b8e1176cbb43a0e56262764"
 
   url "https://github.com/RetroHazard/SwiftX/releases/download/v#{version}/SwiftX-#{version}.dmg"
   name "SwiftX"
