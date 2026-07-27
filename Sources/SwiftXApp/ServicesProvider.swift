@@ -6,9 +6,10 @@
 // of the context menu system-wide — Finder file selections and selected text
 // in any app. The service itself is declared in the app bundle's Info.plist
 // (NSServices, written by Scripts/make-app.sh); this class receives the calls.
-// A true Share-sheet extension (.appex) needs an embedded extension bundle,
-// which the SPM bundling pipeline doesn't produce yet — Services give the
-// same right-click flow without one.
+//
+// This is the right-click Services flow only. The "Share…" menu is a separate
+// system — com.apple.share-services extensions — handled by the embedded
+// SwiftXShare.appex (Sources/ShareExtension) and ShareRequests.
 
 import AppKit
 

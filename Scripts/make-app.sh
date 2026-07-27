@@ -49,6 +49,85 @@ if [ -f Resources/OAuthApps.plist ]; then
     echo "Bundled OAuth app credentials"
 fi
 
+# Share extension. macOS populates the system-wide "Share…" menu (and System
+# Settings > ... > Extensions > Sharing) from com.apple.share-services app
+# extensions only — NSServices below puts SwiftX in the right-click Services
+# menu, but never in the share sheet. An .appex is an ordinary bundle wrapping
+# an executable whose entry point is NSExtensionMain, so SwiftPM can build it;
+# only the wrapper has to be assembled here.
+APPEX="$APP/Contents/PlugIns/SwiftXShare.appex"
+mkdir -p "$APPEX/Contents/MacOS" "$APPEX/Contents/Resources"
+cp "$BIN/swiftx-share" "$APPEX/Contents/MacOS/SwiftXShare"
+# icon shown next to "SwiftX" in the share sheet
+cp Resources/SwiftX.icns "$APPEX/Contents/Resources/"
+# the extension links SharedKit, whose Bundle.module lookup resolves against
+# the appex bundle rather than the app's
+if [ -d "$BIN/SwiftX_SharedKit.bundle" ]; then
+    cp -R "$BIN/SwiftX_SharedKit.bundle" "$APPEX/Contents/Resources/"
+fi
+
+cat > "$APPEX/Contents/Info.plist" <<PLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleExecutable</key>
+    <string>SwiftXShare</string>
+    <key>CFBundleIconFile</key>
+    <string>SwiftX</string>
+    <!-- the label the Share menu shows -->
+    <key>CFBundleDisplayName</key>
+    <string>SwiftX</string>
+    <key>CFBundleName</key>
+    <string>SwiftX</string>
+    <!-- must be prefixed by the host app's identifier, and must match
+         ShareInbox.extensionBundleID: the app locates the extension's sandbox
+         container by this name -->
+    <key>CFBundleIdentifier</key>
+    <string>com.retrohazard.swiftx.share</string>
+    <!-- app extensions are XPC bundles, not applications -->
+    <key>CFBundlePackageType</key>
+    <string>XPC!</string>
+    <key>CFBundleShortVersionString</key>
+    <string>${VERSION}</string>
+    <key>CFBundleVersion</key>
+    <string>${VERSION}</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>14.0</string>
+    <key>NSHumanReadableCopyright</key>
+    <string>Copyright © 2026 RetroHazard. Licensed under GPL v3.</string>
+    <key>NSExtension</key>
+    <dict>
+        <key>NSExtensionPointIdentifier</key>
+        <string>com.apple.share-services</string>
+        <!-- @objc(ShareViewController) keeps this name stable through Swift's
+             module-qualified mangling -->
+        <key>NSExtensionPrincipalClass</key>
+        <string>ShareViewController</string>
+        <key>NSExtensionAttributes</key>
+        <dict>
+            <!-- What SwiftX offers to share. Counts are generous rather than
+                 unlimited: TRUEPREDICATE would also volunteer SwiftX for
+                 content it cannot upload. -->
+            <key>NSExtensionActivationRule</key>
+            <dict>
+                <key>NSExtensionActivationSupportsFileWithMaxCount</key>
+                <integer>100</integer>
+                <key>NSExtensionActivationSupportsImageWithMaxCount</key>
+                <integer>100</integer>
+                <key>NSExtensionActivationSupportsMovieWithMaxCount</key>
+                <integer>100</integer>
+                <key>NSExtensionActivationSupportsText</key>
+                <true/>
+                <key>NSExtensionActivationSupportsWebURLWithMaxCount</key>
+                <integer>1</integer>
+            </dict>
+        </dict>
+    </dict>
+</dict>
+</plist>
+PLIST
+
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -97,7 +176,8 @@ cat > "$APP/Contents/Info.plist" <<PLIST
     <!-- "Upload with SwiftX" in the system-wide Services context menu (Finder
          file selections and selected text). Handled by ServicesProvider; the
          first use may need enabling in System Settings > Keyboard >
-         Keyboard Shortcuts > Services on older macOS versions. -->
+         Keyboard Shortcuts > Services on older macOS versions. This is separate
+         from the "Share…" menu, which SwiftXShare.appex handles. -->
     <key>NSServices</key>
     <array>
         <dict>
@@ -158,8 +238,12 @@ fi
 SIGN_FLAGS=(--force --options runtime)
 [ -n "$IDENTITY" ] && SIGN_FLAGS+=(--timestamp)
 
-# nested executables must be signed before the bundle seal
+# nested code must be signed before the bundle seal
 codesign "${SIGN_FLAGS[@]}" --sign "${IDENTITY:--}" "$APP/Contents/MacOS/SwiftXHost"
+# The appex is the one part of SwiftX that IS sandboxed — macOS requires app
+# extensions to be, and this one has nothing the sandbox gets in the way of.
+codesign "${SIGN_FLAGS[@]}" --entitlements Resources/ShareExtension.entitlements \
+    --sign "${IDENTITY:--}" "$APPEX"
 codesign "${SIGN_FLAGS[@]}" --sign "${IDENTITY:--}" "$APP"
 echo "Signed as: ${IDENTITY:-ad-hoc}"
 
@@ -184,6 +268,16 @@ if rm -rf "$INSTALLED" 2>/dev/null && cp -R "$APP" "$INSTALLED" 2>/dev/null; the
 else
     echo "note: could not write /Applications; run from $APP"
     LAUNCH="$APP"
+fi
+
+# pluginkit discovers extensions when LaunchServices registers the bundle, which
+# happens on the first launch from a stable location. Nudge it so the Share menu
+# entry appears without waiting for a login cycle; -a is idempotent.
+pluginkit -a "$LAUNCH/Contents/PlugIns/SwiftXShare.appex" 2>/dev/null || true
+if pluginkit -m -p com.apple.share-services 2>/dev/null | grep -q com.retrohazard.swiftx.share; then
+    echo "Share extension registered (Share… menu, System Settings > General > Login Items & Extensions > Sharing)"
+else
+    echo "note: the Share extension is not registered yet; it appears after the first launch from $LAUNCH"
 fi
 
 if pgrep -xq SwiftX; then

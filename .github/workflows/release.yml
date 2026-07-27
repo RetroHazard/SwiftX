@@ -204,9 +204,24 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           DMG="build/SwiftX-$VERSION.dmg"
-          ARGS=(--title "SwiftX $VERSION" --generate-notes)
+          ARGS=(--title "SwiftX $VERSION")
           # manual dispatch runs from a branch head; create the tag with the release
           [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ] && ARGS+=(--target "$GITHUB_SHA")
+
+          # .github/release-notice.md is a standing notice (currently the OAuth
+          # verification status) shown above the changelog. Delete the file when
+          # it no longer applies and releases go back to the changelog alone.
+          # The notes are assembled here rather than with --generate-notes,
+          # which has no defined behaviour when combined with a notes body.
+          NOTES="build/release-notes.md"
+          : > "$NOTES"
+          [ -f .github/release-notice.md ] && cat .github/release-notice.md >> "$NOTES"
+          gh api "repos/$GITHUB_REPOSITORY/releases/generate-notes" \
+              -f tag_name="v$VERSION" -f target_commitish="$GITHUB_SHA" \
+              --jq .body >> "$NOTES" \
+              || echo "::warning::could not generate changelog; publishing with the notice only"
+          ARGS+=(--notes-file "$NOTES")
+
           gh release create "v$VERSION" "$DMG" "$DMG.sha256" "${ARGS[@]}"
 
       # This repo doubles as the Homebrew tap, so landing the cask bump on

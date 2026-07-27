@@ -16,7 +16,7 @@ export type Release = {
   brewCommand: string;
 };
 
-const version = "0.1.0";
+const version = "2026.7.1";
 
 export const release: Release = {
   version,
@@ -166,9 +166,14 @@ export const faqs: FaqItem[] = [
       "Only what you connect it for. Signing in opens your browser at Google's or Microsoft's own consent screen — SwiftX never sees your password. A connected Google account can upload a file to your Drive (limited to files SwiftX itself creates) or a video to your YouTube channel as unlisted; a connected Microsoft account can upload a file to your OneDrive. Nothing else in your account is read, listed or changed. Tokens live in the macOS Keychain, and you can disconnect and revoke access at any time — details are in the Privacy Policy.",
   },
   {
+    question: "Why does Google Drive, YouTube or OneDrive say the app is unverified?",
+    answer:
+      "Because SwiftX's registration with those providers is still in review — the Google submission is pending and the Microsoft one needs a Partner Center business account. The destinations work regardless. That warning is about SwiftX's paperwork with Google and Microsoft, not about what it does with your files: uploads go straight from your Mac to your own account, and the access tokens stay in your login Keychain. On Google's screen, choose Advanced, then \"Go to SwiftX (unsafe)\". Every other destination is unaffected.",
+  },
+  {
     question: "I already use ShareX on Windows. Does my setup come with me?",
     answer:
-      "Largely, yes. SwiftX reads the same custom uploader (.sxcu) and image effect preset (.sxie) files, keeps a compatible history database, and works with the existing browser extensions — so destinations and presets you have already tuned carry over.",
+      "Largely, yes. Import Settings… in SwiftX reads a Windows ShareX .sxb backup directly and merges its custom uploaders, hotkeys, and (optionally) upload history into your Mac config in one step. Short of a full backup, SwiftX also reads the same custom uploader (.sxcu) and image effect preset (.sxie) files on their own, keeps a compatible history database, and works with the existing browser extensions.",
   },
   {
     question: "Is this the official ShareX for Mac?",

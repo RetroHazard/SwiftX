@@ -79,6 +79,14 @@ enum CLI {
                 ImageEffectsStore.shared.presets.append(preset)
                 ImageEffectsStore.shared.save()
             }
+        } else if command.matches(ShareInbox.verb) {
+            // Share extension handoff. The parameter is a UUID naming a request
+            // directory inside the extension's sandbox container; ShareRequests
+            // derives every path itself, so an untrusted caller cannot aim this
+            // at a file of its choosing (see ShareRequests.swift).
+            if let parameter = command.parameter {
+                ShareRequests.handle(id: parameter)
+            }
         } else if command.matches("NativeMessagingInput") {
             if let parameter = command.parameter, parameter.lowercased().hasSuffix(".json") {
                 await handleNativeMessagingInput(fileAt: URL(fileURLWithPath: absolutePath(parameter)), source: source)

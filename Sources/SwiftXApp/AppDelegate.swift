@@ -109,6 +109,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.servicesProvider = servicesProvider
         NSUpdateDynamicServices()
 
+        // Share menu handoff: normally the extension's swiftx:// URL brings us
+        // here, but on a cold launch that event can land before the handler
+        // above is installed, so anything already staged is picked up now.
+        ShareRequests.drainPending()
+
         setupHotkeys()
         Notifier.setup()
         WatchFolderCenter.shared.applySettings()
