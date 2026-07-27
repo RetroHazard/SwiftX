@@ -4,8 +4,8 @@
 //
 // Drives the interactive OAuth2 consent flow: open the authorize URL in the
 // default browser, catch the loopback redirect, exchange the code for tokens,
-// and store them in the Keychain. Dormant until app credentials exist (the
-// bundled OAuthApps.plist or a user-supplied client ID).
+// and store them in the Keychain. Dormant until app credentials exist, which
+// normally means the bundled OAuthApps.plist.
 
 import AppKit
 import SharedKit
@@ -23,7 +23,10 @@ final class OAuthConnectCoordinator {
         let config = UploadersConfig.load()
         guard let credentials = config.oauthCredentials(for: id) else {
             AppLog.upload.error("OAuth connect \(id.rawValue, privacy: .public): no app credentials")
-            presentError(id, message: "Add a client ID before connecting.")
+            // unreachable from the UI — the button only renders when
+            // isConfigured(id) is true — but a URL-scheme or CLI entry point
+            // can still land here on a build with no credentials.
+            presentError(id, message: "This build of SwiftX ships without \(id.displayName) app credentials, so it can't connect.")
             return
         }
         do {

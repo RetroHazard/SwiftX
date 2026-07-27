@@ -426,8 +426,8 @@ struct SettingsView: View {
     @ObservedObject private var nav = SettingsNavigator.shared
     // UploadersConfig/OAuthTokenStore are read straight from disk/Keychain on
     // every body evaluation, so nothing marks the view dirty when they change
-    // out from under it (editing the Advanced client ID, connecting,
-    // disconnecting). Bumping this forces SwiftUI to re-evaluate oauthFields.
+    // out from under it (connecting, disconnecting). Bumping this forces
+    // SwiftUI to re-evaluate oauthFields.
     @State private var oauthRefresh = 0
 
     private static let afterCaptureToggles: [(AfterCaptureTasks, String)] = [
@@ -1177,21 +1177,6 @@ struct SettingsView: View {
         UploadersConfig.load().isConfigured(id) ? id.displayName : "\(id.displayName) — unavailable"
     }
 
-    private func oauthBinding(_ id: OAuthProviderID,
-                              _ keyPath: WritableKeyPath<OAuthAppCredentials, String>) -> Binding<String> {
-        Binding(
-            get: { (UploadersConfig.load().oauthApps[id.rawValue] ?? OAuthAppCredentials())[keyPath: keyPath] },
-            set: { value in
-                var config = UploadersConfig.load()
-                var creds = config.oauthApps[id.rawValue] ?? OAuthAppCredentials()
-                creds[keyPath: keyPath] = value
-                config.oauthApps[id.rawValue] = creds
-                try? config.save()
-                oauthRefresh &+= 1
-            }
-        )
-    }
-
     /// Per-type custom uploader pickers. Text and file uploads can follow the
     /// image uploader (empty selection) or pin their own .sxcu.
     @ViewBuilder
@@ -1230,13 +1215,13 @@ struct SettingsView: View {
         }
     }
 
-    /// End-user OAuth setup is one-click: SwiftX ships the app credentials, so
-    /// the user only signs in and approves. The client ID/secret fields are for
-    /// developers / power users and stay hidden in an Advanced disclosure.
+    /// OAuth setup is one click: SwiftX ships the app credentials, so the user
+    /// only signs in and approves. There is deliberately nothing to fill in —
+    /// a build without baked-in credentials just reports the host unavailable.
     @ViewBuilder
     private func oauthFields(for destination: String) -> some View {
-        // Read as a dependency so SwiftUI re-evaluates this section whenever
-        // the Advanced client ID or the connect/disconnect state changes.
+        // Read as a dependency so SwiftUI re-evaluates this section when the
+        // connect/disconnect state changes.
         let _ = oauthRefresh
         if let id = OAuthProviderID(rawValue: destination) {
             let configured = UploadersConfig.load().isConfigured(id)
@@ -1266,17 +1251,7 @@ struct SettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             } else {
-                Text("\(id.displayName) uploads are unavailable in this build (no registered app). Supply your own OAuth app below, or use a build that ships \(id.displayName) credentials.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            // Developers / power users who want their own app + quota. Redirect
-            // URI to register with the host: http://127.0.0.1 (loopback).
-            DisclosureGroup("Advanced: use your own \(id.displayName) OAuth app") {
-                TextField("Client ID", text: oauthBinding(id, \.clientID))
-                SecureField("Client secret (blank for PKCE-only apps)", text: oauthBinding(id, \.clientSecret))
-                Text("Register the redirect URI as http://127.0.0.1 (loopback). Overrides the built-in app for this host.")
+                Text("\(id.displayName) uploads are unavailable in this build, which ships without \(id.displayName) app credentials. Official releases include them.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

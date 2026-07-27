@@ -3,11 +3,10 @@
 // Licensed under GPL v3 - see /LICENSE
 //
 // OAuth destination identity + the app-credential gate. An OAuth host is
-// enabled as soon as app credentials exist for it — either baked in from the
-// bundled OAuthApps.plist (git-ignored; present in release builds) or pasted
-// by the user in Settings → Advanced, which overrides the bundled entry.
-// Without either, `isConfigured(_:)` returns false and the destination is
-// greyed out / refuses to route. The switch is data, not a compile flag.
+// enabled as soon as app credentials exist for it — normally baked in from the
+// bundled OAuthApps.plist (git-ignored; present in release builds). Without
+// them, `isConfigured(_:)` returns false and the destination is greyed out /
+// refuses to route. The switch is data, not a compile flag.
 
 import Foundation
 
@@ -87,8 +86,12 @@ public enum OAuthAppRegistry {
 }
 
 public extension UploadersConfig {
-    /// A power-user override supplied in Settings → Advanced (their own OAuth
-    /// app). Nil unless they entered a client ID.
+    /// An override in the `OAuthApps` key of UploadersConfig.json, for someone
+    /// running their own registered app and quota. There is no UI for this —
+    /// the settings window offers only Connect — but the key is still honoured
+    /// so configs written when that UI existed keep authenticating against the
+    /// app their stored refresh token was issued to. Nil unless a client ID is
+    /// present, which is the normal case.
     func oauthUserOverride(for id: OAuthProviderID) -> OAuthAppCredentials? {
         guard let creds = oauthApps[id.rawValue], creds.isPresent else { return nil }
         return creds
