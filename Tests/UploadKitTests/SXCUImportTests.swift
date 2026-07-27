@@ -4,16 +4,14 @@
 //
 // Validates .sxcu import against real-world files: a ShareX 14.1 export (the
 // shape the in-app Import… button receives) and the null-heavy variant that
-// ShareX embeds inside .sxb backups.
+// ShareX embeds inside .sxb backups. Store operations run against explicit
+// temp directories — the global SettingsPaths.root stays untouched, since all
+// test targets share one process and SharedKitTests owns that global.
 
 import Foundation
 import Testing
-@testable import SharedKit
 @testable import UploadKit
 
-// Serialized: importFile writes into CustomUploaderStore.directory, which
-// derives from the global SettingsPaths.root the suite swaps out.
-@Suite(.serialized)
 struct SXCUImportTests {
     /// Field-for-field the user-facing export shape of ShareX 14.1.0+.
     private let exportedSXCU = """
@@ -31,15 +29,10 @@ struct SXCUImportTests {
     }
     """
 
-    private func withTempRoot(_ body: (URL) throws -> Void) throws {
-        let original = SettingsPaths.root
+    private func withTempDirectory(_ body: (URL) throws -> Void) throws {
         let temp = FileManager.default.temporaryDirectory
             .appendingPathComponent("SXCUImportTests-\(UUID().uuidString)", isDirectory: true)
-        SettingsPaths.root = temp
-        defer {
-            SettingsPaths.root = original
-            try? FileManager.default.removeItem(at: temp)
-        }
+        defer { try? FileManager.default.removeItem(at: temp) }
         try FileManager.default.createDirectory(at: temp, withIntermediateDirectories: true)
         try body(temp)
     }
@@ -61,31 +54,33 @@ struct SXCUImportTests {
     }
 
     @Test func importFileStoresAndLoads() throws {
-        try withTempRoot { temp in
+        try withTempDirectory { temp in
+            let store = temp.appendingPathComponent("store", isDirectory: true)
             let source = temp.appendingPathComponent("RetroHazard_Image_Host.sxcu")
             try Data(exportedSXCU.utf8).write(to: source)
 
-            let stored = try CustomUploaderStore.importFile(from: source)
+            let stored = try CustomUploaderStore.importFile(from: source, into: store)
             #expect(stored == "RetroHazard_Image_Host.sxcu")
-            #expect(CustomUploaderStore.list().contains(stored))
+            #expect(CustomUploaderStore.list(in: store).contains(stored))
 
-            let loaded = CustomUploaderStore.load(named: stored)
+            let loaded = CustomUploaderStore.load(named: stored, in: store)
             #expect(loaded?.name == "RetroHazard Image Host")
             // the stored bytes match the source exactly (Windows round-trip safe)
             let original = try Data(contentsOf: source)
-            let copy = try Data(contentsOf: CustomUploaderStore.directory.appendingPathComponent(stored))
+            let copy = try Data(contentsOf: store.appendingPathComponent(stored))
             #expect(copy == original)
         }
     }
 
     @Test func importRejectsInvalidJSON() throws {
-        try withTempRoot { temp in
+        try withTempDirectory { temp in
+            let store = temp.appendingPathComponent("store", isDirectory: true)
             let source = temp.appendingPathComponent("broken.sxcu")
             try Data("not json".utf8).write(to: source)
             #expect(throws: (any Error).self) {
-                try CustomUploaderStore.importFile(from: source)
+                try CustomUploaderStore.importFile(from: source, into: store)
             }
-            #expect(CustomUploaderStore.list().isEmpty)
+            #expect(CustomUploaderStore.list(in: store).isEmpty)
         }
     }
 
@@ -117,7 +112,7 @@ struct SXCUImportTests {
 
     /// Pre-13.7.1 files use $function$ syntax and must migrate on load.
     @Test func loadMigratesLegacySyntax() throws {
-        try withTempRoot { _ in
+        try withTempDirectory { store in
             let legacy = """
             {
               "Version": "12.0.0",
@@ -126,11 +121,8 @@ struct SXCUImportTests {
               "URL": "$json:url$"
             }
             """
-            try FileManager.default.createDirectory(at: CustomUploaderStore.directory,
-                                                    withIntermediateDirectories: true)
-            try Data(legacy.utf8).write(
-                to: CustomUploaderStore.directory.appendingPathComponent("legacy.sxcu"))
-            let item = CustomUploaderStore.load(named: "legacy.sxcu")
+            try Data(legacy.utf8).write(to: store.appendingPathComponent("legacy.sxcu"))
+            let item = CustomUploaderStore.load(named: "legacy.sxcu", in: store)
             #expect(item?.url == "{json:url}")
         }
     }
