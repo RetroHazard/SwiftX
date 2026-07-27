@@ -69,27 +69,34 @@ enum UploadActions {
             let name = NameParser.forTask(.fileName, settings: settings).parse(settings.nameFormatPattern)
             UploadCoordinator.uploadImage(cgImage, fileName: (name.isEmpty ? "clipboard" : name) + ".png")
         } else if let text = pasteboard.string(forType: .string), !text.isEmpty {
-            let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-            if let url = URL(string: trimmed), ["http", "https"].contains(url.scheme?.lowercased()) {
-                // C# order: download contents, else shorten, else share
-                if settings.clipboardUploadURLContents {
-                    Task { await UploadCoordinator.downloadAndUpload(url) }
-                    return
-                }
-                if settings.clipboardUploadShortenURL {
-                    shortenAndCopy(trimmed)
-                    return
-                }
-                if settings.clipboardUploadShareURL {
-                    let service = URLSharingService(rawValue: settings.urlSharingServiceDestination) ?? .email
-                    if let share = service.shareURL(for: trimmed) {
-                        NSWorkspace.shared.open(share)
-                    }
-                    return
-                }
-            }
-            UploadCoordinator.uploadText(text)
+            uploadTextOrURL(text, settings: settings)
         }
+    }
+
+    /// Routes text that may be a bare http(s) URL, in the C# order: download
+    /// its contents, else shorten it, else hand it to the sharing service —
+    /// with a plain text upload as the fallback. Shared by ClipboardUpload and
+    /// the Share extension, which both hand us "some text, possibly a link".
+    static func uploadTextOrURL(_ text: String, settings: TaskSettings) {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let url = URL(string: trimmed), ["http", "https"].contains(url.scheme?.lowercased()) {
+            if settings.clipboardUploadURLContents {
+                Task { await UploadCoordinator.downloadAndUpload(url) }
+                return
+            }
+            if settings.clipboardUploadShortenURL {
+                shortenAndCopy(trimmed)
+                return
+            }
+            if settings.clipboardUploadShareURL {
+                let service = URLSharingService(rawValue: settings.urlSharingServiceDestination) ?? .email
+                if let share = service.shareURL(for: trimmed) {
+                    NSWorkspace.shared.open(share)
+                }
+                return
+            }
+        }
+        UploadCoordinator.uploadText(text)
     }
 
     /// C# ClipboardUploadAutoIndexFolder: index the copied folder and upload

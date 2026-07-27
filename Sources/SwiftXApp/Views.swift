@@ -424,6 +424,11 @@ struct SettingsView: View {
     @State private var config = ApplicationConfig.load()
     @State private var task = TaskSettings.load()
     @ObservedObject private var nav = SettingsNavigator.shared
+    // UploadersConfig/OAuthTokenStore are read straight from disk/Keychain on
+    // every body evaluation, so nothing marks the view dirty when they change
+    // out from under it (connecting, disconnecting). Bumping this forces
+    // SwiftUI to re-evaluate oauthFields.
+    @State private var oauthRefresh = 0
 
     private static let afterCaptureToggles: [(AfterCaptureTasks, String)] = [
         (.annotateImage, "Annotate image (editor)"),
@@ -1024,9 +1029,7 @@ struct SettingsView: View {
     }
 
     /// The three per-type "custom uploader" sentinels (C# enum member names).
-    private static let customUploaderTags: Set<String> = [
-        "CustomImageUploader", "CustomTextUploader", "CustomFileUploader"
-    ]
+    private static let customUploaderTags = DestinationCatalog.customUploaderTags
 
     /// Distinct destinations selected across the three pickers, so each host's
     /// credential fields render once even when types share a destination.
@@ -1039,48 +1042,45 @@ struct SettingsView: View {
     }
 
     private func destinationDisplayName(_ destination: String) -> String {
-        switch destination {
-        case "AmazonS3": return "Amazon S3"
-        case "BackblazeB2": return "Backblaze B2"
-        case "AzureStorage": return "Azure Storage"
-        case "OwnCloud": return "ownCloud / Nextcloud"
-        case "Seafile": return "Seafile"
-        case "Pushbullet": return "Pushbullet"
-        default:
-            return SimpleHostDestination(rawValue: destination)?.displayName
-                ?? OAuthProviderID(rawValue: destination)?.displayName
-                ?? destination
+        DestinationCatalog.displayName(for: destination)
+    }
+
+    /// Picker rows for a slot: only the hosts that accept that kind of upload,
+    /// so YouTube can't be chosen for text and image hosts can't take archives.
+    /// A stored destination that doesn't fit the slot (an imported Windows
+    /// config, or one set before this filtering existed) still gets a row —
+    /// dropping it would silently repoint the slot without saying so.
+    @ViewBuilder
+    private func destinationPicker(_ label: String, kind: UploadKind,
+                                   selection: Binding<String>) -> some View {
+        let available = DestinationCatalog.available(for: kind)
+        let current = selection.wrappedValue
+        Picker(label, selection: selection) {
+            ForEach(available) { destination in
+                Text(destinationPickerLabel(destination)).tag(destination.id)
+            }
+            if !available.contains(where: { $0.id == current }) {
+                Text("\(destinationDisplayName(current)) — not valid for \(kind.displayName) uploads")
+                    .tag(current)
+            }
         }
     }
 
-    @ViewBuilder
-    private func destinationPicker(_ label: String, customTag: String,
-                                   selection: Binding<String>) -> some View {
-        Picker(label, selection: selection) {
-            Text("Custom uploader").tag(customTag)
-            Text("Amazon S3").tag("AmazonS3")
-            Text("Backblaze B2").tag("BackblazeB2")
-            Text("Azure Storage").tag("AzureStorage")
-            Text("ownCloud / Nextcloud").tag("OwnCloud")
-            Text("Seafile").tag("Seafile")
-            Text("Pushbullet").tag("Pushbullet")
-            ForEach(SimpleHostDestination.allCases, id: \.rawValue) { destination in
-                Text(destination.displayName).tag(destination.rawValue)
-            }
-            ForEach(OAuthProviderID.allCases, id: \.rawValue) { provider in
-                Text(oauthPickerLabel(provider)).tag(provider.rawValue)
-            }
-        }
+    /// OAuth hosts without credentials read "unavailable"; everything else uses
+    /// its plain catalog name.
+    private func destinationPickerLabel(_ destination: UploadDestination) -> String {
+        guard let id = OAuthProviderID(rawValue: destination.id) else { return destination.displayName }
+        return oauthPickerLabel(id)
     }
 
     @ViewBuilder
     private var destinationsPane: some View {
         Section("Upload destinations") {
-            destinationPicker("Image uploads", customTag: "CustomImageUploader",
+            destinationPicker("Image uploads", kind: .image,
                               selection: destinationBinding(\.imageDestination))
-            destinationPicker("Text uploads", customTag: "CustomTextUploader",
+            destinationPicker("Text uploads", kind: .text,
                               selection: destinationBinding(\.textDestination))
-            destinationPicker("File & video uploads", customTag: "CustomFileUploader",
+            destinationPicker("File & video uploads", kind: .file,
                               selection: destinationBinding(\.fileDestination))
             Text("Screenshots use the image destination; recordings and other files the "
                  + "file destination. Until a separate custom uploader is chosen below, text "
@@ -1177,20 +1177,6 @@ struct SettingsView: View {
         UploadersConfig.load().isConfigured(id) ? id.displayName : "\(id.displayName) — unavailable"
     }
 
-    private func oauthBinding(_ id: OAuthProviderID,
-                              _ keyPath: WritableKeyPath<OAuthAppCredentials, String>) -> Binding<String> {
-        Binding(
-            get: { (UploadersConfig.load().oauthApps[id.rawValue] ?? OAuthAppCredentials())[keyPath: keyPath] },
-            set: { value in
-                var config = UploadersConfig.load()
-                var creds = config.oauthApps[id.rawValue] ?? OAuthAppCredentials()
-                creds[keyPath: keyPath] = value
-                config.oauthApps[id.rawValue] = creds
-                try? config.save()
-            }
-        )
-    }
-
     /// Per-type custom uploader pickers. Text and file uploads can follow the
     /// image uploader (empty selection) or pin their own .sxcu.
     @ViewBuilder
@@ -1229,11 +1215,14 @@ struct SettingsView: View {
         }
     }
 
-    /// End-user OAuth setup is one-click: SwiftX ships the app credentials, so
-    /// the user only signs in and approves. The client ID/secret fields are for
-    /// developers / power users and stay hidden in an Advanced disclosure.
+    /// OAuth setup is one click: SwiftX ships the app credentials, so the user
+    /// only signs in and approves. There is deliberately nothing to fill in —
+    /// a build without baked-in credentials just reports the host unavailable.
     @ViewBuilder
     private func oauthFields(for destination: String) -> some View {
+        // Read as a dependency so SwiftUI re-evaluates this section when the
+        // connect/disconnect state changes.
+        let _ = oauthRefresh
         if let id = OAuthProviderID(rawValue: destination) {
             let configured = UploadersConfig.load().isConfigured(id)
             let connected = OAuthTokenStore.isConnected(id)
@@ -1241,13 +1230,19 @@ struct SettingsView: View {
             if configured {
                 HStack {
                     Button(connected ? "Reconnect \(id.displayName)…" : "Connect \(id.displayName)…") {
-                        OAuthConnectCoordinator.shared.connect(id)
+                        Task {
+                            await OAuthConnectCoordinator.shared.connect(id)
+                            oauthRefresh &+= 1
+                        }
                     }
                     if connected {
                         Label("Connected", systemImage: "checkmark.seal.fill")
                             .foregroundStyle(.green)
                             .font(.caption)
-                        Button("Disconnect") { OAuthTokenStore.delete(for: id) }
+                        Button("Disconnect") {
+                            OAuthTokenStore.delete(for: id)
+                            oauthRefresh &+= 1
+                        }
                     }
                 }
                 Text(connected
@@ -1256,17 +1251,7 @@ struct SettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             } else {
-                Text("\(id.displayName) uploads are unavailable in this build (no registered app). Supply your own OAuth app below, or use a build that ships \(id.displayName) credentials.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            // Developers / power users who want their own app + quota. Redirect
-            // URI to register with the host: http://127.0.0.1 (loopback).
-            DisclosureGroup("Advanced: use your own \(id.displayName) OAuth app") {
-                TextField("Client ID", text: oauthBinding(id, \.clientID))
-                SecureField("Client secret (blank for PKCE-only apps)", text: oauthBinding(id, \.clientSecret))
-                Text("Register the redirect URI as http://127.0.0.1 (loopback). Overrides the built-in app for this host.")
+                Text("\(id.displayName) uploads are unavailable in this build, which ships without \(id.displayName) app credentials. Official releases include them.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

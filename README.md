@@ -29,6 +29,13 @@ the ShareX feature set already runs on macOS; see the
 [feature parity tracker](docs/macos-swift-port/PARITY.md) for what's ported, partial, or still
 planned. To build a development copy from source instead, see below.
 
+**OAuth destinations are pending provider verification.** Google Drive, YouTube and OneDrive work,
+but connecting shows an "unverified app" warning: the Google registration is submitted and awaiting
+review, and the Microsoft one is not yet submitted (publisher verification needs a Microsoft Partner
+Center account). The warning describes SwiftX's registration status with the provider, not what the
+app does — uploads go straight from your Mac to your own account and tokens stay in your login
+Keychain, with no SwiftX server in the path. Every other destination is unaffected.
+
 ## Features
 
 - **Screen capture** — fullscreen, active window, monitor and window picker capture; a region
@@ -47,8 +54,14 @@ planned. To build a development copy from source instead, see below.
 - **History &amp; main window** — a Windows-compatible SQLite history store (an existing
   `History.db` opens unchanged; `History.json`/`History.xml` import), searchable list and
   thumbnail grid, live upload queue, favorites and tag filters
+- **Migrating from Windows** — Import Settings… also accepts a Windows ShareX `.sxb` backup
+  directly, merging its custom uploaders, hotkeys, and (optionally) upload history into your
+  macOS config in one step
 - **Automation** — global hotkeys, watch folders, auto capture, scrolling capture, quick task menu,
   `swiftx://` URL scheme, CLI verbs, and a native messaging host for Chrome/Edge/Firefox
+- **System integration** — SwiftX in the macOS **Share…** menu / share sheet (files, images, movies,
+  text and links) via an embedded share extension, plus an "Upload with SwiftX" right-click
+  Services entry
 - **Tools** — color/screen color picker, ruler, OCR (Vision), QR generate/decode/scan, hash
   checker, metadata viewer/stripper, image and video converters, background remover, image
   comparer, folder indexer, and AI-assisted image analysis (OpenAI-compatible providers)
@@ -101,9 +114,12 @@ this and other gotchas discovered while porting.
 | `ToolsKit` | Color picker, ruler, OCR/QR, hash checker, converters, indexer |
 | `SwiftXApp` | The app itself — menu bar shell, settings, CLI |
 | `NativeMessagingHost` | `swiftx-host` — browser native messaging binary |
+| `ShareExtension` | `SwiftXShare.appex` — the macOS Share menu entry |
 
-Each `*Kit` module has a matching test target under `Tests/`; `SwiftXApp` and
-`NativeMessagingHost` are the two executable targets.
+Each `*Kit` module has a matching test target under `Tests/`; `SwiftXApp`,
+`NativeMessagingHost` and `ShareExtension` are the three executable targets.
+`Scripts/make-app.sh` wraps the last one in an `.appex` bundle inside
+`SwiftX.app/Contents/PlugIns/`.
 
 ## Documentation
 

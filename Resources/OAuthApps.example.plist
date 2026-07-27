@@ -11,6 +11,16 @@
 
   Redirect URI to register with every host: http://127.0.0.1  (loopback)
 
+  The port is deliberately absent: SwiftX binds an ephemeral one per connect,
+  and both hosts ignore the port when matching a loopback redirect URI.
+
+  OneDrive gotcha: the Azure portal's redirect-URI box refuses http-scheme URIs
+  with 127.0.0.1, so add it in the app MANIFEST instead — publicClient.
+  redirectUris (Microsoft Graph manifest) or replyUrlsWithType with
+  "type": "InstalledClient" (older manifest). Registering it under the
+  Authentication blade's "Web" platform fails mid-flow with
+  "invalid_request: ... redirect_uri ... is not valid".
+
   Client secrets: a desktop app can't keep a secret truly secret, so PKCE is the
   real protection. Public-client hosts need NO secret — leave ClientSecret empty:
     - OneDrive                -> PKCE only, ClientSecret blank

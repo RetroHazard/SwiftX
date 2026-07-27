@@ -104,6 +104,49 @@ real credentials never enter the tree; `make-app.sh` bundles it automatically wh
 it, those destinations show as unavailable — every other destination (S3, custom uploaders,
 keyless shorteners, etc.) works without any setup.
 
+`Scripts/write-oauth-plist.sh` writes the same file from `OAUTH_GOOGLE_CLIENT_ID` /
+`OAUTH_GOOGLE_CLIENT_SECRET` / `OAUTH_ONEDRIVE_CLIENT_ID` if you'd rather not hand-edit it; the
+release workflow runs it from repository secrets. The plist is copied into the bundle by
+`make-app.sh` *before* signing, so re-run that script after changing credentials — editing the
+copy inside a signed `.app` breaks its signature, and a bare `swift run` never sees the file at
+all (`OAuthAppRegistry` resolves it through `Bundle.main`).
+
+Registering the apps, once each:
+
+- **Google** — one Cloud project, one OAuth client of type *Desktop app*, covering both providers;
+  enable the Drive API and the YouTube Data API v3 on it. Scopes: `drive.file`, `youtube.upload`.
+  While the consent screen's publishing status is **Testing**, Google expires refresh tokens after
+  7 days, so connections drop weekly until the app is published — that presents as a destination
+  spontaneously needing a reconnect, not as a bug.
+- **OneDrive** — an Azure app registration as a public client (PKCE, no secret). The Azure portal's
+  redirect-URI box [rejects http-scheme URIs with `127.0.0.1`](https://learn.microsoft.com/en-us/entra/identity-platform/reply-url),
+  so add it through the app **manifest** instead — `publicClient.redirectUris` in the Microsoft
+  Graph manifest, or `replyUrlsWithType` with `"type": "InstalledClient"` in the older one. Adding
+  it under the Authentication blade's *Web* platform silently produces an `invalid_request:
+  redirect_uri` failure mid-flow. The port never needs registering: both hosts ignore it for
+  loopback matching, which is what lets SwiftX bind an ephemeral port per connect.
+
+### Verification status
+
+Both of the apps behind the official releases are **unverified and pending review**. They are fully
+functional; the only symptom is the "unverified app" warning on the provider's sign-in screen, which
+[`.github/release-notice.md`](../.github/release-notice.md) explains in every release. Delete that
+file once the notice no longer applies.
+
+- **Google** — submitted for verification, awaiting review. `youtube.upload` is a sensitive scope,
+  so review covers a demo video and a privacy-policy URL. Two things to watch while it is pending:
+  an unverified app requesting sensitive scopes is capped at roughly 100 users who can ever grant
+  consent, and if the consent screen is ever moved back to **Testing**, the 7-day refresh-token
+  expiry above applies again and every user silently disconnects each week.
+- **Microsoft** — not submitted. Publisher verification needs a Microsoft Partner Center account
+  with a verified MPN ID whose email domain matches the app's publisher domain, so it is gated on
+  registering a business entity rather than on anything in this repo. The consent screen keeps
+  saying "unverified" until that is done; nothing else is affected.
+
+Neither warning blocks a user from connecting, and neither is a security finding — the client ID and
+Google's desktop client secret are public by construction in any native app (see
+`Resources/OAuthApps.example.plist`), which is why the flow uses PKCE.
+
 ## Layout
 
 ```
@@ -117,10 +160,11 @@ Sources/
   HistoryKit/           SQLite history store
   ToolsKit/             color picker, ruler, OCR/QR, hash checker, converters, indexer
   NativeMessagingHost/  swiftx-host, the browser native messaging binary
+  ShareExtension/       SwiftXShare.appex, the macOS Share… menu entry
 Tests/                  one test target per *Kit module above
 Scripts/                make-app.sh, make-dmg.sh, make-icon.swift, notarize.sh
 Casks/                  swiftx.rb Homebrew cask
-Resources/              SwiftX.icns, OAuthApps.example.plist
+Resources/              SwiftX.icns, OAuthApps.example.plist, ShareExtension.entitlements
 Assets/icons/           exported PNG icon ladder
 site/                   the landing site (own README)
 ```

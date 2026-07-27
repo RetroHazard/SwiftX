@@ -4,8 +4,8 @@
 //
 // Drives the interactive OAuth2 consent flow: open the authorize URL in the
 // default browser, catch the loopback redirect, exchange the code for tokens,
-// and store them in the Keychain. Dormant until app credentials exist (the
-// bundled OAuthApps.plist or a user-supplied client ID).
+// and store them in the Keychain. Dormant until app credentials exist, which
+// normally means the bundled OAuthApps.plist.
 
 import AppKit
 import SharedKit
@@ -15,14 +15,18 @@ import UploadKit
 final class OAuthConnectCoordinator {
     static let shared = OAuthConnectCoordinator()
 
-    func connect(_ id: OAuthProviderID) {
-        Task { await run(id) }
+    func connect(_ id: OAuthProviderID) async {
+        await run(id)
     }
 
     private func run(_ id: OAuthProviderID) async {
         let config = UploadersConfig.load()
         guard let credentials = config.oauthCredentials(for: id) else {
-            Notifier.notify(title: id.displayName, body: "Add a client ID before connecting.")
+            AppLog.upload.error("OAuth connect \(id.rawValue, privacy: .public): no app credentials")
+            // unreachable from the UI — the button only renders when
+            // isConfigured(id) is true — but a URL-scheme or CLI entry point
+            // can still land here on a build with no credentials.
+            presentError(id, message: "This build of SwiftX ships without \(id.displayName) app credentials, so it can't connect.")
             return
         }
         do {
@@ -34,7 +38,10 @@ final class OAuthConnectCoordinator {
             let authorizeURL = OAuth2Flow.authorizeURL(
                 provider: provider, credentials: credentials,
                 redirectURI: redirect.redirectURI, state: state, pkce: pkce)
-            NSWorkspace.shared.open(authorizeURL)
+            AppLog.upload.info("OAuth connect \(id.rawValue, privacy: .public): listening on \(redirect.redirectURI, privacy: .public), opening browser")
+            guard NSWorkspace.shared.open(authorizeURL) else {
+                throw OAuthError.authorizationFailed("the sign-in page could not be opened in your browser")
+            }
 
             let params = try await redirect.waitForCallback()
             if let error = params["error"] {
@@ -55,11 +62,25 @@ final class OAuthConnectCoordinator {
             }
             let token = try OAuth2Flow.parseTokenResponse(data)
             OAuthTokenStore.save(token, for: id)
+            AppLog.upload.info("OAuth connect \(id.rawValue, privacy: .public): connected")
             Notifier.notify(title: id.displayName, body: "Connected. \(id.displayName) is ready to use.")
         } catch is CancellationError {
             // user closed the flow — nothing to report
         } catch {
-            Notifier.notify(title: "\(id.displayName) connection failed", body: error.localizedDescription)
+            AppLog.upload.error("OAuth connect \(id.rawValue, privacy: .public) failed: \(error.localizedDescription, privacy: .public)")
+            presentError(id, message: error.localizedDescription)
         }
+    }
+
+    /// Connect is launched from the Settings window, so failures surface as an
+    /// alert there — a notification can be silently dropped when Notification
+    /// Center authorization was denied, which made a failed connect look like
+    /// the button did nothing.
+    private func presentError(_ id: OAuthProviderID, message: String) {
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = "\(id.displayName) connection failed"
+        alert.informativeText = message
+        alert.runModal()
     }
 }
