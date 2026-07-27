@@ -32,8 +32,8 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version to release, without the v prefix (e.g. 0.2.0)"
-        required: true
+        description: "Version to release, without the v prefix. Leave empty for the next CalVer (Scripts/version.sh next)"
+        required: false
         type: string
       dry-run:
         description: "Build, sign, notarize and staple — but publish nothing (no tag, no release, no cask/site bump). The DMG is uploaded as a workflow artifact instead."
@@ -54,17 +54,32 @@ jobs:
     if: github.repository == 'RetroHazard/SwiftX'
     runs-on: macos-15
     steps:
+      # RELEASE_PUSH_TOKEN (when set) is persisted as the push credential so the
+      # bump-to-master commit triggers pages.yml and clears branch protection;
+      # GITHUB_TOKEN pushes do neither. fetch-depth 0 brings the release tags
+      # that Scripts/version.sh next counts.
+      - uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.RELEASE_PUSH_TOKEN || github.token }}
+          fetch-depth: 0
+
       - name: Determine version
         env:
           INPUT_VERSION: ${{ inputs.version }}
         run: |
           if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
-            VERSION="$INPUT_VERSION"
+            # empty input = next CalVer (YYYY.M.N) from the calendar + tags
+            VERSION="${INPUT_VERSION:-$(Scripts/version.sh next)}"
           else
             VERSION="${GITHUB_REF_NAME#v}"
           fi
           if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.]+)?$ ]]; then
-            echo "::error::'$VERSION' is not a valid version (expected e.g. 0.2.0)"
+            echo "::error::'$VERSION' is not a valid version (expected e.g. 2026.7.1)"
+            exit 1
+          fi
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ] \
+              && git rev-parse -q --verify "refs/tags/v$VERSION" >/dev/null; then
+            echo "::error::v$VERSION is already tagged — refusing to re-release it"
             exit 1
           fi
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
@@ -96,13 +111,6 @@ jobs:
           [ -n "$OAUTH_GOOGLE_CLIENT_ID" ] || echo "::warning::OAUTH_GOOGLE_CLIENT_ID not set — Google Drive & YouTube will be disabled in this build"
           [ -n "$OAUTH_ONEDRIVE_CLIENT_ID" ] || echo "::warning::OAUTH_ONEDRIVE_CLIENT_ID not set — OneDrive will be disabled in this build"
           [ -n "$RELEASE_PUSH_TOKEN" ] || echo "::warning::RELEASE_PUSH_TOKEN not set — the version bump will not redeploy the site, and will fail outright once master is branch-protected"
-
-      # RELEASE_PUSH_TOKEN (when set) is persisted as the push credential so the
-      # bump-to-master commit triggers pages.yml and clears branch protection;
-      # GITHUB_TOKEN pushes do neither.
-      - uses: actions/checkout@v5
-        with:
-          token: ${{ secrets.RELEASE_PUSH_TOKEN || github.token }}
 
       - name: Run tests
         run: swift test
@@ -202,8 +210,10 @@ jobs:
           gh release create "v$VERSION" "$DMG" "$DMG.sha256" "${ARGS[@]}"
 
       # This repo doubles as the Homebrew tap, so landing the cask bump on
-      # master is what ships the release to `brew upgrade` users.
-      - name: Bump cask and site version on master
+      # master is what ships the release to `brew upgrade` users. VERSION,
+      # cask, site and the site package manifests all move together here —
+      # Scripts/version.sh check enforces that they agree.
+      - name: Bump version files on master
         if: ${{ !inputs.dry-run }}
         env:
           GH_TOKEN: ${{ github.token }}
@@ -212,13 +222,16 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git fetch origin master
           git checkout -B master origin/master
+          Scripts/version.sh apply "$VERSION"
           sed -i '' -E "s/^  version \"[^\"]*\"/  version \"$VERSION\"/" Casks/swiftx.rb
           sed -i '' -E "s/^  sha256 \"[^\"]*\"/  sha256 \"$SHA256\"/" Casks/swiftx.rb
           sed -i '' -E "s/^const version = \"[^\"]*\";/const version = \"$VERSION\";/" site/src/lib/content.ts
+          (cd site && npm version "$VERSION" --no-git-tag-version --allow-same-version)
+          Scripts/version.sh check
           if git diff --quiet; then
-            echo "cask/site already at $VERSION; nothing to commit"
+            echo "version files already at $VERSION; nothing to commit"
           else
-            git commit -am "Bump cask and site to $VERSION"
+            git commit -am "Bump version files to $VERSION"
             for i in 1 2 3; do
               git push origin master && break
               git pull --rebase origin master

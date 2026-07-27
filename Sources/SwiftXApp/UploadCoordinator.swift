@@ -10,6 +10,32 @@ import SharedKit
 import UniformTypeIdentifiers
 import UploadKit
 
+/// Which destination setting an upload routes through, mirroring the C#
+/// ImageDestination / TextDestination / FileDestination split.
+enum UploadKind {
+    case image, text, file
+
+    /// C# EDataType-style classification by extension: captures and pictures
+    /// route as images, text-y files as text, everything else (recordings,
+    /// archives, …) as files.
+    static func classify(fileExtension ext: String) -> UploadKind {
+        let lowered = ext.lowercased()
+        if imageExtensions.contains(lowered) { return .image }
+        if textExtensions.contains(lowered) { return .text }
+        return .file
+    }
+
+    /// C# TaskSettingsAdvanced.ImageExtensions / TextExtensions defaults.
+    private static let imageExtensions: Set<String> = [
+        "png", "jpg", "jpeg", "gif", "bmp", "ico", "tif", "tiff", "webp", "heic"
+    ]
+    private static let textExtensions: Set<String> = [
+        "txt", "log", "nfo", "md", "json", "xml", "csv", "html", "htm", "css",
+        "js", "ts", "c", "cpp", "cc", "h", "hpp", "cs", "java", "kt", "swift",
+        "py", "rb", "php", "pl", "sh", "zsh", "bash", "yaml", "yml", "toml", "ini"
+    ]
+}
+
 @MainActor
 enum UploadCoordinator {
     /// `settings` overrides the stored TaskSettings for this run (quick task
@@ -22,13 +48,14 @@ enum UploadCoordinator {
             return
         }
         upload(UploadFile(data: data, fileName: fileName, mimeType: format.mimeType),
-               filePath: filePath, settingsOverride: settings)
+               kind: .image, filePath: filePath, settingsOverride: settings)
     }
 
-    /// Uploads an existing file (recordings, GIFs) through the image destination.
-    /// ponytail: reuses ImageDestination for all file types; a separate
-    /// FileDestination setting can come with the destination long tail (Phase 9).
-    static func uploadFile(at url: URL, settings: TaskSettings? = nil) {
+    /// Uploads an existing file (recordings, GIFs, arbitrary files), routed by
+    /// extension: images use ImageDestination, text files TextDestination and
+    /// everything else FileDestination — same split as Windows ShareX.
+    static func uploadFile(at url: URL, settings: TaskSettings? = nil,
+                           kind: UploadKind? = nil) {
         guard let data = try? Data(contentsOf: url) else {
             Notifier.notify(title: "Upload failed", body: "Could not read \(url.lastPathComponent).",
                             event: .error)
@@ -47,6 +74,7 @@ enum UploadCoordinator {
         }
         upload(UploadFile(data: data, fileName: uploadName(for: url, task: task), mimeType:
                 UTType(filenameExtension: url.pathExtension)?.preferredMIMEType ?? "application/octet-stream"),
+               kind: kind ?? UploadKind.classify(fileExtension: url.pathExtension),
                filePath: url.path, settingsOverride: settings)
     }
 
@@ -83,13 +111,13 @@ enum UploadCoordinator {
     /// C# LargeFileSizeWarning threshold (100 MB).
     private static let largeFileWarningBytes = 100 * 1024 * 1024
 
-    /// ponytail: text uploads go out as a .txt file; dedicated text
-    /// destinations (Pastebin etc.) are benched
+    /// Text uploads go out as a .txt file through the text destination;
+    /// dedicated pastebin-style hosts are benched.
     static func uploadText(_ text: String) {
         let temp = FileManager.default.temporaryDirectory
             .appendingPathComponent("swiftx-\(UUID().uuidString).txt")
         try? Data(text.utf8).write(to: temp)
-        uploadFile(at: temp)
+        uploadFile(at: temp, kind: .text)
     }
 
     /// Downloads a remote file into temp, then uploads it.
@@ -132,9 +160,48 @@ enum UploadCoordinator {
         }
     }
 
-    private static func route(_ file: UploadFile, settings: TaskSettings,
+    /// Destination setting for an upload kind. Historical configs predate the
+    /// text/file split, so text/file fall back to the image destination when
+    /// they still hold their untouched "CustomTextUploader"/"CustomFileUploader"
+    /// defaults but no matching custom uploader is configured — that keeps
+    /// pre-split behavior (everything through the image destination) intact.
+    static func destination(for kind: UploadKind, settings: TaskSettings,
+                            config: UploadersConfig) -> String {
+        switch kind {
+        case .image:
+            return settings.imageDestination
+        case .text:
+            if settings.textDestination == "CustomTextUploader",
+               activeCustomUploaderName(for: .text, config: config).isEmpty {
+                return settings.imageDestination
+            }
+            return settings.textDestination
+        case .file:
+            if settings.fileDestination == "CustomFileUploader",
+               activeCustomUploaderName(for: .file, config: config).isEmpty {
+                return settings.imageDestination
+            }
+            return settings.fileDestination
+        }
+    }
+
+    /// Per-kind active .sxcu file name; text/file fall back to the image one.
+    static func activeCustomUploaderName(for kind: UploadKind, config: UploadersConfig) -> String {
+        switch kind {
+        case .image:
+            return config.activeCustomUploader
+        case .text:
+            return config.activeTextCustomUploader.isEmpty
+                ? config.activeCustomUploader : config.activeTextCustomUploader
+        case .file:
+            return config.activeFileCustomUploader.isEmpty
+                ? config.activeCustomUploader : config.activeFileCustomUploader
+        }
+    }
+
+    private static func route(_ file: UploadFile, kind: UploadKind, settings: TaskSettings,
                               config: UploadersConfig) async throws -> (UploadResult, String) {
-        switch settings.imageDestination {
+        switch destination(for: kind, settings: settings, config: config) {
         case "AmazonS3":
             return (try await AmazonS3Uploader.upload(file: file, settings: config.amazonS3), "Amazon S3")
         case "BackblazeB2":
@@ -152,21 +219,22 @@ enum UploadCoordinator {
             // gate and throws a clear error until credentials + a connection exist.
             let id = OAuthProviderID(rawValue: dest)!
             return (try await OAuthUploaderRegistry.upload(id: id, file: file, config: config), id.displayName)
-        case "CustomImageUploader":
-            guard let item = CustomUploaderStore.load(named: config.activeCustomUploader) else {
+        case "CustomImageUploader", "CustomTextUploader", "CustomFileUploader":
+            let name = activeCustomUploaderName(for: kind, config: config)
+            guard let item = CustomUploaderStore.load(named: name) else {
                 throw RoutingError.noCustomUploader
             }
             return (try await CustomUploaderService.upload(file: file, with: item), item.displayName)
-        default:
-            guard let destination = SimpleHostDestination(rawValue: settings.imageDestination) else {
-                throw RoutingError.notImplemented(settings.imageDestination)
+        case let other:
+            guard let destination = SimpleHostDestination(rawValue: other) else {
+                throw RoutingError.notImplemented(other)
             }
             return (try await SimpleHostUploader.upload(file: file, destination: destination, config: config),
                     destination.displayName)
         }
     }
 
-    private static func upload(_ file: UploadFile, filePath: String?,
+    private static func upload(_ file: UploadFile, kind: UploadKind, filePath: String?,
                                settingsOverride: TaskSettings? = nil, attempt: Int = 0) {
         let settings = settingsOverride ?? TaskSettings.load()
         let appConfig = ApplicationConfig.load()
@@ -184,13 +252,15 @@ enum UploadCoordinator {
                 guard var chosen = await BeforeUploadWindow.present(
                     fileName: file.fileName, previewData: file.data, settings: settings) else { return }
                 chosen.afterCaptureJob.remove(.showBeforeUploadWindow)
-                upload(file, filePath: filePath, settingsOverride: chosen)
+                upload(file, kind: kind, filePath: filePath, settingsOverride: chosen)
             }
             return
         }
 
         let config = UploadersConfig.load()
-        let entryID = UploadTaskCenter.shared.begin(fileName: file.fileName, host: settings.imageDestination)
+        let entryID = UploadTaskCenter.shared.begin(
+            fileName: file.fileName,
+            host: destination(for: kind, settings: settings, config: config))
         let reporter = UploadProgressReporter { sent, expected in
             Task { @MainActor in
                 UploadTaskCenter.shared.progress(entryID, sent: sent, expected: expected)
@@ -203,7 +273,7 @@ enum UploadCoordinator {
             defer { UploadGate.shared.release() }
             do {
                 let (result, hostName) = try await UploadProgressReporter.$current.withValue(reporter) {
-                    try await route(file, settings: settings, config: config)
+                    try await route(file, kind: kind, settings: settings, config: config)
                 }
                 if let filePath {
                     await MainActor.run {
@@ -234,7 +304,7 @@ enum UploadCoordinator {
                     }
                     try? await Task.sleep(for: .seconds(1))
                     await MainActor.run {
-                        upload(file, filePath: filePath, settingsOverride: settingsOverride,
+                        upload(file, kind: kind, filePath: filePath, settingsOverride: settingsOverride,
                                attempt: attempt + 1)
                     }
                     return

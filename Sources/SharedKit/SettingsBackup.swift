@@ -50,7 +50,7 @@ public enum SettingsBackup {
         let staging = FileManager.default.temporaryDirectory
             .appendingPathComponent("swiftx-restore-\(UUID().uuidString)", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: staging) }
-        try ditto(["-x", "-k", zipURL.path, staging.path])
+        try extract(zipURL, to: staging)
         try FileManager.default.createDirectory(at: SettingsPaths.root, withIntermediateDirectories: true)
         for name in entries {
             let source = staging.appendingPathComponent(name)
@@ -59,6 +59,24 @@ public enum SettingsBackup {
             try? FileManager.default.removeItem(at: destination)
             try FileManager.default.copyItem(at: source, to: destination)
         }
+    }
+
+    /// Unzips an archive into `directory` (created if needed). Used for both
+    /// native backups and Windows ShareX .sxb files, which are plain zips too.
+    public static func extract(_ zipURL: URL, to directory: URL) throws {
+        try ditto(["-x", "-k", zipURL.path, directory.path])
+    }
+
+    /// True when an extracted backup came from Windows ShareX rather than
+    /// SwiftX: its ApplicationConfig.json nests everything the Mac app splits
+    /// into TaskSettings.json under a DefaultTaskSettings object.
+    public static func isWindowsShareXBackup(extractedAt directory: URL) -> Bool {
+        let config = directory.appendingPathComponent("ApplicationConfig.json")
+        guard let data = try? Data(contentsOf: config),
+              let object = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else {
+            return false
+        }
+        return object["DefaultTaskSettings"] != nil
     }
 
     private static func ditto(_ arguments: [String]) throws {

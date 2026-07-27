@@ -6,14 +6,63 @@
 // Imports Windows ShareX History.json / History.xml (the pre-SQLite formats,
 // mirroring HistoryManagerJSON.cs / HistoryManagerXML.cs). Both files are
 // element streams without a document root; we wrap before parsing, exactly
-// like the C# loaders do.
+// like the C# loaders do. Modern (v21) History.db files use the same SQLite
+// schema as SwiftX's own store and import row-by-row.
 
 import Foundation
+import SQLite3
 
 public enum HistoryImport {
     public static func items(fromFile url: URL) throws -> [HistoryItem] {
+        if url.pathExtension.lowercased() == "db" {
+            return items(fromSQLiteDatabase: url)
+        }
         let text = try String(contentsOf: url, encoding: .utf8)
         return url.pathExtension.lowercased() == "xml" ? items(fromXML: text) : items(fromJSON: text)
+    }
+
+    /// Windows ShareX v21+ History.db (same History table SwiftX writes).
+    /// Read-only open so a live/locked source file can't be corrupted.
+    public static func items(fromSQLiteDatabase url: URL) -> [HistoryItem] {
+        var db: OpaquePointer?
+        guard sqlite3_open_v2(url.path, &db, SQLITE_OPEN_READONLY, nil) == SQLITE_OK else {
+            sqlite3_close(db)
+            return []
+        }
+        defer { sqlite3_close(db) }
+
+        let sql = """
+        SELECT FileName, FilePath, DateTime, Type, Host, URL, ThumbnailURL, DeletionURL, ShortenedURL, Tags
+        FROM History ORDER BY Id ASC;
+        """
+        var statement: OpaquePointer?
+        guard sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK else { return [] }
+        defer { sqlite3_finalize(statement) }
+
+        func column(_ index: Int32) -> String {
+            guard let text = sqlite3_column_text(statement, index) else { return "" }
+            return String(cString: text)
+        }
+
+        var items: [HistoryItem] = []
+        while sqlite3_step(statement) == SQLITE_ROW {
+            var item = HistoryItem()
+            item.fileName = column(0)
+            item.filePath = column(1)
+            item.date = HistoryDate.date(from: column(2)) ?? .distantPast
+            item.type = column(3)
+            item.host = column(4)
+            item.url = column(5)
+            item.thumbnailURL = column(6)
+            item.deletionURL = column(7)
+            item.shortenedURL = column(8)
+            if let data = column(9).data(using: .utf8),
+               let tags = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                item.tags = tags.mapValues { $0 as? String ?? "" }
+            }
+            items.append(item)
+        }
+        return items
     }
 
     /// History.json is `{...},\r\n{...}` — comma-separated objects, no brackets.

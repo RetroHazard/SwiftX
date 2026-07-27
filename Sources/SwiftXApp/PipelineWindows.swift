@@ -206,8 +206,15 @@ private struct BeforeUploadView: View {
                 Spacer()
                 Button("Cancel") { onFinish(nil) }
                     .keyboardShortcut(.cancelAction)
-                Button("Upload") { onFinish(settings) }
-                    .keyboardShortcut(.defaultAction)
+                Button("Upload") {
+                    // the picker shows one destination; make it authoritative
+                    // for this run regardless of the upload's type routing
+                    var chosen = settings
+                    chosen.textDestination = chosen.imageDestination
+                    chosen.fileDestination = chosen.imageDestination
+                    onFinish(chosen)
+                }
+                .keyboardShortcut(.defaultAction)
             }
         }
         .padding(12)
