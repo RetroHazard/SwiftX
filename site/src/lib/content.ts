@@ -105,7 +105,10 @@ export type Destination = {
 };
 
 /* Every name here must have a real uploader in Sources/UploadKit — this grid
-   is a sample of what ships, not a wish list. */
+   is a sample of what ships, not a wish list. Google Drive, YouTube and
+   OneDrive stay in the list (not just in the privacy policy) because Google's
+   OAuth verification checks that the home page actually shows the
+   functionality behind the scopes it is granting — see site/README.md. */
 export const destinations: Destination[] = [
   { name: "Amazon S3", kind: "Storage" },
   { name: "Backblaze B2", kind: "Storage" },
@@ -114,6 +117,9 @@ export const destinations: Destination[] = [
   { name: "ownCloud", kind: "Self-hosted" },
   { name: "Seafile", kind: "Self-hosted" },
   { name: "Chevereto", kind: "Image host" },
+  { name: "Google Drive", kind: "Connected account" },
+  { name: "YouTube", kind: "Connected account" },
+  { name: "OneDrive", kind: "Connected account" },
   { name: "Custom", kind: ".sxcu" },
 ];
 
@@ -153,6 +159,11 @@ export const faqs: FaqItem[] = [
     question: "Do my screenshots pass through your servers?",
     answer:
       "No. There is no SwiftX account and no SwiftX backend. Uploads go straight from your Mac to whichever destination you set up — your own S3 bucket, your Nextcloud, an image host, or nowhere at all if you only save locally.",
+  },
+  {
+    question: "What can SwiftX do with my Google or Microsoft account?",
+    answer:
+      "Only what you connect it for. Signing in opens your browser at Google's or Microsoft's own consent screen — SwiftX never sees your password. A connected Google account can upload a file to your Drive (limited to files SwiftX itself creates) or a video to your YouTube channel as unlisted; a connected Microsoft account can upload a file to your OneDrive. Nothing else in your account is read, listed or changed. Tokens live in the macOS Keychain, and you can disconnect and revoke access at any time — details are in the Privacy Policy.",
   },
   {
     question: "I already use ShareX on Windows. Does my setup come with me?",
