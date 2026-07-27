@@ -45,6 +45,14 @@ it asserts has to stay true of the code: when a destination, OAuth scope,
 locally stored file or outbound network call changes in `Sources/`, update
 `src/lib/legal.ts` in the same commit and move its `effective` date.
 
+Google's [home page requirements](https://support.google.com/cloud/answer/13807376)
+also expect the home page itself — not just the privacy policy — to show the
+functionality behind the scopes being requested. That's why Google Drive,
+YouTube and OneDrive appear as destinations in `src/lib/content.ts` and get a
+plain-language mention in the FAQ, not just a line in `/privacy/`: keep them
+there alongside whatever else changes when a connected-account destination is
+added, renamed or removed.
+
 ## Developing
 
 ```bash

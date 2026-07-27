@@ -337,7 +337,7 @@ export function Features() {
           <Panel
             className="lg:col-span-2"
             title="Your own destinations"
-            description="Upload to storage you control, a self-hosted server, or an image host — then get the URL back on your clipboard. No SwiftX account, no SwiftX servers."
+            description="Upload to storage you control, a self-hosted server, an image host, or a connected Google Drive, YouTube or OneDrive account — then get the URL back on your clipboard. No SwiftX account, no SwiftX servers."
           >
             <DestinationsVisual />
           </Panel>
