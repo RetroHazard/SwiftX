@@ -104,6 +104,28 @@ real credentials never enter the tree; `make-app.sh` bundles it automatically wh
 it, those destinations show as unavailable — every other destination (S3, custom uploaders,
 keyless shorteners, etc.) works without any setup.
 
+`Scripts/write-oauth-plist.sh` writes the same file from `OAUTH_GOOGLE_CLIENT_ID` /
+`OAUTH_GOOGLE_CLIENT_SECRET` / `OAUTH_ONEDRIVE_CLIENT_ID` if you'd rather not hand-edit it; the
+release workflow runs it from repository secrets. The plist is copied into the bundle by
+`make-app.sh` *before* signing, so re-run that script after changing credentials — editing the
+copy inside a signed `.app` breaks its signature, and a bare `swift run` never sees the file at
+all (`OAuthAppRegistry` resolves it through `Bundle.main`).
+
+Registering the apps, once each:
+
+- **Google** — one Cloud project, one OAuth client of type *Desktop app*, covering both providers;
+  enable the Drive API and the YouTube Data API v3 on it. Scopes: `drive.file`, `youtube.upload`.
+  While the consent screen's publishing status is **Testing**, Google expires refresh tokens after
+  7 days, so connections drop weekly until the app is published — that presents as a destination
+  spontaneously needing a reconnect, not as a bug.
+- **OneDrive** — an Azure app registration as a public client (PKCE, no secret). The Azure portal's
+  redirect-URI box [rejects http-scheme URIs with `127.0.0.1`](https://learn.microsoft.com/en-us/entra/identity-platform/reply-url),
+  so add it through the app **manifest** instead — `publicClient.redirectUris` in the Microsoft
+  Graph manifest, or `replyUrlsWithType` with `"type": "InstalledClient"` in the older one. Adding
+  it under the Authentication blade's *Web* platform silently produces an `invalid_request:
+  redirect_uri` failure mid-flow. The port never needs registering: both hosts ignore it for
+  loopback matching, which is what lets SwiftX bind an ephemeral port per connect.
+
 ## Layout
 
 ```
