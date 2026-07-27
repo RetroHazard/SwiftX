@@ -213,6 +213,9 @@ public struct ApplicationConfig: SettingsFile {
     public var trayLeftClickAction = "ToggleTrayMenu"
     /// Draw upload progress onto the status icon (C# TrayIconProgressEnabled).
     public var trayIconProgressEnabled = true
+    /// TrayMenuItemID raw values the user hid from the status-bar menu
+    /// (macOS-only key; Settings and Quit are never hideable).
+    public var trayMenuHiddenItems: [String] = []
     public var disableHotkeysOnFullscreen = false
     /// Minimum milliseconds between repeats of the same hotkey (0 = off).
     public var hotkeyRepeatLimit = 500
@@ -259,6 +262,7 @@ public struct ApplicationConfig: SettingsFile {
         case recentTasksMaxCount = "RecentTasksMaxCount"
         case trayLeftClickAction = "TrayLeftClickAction"
         case trayIconProgressEnabled = "TrayIconProgressEnabled"
+        case trayMenuHiddenItems = "TrayMenuHiddenItems"
         case disableHotkeysOnFullscreen = "DisableHotkeysOnFullscreen"
         case hotkeyRepeatLimit = "HotkeyRepeatLimit"
         case actionsToolbarList = "ActionsToolbarList"
@@ -290,6 +294,7 @@ public struct ApplicationConfig: SettingsFile {
         recentTasksMaxCount = try c.decodeIfPresent(Int.self, forKey: .recentTasksMaxCount) ?? 10
         trayLeftClickAction = try c.decodeIfPresent(String.self, forKey: .trayLeftClickAction) ?? "ToggleTrayMenu"
         trayIconProgressEnabled = try c.decodeIfPresent(Bool.self, forKey: .trayIconProgressEnabled) ?? true
+        trayMenuHiddenItems = try c.decodeIfPresent([String].self, forKey: .trayMenuHiddenItems) ?? []
         disableHotkeysOnFullscreen = try c.decodeIfPresent(Bool.self, forKey: .disableHotkeysOnFullscreen) ?? false
         hotkeyRepeatLimit = try c.decodeIfPresent(Int.self, forKey: .hotkeyRepeatLimit) ?? 500
         actionsToolbarList = try c.decodeIfPresent([String].self, forKey: .actionsToolbarList)
@@ -346,6 +351,11 @@ public struct TaskSettings: SettingsFile {
     public var afterUploadJob: AfterUploadTasks = [.copyURLToClipboard]
     /// C# ImageDestination enum name; string keeps unknown values loadable.
     public var imageDestination = "CustomImageUploader"
+    /// C# TextDestination enum name. Text uploads go out as .txt files, so any
+    /// file-capable destination works here.
+    public var textDestination = "CustomTextUploader"
+    /// C# FileDestination enum name; recordings and other files route here.
+    public var fileDestination = "CustomFileUploader"
     /// C# UrlShortenerType enum name.
     public var urlShortenerDestination = "ISGD"
     /// C# URLSharingServices enum name.
@@ -481,6 +491,8 @@ public struct TaskSettings: SettingsFile {
         case afterCaptureJob = "AfterCaptureJob"
         case afterUploadJob = "AfterUploadJob"
         case imageDestination = "ImageDestination"
+        case textDestination = "TextDestination"
+        case fileDestination = "FileDestination"
         case urlShortenerDestination = "URLShortenerDestination"
         case urlSharingServiceDestination = "URLSharingServiceDestination"
         case screenshotDelay = "ScreenshotDelay"
@@ -555,6 +567,8 @@ public struct TaskSettings: SettingsFile {
         afterCaptureJob = try c.decodeIfPresent(AfterCaptureTasks.self, forKey: .afterCaptureJob) ?? [.copyImageToClipboard, .saveImageToFile]
         afterUploadJob = try c.decodeIfPresent(AfterUploadTasks.self, forKey: .afterUploadJob) ?? [.copyURLToClipboard]
         imageDestination = try c.decodeIfPresent(String.self, forKey: .imageDestination) ?? "CustomImageUploader"
+        textDestination = try c.decodeIfPresent(String.self, forKey: .textDestination) ?? "CustomTextUploader"
+        fileDestination = try c.decodeIfPresent(String.self, forKey: .fileDestination) ?? "CustomFileUploader"
         urlShortenerDestination = try c.decodeIfPresent(String.self, forKey: .urlShortenerDestination) ?? "ISGD"
         urlSharingServiceDestination = try c.decodeIfPresent(String.self, forKey: .urlSharingServiceDestination) ?? "Email"
         screenshotDelay = try c.decodeIfPresent(Double.self, forKey: .screenshotDelay) ?? 0
@@ -738,8 +752,13 @@ public struct HotkeyConfig: Codable, Equatable {
 public struct UploadersConfig: SettingsFile {
     public static let fileName = "UploadersConfig.json"
 
-    /// File name of the active .sxcu in CustomUploaders/.
+    /// File name of the active .sxcu in CustomUploaders/ (image uploads).
     public var activeCustomUploader = ""
+    /// Active .sxcu for text uploads; empty falls back to ActiveCustomUploader.
+    /// macOS-only keys: C# stores indexes into CustomUploadersList instead.
+    public var activeTextCustomUploader = ""
+    /// Active .sxcu for file/video uploads; empty falls back to ActiveCustomUploader.
+    public var activeFileCustomUploader = ""
     public var amazonS3 = AmazonS3Settings()
 
     // URL shorteners. Flat key names match the C# UploadersConfig, except
@@ -806,6 +825,8 @@ public struct UploadersConfig: SettingsFile {
 
     enum CodingKeys: String, CodingKey {
         case activeCustomUploader = "ActiveCustomUploader"
+        case activeTextCustomUploader = "ActiveTextCustomUploader"
+        case activeFileCustomUploader = "ActiveFileCustomUploader"
         case amazonS3 = "AmazonS3Settings"
         case bitlyAccessToken = "BitlyAccessToken"
         case bitlyDomain = "BitlyDomain"
@@ -858,6 +879,8 @@ public struct UploadersConfig: SettingsFile {
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         activeCustomUploader = try c.decodeIfPresent(String.self, forKey: .activeCustomUploader) ?? ""
+        activeTextCustomUploader = try c.decodeIfPresent(String.self, forKey: .activeTextCustomUploader) ?? ""
+        activeFileCustomUploader = try c.decodeIfPresent(String.self, forKey: .activeFileCustomUploader) ?? ""
         amazonS3 = try c.decodeIfPresent(AmazonS3Settings.self, forKey: .amazonS3) ?? AmazonS3Settings()
         bitlyAccessToken = try c.decodeIfPresent(String.self, forKey: .bitlyAccessToken) ?? ""
         bitlyDomain = try c.decodeIfPresent(String.self, forKey: .bitlyDomain) ?? ""

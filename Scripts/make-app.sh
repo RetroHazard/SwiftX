@@ -7,7 +7,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-VERSION="${1:-0.1.0}"
+# default: the last released version (VERSION is maintained by release.yml)
+VERSION="${1:-$(cat VERSION)}"
 
 # SWIFTX_UNIVERSAL=1 (release pipeline) builds arm64 + x86_64 into one binary;
 # the default single-arch build keeps local iteration fast. SPM puts
@@ -90,6 +91,32 @@ cat > "$APP/Contents/Info.plist" <<PLIST
                 <string>swiftx</string>
                 <!-- legacy scheme from before the SwiftX rename -->
                 <string>sharex</string>
+            </array>
+        </dict>
+    </array>
+    <!-- "Upload with SwiftX" in the system-wide Services context menu (Finder
+         file selections and selected text). Handled by ServicesProvider; the
+         first use may need enabling in System Settings > Keyboard >
+         Keyboard Shortcuts > Services on older macOS versions. -->
+    <key>NSServices</key>
+    <array>
+        <dict>
+            <key>NSMenuItem</key>
+            <dict>
+                <key>default</key>
+                <string>Upload with SwiftX</string>
+            </dict>
+            <key>NSMessage</key>
+            <string>uploadFiles</string>
+            <key>NSPortName</key>
+            <string>SwiftX</string>
+            <key>NSSendFileTypes</key>
+            <array>
+                <string>public.item</string>
+            </array>
+            <key>NSSendTypes</key>
+            <array>
+                <string>public.utf8-plain-text</string>
             </array>
         </dict>
     </array>

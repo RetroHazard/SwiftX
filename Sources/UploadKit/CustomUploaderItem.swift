@@ -165,7 +165,7 @@ public enum CustomUploaderStore {
 
     /// Copies a .sxcu file into the store, validating it decodes. Returns the stored file name.
     @discardableResult
-    public static func importFile(from source: URL) throws -> String {
+    public static func importFile(from source: URL, into directory: URL = directory) throws -> String {
         let data = try Data(contentsOf: source)
         _ = try JSONDecoder().decode(CustomUploaderItem.self, from: data) // validate before storing
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)

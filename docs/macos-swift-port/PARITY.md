@@ -162,16 +162,17 @@ audit are tracked below as Phases 12–15.
 | DMG packaging + Homebrew cask | Ported — `Scripts/make-dmg.sh` builds a drag-to-install DMG (hdiutil); `Casks/swiftx.rb` (this repo doubles as the tap — `brew tap retrohazard/swiftx <repo url>` — `brew style` clean) with a real sha256, bumped automatically by the release pipeline. Official `homebrew/cask` is a follow-up (needs traction) |
 | Developer ID signing, notarization | Ported — the release pipeline (`.github/workflows/release.yml`) signs with a Developer ID Application cert, notarizes and staples the DMG, and runs a Gatekeeper assessment before publishing; v0.1.0 shipped this way |
 | Sparkle auto-update (Release/PreRelease) | N/A — `brew upgrade --cask` is the update channel; revisit only if a direct-download channel is added |
-| Login item, settings import from Windows backup, localization infra | Planned (11) |
+| Settings import from Windows backup (.sxb) | Ported — Import Settings… detects a Windows ShareX .sxb (zip with DefaultTaskSettings-nested config), merges the keys with macOS equivalents, imports custom uploaders from CustomUploadersList (with legacy-syntax migration), maps C# Keys hotkey strings to mac combos (unmappable keys like PrintScreen are skipped and counted), and offers to import History.db (same SQLite schema as the native store) |
+| Login item, localization infra | Planned (11) |
 | Steam build, Windows installer, DevBuilds channel | N/A |
 
 ## Phase 12 — Workflow engine & destination routing
 
 | Feature | Status |
 |---|---|
-| Per-hotkey TaskSettings overrides (named workflows, C# UseDefault* flags, Windows HotkeysConfig.json import) | Planned (12) — hotkeys are verb + key combo only today; the `settings:` override plumbing (quick tasks, before-upload window) is the intended path |
+| Per-hotkey TaskSettings overrides (named workflows, C# UseDefault* flags) | Planned (12) — hotkeys are verb + key combo only today (which the .sxb import maps from Windows HotkeysConfig.json); the `settings:` override plumbing (quick tasks, before-upload window) is the intended path |
 | Named workflows in tray + `-workflow <name>` by Description | Planned (12) — CLI currently matches by verb name |
-| Text / File destination slots (TextDestination, FileDestination, image-file/text-file fallbacks), routing by task data type | Planned (12) — a single ImageDestination routes everything; text uploads wrap as .txt files |
+| Text / File destination slots (TextDestination, FileDestination), routing by task data type | Ported — per-type pickers in Settings → Destinations (image / text / file & video) with per-type active custom uploaders (ActiveTextCustomUploader / ActiveFileCustomUploader, falling back to the image uploader); uploads classify by extension like C# EDataType; text uploads still wrap as .txt files. Image-file/text-file secondary fallbacks remain unported |
 | UploaderFilters (per-extension destination routing) | Planned (12) |
 
 ## Phase 13 — Capture, recording & output options
@@ -200,7 +201,7 @@ audit are tracked below as Phases 12–15.
 | Notification granularity (off-switch, fullscreen suppression, custom per-event sounds, action buttons) | Ported — ShowToastNotificationAfterTaskCompleted, DisableNotificationsOnFullscreen (CGWindowList fullscreen heuristic); custom capture/completion/error sounds play via NSSound (banner goes silent to avoid doubling); banner buttons: Copy URL/Open for uploads, Show in Finder/Annotate/Delete for files |
 | Toast geometry (duration, placement, size, fade) | N/A — Notification Center owns presentation |
 | Recent-links tray submenu + main-window recent strip (RecentTasks*) | Ported — Recent submenu reads the last N history entries (click copies the URL, or reveals the file); the main window's live task rows + searchable history already serve as the recent strip |
-| Tray Upload section, configurable left-click action, status-icon upload progress | Ported — Upload submenu (file/folder/clipboard/text/URL/shorten/drop window/stop/disable); TrayLeftClickAction picker (right click always menus); TrayIconProgressEnabled draws a progress ring on the status icon |
+| Tray Upload section, configurable left-click action, status-icon upload progress | Ported — Upload submenu (file/folder/clipboard/text/URL/shorten/drop window/stop/disable); TrayLeftClickAction picker (right click always menus); TrayIconProgressEnabled draws a progress ring on the status icon. macOS extras: Settings → General → Menu bar → Menu items hides individual entries (TrayMenuHiddenItems; Settings/Quit and live recording controls stay), and an "Upload with SwiftX" Services entry puts SwiftX in the system-wide right-click Services menu for files and selected text (a Share-sheet .appex needs an embedded extension bundle the SPM pipeline doesn't produce yet) |
 | DisableHotkeysOnFullscreen, HotkeyRepeatLimit | Ported — both enforced in HotkeyCenter.fire; the DisableHotkeys toggle hotkey stays live |
 | Configurable actions toolbar (button list, position lock, run at startup) | Ported — ActionsToolbarList (HotkeyType names) with add/remove/reorder editor, ActionsToolbarLockPosition, ActionsToolbarRunAtStartup |
 
@@ -215,6 +216,6 @@ audit are tracked below as Phases 12–15.
 | Editor: font family, arrow styles (classic/modern), middle-click canvas pan (v20.1–21) | Ported — font-family picker (System + installed families) for text/balloon incl. the inline entry field; Classic (filled triangle) / Modern (open chevron) arrow heads; middle-drag pans the canvas |
 | Sticker packs / sticker browser | Deferred — image stamp covers local files; emoji via macOS palette |
 | Log subsystem (os.Logger) + Show Log window, auto-cleanup of logs/backups | Ported — `AppLog` os.Logger subsystem (all NSLog call sites migrated), tray Show Log… window reads the session's entries via OSLogStore. Auto-cleanup knobs are N/A: the unified log owns storage/rotation and SwiftX writes no log or backup files |
-| Native settings export/restore | Ported — Export/Import Settings in General settings (zip via ditto; restore only touches known file names). Keychain secrets are never exported by design — the consent story is re-entry after restore, stated in the UI; Windows-backup import stays in Phase 11 |
+| Native settings export/restore | Ported — Export/Import Settings in General settings (zip via ditto; restore only touches known file names). Keychain secrets are never exported by design — the consent story is re-entry after restore, stated in the UI. Import Settings… also accepts Windows ShareX .sxb backups (see Phase 11) |
 | Themes, SilentRun, BrowserPath, white-icon variant, machine-specific config paths, taskbar progress | N/A — macOS-native equivalents (appearance, menu bar app, default browser, template icon) |
 | Manual proxy configuration | N/A — URLSession follows the system proxy automatically |

@@ -28,7 +28,7 @@ swift build -c release               # release build
 
 DEVELOPER_DIR=/Applications/Xcode.app swift test
 
-./Scripts/make-app.sh [version]      # bundles build/SwiftX.app (version defaults to 0.1.0)
+./Scripts/make-app.sh [version]      # bundles build/SwiftX.app (version defaults to the VERSION file)
 open /Applications/SwiftX.app
 ```
 
@@ -53,6 +53,36 @@ build; quit it first (`pkill -x SwiftX && open /Applications/SwiftX.app`).
 If `/Applications` isn't writable (or `CI` is set), `make-app.sh` skips the install step and prints
 the `build/SwiftX.app` fallback path to run from instead — that path works for everything except
 fresh TCC grants.
+
+## Versioning & releases
+
+SwiftX uses CalVer: `YYYY.M.N` — release year, release month (unpadded), and a counter that
+increments per release within that month (`2026.7.1`, `2026.7.2`, `2027.1.1`). Versions are
+computed at release time from the calendar and the existing `v*` tags; **nothing is bumped in
+PRs**, and `.github/workflows/version-check.yml` fails a PR that hand-edits the version
+locations. `Scripts/version.sh` is the single implementation:
+
+```sh
+Scripts/version.sh next     # the version the next release would get
+Scripts/version.sh check    # verify VERSION, cask, and site versions agree
+```
+
+The root `VERSION` file, `Casks/swiftx.rb`, and the site's version strings always hold the
+**last released** version — the cask and site embed download URLs, so they must never point at
+an unpublished release. `release.yml` rewrites all of them (plus the DMG sha256) after each
+successful publish.
+
+Cutting a release, in order of preference:
+
+1. **Label a PR `release`** — when it merges to master, `auto-release.yml` dispatches the
+   release pipeline, which computes the next CalVer, builds, signs, notarizes, publishes the
+   GitHub release, and bumps the version files. Back-to-back releases are serialized by the
+   pipeline's concurrency group, so numbers can't collide.
+2. **Manual dispatch** — Actions → Release → Run workflow; leave the version empty for the next
+   CalVer (or override it). `dry-run: true` builds and notarizes a DMG artifact without
+   publishing anything.
+3. **Tag push** — `git tag v2026.7.1 && git push origin v2026.7.1` still works and skips the
+   version computation.
 
 ## Regenerating the app icon
 
