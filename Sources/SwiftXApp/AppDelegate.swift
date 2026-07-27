@@ -159,6 +159,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// Builds the status menu, skipping entries the user hid in Settings →
     /// General → Menu bar. Rebuilt on every open so edits apply immediately.
     private func buildMenu() -> NSMenu {
+        // The delegate-populated submenus (screens, windows, delay, upload,
+        // recent) are long-lived and still attached to the previous build's
+        // items; re-adding a menu that has a supermenu raises an ObjC
+        // exception, so detach them first.
+        statusMenu?.items.forEach { $0.submenu = nil }
         let menu = NSMenu()
         let hidden = Set(ApplicationConfig.load().trayMenuHiddenItems)
         func visible(_ id: TrayMenuItemID) -> Bool { !hidden.contains(id.rawValue) }
