@@ -162,7 +162,7 @@ export const faqs: FaqItem[] = [
   {
     question: "I already use ShareX on Windows. Does my setup come with me?",
     answer:
-      "Largely, yes. SwiftX reads the same custom uploader (.sxcu) and image effect preset (.sxie) files, keeps a compatible history database, and works with the existing browser extensions — so destinations and presets you have already tuned carry over.",
+      "Largely, yes. Import Settings… in SwiftX reads a Windows ShareX .sxb backup directly and merges its custom uploaders, hotkeys, and (optionally) upload history into your Mac config in one step. Short of a full backup, SwiftX also reads the same custom uploader (.sxcu) and image effect preset (.sxie) files on their own, keeps a compatible history database, and works with the existing browser extensions.",
   },
   {
     question: "Is this the official ShareX for Mac?",

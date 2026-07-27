@@ -54,6 +54,9 @@ Keychain, with no SwiftX server in the path. Every other destination is unaffect
 - **History &amp; main window** — a Windows-compatible SQLite history store (an existing
   `History.db` opens unchanged; `History.json`/`History.xml` import), searchable list and
   thumbnail grid, live upload queue, favorites and tag filters
+- **Migrating from Windows** — Import Settings… also accepts a Windows ShareX `.sxb` backup
+  directly, merging its custom uploaders, hotkeys, and (optionally) upload history into your
+  macOS config in one step
 - **Automation** — global hotkeys, watch folders, auto capture, scrolling capture, quick task menu,
   `swiftx://` URL scheme, CLI verbs, and a native messaging host for Chrome/Edge/Firefox
 - **System integration** — SwiftX in the macOS **Share…** menu / share sheet (files, images, movies,
