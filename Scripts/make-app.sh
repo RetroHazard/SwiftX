@@ -7,7 +7,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-VERSION="${1:-0.16.63}"
+# default: the last released version (VERSION is maintained by release.yml)
+VERSION="${1:-$(cat VERSION)}"
 
 # SWIFTX_UNIVERSAL=1 (release pipeline) builds arm64 + x86_64 into one binary;
 # the default single-arch build keeps local iteration fast. SPM puts

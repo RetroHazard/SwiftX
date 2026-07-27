@@ -1,0 +1,33 @@
+# SwiftX auto-release trigger: merging a PR that carries the `release` label
+# dispatches the release pipeline. The version is NOT computed here —
+# release.yml derives the next CalVer (YYYY.M.N, Scripts/version.sh next)
+# inside its own run, where the `release` concurrency group serializes
+# back-to-back releases so two merges can never mint the same number.
+#
+# workflow_dispatch events created with GITHUB_TOKEN are exempt from GitHub's
+# no-recursive-triggering rule, so the default token is enough here.
+
+name: Auto release
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  actions: write
+
+jobs:
+  dispatch:
+    if: >
+      github.repository == 'RetroHazard/SwiftX' &&
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.base.ref == 'master' &&
+      contains(github.event.pull_request.labels.*.name, 'release')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch release pipeline
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "PR #${{ github.event.pull_request.number }} merged with the release label — dispatching release.yml"
+          gh workflow run release.yml --repo "$GITHUB_REPOSITORY" --ref master

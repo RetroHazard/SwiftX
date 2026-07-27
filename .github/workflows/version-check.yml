@@ -1,0 +1,60 @@
+# Version hygiene on pull requests. SwiftX uses CalVer (YYYY.M.N) computed at
+# release time from the calendar and existing tags, so PRs never bump versions
+# themselves: the VERSION file, cask, and site version strings are owned by
+# release.yml. This check keeps those locations in agreement and stops PRs
+# from editing them by hand.
+
+name: Version check
+
+on:
+  pull_request:
+    paths:
+      - "VERSION"
+      - "Casks/swiftx.rb"
+      - "site/src/lib/content.ts"
+      - "site/package.json"
+      - "Scripts/version.sh"
+      - ".github/workflows/version-check.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: version-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Version locations agree
+        run: Scripts/version.sh check
+
+      - name: PRs do not hand-edit released versions
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: |
+          [ -n "$BASE_REF" ] || { echo "manual run — skipping diff check"; exit 0; }
+          git fetch origin "$BASE_REF"
+          base=$(git merge-base "origin/$BASE_REF" HEAD)
+          changed=$(git diff --name-only "$base"...HEAD -- VERSION || true)
+          if [ -n "$changed" ]; then
+            echo "::error::This PR edits the VERSION file. Versions are computed at release time (Scripts/version.sh next) and written only by release.yml — drop this change."
+            exit 1
+          fi
+          # version *lines* in the cask/site are release-owned too; other edits
+          # to those files (e.g. cask stanzas, site copy) are fine
+          if git diff "$base"...HEAD -- Casks/swiftx.rb | grep -E '^[+-]  (version|sha256) ' >/dev/null; then
+            echo "::error::This PR edits the cask version/sha256 — release.yml owns those lines."
+            exit 1
+          fi
+          if git diff "$base"...HEAD -- site/src/lib/content.ts | grep -E '^[+-]const version = ' >/dev/null; then
+            echo "::error::This PR edits the site version constant — release.yml owns that line."
+            exit 1
+          fi
+          echo "No hand-edited version lines."

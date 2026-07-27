@@ -8,7 +8,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-VERSION="${1:-0.16.63}"
+# default: the last released version (VERSION is maintained by release.yml)
+VERSION="${1:-$(cat VERSION)}"
 APP="build/SwiftX.app"
 DMG="build/SwiftX-$VERSION.dmg"
 
