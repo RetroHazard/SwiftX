@@ -10,16 +10,34 @@ cd "$(dirname "$0")/.."
 # default: the last released version (VERSION is maintained by release.yml)
 VERSION="${1:-$(cat VERSION)}"
 
+# SWIFTX_CONFIG picks the build configuration to compile and copy from, and
+# defaults to release — everything shipped is release, so every existing caller
+# keeps its old behaviour. CI's pull-request job sets debug so the bundle is
+# assembled from the products `swift build --build-tests` already produced: the
+# package then compiles once per run instead of twice, and bundling is still
+# proven end to end. Sources/ contains no #if DEBUG blocks, so a debug bundle
+# differs only in optimization level and architecture count.
+#
 # SWIFTX_UNIVERSAL=1 (release pipeline) builds arm64 + x86_64 into one binary;
-# the default single-arch build keeps local iteration fast. SPM puts
-# multi-arch products under .build/apple/Products/Release instead of
-# .build/release.
+# the default single-arch build keeps local iteration fast. SPM puts multi-arch
+# products under .build/apple/Products/<Config> instead of .build/<config> —
+# note the capitalization, which bash 3.2 (what macOS ships) can't do inline.
+CONFIG="${SWIFTX_CONFIG:-release}"
+case "$CONFIG" in
+    debug)   CONFIG_DIR="Debug" ;;
+    release) CONFIG_DIR="Release" ;;
+    *)
+        echo "error: SWIFTX_CONFIG must be 'debug' or 'release', got '$CONFIG'" >&2
+        exit 1
+        ;;
+esac
+
 if [ "${SWIFTX_UNIVERSAL:-0}" = "1" ]; then
-    swift build -c release --arch arm64 --arch x86_64
-    BIN=".build/apple/Products/Release"
+    swift build -c "$CONFIG" --arch arm64 --arch x86_64
+    BIN=".build/apple/Products/$CONFIG_DIR"
 else
-    swift build -c release
-    BIN=".build/release"
+    swift build -c "$CONFIG"
+    BIN=".build/$CONFIG"
 fi
 
 APP="build/SwiftX.app"

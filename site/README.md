@@ -91,8 +91,12 @@ Two workflows cover it:
 
 | Workflow | Runs on | Does |
 | --- | --- | --- |
-| `.github/workflows/site-ci.yml` | pull requests touching `site/**` | lint, build, sanity-check the export |
+| `.github/workflows/ci.yml` | pull requests and the merge queue, when `site/**` changed | lint, build, sanity-check the export |
 | `.github/workflows/pages.yml` | push to `master` touching `site/**`, or manual dispatch | build and publish via `actions/deploy-pages` |
+
+Both run the same `.github/actions/build-site` composite action, so the export that deploys is
+verified by exactly the checks that gated the pull request. The only difference is that `ci.yml`
+also runs eslint — a lint regression must not block publishing a site that builds correctly.
 
 **Settings → Pages → Build and deployment → Source** must be **GitHub
 Actions**, not "Deploy from a branch". The site publishes from **`master`**;

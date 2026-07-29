@@ -54,12 +54,41 @@ If `/Applications` isn't writable (or `CI` is set), `make-app.sh` skips the inst
 the `build/SwiftX.app` fallback path to run from instead — that path works for everything except
 fresh TCC grants.
 
+`make-app.sh` builds in release configuration by default. Set `SWIFTX_CONFIG=debug` to bundle from
+the debug products instead — CI does this so the package compiles once per run rather than twice,
+and it's useful locally when you already have a warm `.build/debug` from `swift build`. Set
+`SWIFTX_UNIVERSAL=1` for an arm64 + x86_64 build (what the release pipeline ships).
+
+## CI
+
+`.github/workflows/ci.yml` is the only workflow that gates a pull request. It runs on
+`pull_request` and `merge_group`, plus a weekly schedule, and has **no top-level `paths:` filter**
+— a workflow skipped by a path filter never reports a conclusion, and a required check that never
+reports leaves a merge group pending until the queue's timeout ejects the PR. Instead a cheap
+`changes` job diffs the pull request against its base and gates the heavy jobs:
+
+| Job | Runs when | Does |
+| --- | --- | --- |
+| `changes` | always | resolves the diff range and sets the `swift` / `site` / `version` flags |
+| `swift` | `Sources/`, `Tests/`, `Package.swift`, `Scripts/`, `Resources/` | `swift build --build-tests`, `swift test`, bundle from debug products, assert the bundle |
+| `site` | `site/`, the shared build action | `.github/actions/build-site` with eslint on |
+| `version` | `VERSION`, cask, site version strings, `Scripts/version.sh` | `version.sh check` plus the hand-edit guard |
+| `release-build` | weekly schedule only | universal release build — covers the release-mode compile and macos-15 image drift |
+| `ci-ok` | always | **the single required status check**; passes on skipped jobs, fails on any failure |
+
+`master` uses a merge queue, so the queue run validates the actual merge result and there is no
+post-merge re-check — `ci.yml` has no `push:` trigger at all. When adding a job to `ci.yml`,
+**add it to `ci-ok`'s `needs:` list**, or it is silently ungated.
+
+`.github/workflows/pages.yml` (deploy) and `release.yml` / `auto-release.yml` (release) are
+separate because they are not checks.
+
 ## Versioning & releases
 
 SwiftX uses CalVer: `YYYY.M.N` — release year, release month (unpadded), and a counter that
 increments per release within that month (`2026.7.1`, `2026.7.2`, `2027.1.1`). Versions are
 computed at release time from the calendar and the existing `v*` tags; **nothing is bumped in
-PRs**, and `.github/workflows/version-check.yml` fails a PR that hand-edits the version
+PRs**, and the `version` job in `.github/workflows/ci.yml` fails a PR that hand-edits the version
 locations. `Scripts/version.sh` is the single implementation:
 
 ```sh

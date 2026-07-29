@@ -3,7 +3,7 @@
 <h3 align="center">A native macOS screenshot, screen recording &amp; file-sharing tool</h3>
 <br>
 <div align="center">
-  <a href="https://github.com/RetroHazard/SwiftX/actions/workflows/macos-swift.yml"><img src="https://img.shields.io/github/actions/workflow/status/RetroHazard/SwiftX/macos-swift.yml?label=Build&cacheSeconds=3600" alt="Build status"/></a>
+  <a href="https://github.com/RetroHazard/SwiftX/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/RetroHazard/SwiftX/ci.yml?branch=master&label=Build&cacheSeconds=3600" alt="Build status"/></a>
   <a href="./LICENSE"><img src="https://img.shields.io/github/license/RetroHazard/SwiftX?label=License&color=brightgreen&cacheSeconds=3600" alt="License"/></a>
   <img src="https://img.shields.io/badge/macOS-14%2B-lightgrey" alt="macOS 14+"/>
   <img src="https://img.shields.io/badge/Swift-5.10%2B-orange" alt="Swift 5.10+"/>
