@@ -91,7 +91,7 @@ Two workflows cover it:
 
 | Workflow | Runs on | Does |
 | --- | --- | --- |
-| `.github/workflows/ci.yml` | pull requests and the merge queue, when `site/**` changed | lint, build, sanity-check the export |
+| `.github/workflows/ci.yml` | pull requests, when `site/**` changed | lint, build, sanity-check the export |
 | `.github/workflows/pages.yml` | push to `master` touching `site/**`, or manual dispatch | build and publish via `actions/deploy-pages` |
 
 Both run the same `.github/actions/build-site` composite action, so the export that deploys is

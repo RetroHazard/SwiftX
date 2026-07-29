@@ -7,10 +7,10 @@
 # workflow_dispatch events created with GITHUB_TOKEN are exempt from GitHub's
 # no-recursive-triggering rule, so the default token is enough here.
 #
-# This works unchanged under the merge queue: a queue-merged PR still emits
-# pull_request with action=closed and merged=true, carrying its base ref and
-# labels. Do NOT add a merge_group trigger here — that event has no
-# pull_request context, so every condition below would evaluate false anyway.
+# Do NOT add a merge_group trigger here, should a merge queue ever become
+# available to this repo: that event carries no pull_request context, so every
+# condition below would evaluate false. A queue-merged PR still emits
+# pull_request with action=closed and merged=true, which is what this needs.
 
 name: Auto release
 

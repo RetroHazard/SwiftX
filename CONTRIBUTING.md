@@ -22,9 +22,10 @@ recording, window inspection) misbehaves, check
 [`docs/solutions/runtime-errors/tcc-screen-recording-responsible-process-SwiftX-20260708.md`](docs/solutions/runtime-errors/tcc-screen-recording-responsible-process-SwiftX-20260708.md)
 before debugging further.
 
-PRs land through a merge queue on `master`, and `ci-ok` is the only required status check — it
-aggregates the Swift, site and version jobs in `.github/workflows/ci.yml`, each of which runs only
-when the relevant paths changed. See [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md#ci).
+`ci-ok` is the only required status check on `master` — it aggregates the Swift, site and version
+jobs in `.github/workflows/ci.yml`, each of which runs only when the relevant paths changed. Your
+branch must be up to date with `master` before it can merge, so you may be asked to update it if
+something else lands first. See [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md#ci).
 
 ## Where things live
 

@@ -62,10 +62,10 @@ and it's useful locally when you already have a warm `.build/debug` from `swift 
 ## CI
 
 `.github/workflows/ci.yml` is the only workflow that gates a pull request. It runs on
-`pull_request` and `merge_group`, plus a weekly schedule, and has **no top-level `paths:` filter**
-— a workflow skipped by a path filter never reports a conclusion, and a required check that never
-reports leaves a merge group pending until the queue's timeout ejects the PR. Instead a cheap
-`changes` job diffs the pull request against its base and gates the heavy jobs:
+`pull_request` plus a weekly schedule, and has **no top-level `paths:` filter** — a workflow
+skipped by a path filter never reports a conclusion, which would leave a PR blocked on
+`Expected — ci-ok` forever. Instead a cheap `changes` job diffs the pull request against its base
+and gates the heavy jobs:
 
 | Job | Runs when | Does |
 | --- | --- | --- |
@@ -76,9 +76,15 @@ reports leaves a merge group pending until the queue's timeout ejects the PR. In
 | `release-build` | weekly schedule only | universal release build — covers the release-mode compile and macos-15 image drift |
 | `ci-ok` | always | **the single required status check**; passes on skipped jobs, fails on any failure |
 
-`master` uses a merge queue, so the queue run validates the actual merge result and there is no
-post-merge re-check — `ci.yml` has no `push:` trigger at all. When adding a job to `ci.yml`,
-**add it to `ci-ok`'s `needs:` list**, or it is silently ungated.
+There is no `push:` trigger, so nothing re-runs after a merge. That is safe because the
+`pull_request` event builds `refs/pull/N/merge` — GitHub tests the **merge result**, not the
+branch tip — and `master` requires branches to be up to date before merging, so that result is
+still current when the merge lands. The trade is that merging one PR obliges any other open PR to
+update and re-run; a merge queue would automate that, but merge queues need an organization-owned
+repository and SwiftX is user-owned. The `merge_group` trigger is present but inert, so moving the
+repo under an organization would make enabling the queue a settings-only change.
+
+When adding a job to `ci.yml`, **add it to `ci-ok`'s `needs:` list**, or it is silently ungated.
 
 `.github/workflows/pages.yml` (deploy) and `release.yml` / `auto-release.yml` (release) are
 separate because they are not checks.

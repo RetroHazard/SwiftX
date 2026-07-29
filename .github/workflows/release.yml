@@ -117,9 +117,9 @@ jobs:
 
       # Keep this even though ci.yml already tested the merged commit: this
       # workflow also fires on a tag push and on workflow_dispatch from an
-      # arbitrary ref, neither of which necessarily went through the merge
-      # queue. Dropping it would let an unvalidated ref be notarized and
-      # published. 70s inside a pipeline dominated by notarization latency.
+      # arbitrary ref, neither of which went through a pull request at all.
+      # Dropping it would let an unvalidated ref be notarized and published.
+      # 70s inside a pipeline dominated by notarization latency.
       - name: Run tests
         run: swift test
 

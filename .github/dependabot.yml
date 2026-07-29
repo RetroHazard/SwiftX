@@ -1,6 +1,8 @@
 # Keeps the pinned action versions and the landing site's npm dependencies
-# current. Updates are grouped so the merge queue processes a handful of pull
-# requests rather than a dozen single-dependency ones.
+# current. Updates are grouped so this produces a handful of pull requests
+# rather than a dozen single-dependency ones — which matters more than usual
+# here, because master requires branches to be up to date before merging, so
+# every merge obliges the remaining open PRs to update and re-run.
 #
 # WARNING: never add a `labels:` entry containing `release` here.
 # auto-release.yml dispatches the full sign/notarize/publish pipeline for any

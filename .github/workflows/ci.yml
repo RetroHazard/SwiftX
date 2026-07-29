@@ -5,20 +5,25 @@
 # Two design decisions worth not undoing:
 #
 # 1. There is NO top-level `paths:` filter. A workflow skipped by a path filter
-#    never reports a conclusion, and a required check that never reports leaves
-#    a merge group pending until the queue's check-response timeout expires,
-#    which then silently ejects the PR. Path gating lives in the `changes` job
-#    instead, so `ci-ok` always reports.
+#    never reports a conclusion, and branch protection leaves a PR blocked on
+#    "Expected — ci-ok" forever waiting for one that will never arrive. Path
+#    gating lives in the `changes` job instead, so `ci-ok` always reports.
 #
-# 2. There is NO `push:` trigger. `merge_group` validates the actual merge
-#    result before it lands, which strictly dominates re-testing the same
-#    content again after the merge. `ci-ok` is the single required status check
-#    and the merge-queue gate — see docs/DEVELOPMENT.md.
+# 2. There is NO `push:` trigger. The pull_request event builds
+#    refs/pull/N/merge — GitHub already tests the MERGE RESULT, not the branch
+#    tip — and master requires branches to be up to date before merging, so
+#    that result is still current when the merge lands. Re-running on master
+#    would therefore only re-test content that has already passed.
+#    `ci-ok` is the single required status check; see docs/DEVELOPMENT.md.
 
 name: CI
 
 on:
   pull_request:
+  # Inert on this repo: merge queues need an organization-owned repository, and
+  # SwiftX is user-owned. Kept (along with the merge_group branch in `changes`
+  # below) so that moving the repo under an organization makes the queue a
+  # settings-only change rather than a workflow edit.
   merge_group:
   workflow_dispatch:
   # Nothing runs on master any more, so nothing would otherwise catch macos-15
@@ -32,10 +37,9 @@ permissions:
   contents: read
 
 concurrency:
-  # Pull-request runs supersede each other. Merge-group refs are unique per
-  # group (gh-readonly-queue/master/pr-N-<sha>), so groups can never collide —
-  # the cancel-in-progress guard below documents that intent rather than
-  # providing it.
+  # Pull-request runs supersede each other; nothing else is cancelled. (Should
+  # merge_group ever become live, its refs are unique per group, so groups
+  # cannot collide regardless.)
   group: ci-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
@@ -294,16 +298,15 @@ jobs:
       - name: Both architectures are present
         run: lipo -info build/SwiftX.app/Contents/MacOS/SwiftX | grep -q 'arm64 x86_64'
 
-  # THE required status check, and the merge-queue gate. Every job above is
-  # path-gated and may legitimately not run; this one never is, so branch
-  # protection always gets a conclusion on both the pull-request head and the
-  # merge-group commit.
+  # THE required status check. Every job above is path-gated and may
+  # legitimately not run; this one never is, so branch protection always gets a
+  # conclusion instead of waiting forever on one that never arrives.
   #
   # always() rather than !cancelled(): a cancelled run would leave this job with
   # conclusion "skipped", and branch protection treats a skipped required check
-  # as PASSING — in a merge queue that is precisely how something merges having
-  # never been validated. The cost is a brief red X on superseded pull-request
-  # runs, before the newer run posts green on the same SHA.
+  # as PASSING — which is how an unvalidated change slips through. The cost is a
+  # brief red X on superseded pull-request runs, before the newer run posts
+  # green on the same SHA.
   #
   # !!! Every job added to this workflow MUST be added to `needs` below, or it
   # !!! is silently ungated. GitHub cannot enforce this.
