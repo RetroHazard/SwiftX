@@ -1,0 +1,334 @@
+# Every pull-request check SwiftX has: Swift build/test/bundle, the landing
+# site, and version hygiene. Replaces macos-swift.yml, site-ci.yml and
+# version-check.yml.
+#
+# Two design decisions worth not undoing:
+#
+# 1. There is NO top-level `paths:` filter. A workflow skipped by a path filter
+#    never reports a conclusion, and branch protection leaves a PR blocked on
+#    "Expected — ci-ok" forever waiting for one that will never arrive. Path
+#    gating lives in the `changes` job instead, so `ci-ok` always reports.
+#
+# 2. There is NO `push:` trigger. The pull_request event builds
+#    refs/pull/N/merge — GitHub already tests the MERGE RESULT, not the branch
+#    tip — and master requires branches to be up to date before merging, so
+#    that result is still current when the merge lands. Re-running on master
+#    would therefore only re-test content that has already passed.
+#    `ci-ok` is the single required status check; see docs/DEVELOPMENT.md.
+
+name: CI
+
+on:
+  pull_request:
+  # Inert on this repo: merge queues need an organization-owned repository, and
+  # SwiftX is user-owned. Kept (along with the merge_group branch in `changes`
+  # below) so that moving the repo under an organization makes the queue a
+  # settings-only change rather than a workflow edit.
+  merge_group:
+  workflow_dispatch:
+  # Nothing runs on master any more, so nothing would otherwise catch macos-15
+  # image drift (a new Xcode breaking the build with no repo change). The
+  # weekly run also covers the release-configuration compile that the debug
+  # pull-request bundle gives up.
+  schedule:
+    - cron: "17 6 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  # Pull-request runs supersede each other; nothing else is cancelled. (Should
+  # merge_group ever become live, its refs are unique per group, so groups
+  # cannot collide regardless.)
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  changes:
+    name: Detect changed areas
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      swift: ${{ steps.filter.outputs.swift }}
+      site: ${{ steps.filter.outputs.site }}
+      version: ${{ steps.filter.outputs.version }}
+      base_sha: ${{ steps.range.outputs.base_sha }}
+      head_sha: ${{ steps.range.outputs.head_sha }}
+    steps:
+      # fetch-depth: 0 is mandatory, not a nicety:
+      #   pull_request -> checks out refs/pull/N/merge at depth 1, so the merge
+      #                   commit's parents (and thus the base) are absent.
+      #   merge_group  -> checks out refs/heads/gh-readonly-queue/... at depth
+      #                   1; github.event.merge_group.base_sha is NOT fetched.
+      # Either way `git diff` fails with "bad object". blob:none keeps it cheap:
+      # --name-only compares tree entry OIDs and never needs blob content.
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          filter: blob:none
+
+      - name: Resolve diff range
+        id: range
+        env:
+          PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
+          MG_BASE_SHA: ${{ github.event.merge_group.base_sha }}
+          MG_HEAD_SHA: ${{ github.event.merge_group.head_sha }}
+        run: |
+          set -euo pipefail
+          case "$GITHUB_EVENT_NAME" in
+            pull_request)
+              # HEAD is the PR's merge commit, whose first parent is the base
+              # tip, so merge-base(base, HEAD) is that tip and the range is
+              # exactly the PR's own changes.
+              git fetch --no-tags --prune origin \
+                "+refs/heads/$PR_BASE_REF:refs/remotes/origin/$PR_BASE_REF"
+              BASE="$(git merge-base "origin/$PR_BASE_REF" HEAD)"
+              HEAD_SHA="$(git rev-parse HEAD)"
+              ;;
+            merge_group)
+              # The queue branch is base_sha with the queued PRs replayed on
+              # top, so a two-dot diff is the union of everything the group
+              # would land — exactly what has to be validated.
+              BASE="$MG_BASE_SHA"
+              HEAD_SHA="$MG_HEAD_SHA"
+              git cat-file -e "${BASE}^{commit}" 2>/dev/null || {
+                echo "::error::merge_group base_sha $BASE is not in the checkout — is fetch-depth still 0?"
+                exit 1
+              }
+              ;;
+            *)
+              # workflow_dispatch / schedule: no meaningful range, run it all.
+              BASE=""
+              HEAD_SHA="$(git rev-parse HEAD)"
+              ;;
+          esac
+          echo "base_sha=$BASE" >> "$GITHUB_OUTPUT"
+          echo "head_sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
+          echo "diff range: ${BASE:-<none>} .. $HEAD_SHA"
+
+      - name: Filter paths
+        id: filter
+        env:
+          BASE: ${{ steps.range.outputs.base_sha }}
+          HEAD: ${{ steps.range.outputs.head_sha }}
+        run: |
+          set -euo pipefail
+
+          emit() { echo "$1=$2" >> "$GITHUB_OUTPUT"; echo "$1=$2"; }
+
+          if [ -z "$BASE" ]; then
+            echo "no diff range for $GITHUB_EVENT_NAME — running every job"
+            emit swift true
+            emit site true
+            emit version true
+            exit 0
+          fi
+
+          # Only ever used as an `if` condition, so its non-zero exit on "no
+          # changes" is safe under set -e.
+          changed() { [ -n "$(git diff --name-only "$BASE" "$HEAD" -- "$@")" ]; }
+
+          # Scripts/ stays whole: make-app.sh and write-oauth-plist.sh are
+          # load-bearing for the bundle step. Casks/ is deliberately absent — a
+          # cask edit cannot affect a Swift build, and having it in the old
+          # filter is what made release.yml's own version-bump commit trigger a
+          # full macOS build. Assets/ is absent for the same reason: nothing in
+          # make-app.sh reads it (the app icon comes from Resources/).
+          if changed Sources Tests Package.swift Scripts Resources \
+                     .github/workflows/ci.yml
+          then emit swift true; else emit swift false; fi
+
+          if changed site .github/actions/build-site .github/workflows/ci.yml
+          then emit site true; else emit site false; fi
+
+          # Scripts/version.sh appears in both sets on purpose.
+          if changed VERSION Casks/swiftx.rb site/src/lib/content.ts \
+                     site/package.json Scripts/version.sh \
+                     .github/workflows/ci.yml
+          then emit version true; else emit version false; fi
+
+  swift:
+    name: Swift build, test and bundle
+    needs: changes
+    if: >-
+      needs.changes.outputs.swift == 'true' &&
+      github.repository == 'RetroHazard/SwiftX'
+    runs-on: macos-15
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      # --build-tests builds the executable products AND the test bundle in one
+      # pass. Bare `swift test` builds only test targets and their dependencies,
+      # which would leave swiftx/swiftx-host/swiftx-share for make-app.sh to
+      # compile afterwards — a partial second build.
+      - name: Build (debug, including tests)
+        run: swift build --build-tests
+
+      # --skip-build is a seconds-level optimization on top of the warm
+      # .build/debug above, not load-bearing: if it ever misbehaves with
+      # swift-testing, drop the flag and the run is still a single compile.
+      - name: Test
+        run: swift test --skip-build
+
+      # SWIFTX_CONFIG=debug reuses those products rather than triggering a
+      # second, release-mode compile of the whole package. make-app.sh's own
+      # `swift build -c debug` is an incremental no-op here. The weekly
+      # release-build job below covers the release path.
+      - name: Bundle SwiftX.app from the debug products
+        env:
+          SWIFTX_CONFIG: debug
+        run: ./Scripts/make-app.sh
+
+      # make-app.sh exits non-zero on a missing product, but says nothing about
+      # the bundle it assembled. plutil is real coverage: both Info.plists are
+      # heredocs interpolating ${VERSION}.
+      - name: Bundle is well formed
+        run: |
+          set -euo pipefail
+          APP=build/SwiftX.app
+          APPEX="$APP/Contents/PlugIns/SwiftXShare.appex"
+          test -x "$APP/Contents/MacOS/SwiftX"
+          test -x "$APP/Contents/MacOS/SwiftXHost"
+          test -x "$APPEX/Contents/MacOS/SwiftXShare"
+          test -f "$APP/Contents/Resources/SwiftX.icns"
+          test -f "$APP/Contents/Resources/LICENSE"
+          plutil -lint "$APP/Contents/Info.plist"
+          plutil -lint "$APPEX/Contents/Info.plist"
+          codesign --verify --deep --strict "$APP"
+          echo "Bundle looks good."
+
+  site:
+    name: Site lint, build and export
+    needs: changes
+    if: needs.changes.outputs.site == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/build-site
+        with:
+          lint: "true"
+
+  version:
+    name: Version hygiene
+    needs: changes
+    if: needs.changes.outputs.version == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      # No blob:none here: the hand-edit guard greps diff *content*, which a
+      # partial clone would have to lazily refetch anyway.
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Version locations agree
+        run: Scripts/version.sh check
+
+      # SwiftX uses CalVer (YYYY.M.N) computed at release time from the calendar
+      # and existing tags, so PRs never bump versions themselves: the VERSION
+      # file, cask, and site version strings are owned by release.yml. The range
+      # comes from `changes`, so this behaves identically on pull_request and
+      # merge_group — the old version-check.yml derived it from
+      # github.event.pull_request.base.ref, which is empty in a merge group and
+      # made the guard silently no-op there.
+      - name: PRs do not hand-edit released versions
+        env:
+          BASE: ${{ needs.changes.outputs.base_sha }}
+          HEAD: ${{ needs.changes.outputs.head_sha }}
+        run: |
+          set -euo pipefail
+          [ -n "$BASE" ] || { echo "no diff range ($GITHUB_EVENT_NAME) — skipping"; exit 0; }
+
+          # --diff-filter=M: only modifications count — the PR that first
+          # introduces the VERSION file must be able to add it
+          if [ -n "$(git diff --diff-filter=M --name-only "$BASE" "$HEAD" -- VERSION)" ]; then
+            echo "::error::This PR edits the VERSION file. Versions are computed at release time (Scripts/version.sh next) and written only by release.yml — drop this change."
+            exit 1
+          fi
+          # version *lines* in the cask/site are release-owned too; other edits
+          # to those files (e.g. cask stanzas, site copy) are fine
+          if git diff "$BASE" "$HEAD" -- Casks/swiftx.rb | grep -qE '^[+-]  (version|sha256) '; then
+            echo "::error::This PR edits the cask version/sha256 — release.yml owns those lines."
+            exit 1
+          fi
+          if git diff "$BASE" "$HEAD" -- site/src/lib/content.ts | grep -qE '^[+-]const version = '; then
+            echo "::error::This PR edits the site version constant — release.yml owns that line."
+            exit 1
+          fi
+          echo "No hand-edited version lines."
+
+  release-build:
+    name: Release-configuration build (scheduled)
+    # Weekly only. Pull-request CI bundles from debug products for speed; this
+    # is the job that proves the release-mode -O compile and the universal
+    # (arm64 + x86_64) layout under .build/apple/Products/Release still work,
+    # so release.yml is never the first thing to discover a release-only break.
+    if: >-
+      github.event_name == 'schedule' &&
+      github.repository == 'RetroHazard/SwiftX'
+    runs-on: macos-15
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Build, bundle and ad-hoc sign (universal release)
+        env:
+          SWIFTX_UNIVERSAL: "1"
+        run: ./Scripts/make-app.sh
+
+      - name: Both architectures are present
+        run: lipo -info build/SwiftX.app/Contents/MacOS/SwiftX | grep -q 'arm64 x86_64'
+
+  # THE required status check. Every job above is path-gated and may
+  # legitimately not run; this one never is, so branch protection always gets a
+  # conclusion instead of waiting forever on one that never arrives.
+  #
+  # always() rather than !cancelled(): a cancelled run would leave this job with
+  # conclusion "skipped", and branch protection treats a skipped required check
+  # as PASSING — which is how an unvalidated change slips through. The cost is a
+  # brief red X on superseded pull-request runs, before the newer run posts
+  # green on the same SHA.
+  #
+  # !!! Every job added to this workflow MUST be added to `needs` below, or it
+  # !!! is silently ungated. GitHub cannot enforce this.
+  ci-ok:
+    name: ci-ok
+    needs: [changes, swift, site, version, release-build]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      # needs.*.result is one of success | failure | cancelled | skipped.
+      # "skipped" passes on purpose: it means the path filter proved this change
+      # cannot have broken that area. A job skipped because its dependency
+      # failed is also "skipped", but the dependency itself reports "failure",
+      # so nothing slips through.
+      - name: Fail if anything failed or was cancelled
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: |
+          echo "::error::CI failed — results: ${{ join(needs.*.result, ', ') }}"
+          exit 1
+
+      - name: Report
+        run: |
+          echo "CI passed (results: ${{ join(needs.*.result, ', ') }})"

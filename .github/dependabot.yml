@@ -1,0 +1,56 @@
+# Keeps the pinned action versions and the landing site's npm dependencies
+# current. Updates are grouped so this produces a handful of pull requests
+# rather than a dozen single-dependency ones — which matters more than usual
+# here, because master requires branches to be up to date before merging, so
+# every merge obliges the remaining open PRs to update and re-run.
+#
+# WARNING: never add a `labels:` entry containing `release` here.
+# auto-release.yml dispatches the full sign/notarize/publish pipeline for any
+# merged pull request carrying that label.
+#
+# Note that npm updates touch site/package.json, which is in ci.yml's `version`
+# pathspec, so Scripts/version.sh check runs on them. That is intended and safe:
+# version.sh matches `  "version": ` at indent 2, while dependency entries sit
+# at indent 4.
+
+version: 2
+updates:
+  # "/" covers .github/workflows/** and .github/actions/**.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: ci
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: npm
+    directory: "/site"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: site
+    groups:
+      # Next and React move together; splitting them produces pull requests
+      # that cannot build on their own.
+      next:
+        patterns:
+          - "next"
+          - "eslint-config-next"
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
+      dev-dependencies:
+        dependency-type: development
+      production:
+        dependency-type: production
+        exclude-patterns:
+          - "next"
+          - "react"
+          - "react-dom"

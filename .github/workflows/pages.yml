@@ -5,6 +5,10 @@ name: Deploy landing site
 # The /SwiftX base path comes from site/next.config.ts, which defaults to it —
 # no build-time environment variable is needed here.
 #
+# This is a deploy, not a check, so it keeps its push trigger: ci.yml already
+# linted and verified the same export on the pull request, and the build here
+# is what actually produces the published artifact.
+#
 # Requires Settings -> Pages -> Source = "GitHub Actions".
 on:
   push:
@@ -12,13 +16,14 @@ on:
       - master
     paths:
       - "site/**"
+      # Without this a fix to the shared build/verify action would never reach
+      # production until some unrelated site/** change came along.
+      - ".github/actions/build-site/**"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages
@@ -28,34 +33,18 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: site
+    timeout-minutes: 15
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v5
-
-      - uses: actions/setup-node@v5
         with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: site/package-lock.json
+          persist-credentials: false
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build static export
-        run: npm run build
-
-      # Stops Pages' Jekyll pass from discarding the _next directory.
-      - name: Add .nojekyll
-        run: touch out/.nojekyll
-
-      # Fail before publishing rather than deploying a broken export.
-      - name: Verify export output
-        run: |
-          test -f out/index.html || { echo "::error::out/index.html missing"; exit 1; }
-          grep -q '"/SwiftX/_next/' out/index.html \
-            || { echo "::error::assets are not prefixed with the /SwiftX base path"; exit 1; }
+      # Same action ci.yml runs, so the export that deploys is verified by the
+      # same checks that gated the pull request. lint stays off by default: a
+      # lint regression must not block publishing a site that builds correctly.
+      - uses: ./.github/actions/build-site
 
       - uses: actions/configure-pages@v5
 
@@ -67,6 +56,12 @@ jobs:
     name: Deploy
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Publishing rights live here and nowhere else — the build job above cannot
+    # deploy.
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

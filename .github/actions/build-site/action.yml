@@ -1,0 +1,65 @@
+name: Build the SwiftX landing site
+description: >-
+  Installs dependencies, produces the static export in site/out, and verifies
+  that export is publishable. Shared by ci.yml (checks) and pages.yml (deploy)
+  so the two can never drift — they previously carried two copies of the
+  verification block and only one of them checked 404.html.
+
+inputs:
+  lint:
+    description: >-
+      Also run eslint. Checks want this; the deploy does not — a lint
+      regression that reaches master must not block publishing a site that
+      builds and exports correctly.
+    required: false
+    default: "false"
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v5
+      with:
+        node-version: 22
+        cache: npm
+        cache-dependency-path: site/package-lock.json
+
+    # Composite actions do not honour defaults.run.working-directory, and every
+    # run step needs an explicit shell — hence the repetition below.
+    - name: Install dependencies
+      shell: bash
+      working-directory: site
+      run: npm ci
+
+    - name: Lint
+      if: inputs.lint == 'true'
+      shell: bash
+      working-directory: site
+      run: npx eslint .
+
+    - name: Build static export
+      shell: bash
+      working-directory: site
+      run: npm run build
+
+    # Stops Pages' Jekyll pass from discarding the _next directory. Done here
+    # rather than only in pages.yml so what CI verifies is byte-identical to
+    # what deploys.
+    - name: Add .nojekyll
+      shell: bash
+      working-directory: site
+      run: touch out/.nojekyll
+
+    # The single copy of the export contract: the entry point and 404 page must
+    # exist, and assets must carry the /SwiftX prefix the project site is served
+    # under (site/next.config.ts defaults basePath to it).
+    - name: Verify export output
+      shell: bash
+      working-directory: site
+      run: |
+        set -euo pipefail
+        test -f out/index.html || { echo "::error::out/index.html missing"; exit 1; }
+        test -f out/404.html   || { echo "::error::out/404.html missing"; exit 1; }
+        test -f out/.nojekyll  || { echo "::error::out/.nojekyll missing"; exit 1; }
+        grep -q '"/SwiftX/_next/' out/index.html \
+          || { echo "::error::assets are not prefixed with the /SwiftX base path"; exit 1; }
+        echo "Export looks good."
