@@ -64,7 +64,7 @@ jobs:
       #                   1; github.event.merge_group.base_sha is NOT fetched.
       # Either way `git diff` fails with "bad object". blob:none keeps it cheap:
       # --name-only compares tree entry OIDs and never needs blob content.
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           filter: blob:none
@@ -160,7 +160,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
 
@@ -213,7 +213,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
       - uses: ./.github/actions/build-site
@@ -231,7 +231,7 @@ jobs:
     steps:
       # No blob:none here: the hand-edit guard greps diff *content*, which a
       # partial clone would have to lazily refetch anyway.
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -286,7 +286,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
 
