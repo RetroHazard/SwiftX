@@ -34,6 +34,10 @@ something else lands first. See [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md#ci).
 - [`docs/solutions/`](docs/solutions/) — a knowledge base of non-obvious patterns and gotchas found
   while porting (SPM app-bundle packaging, `swift test` requiring full Xcode, TCC quirks, etc.).
   Add an entry here when you hit something similarly non-obvious.
+- [`docs/LOCALIZATION.md`](docs/LOCALIZATION.md) — how translations work and how to add a
+  language (one `Localizable.strings` file per language, no code changes needed). User-facing
+  strings in code go through `L10n.t("namespace.key")`, never as bare literals;
+  `./Scripts/check-localizations.sh` validates the tables.
 
 ## Coding conventions
 

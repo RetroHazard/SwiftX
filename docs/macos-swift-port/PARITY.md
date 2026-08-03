@@ -163,7 +163,8 @@ audit are tracked below as Phases 12–15.
 | Developer ID signing, notarization | Ported — the release pipeline (`.github/workflows/release.yml`) signs with a Developer ID Application cert, notarizes and staples the DMG, and runs a Gatekeeper assessment before publishing; v0.1.0 shipped this way |
 | Sparkle auto-update (Release/PreRelease) | N/A — `brew upgrade --cask` is the update channel; revisit only if a direct-download channel is added |
 | Settings import from Windows backup (.sxb) | Ported — Import Settings… detects a Windows ShareX .sxb (zip with DefaultTaskSettings-nested config), merges the keys with macOS equivalents, imports custom uploaders from CustomUploadersList (with legacy-syntax migration), maps C# Keys hotkey strings to mac combos (unmappable keys like PrintScreen are skipped and counted), and offers to import History.db (same SQLite schema as the native store) |
-| Login item, localization infra | Planned (11) |
+| Login item | Planned (11) |
+| Localization infra | Ported — one `Localizable.strings` per language in SharedKit, `L10n` lookup with English fallback, in-app language picker (Settings → General, `InterfaceLanguage` key, relaunch to apply), `Scripts/check-localizations.sh` + CI key-set validation; see `docs/LOCALIZATION.md`. English is the only shipped language so far; `InfoPlist.strings` and `.stringsdict` plurals are deferred to the first translation |
 | Steam build, Windows installer, DevBuilds channel | N/A |
 
 ## Phase 12 — Workflow engine & destination routing
