@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: SwiftX Discussions
+    url: https://github.com/OWNER/SwiftX/discussions
+    about: Ask general questions or start a discussion with the community before opening an issue.
