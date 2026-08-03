@@ -9,6 +9,7 @@ import CaptureKit
 import HistoryKit
 import SharedKit
 import UniformTypeIdentifiers
+import UpdateKit
 import UploadKit
 
 enum TimeRange: String, CaseIterable {
@@ -363,12 +364,77 @@ enum SettingsPane: String, CaseIterable, Identifiable {
 /// notices, the redistribution statement, the no-warranty statement, and a
 /// link to the bundled license text. Replaces the old AppKit About panel.
 struct AboutView: View {
+    @ObservedObject private var updater = UpdateManager.shared
+    @State private var config = ApplicationConfig.load()
+
     private var version: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"
     }
     private var licenseURL: URL {
         Bundle.main.url(forResource: "LICENSE", withExtension: "txt")
             ?? URL(string: "https://www.gnu.org/licenses/gpl-3.0.html")!
+    }
+
+    /// AboutView has no access to SettingsView's configBinding; same
+    /// write-through shape, local copy.
+    private func updateBinding<Value>(_ keyPath: WritableKeyPath<ApplicationConfig, Value>) -> Binding<Value> {
+        Binding(
+            get: { config[keyPath: keyPath] },
+            set: { newValue in
+                config[keyPath: keyPath] = newValue
+                try? config.save()
+            }
+        )
+    }
+
+    private var updateActionInFlight: Bool {
+        switch updater.state {
+        case .checking, .downloading: return true
+        default: return false
+        }
+    }
+
+    @ViewBuilder private var updateStatusRow: some View {
+        switch updater.state {
+        case .idle:
+            LabeledContent("Status") { Text("Not checked yet") }
+        case .checking:
+            LabeledContent("Status") {
+                HStack(spacing: 6) {
+                    ProgressView().controlSize(.small)
+                    Text("Checking…")
+                }
+            }
+        case .upToDate(let date):
+            LabeledContent("Status") {
+                Text("Up to date (checked \(date.formatted(.relative(presentation: .named))))")
+            }
+        case .available(let update):
+            LabeledContent("Status") {
+                HStack(spacing: 8) {
+                    Text("Version \(String(describing: update.version)) available")
+                    Link("Release notes", destination: update.release.htmlURL)
+                }
+            }
+        case .downloading:
+            LabeledContent("Status") {
+                HStack(spacing: 6) {
+                    ProgressView().controlSize(.small)
+                    Text("Downloading and installing…")
+                }
+            }
+        case .installed(let installedVersion):
+            LabeledContent("Status") {
+                HStack(spacing: 8) {
+                    Text("Version \(String(describing: installedVersion)) installed — relaunch to finish")
+                    Button("Relaunch Now") { updater.relaunchNow() }
+                }
+            }
+        case .failed(let message):
+            LabeledContent("Status") {
+                Text(message).foregroundStyle(.red)
+            }
+        }
     }
 
     var body: some View {
@@ -391,6 +457,43 @@ struct AboutView: View {
                 Spacer()
             }
             .padding(.vertical, 4)
+        }
+        Section("Updates") {
+            updateStatusRow
+            HStack {
+                Button("Check for Updates") { updater.checkFromMenu() }
+                    .disabled(updateActionInFlight)
+                if case .available = updater.state, !updater.isHomebrewManaged {
+                    Button(updater.canSelfInstall ? "Install Update" : "Open Release Page") {
+                        if updater.canSelfInstall {
+                            updater.installCurrentUpdate()
+                        } else {
+                            updater.openReleasePage()
+                        }
+                    }
+                    Button("Skip This Version") { updater.skipCurrentUpdate() }
+                }
+            }
+            Picker("Check automatically", selection: updateBinding(\.updateCheckFrequency)) {
+                ForEach(UpdateCheckFrequency.allCases, id: \.rawValue) { frequency in
+                    Text(frequency.displayName).tag(frequency.rawValue)
+                }
+            }
+            .pickerStyle(.menu)
+            .frame(maxWidth: 320)
+            if updater.isHomebrewManaged {
+                LabeledContent("Managed by Homebrew") {
+                    HStack(spacing: 8) {
+                        Text(UpdateManager.brewUpgradeCommand)
+                            .font(.callout.monospaced())
+                            .foregroundStyle(.secondary)
+                        Button("Copy Command") { updater.copyBrewCommand() }
+                    }
+                }
+            } else {
+                Toggle("Automatically download and install updates",
+                       isOn: updateBinding(\.updateAutoInstall))
+            }
         }
         Section("Credits") {
             LabeledContent("Developed by") {

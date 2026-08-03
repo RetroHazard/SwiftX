@@ -42,6 +42,10 @@ let package = Package(
             name: "ToolsKit",
             dependencies: ["CaptureKit"]
         ),
+        .target(
+            name: "UpdateKit",
+            dependencies: ["SharedKit"]
+        ),
         .executableTarget(
             name: "NativeMessagingHost"
         ),
@@ -51,7 +55,7 @@ let package = Package(
         ),
         .executableTarget(
             name: "SwiftXApp",
-            dependencies: ["SharedKit", "CaptureKit", "UploadKit", "HistoryKit", "EditorKit", "EffectsKit", "ToolsKit"]
+            dependencies: ["SharedKit", "CaptureKit", "UploadKit", "HistoryKit", "EditorKit", "EffectsKit", "ToolsKit", "UpdateKit"]
         ),
         .testTarget(
             name: "SharedKitTests",
@@ -80,6 +84,10 @@ let package = Package(
         .testTarget(
             name: "ToolsKitTests",
             dependencies: ["ToolsKit", "CaptureKit"]
+        ),
+        .testTarget(
+            name: "UpdateKitTests",
+            dependencies: ["UpdateKit"]
         )
     ]
 )

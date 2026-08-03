@@ -105,6 +105,39 @@ struct SettingsTests {
         }
     }
 
+    @Test func updateKeysDefaultToSafeValues() {
+        withTempRoot { _ in
+            let config = ApplicationConfig.load()
+            #expect(config.updateCheckFrequency == "Daily")
+            #expect(!config.updateAutoInstall)
+            #expect(config.updateSkippedVersion.isEmpty)
+            #expect(config.updateLastCheckTime == 0)
+        }
+    }
+
+    @Test func updateKeysRoundTripWithPascalCaseNames() throws {
+        try withTempRoot { _ in
+            var config = ApplicationConfig()
+            config.updateCheckFrequency = "Weekly"
+            config.updateAutoInstall = true
+            config.updateSkippedVersion = "2026.8.1"
+            config.updateLastCheckTime = 1_754_000_000
+            try config.save()
+
+            let loaded = ApplicationConfig.load()
+            #expect(loaded.updateCheckFrequency == "Weekly")
+            #expect(loaded.updateAutoInstall)
+            #expect(loaded.updateSkippedVersion == "2026.8.1")
+            #expect(loaded.updateLastCheckTime == 1_754_000_000)
+
+            let json = try String(contentsOf: ApplicationConfig.fileURL, encoding: .utf8)
+            #expect(json.contains("\"UpdateCheckFrequency\""))
+            #expect(json.contains("\"UpdateAutoInstall\""))
+            #expect(json.contains("\"UpdateSkippedVersion\""))
+            #expect(json.contains("\"UpdateLastCheckTime\""))
+        }
+    }
+
     @Test func taskSettingsDefaults() {
         withTempRoot { _ in
             let settings = TaskSettings.load()

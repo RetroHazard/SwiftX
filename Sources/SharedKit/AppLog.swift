@@ -19,4 +19,5 @@ public enum AppLog {
     public static let hotkeys = Logger(subsystem: subsystem, category: "hotkeys")
     public static let history = Logger(subsystem: subsystem, category: "history")
     public static let notifications = Logger(subsystem: subsystem, category: "notifications")
+    public static let updates = Logger(subsystem: subsystem, category: "updates")
 }
