@@ -13,6 +13,12 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# comm(1) needs both inputs in the SAME collation order. python's sorted() is
+# bytewise; macOS's UTF-8 locale sort is not (it reordered dotted keys around
+# underscores, making comm report a key as missing AND unused at once). Force
+# bytewise everywhere.
+export LC_ALL=C
+
 DIR="Sources/SharedKit/Resources"
 BASE="$DIR/en.lproj/Localizable.strings"
 [ -f "$BASE" ] || { echo "error: $BASE not found"; exit 1; }
