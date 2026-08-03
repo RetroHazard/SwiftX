@@ -257,6 +257,7 @@ final class NotifierDelegate: NSObject, UNUserNotificationCenterDelegate {
         let info = response.notification.request.content.userInfo
         let urlString = info["url"] as? String
         let path = info["filePath"] as? String
+        let updateVersion = info["updateVersion"] as? String
         let action = response.actionIdentifier
         await MainActor.run {
             switch action {
@@ -281,11 +282,11 @@ final class NotifierDelegate: NSObject, UNUserNotificationCenterDelegate {
             case Notifier.annotateFileAction:
                 if let path { Self.annotate(path: path) }
             case Notifier.installUpdateAction:
-                UpdateManager.shared.installCurrentUpdate()
+                UpdateManager.shared.installCurrentUpdate(versionHint: updateVersion)
             case Notifier.viewReleaseAction:
-                UpdateManager.shared.openReleasePage()
+                UpdateManager.shared.openReleasePage(urlHint: urlString)
             case Notifier.skipUpdateAction:
-                UpdateManager.shared.skipCurrentUpdate()
+                UpdateManager.shared.skipVersion(updateVersion)
             case Notifier.relaunchAction:
                 UpdateManager.shared.relaunchNow()
             default:

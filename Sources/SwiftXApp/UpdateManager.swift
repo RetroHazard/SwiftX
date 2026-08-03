@@ -11,6 +11,7 @@
 // relaunches when convenient.
 
 import AppKit
+import Combine
 import SharedKit
 import UpdateKit
 
@@ -75,6 +76,7 @@ final class UpdateManager: ObservableObject {
 
     private func backgroundCheckIfDue() async {
         if case .installed = state { return } // waiting on a relaunch
+        if case .downloading = state { return }
         let config = ApplicationConfig.load()
         guard let interval = UpdateCheckFrequency(rawValue: config.updateCheckFrequency)?.interval,
               Date().timeIntervalSince1970 - config.updateLastCheckTime > interval
@@ -98,8 +100,14 @@ final class UpdateManager: ObservableObject {
         }
 
         switch outcome {
-        case .upToDate, .skipped:
-            AppLog.updates.info("background check: no actionable update")
+        case .upToDate:
+            // also clears a stale "available" left by an out-of-band upgrade
+            state = .upToDate(Date())
+            AppLog.updates.info("background check: up to date")
+        case .skipped(let update):
+            lastUpdate = update // manual install from the About pane still works
+            if case .available = state { state = .idle }
+            AppLog.updates.info("background check: update skipped by user")
         case .available(let update):
             lastUpdate = update
             state = .available(update)
@@ -175,10 +183,12 @@ final class UpdateManager: ObservableObject {
 
     // MARK: - Actions
 
-    /// Notification actions can arrive after a relaunch wiped the cached
-    /// update; re-check first in that case.
-    func installCurrentUpdate() {
-        if let update = lastUpdate {
+    /// `versionHint` is the version a notification banner named; when the
+    /// cache is gone (app relaunched) or names a different version (a later
+    /// check superseded the banner), re-check and install what is actually
+    /// latest instead of trusting stale state.
+    func installCurrentUpdate(versionHint: String? = nil) {
+        if let update = lastUpdate, versionHint == nil || "\(update.version)" == versionHint {
             Task { await performInstall(update, interactive: true) }
             return
         }
@@ -195,15 +205,30 @@ final class UpdateManager: ObservableObject {
 
     func skipCurrentUpdate() {
         guard let update = lastUpdate else { return }
-        var config = ApplicationConfig.load()
-        config.updateSkippedVersion = "\(update.version)"
-        try? config.save()
-        if case .available = state { state = .idle }
-        AppLog.updates.info("skipping version \(update.version, privacy: .public)")
+        skipVersion("\(update.version)")
     }
 
-    func openReleasePage() {
-        NSWorkspace.shared.open(lastUpdate?.release.htmlURL ?? Self.releasesFallbackURL)
+    /// Notification "Skip This Version" skips the version the banner named,
+    /// not whatever a later background check may have cached since.
+    func skipVersion(_ raw: String?) {
+        guard let raw, CalVer(raw) != nil else {
+            skipCurrentUpdate()
+            return
+        }
+        var config = ApplicationConfig.load()
+        config.updateSkippedVersion = raw
+        try? config.save()
+        if case .available(let update) = state, "\(update.version)" == raw { state = .idle }
+        AppLog.updates.info("skipping version \(raw, privacy: .public)")
+    }
+
+    /// `urlHint` is the release URL a notification banner carried; it wins
+    /// over the cached update so an old banner opens its own release page.
+    func openReleasePage(urlHint: String? = nil) {
+        let url = urlHint.flatMap(URL.init(string:))
+            ?? lastUpdate?.release.htmlURL
+            ?? Self.releasesFallbackURL
+        NSWorkspace.shared.open(url)
     }
 
     func relaunchNow() {

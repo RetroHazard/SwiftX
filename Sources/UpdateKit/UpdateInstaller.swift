@@ -21,6 +21,7 @@ public enum UpdateInstaller {
         case translocated
         case devSignedBuild
         case destinationNotWritable(String)
+        case downloadFailed(Int)
         case checksumUnavailable
         case checksumMismatch
         case mountFailed(String)
@@ -39,6 +40,8 @@ public enum UpdateInstaller {
                 return "This build is not Developer ID signed, so it cannot update itself."
             case .destinationNotWritable(let path):
                 return "The location \(path) is not writable."
+            case .downloadFailed(let status):
+                return "The download failed with HTTP \(status)."
             case .checksumUnavailable:
                 return "The release does not publish a checksum, so the download cannot be verified."
             case .checksumMismatch:
@@ -122,10 +125,16 @@ public enum UpdateInstaller {
         guard let checksumAsset = update.checksum else { throw InstallError.checksumUnavailable }
 
         let dmgURL = staging.appendingPathComponent(update.dmg.name)
-        let (downloaded, _) = try await session.download(from: update.dmg.browserDownloadURL)
+        let (downloaded, dmgResponse) = try await session.download(from: update.dmg.browserDownloadURL)
+        if let http = dmgResponse as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
+            throw InstallError.downloadFailed(http.statusCode)
+        }
         try FileManager.default.moveItem(at: downloaded, to: dmgURL)
 
-        let (checksumData, _) = try await session.data(from: checksumAsset.browserDownloadURL)
+        let (checksumData, checksumResponse) = try await session.data(from: checksumAsset.browserDownloadURL)
+        if let http = checksumResponse as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
+            throw InstallError.downloadFailed(http.statusCode)
+        }
         guard let text = String(data: checksumData, encoding: .utf8),
               let expected = expectedDigest(fromChecksumFile: text)
         else { throw InstallError.checksumUnavailable }
@@ -253,11 +262,13 @@ public enum UpdateInstaller {
     /// The caller terminates the app after this returns.
     public static func spawnRelaunchHelper(appAt url: URL) {
         let pid = ProcessInfo.processInfo.processIdentifier
+        // The path travels as $0, never interpolated into the script, so no
+        // character in it can break out of the quoting.
         let script = "while /bin/kill -0 \(pid) 2>/dev/null; do /bin/sleep 0.2; done; " +
-                     "/usr/bin/open \"\(url.path)\""
+                     "exec /usr/bin/open \"$0\""
         let helper = Process()
         helper.executableURL = URL(fileURLWithPath: "/bin/sh")
-        helper.arguments = ["-c", script]
+        helper.arguments = ["-c", script, url.path]
         try? helper.run()
     }
 
@@ -304,12 +315,21 @@ public enum UpdateInstaller {
         let out = Pipe(), err = Pipe()
         process.standardOutput = out
         process.standardError = err
+        // Drain stderr concurrently: reading the pipes one after the other
+        // deadlocks if the child fills the second pipe's buffer first.
+        var stderrData = Data()
+        let drained = DispatchGroup()
+        drained.enter()
+        DispatchQueue.global(qos: .utility).async {
+            stderrData = err.fileHandleForReading.readDataToEndOfFile()
+            drained.leave()
+        }
         try process.run()
         let stdout = out.fileHandleForReading.readDataToEndOfFile()
-        let stderr = err.fileHandleForReading.readDataToEndOfFile()
+        drained.wait()
         process.waitUntilExit()
         return (process.terminationStatus, stdout,
-                String(data: stderr, encoding: .utf8)?
+                String(data: stderrData, encoding: .utf8)?
                     .trimmingCharacters(in: .whitespacesAndNewlines) ?? "")
     }
 }
