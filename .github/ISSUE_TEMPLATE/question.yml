@@ -1,0 +1,56 @@
+name: ❓ Question / Support
+description: Ask a question about using or building SwiftX
+title: "[Question]: "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have a question about SwiftX? Please check the README and existing issues/discussions first — if you can't find an answer, fill this out.
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your Question
+      description: What do you need help with?
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: What are you trying to accomplish? Include what you've already tried.
+    validations:
+      required: false
+
+  - type: input
+    id: app-version
+    attributes:
+      label: SwiftX Version (if applicable)
+      placeholder: e.g. 2.4.1 (build 318)
+    validations:
+      required: false
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform (if applicable)
+      multiple: true
+      options:
+        - iOS
+        - iPadOS
+        - macOS
+        - watchOS
+        - Other
+        - Not applicable
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I have searched existing issues and discussions for an answer
+          required: true
