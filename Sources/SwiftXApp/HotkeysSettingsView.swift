@@ -16,7 +16,7 @@ struct HotkeysSettingsView: View {
     @State private var monitor: Any?
 
     var body: some View {
-        Section("Hotkeys") {
+        Section(L10n.t("settings.hotkeys.title")) {
             ForEach(settings.hotkeys.indices, id: \.self) { index in
                 HStack {
                     Picker("", selection: taskTypeBinding(index)) {
@@ -40,12 +40,12 @@ struct HotkeysSettingsView: View {
                 settings.hotkeys.append(HotkeyConfig(taskType: HotkeyType.none.rawValue))
                 persist()
             } label: {
-                Label("Add Hotkey", systemImage: "plus.circle.fill")
+                Label(L10n.t("settings.hotkeys.add_hotkey"), systemImage: "plus.circle.fill")
             }
             .buttonStyle(.borderless)
 
             if recordingIndex != nil {
-                Text("Press the new shortcut (with at least one modifier), or Esc to cancel.")
+                Text(L10n.t("settings.hotkeys.recording_hint"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -54,12 +54,15 @@ struct HotkeysSettingsView: View {
     }
 
     private func buttonTitle(_ index: Int) -> String {
-        if recordingIndex == index { return "Press keys…" }
-        return settings.hotkeys[index].combo?.displayString ?? "Record"
+        if recordingIndex == index { return L10n.t("settings.hotkeys.press_keys") }
+        return settings.hotkeys[index].combo?.displayString ?? L10n.t("settings.hotkeys.record")
     }
 
     /// "ScreenRecorderGIF" -> "Screen Recorder GIF"
     static func displayName(for type: HotkeyType) -> String {
+        let key = "hotkey.\(type.rawValue)"
+        if L10n.has(key) { return L10n.t(key) }
+        // fallback: derived label for cases without a translation entry
         var result = ""
         var previous: Character = " "
         for char in type.rawValue {

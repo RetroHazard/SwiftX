@@ -9,6 +9,7 @@
 // include the cursor).
 
 import AppKit
+import SharedKit
 
 public enum AnnotationTool: String, CaseIterable, Identifiable {
     /// Selection/manipulation mode - never stored on a shape.
@@ -60,24 +61,24 @@ public enum AnnotationTool: String, CaseIterable, Identifiable {
 
     public var displayName: String {
         switch self {
-        case .select: return "Select"
-        case .rectangle: return "Rectangle"
-        case .ellipse: return "Ellipse"
-        case .line: return "Line"
-        case .arrow: return "Arrow"
-        case .freehand: return "Freehand"
-        case .text: return "Text"
-        case .speechBalloon: return "Speech balloon"
-        case .step: return "Step number"
-        case .magnify: return "Magnify"
-        case .blur: return "Blur"
-        case .pixelate: return "Pixelate"
-        case .highlight: return "Highlight"
-        case .smartEraser: return "Smart eraser"
-        case .spotlight: return "Spotlight"
-        case .image: return "Image stamp"
-        case .crop: return "Crop"
-        case .cutOut: return "Cut out"
+        case .select: return L10n.t("editor.tool.select")
+        case .rectangle: return L10n.t("editor.tool.rectangle")
+        case .ellipse: return L10n.t("editor.tool.ellipse")
+        case .line: return L10n.t("editor.tool.line")
+        case .arrow: return L10n.t("editor.tool.arrow")
+        case .freehand: return L10n.t("editor.tool.freehand")
+        case .text: return L10n.t("editor.tool.text")
+        case .speechBalloon: return L10n.t("editor.tool.speech_balloon")
+        case .step: return L10n.t("editor.tool.step")
+        case .magnify: return L10n.t("editor.tool.magnify")
+        case .blur: return L10n.t("editor.tool.blur")
+        case .pixelate: return L10n.t("editor.tool.pixelate")
+        case .highlight: return L10n.t("editor.tool.highlight")
+        case .smartEraser: return L10n.t("editor.tool.smart_eraser")
+        case .spotlight: return L10n.t("editor.tool.spotlight")
+        case .image: return L10n.t("editor.tool.image")
+        case .crop: return L10n.t("editor.tool.crop")
+        case .cutOut: return L10n.t("editor.tool.cut_out")
         }
     }
 
@@ -103,6 +104,14 @@ public enum AnnotationTool: String, CaseIterable, Identifiable {
 public enum ArrowHeadStyle: String, CaseIterable, Sendable {
     case classic = "Classic"
     case modern = "Modern"
+
+    /// Localized display label; the rawValue stays the stable identifier.
+    public var localizedName: String {
+        switch self {
+        case .classic: return L10n.t("editor.arrow_style.classic")
+        case .modern: return L10n.t("editor.arrow_style.modern")
+        }
+    }
 }
 
 public struct AnnotationShape: Identifiable {

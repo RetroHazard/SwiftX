@@ -33,30 +33,30 @@ struct CustomUploaderEditorView: View {
     private static let methods = ["GET", "POST", "PUT", "PATCH", "DELETE"]
 
     var body: some View {
-        Section("Uploaders") {
+        Section(L10n.t("settings.customuploader.uploaders")) {
             if files.isEmpty {
-                Text("No custom uploaders yet. Create one, or import a community .sxcu file.")
+                Text(L10n.t("settings.customuploader.empty_hint"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             } else {
-                Picker("Uploader", selection: Binding(get: { selected }, set: select)) {
+                Picker(L10n.t("settings.customuploader.uploader"), selection: Binding(get: { selected }, set: select)) {
                     ForEach(files, id: \.self) { name in
-                        Text(name + (name == activeUploader ? "  (active)" : "")).tag(name)
+                        Text(name + (name == activeUploader ? L10n.t("settings.customuploader.active_suffix") : "")).tag(name)
                     }
                 }
             }
             HStack {
-                Button("New") { create(from: CustomUploaderItem()) }
-                Button("Duplicate") { create(from: draft) }
+                Button(L10n.t("settings.customuploader.new")) { create(from: CustomUploaderItem()) }
+                Button(L10n.t("settings.customuploader.duplicate")) { create(from: draft) }
                     .disabled(selected.isEmpty)
-                Button("Delete…", role: .destructive) { confirmDelete = true }
+                Button(L10n.t("settings.customuploader.delete"), role: .destructive) { confirmDelete = true }
                     .disabled(selected.isEmpty)
-                Button("Import…") { importFile() }
-                Button("Export…") { exportFile() }
+                Button(L10n.t("settings.customuploader.import")) { importFile() }
+                Button(L10n.t("settings.customuploader.export")) { exportFile() }
                     .disabled(selected.isEmpty)
                 Spacer()
                 if !selected.isEmpty && selected != activeUploader {
-                    Button("Set Active") {
+                    Button(L10n.t("settings.customuploader.set_active")) {
                         activeUploader = selected
                         var config = UploadersConfig.load()
                         config.activeCustomUploader = selected
@@ -64,8 +64,8 @@ struct CustomUploaderEditorView: View {
                     }
                 }
             }
-            .confirmationDialog("Delete \(selected)?", isPresented: $confirmDelete) {
-                Button("Delete", role: .destructive) { deleteSelected() }
+            .confirmationDialog(L10n.t("settings.customuploader.confirm_delete", selected), isPresented: $confirmDelete) {
+                Button(L10n.t("common.delete"), role: .destructive) { deleteSelected() }
             }
         }
         .onAppear {
@@ -75,18 +75,18 @@ struct CustomUploaderEditorView: View {
         }
 
         if !selected.isEmpty {
-            Section("Request") {
-                TextField("Name", text: field(\.name))
+            Section(L10n.t("settings.customuploader.request")) {
+                TextField(L10n.t("common.name"), text: field(\.name))
                     .focused($nameFieldFocused)
                     .onSubmit { syncFileName() }
                     .onChange(of: nameFieldFocused) {
                         if !nameFieldFocused { syncFileName() }
                     }
-                Picker("Method", selection: field(\.requestMethod)) {
+                Picker(L10n.t("settings.customuploader.method"), selection: field(\.requestMethod)) {
                     ForEach(Self.methods, id: \.self) { Text($0).tag($0) }
                 }
-                TextField("Request URL", text: field(\.requestURL))
-                Picker("Body", selection: Binding(
+                TextField(L10n.t("settings.customuploader.request_url"), text: field(\.requestURL))
+                Picker(L10n.t("settings.customuploader.body"), selection: Binding(
                     get: { draft.body },
                     set: { draft.body = $0; persist() }
                 )) {
@@ -95,27 +95,27 @@ struct CustomUploaderEditorView: View {
                     }
                 }
                 if draft.body == .multipartFormData || draft.body == .binary {
-                    TextField("File form name", text: field(\.fileFormName))
+                    TextField(L10n.t("settings.customuploader.file_form_name"), text: field(\.fileFormName))
                 }
                 if draft.body == .json || draft.body == .xml {
-                    TextField("Body data (supports {input}, {filename}…)", text: field(\.data), axis: .vertical)
+                    TextField(L10n.t("settings.customuploader.body_data"), text: field(\.data), axis: .vertical)
                         .lineLimit(3...8)
                         .font(.body.monospaced())
                 }
             }
 
-            kvSection("URL parameters", rows: $parameterRows) { draft.parameters = $0 }
-            kvSection("Headers", rows: $headerRows) { draft.headers = $0 }
+            kvSection(L10n.t("settings.customuploader.url_parameters"), rows: $parameterRows) { draft.parameters = $0 }
+            kvSection(L10n.t("settings.customuploader.headers"), rows: $headerRows) { draft.headers = $0 }
             if draft.body == .multipartFormData || draft.body == .formURLEncoded {
-                kvSection("Body arguments", rows: $argumentRows) { draft.arguments = $0 }
+                kvSection(L10n.t("settings.customuploader.body_arguments"), rows: $argumentRows) { draft.arguments = $0 }
             }
 
-            Section("Response") {
-                TextField("URL (e.g. {json:url})", text: field(\.url))
-                TextField("Thumbnail URL", text: field(\.thumbnailURL))
-                TextField("Deletion URL", text: field(\.deletionURL))
-                TextField("Error message", text: field(\.errorMessage))
-                Text("Syntax: {json:path}, {regex:pattern|group}, {response}, {filename}, {random:a|b}, {base64:text} — same as Windows ShareX.")
+            Section(L10n.t("settings.customuploader.response")) {
+                TextField(L10n.t("settings.customuploader.response_url"), text: field(\.url))
+                TextField(L10n.t("settings.customuploader.thumbnail_url"), text: field(\.thumbnailURL))
+                TextField(L10n.t("settings.customuploader.deletion_url"), text: field(\.deletionURL))
+                TextField(L10n.t("settings.customuploader.error_message"), text: field(\.errorMessage))
+                Text(L10n.t("settings.customuploader.syntax_help"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -129,9 +129,9 @@ struct CustomUploaderEditorView: View {
         Section(title) {
             ForEach(rows) { $row in
                 HStack {
-                    TextField("Name", text: $row.key)
+                    TextField(L10n.t("common.name"), text: $row.key)
                         .frame(maxWidth: 180)
-                    TextField("Value", text: $row.value)
+                    TextField(L10n.t("settings.customuploader.value"), text: $row.value)
                     Button {
                         rows.wrappedValue.removeAll { $0.id == row.id }
                     } label: {
@@ -143,7 +143,7 @@ struct CustomUploaderEditorView: View {
             Button {
                 rows.wrappedValue.append(KVRow())
             } label: {
-                Label("Add", systemImage: "plus.circle.fill")
+                Label(L10n.t("common.add"), systemImage: "plus.circle.fill")
             }
             .buttonStyle(.borderless)
         }
@@ -244,7 +244,7 @@ struct CustomUploaderEditorView: View {
         do {
             try CustomUploaderStore.exportFile(named: selected, to: url)
         } catch {
-            Notifier.notify(title: "Export failed", body: error.localizedDescription)
+            Notifier.notify(title: L10n.t("settings.customuploader.export_failed"), body: error.localizedDescription)
         }
     }
 }

@@ -74,8 +74,8 @@ struct WatchFoldersSettingsView: View {
     @State private var task = TaskSettings.load()
 
     var body: some View {
-        Section("Watch folders") {
-            Toggle("Watch folders and upload new files", isOn: Binding(
+        Section(L10n.t("settings.watchfolders.title")) {
+            Toggle(L10n.t("settings.watchfolders.enable"), isOn: Binding(
                 get: { task.watchFolderEnabled },
                 set: { task.watchFolderEnabled = $0; apply() }
             ))
@@ -87,20 +87,20 @@ struct WatchFoldersSettingsView: View {
                             .lineLimit(1)
                             .truncationMode(.middle)
                         Spacer()
-                        Button("Remove") {
+                        Button(L10n.t("common.remove")) {
                             task.watchFolderList.remove(at: index)
                             apply()
                         }
                     }
-                    TextField("File name filter (e.g. *.png, empty = all):", text: Binding(
+                    TextField(L10n.t("settings.watchfolders.filter"), text: Binding(
                         get: { task.watchFolderList[index].filter },
                         set: { task.watchFolderList[index].filter = $0; apply() }
                     ))
-                    Toggle("Include subdirectories", isOn: Binding(
+                    Toggle(L10n.t("settings.watchfolders.include_subdirectories"), isOn: Binding(
                         get: { task.watchFolderList[index].includeSubdirectories },
                         set: { task.watchFolderList[index].includeSubdirectories = $0; apply() }
                     ))
-                    Toggle("Move files to screenshots folder before upload", isOn: Binding(
+                    Toggle(L10n.t("settings.watchfolders.move_to_screenshots"), isOn: Binding(
                         get: { task.watchFolderList[index].moveFilesToScreenshotsFolder },
                         set: { task.watchFolderList[index].moveFilesToScreenshotsFolder = $0; apply() }
                     ))
@@ -108,7 +108,7 @@ struct WatchFoldersSettingsView: View {
                 .padding(.vertical, 4)
             }
 
-            Button("Add Folder…") {
+            Button(L10n.t("settings.watchfolders.add_folder")) {
                 let panel = NSOpenPanel()
                 panel.canChooseDirectories = true
                 panel.canChooseFiles = false
