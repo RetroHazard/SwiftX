@@ -8,17 +8,18 @@
 
 import AppKit
 import CaptureKit
+import SharedKit
 import SwiftUI
 import ToolsKit
 import UniformTypeIdentifiers
 
 extension ToolWindows {
     static func showVideoConverter() {
-        present(title: "Video Converter", content: VideoConverterView())
+        present(title: L10n.t("toolui.window.video_converter"), content: VideoConverterView())
     }
 
     static func showVideoThumbnailer() {
-        present(title: "Video Thumbnailer", content: VideoThumbnailerView())
+        present(title: L10n.t("toolui.window.video_thumbnailer"), content: VideoThumbnailerView())
     }
 
     static func openVideoPanel() -> URL? {
@@ -39,32 +40,32 @@ private struct VideoConverterView: View {
 
     var body: some View {
         Form {
-            LabeledContent("Video") {
+            LabeledContent(L10n.t("toolui.video.video")) {
                 HStack {
-                    Text(file?.lastPathComponent ?? "No file selected")
+                    Text(file?.lastPathComponent ?? L10n.t("toolui.no_file_selected"))
                         .foregroundStyle(file == nil ? .secondary : .primary)
                         .lineLimit(1).truncationMode(.middle)
-                    Button("Browse…") { file = ToolWindows.openVideoPanel() }
+                    Button(L10n.t("common.browse")) { file = ToolWindows.openVideoPanel() }
                 }
             }
-            Picker("Codec", selection: $codec) {
-                ForEach(FFmpeg.ConvertCodec.allCases, id: \.self) { Text($0.rawValue) }
+            Picker(L10n.t("toolui.video.codec"), selection: $codec) {
+                ForEach(FFmpeg.ConvertCodec.allCases, id: \.self) { Text($0.displayName) }
             }
             .onChange(of: codec) { crf = codec.defaultCRF }
             if codec.usesCRF {
-                LabeledContent("Quality (CRF \(crf))") {
+                LabeledContent(L10n.t("toolui.video.quality_crf", crf)) {
                     Slider(value: Binding(get: { Double(crf) }, set: { crf = Int($0) }),
                            in: 0...51, step: 1)
-                    .help("Lower is better quality and larger files")
+                    .help(L10n.t("toolui.video.crf_help"))
                 }
             }
             if codec.usesBitrate {
-                TextField("Bitrate (kbps)", value: $bitrateKbps, format: .number)
+                TextField(L10n.t("toolui.video.bitrate"), value: $bitrateKbps, format: .number)
             }
-            TextField("Custom ffmpeg arguments (replaces preset)", text: $customArgs)
+            TextField(L10n.t("toolui.video.custom_args"), text: $customArgs)
                 .font(.body.monospaced())
             if FFmpeg.installedPath == nil {
-                Label("ffmpeg is not installed — install it from Settings → Recording.",
+                Label(L10n.t("toolui.video.ffmpeg_missing"),
                       systemImage: "exclamationmark.triangle")
                     .foregroundStyle(.orange)
             }
@@ -73,7 +74,7 @@ private struct VideoConverterView: View {
                 if isConverting {
                     ProgressView().controlSize(.small)
                 }
-                Button("Convert…") { convert() }
+                Button(L10n.t("toolui.video.convert")) { convert() }
                     .keyboardShortcut(.defaultAction)
                     .disabled(file == nil || isConverting || FFmpeg.installedPath == nil)
             }
@@ -93,10 +94,11 @@ private struct VideoConverterView: View {
             do {
                 try await FFmpeg.convert(input: file, output: output, codec: codec,
                                          crf: crf, bitrateKbps: bitrate, customArgs: custom)
-                Notifier.notify(title: "Video converted", body: output.lastPathComponent)
+                Notifier.notify(title: L10n.t("toolui.video.converted_title"), body: output.lastPathComponent)
                 NSWorkspace.shared.activateFileViewerSelecting([output])
             } catch {
-                Notifier.notify(title: "Video conversion failed", body: error.localizedDescription)
+                Notifier.notify(title: L10n.t("toolui.video.convert_failed_title"),
+                                body: error.localizedDescription)
             }
             isConverting = false
         }
@@ -113,23 +115,23 @@ private struct VideoThumbnailerView: View {
 
     var body: some View {
         Form {
-            LabeledContent("Video") {
+            LabeledContent(L10n.t("toolui.video.video")) {
                 HStack {
-                    Text(file?.lastPathComponent ?? "No file selected")
+                    Text(file?.lastPathComponent ?? L10n.t("toolui.no_file_selected"))
                         .foregroundStyle(file == nil ? .secondary : .primary)
                         .lineLimit(1).truncationMode(.middle)
-                    Button("Browse…") { file = ToolWindows.openVideoPanel() }
+                    Button(L10n.t("common.browse")) { file = ToolWindows.openVideoPanel() }
                 }
             }
-            Stepper("Thumbnails: \(count)", value: $count, in: 1...50)
-            Stepper("Columns: \(columns)", value: $columns, in: 1...10)
-            Toggle("Add timestamps", isOn: $addTimestamp)
+            Stepper(L10n.t("toolui.video.thumbnails_count", count), value: $count, in: 1...50)
+            Stepper(L10n.t("toolui.video.thumb_columns", columns), value: $columns, in: 1...10)
+            Toggle(L10n.t("toolui.video.add_timestamps"), isOn: $addTimestamp)
             HStack {
                 Spacer()
                 if isWorking {
                     ProgressView().controlSize(.small)
                 }
-                Button("Generate…") { generate() }
+                Button(L10n.t("toolui.generate")) { generate() }
                     .keyboardShortcut(.defaultAction)
                     .disabled(file == nil || isWorking)
             }
@@ -155,10 +157,11 @@ private struct VideoThumbnailerView: View {
                     throw CocoaError(.fileWriteUnknown)
                 }
                 try ImageWriter.writePNG(sheet, to: output)
-                Notifier.notify(title: "Video thumbnails saved", body: output.lastPathComponent)
+                Notifier.notify(title: L10n.t("toolui.video.thumbs_saved_title"), body: output.lastPathComponent)
                 NSWorkspace.shared.activateFileViewerSelecting([output])
             } catch {
-                Notifier.notify(title: "Video thumbnailer failed", body: error.localizedDescription)
+                Notifier.notify(title: L10n.t("toolui.video.thumbs_failed_title"),
+                                body: error.localizedDescription)
             }
             isWorking = false
         }

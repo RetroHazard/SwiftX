@@ -21,7 +21,7 @@ extension ToolWindows {
     }
 
     static func showAIAnalysis(for image: CGImage) {
-        present(title: "AI Image Analysis", resizable: true, content: AIAnalysisView(image: image))
+        present(title: L10n.t("toolui.ai.window_title"), resizable: true, content: AIAnalysisView(image: image))
     }
 }
 
@@ -36,20 +36,22 @@ private struct AIAnalysisView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .top, spacing: 12) {
-                Image(image, scale: 2, label: Text("Image to analyze"))
+                Image(image, scale: 2, label: Text(L10n.t("toolui.ai.image_label")))
                     .resizable().scaledToFit()
                     .frame(maxWidth: 220, maxHeight: 160)
                     .clipShape(RoundedRectangle(cornerRadius: 6))
                 VStack(alignment: .leading) {
-                    TextField("Prompt", text: $config.aiPrompt, axis: .vertical)
+                    TextField(L10n.t("toolui.ai.prompt"), text: $config.aiPrompt, axis: .vertical)
                         .lineLimit(2...4)
                     HStack {
-                        Button(isAnalyzing ? "Analyzing…" : "Analyze") { analyze() }
-                            .keyboardShortcut(.defaultAction)
-                            .disabled(isAnalyzing)
+                        Button(isAnalyzing ? L10n.t("toolui.ai.analyzing") : L10n.t("toolui.ai.analyze")) {
+                            analyze()
+                        }
+                        .keyboardShortcut(.defaultAction)
+                        .disabled(isAnalyzing)
                         if isAnalyzing { ProgressView().controlSize(.small) }
                         Spacer()
-                        Button("Provider…") { showSettings.toggle() }
+                        Button(L10n.t("toolui.ai.provider")) { showSettings.toggle() }
                             .popover(isPresented: $showSettings) { settingsForm }
                     }
                 }
@@ -59,7 +61,7 @@ private struct AIAnalysisView: View {
                 .frame(minWidth: 460, minHeight: 180)
             HStack {
                 Spacer()
-                Button("Copy Response") { ToolWindows.copyToClipboard(response) }
+                Button(L10n.t("toolui.ai.copy_response")) { ToolWindows.copyToClipboard(response) }
                     .disabled(response.isEmpty)
             }
         }
@@ -68,10 +70,10 @@ private struct AIAnalysisView: View {
 
     private var settingsForm: some View {
         Form {
-            TextField("Base URL", text: $config.aiBaseURL)
+            TextField(L10n.t("toolui.ai.base_url"), text: $config.aiBaseURL)
                 .help("OpenAI: https://api.openai.com/v1 — OpenRouter: https://openrouter.ai/api/v1 — Gemini: https://generativelanguage.googleapis.com/v1beta/openai")
-            SecureField("API key", text: $config.aiAPIKey)
-            TextField("Model", text: $config.aiModel)
+            SecureField(L10n.t("toolui.ai.api_key"), text: $config.aiAPIKey)
+            TextField(L10n.t("toolui.ai.model"), text: $config.aiModel)
         }
         .frame(width: 380)
         .padding()
