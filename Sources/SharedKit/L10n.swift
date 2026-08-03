@@ -66,7 +66,7 @@ public final class L10n: ObservableObject {
     /// Shorthand used at call sites: `L10n.t("menu.capture_region")`.
     public static func t(_ key: String) -> String { shared.string(key) }
 
-    /// Format variant: `L10n.t("upload.count", files.count)`.
+    /// Format variant for keys with %@/%d placeholders.
     public static func t(_ key: String, _ args: CVarArg...) -> String { shared.string(key, args) }
 
     /// True when `key` has a translation in the active or English table.

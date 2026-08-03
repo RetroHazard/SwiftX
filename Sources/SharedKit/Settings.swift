@@ -134,6 +134,26 @@ public struct QuickTaskPreset: Codable, Equatable, Sendable {
         return result
     }
 
+    /// Display-time localization. Preset names persist in the user's JSON
+    /// config (ShareX-compatible), so the stored English names never change;
+    /// the built-in defaults are recognized by name and translated here, and
+    /// user-created names pass through untouched.
+    public var localizedDisplayName: String {
+        if let key = QuickTaskPreset.defaultNameKeys[name] { return L10n.t(key) }
+        return displayName
+    }
+
+    private static let defaultNameKeys: [String: String] = [
+        "Save, Upload, Copy URL": "quicktask.save_upload_copy_url",
+        "Save, Copy image": "quicktask.save_copy_image",
+        "Save, Copy image file": "quicktask.save_copy_image_file",
+        "Annotate, Save, Upload, Copy URL": "quicktask.annotate_save_upload_copy_url",
+        "Upload, Copy URL": "quicktask.upload_copy_url",
+        "Save": "quicktask.save",
+        "Copy image": "quicktask.copy_image",
+        "Annotate": "quicktask.annotate"
+    ]
+
     public init(name: String = "", afterCaptureTasks: AfterCaptureTasks = [],
                 afterUploadTasks: AfterUploadTasks = []) {
         self.name = name

@@ -107,6 +107,17 @@
 /* Accessibility */
 "accessibility.recording" = "SwiftX recording";
 
+/* Quick task presets (stored names stay English in the user's config;
+   these translate the built-in defaults at display time only) */
+"quicktask.save_upload_copy_url" = "Save, Upload, Copy URL";
+"quicktask.save_copy_image" = "Save, Copy image";
+"quicktask.save_copy_image_file" = "Save, Copy image file";
+"quicktask.annotate_save_upload_copy_url" = "Annotate, Save, Upload, Copy URL";
+"quicktask.upload_copy_url" = "Upload, Copy URL";
+"quicktask.save" = "Save";
+"quicktask.copy_image" = "Copy image";
+"quicktask.annotate" = "Annotate";
+
 /* Share extension */
 "share.title" = "Upload with SwiftX";
 "share.collecting" = "Collecting…";
