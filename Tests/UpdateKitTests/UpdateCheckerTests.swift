@@ -125,9 +125,12 @@ struct UpdateCheckerTests {
 
     @Test func frequencyIntervalsMatchCadence() {
         #expect(UpdateCheckFrequency.off.interval == nil)
-        #expect(UpdateCheckFrequency.daily.interval == 23.5 * 3600)
-        #expect(UpdateCheckFrequency.weekly.interval == 7 * 86_400 - 1800)
-        #expect(UpdateCheckFrequency.monthly.interval == 30 * 86_400 - 1800)
+        // Double literals throughout: an all-integer expected value drifts
+        // into a heterogeneous Optional<Double> == Int comparison that is
+        // false even for equal values.
+        #expect(UpdateCheckFrequency.daily.interval == 23.5 * 3600.0)
+        #expect(UpdateCheckFrequency.weekly.interval == 7 * 86_400.0 - 1800.0)
+        #expect(UpdateCheckFrequency.monthly.interval == 30 * 86_400.0 - 1800.0)
         // raw values are what ApplicationConfig persists
         #expect(UpdateCheckFrequency(rawValue: "Daily") == .daily)
         #expect(UpdateCheckFrequency(rawValue: "daily") == nil)
