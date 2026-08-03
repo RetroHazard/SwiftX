@@ -374,3 +374,123 @@
 "effects.core.category.filters" = "Filters";
 "effects.core.error.invalid_config" = "The file does not contain a valid image effects preset.";
 "effects.core.error.packaging_failed" = "Failed to package the image effects preset.";
+
+/* HotkeyActions.swift */
+"notification.upload.folder_index_failed" = "Folder index failed";
+"notification.url_shortener.title" = "URL shortener";
+"notification.url_shortener.could_not_shorten" = "Could not shorten %@.";
+"notification.url_shortener.shortened" = "URL shortened";
+"alert.clipboard.image_summary" = "Image %d × %d";
+"notification.clipboard.upload_title" = "Clipboard upload";
+"notification.clipboard.empty" = "The clipboard is empty.";
+"alert.clipboard.upload_content_question" = "Upload clipboard content?";
+"alert.upload.upload_button" = "Upload";
+"alert.upload.text_title" = "Upload text";
+"alert.upload.url_prompt" = "URL to download from and upload";
+"alert.upload.shorten_url_prompt" = "URL to shorten";
+"pipeline.window.drop_to_upload" = "Drop to upload";
+"pipeline.drop_files_here" = "Drop files here";
+
+/* UploadCoordinator.swift */
+"notification.upload.failed" = "Upload failed";
+"notification.upload.could_not_encode_image" = "Could not encode the image.";
+"notification.upload.could_not_read" = "Could not read %@.";
+"alert.upload.large_file_question" = "Upload large file?";
+"alert.upload.large_file_info" = "%@ is %@.";
+"alert.upload.multi_question" = "Upload %d files?";
+"alert.upload.multi_info" = "This starts %d upload tasks.";
+"alert.upload.upload_all_button" = "Upload All";
+"notification.upload.download_too_large" = "Download too large";
+"notification.upload.download_too_large_body" = "%@ exceeds the %d MB limit.";
+"notification.upload.error_no_custom_uploader" = "No custom uploader configured. Import a .sxcu in Settings → Custom Uploader.";
+"notification.upload.error_not_implemented" = "Destination \"%@\" is not implemented yet.";
+"notification.upload.skipped" = "Upload skipped";
+"notification.upload.disabled_in_tray" = "Uploads are disabled in the tray menu.";
+"notification.upload.stopped" = "Stopped";
+"notification.url_shortener.failed" = "URL shortener failed";
+"notification.upload.complete" = "Upload complete";
+
+/* AfterCapturePipeline.swift */
+"notification.capture.action_failed" = "Action failed";
+"alert.capture.file_exists" = "“%@” already exists";
+"alert.capture.file_exists_info" = "Choose what to do with the new capture.";
+"alert.capture.keep_both" = "Keep Both";
+"alert.capture.overwrite" = "Overwrite";
+"alert.capture.task_failed" = "After-capture task failed";
+"notification.pin.title" = "Pin to screen";
+"notification.pin.no_image" = "No image on the clipboard.";
+"pipeline.pin.copy_image" = "Copy Image";
+"pipeline.pin.save_as" = "Save As…";
+"pipeline.pin.close_all" = "Close All Pins";
+
+/* RecordingCoordinator.swift */
+"notification.recording.converting" = "Converting to %@…";
+"notification.recording.conversion_failed_kept_mp4" = "%@ conversion failed — kept MP4";
+"notification.recording.failed" = "Recording failed";
+"alert.recording.abort_question" = "Abort recording?";
+"alert.recording.abort_info" = "The recording will be discarded.";
+"alert.recording.abort_button" = "Abort";
+"alert.recording.keep_recording" = "Keep Recording";
+"notification.recording.ffmpeg_not_found" = "ffmpeg not found — recording H.264 instead";
+"notification.recording.install_ffmpeg" = "Install ffmpeg from SwiftX Settings to enable WebM/WebP/APNG.";
+"alert.recording.failed" = "Recording failed";
+"notification.recording.saved" = "Recording saved";
+
+/* CaptureCoordinator.swift */
+"notification.capture.custom_window_title" = "Custom window capture";
+"notification.capture.custom_window_unset" = "Set CaptureCustomWindow in TaskSettings.json first.";
+"notification.capture.custom_window_no_match" = "No window matching \"%@\".";
+"alert.capture.failed" = "Capture failed";
+"alert.capture.failed_info" = "%@\n\nIf this is a permission problem, grant Screen Recording access in SwiftX Settings.";
+
+/* CLI.swift */
+"notification.cli.action_download_and_upload" = "download and upload %@";
+"notification.cli.action_upload_local_file" = "upload the local file %@";
+"alert.cli.action_import_custom_uploader" = "Import the custom uploader configuration at %@";
+"alert.cli.action_import_image_effect" = "Import the image-effect preset at %@";
+"alert.cli.action_run_on_file" = "Run %@ on the local file %@";
+"alert.cli.action_run_clipboard_upload" = "Run %@, which uploads your current clipboard contents";
+"alert.cli.allow_action_question" = "Allow this SwiftX action?";
+"alert.cli.allow_action_info" = "Another app or a web page asked SwiftX to:\n\n%@\n\nOnly continue if you started this yourself.";
+"notification.cli.blocked_request" = "SwiftX blocked a request";
+"notification.cli.blocked_request_body" = "Ignored a request from another app or web page to %@.";
+"alert.cli.action_browser_download_upload" = "Download and upload from the browser extension:\n%@";
+"alert.cli.action_browser_upload_text" = "Upload text sent from the browser extension";
+
+/* OAuthConnect.swift */
+"oauth.no_credentials" = "This build of SwiftX ships without %@ app credentials, so it can't connect.";
+"oauth.error.browser_open_failed" = "the sign-in page could not be opened in your browser";
+"oauth.error.unexpected_response" = "the browser returned an unexpected response";
+"oauth.error.token_exchange_failed" = "token exchange failed: %@";
+"oauth.connected" = "Connected. %@ is ready to use.";
+"oauth.connection_failed" = "%@ connection failed";
+
+/* PipelineWindows.swift */
+"pipeline.window.after_capture_tasks" = "After Capture Tasks";
+"pipeline.file_name_label" = "File name:";
+"pipeline.section.after_capture" = "After capture";
+"pipeline.section.after_upload" = "After upload";
+"pipeline.window.before_upload" = "Before Upload";
+"pipeline.before_upload_message" = "%@ is about to be uploaded to %@. You may choose a different destination.";
+"pipeline.destination_label" = "Destination:";
+"pipeline.destination.custom_uploader" = "Custom uploader";
+"pipeline.window.upload_complete" = "Upload complete";
+"pipeline.link.url" = "URL";
+"pipeline.link.original_url" = "Original URL";
+"pipeline.link.thumbnail_url" = "Thumbnail URL";
+"pipeline.link.deletion_url" = "Deletion URL";
+"pipeline.link.forum_bbcode" = "Forum (BBCode)";
+"pipeline.link.html" = "HTML";
+"pipeline.link.markdown" = "Markdown";
+"pipeline.link.wiki" = "Wiki";
+
+/* QuickTaskMenu.swift */
+"quicktaskmenu.edit_this_menu" = "Edit This Menu…";
+"quicktaskmenu.window_title" = "Quick Task Menu";
+"quicktaskmenu.separator" = "— separator —";
+"quicktaskmenu.separator_button" = "Separator";
+"quicktaskmenu.name_label" = "Name:";
+"quicktaskmenu.select_preset_hint" = "Select a preset to edit it.";
+
+/* Notifier.swift */
+"notification.capture.screenshot_captured" = "Screenshot captured";

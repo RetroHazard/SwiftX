@@ -79,7 +79,7 @@ enum Notifier {
     }
 
     static func captureSaved(_ url: URL) {
-        notify(title: "Screenshot captured", body: url.lastPathComponent,
+        notify(title: L10n.t("notification.capture.screenshot_captured"), body: url.lastPathComponent,
                sound: TaskSettings.load().playSoundAfterCapture, filePath: url.path, event: .capture)
     }
 

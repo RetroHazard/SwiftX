@@ -194,7 +194,7 @@ enum AfterCapturePipeline {
             do {
                 savedURL = try await ExternalProgramRunner.runAll(settings.externalPrograms, on: inputURL)
             } catch {
-                Notifier.notify(title: "Action failed", body: error.localizedDescription)
+                Notifier.notify(title: L10n.t("notification.capture.action_failed"), body: error.localizedDescription)
             }
         }
 
@@ -297,11 +297,11 @@ enum AfterCapturePipeline {
         var resolved = action
         if action == .ask {
             let alert = NSAlert()
-            alert.messageText = "“\(url.lastPathComponent)” already exists"
-            alert.informativeText = "Choose what to do with the new capture."
-            alert.addButton(withTitle: "Keep Both")
-            alert.addButton(withTitle: "Overwrite")
-            alert.addButton(withTitle: "Cancel")
+            alert.messageText = L10n.t("alert.capture.file_exists", url.lastPathComponent)
+            alert.informativeText = L10n.t("alert.capture.file_exists_info")
+            alert.addButton(withTitle: L10n.t("alert.capture.keep_both"))
+            alert.addButton(withTitle: L10n.t("alert.capture.overwrite"))
+            alert.addButton(withTitle: L10n.t("common.cancel"))
             NSApp.activate(ignoringOtherApps: true)
             switch alert.runModal() {
             case .alertFirstButtonReturn: resolved = .uniqueName
@@ -314,7 +314,7 @@ enum AfterCapturePipeline {
 
     private static func presentError(_ error: Error) {
         let alert = NSAlert()
-        alert.messageText = "After-capture task failed"
+        alert.messageText = L10n.t("alert.capture.task_failed")
         alert.informativeText = error.localizedDescription
         alert.alertStyle = .warning
         NSApp.activate(ignoringOtherApps: true)
@@ -358,7 +358,7 @@ enum PinnedWindows {
 
     static func pinFromClipboard() {
         guard let image = NSPasteboard.general.readObjects(forClasses: [NSImage.self])?.first as? NSImage else {
-            Notifier.notify(title: "Pin to screen", body: "No image on the clipboard.")
+            Notifier.notify(title: L10n.t("notification.pin.title"), body: L10n.t("notification.pin.no_image"))
             return
         }
         pin(image)
@@ -442,11 +442,11 @@ final class PinPanel: NSPanel {
 
     override func rightMouseDown(with event: NSEvent) {
         let menu = NSMenu()
-        menu.addItem(withTitle: "Copy Image", action: #selector(copyImage), keyEquivalent: "")
-        menu.addItem(withTitle: "Save As…", action: #selector(saveImage), keyEquivalent: "")
+        menu.addItem(withTitle: L10n.t("pipeline.pin.copy_image"), action: #selector(copyImage), keyEquivalent: "")
+        menu.addItem(withTitle: L10n.t("pipeline.pin.save_as"), action: #selector(saveImage), keyEquivalent: "")
         menu.addItem(.separator())
-        menu.addItem(withTitle: "Close", action: #selector(close), keyEquivalent: "")
-        menu.addItem(withTitle: "Close All Pins", action: #selector(closeAllPins), keyEquivalent: "")
+        menu.addItem(withTitle: L10n.t("common.close"), action: #selector(close), keyEquivalent: "")
+        menu.addItem(withTitle: L10n.t("pipeline.pin.close_all"), action: #selector(closeAllPins), keyEquivalent: "")
         menu.items.forEach { $0.target = self }
         NSMenu.popUpContextMenu(menu, with: event, for: contentView ?? NSView())
     }

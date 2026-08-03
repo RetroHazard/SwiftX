@@ -21,7 +21,8 @@ enum UploadCoordinator {
                             format: ImageFileFormat = .png, jpegQuality: Int = 90,
                             settings: TaskSettings? = nil) {
         guard let data = ImageWriter.data(image, format: format, jpegQuality: jpegQuality) else {
-            Notifier.notify(title: "Upload failed", body: "Could not encode the image.", event: .error)
+            Notifier.notify(title: L10n.t("notification.upload.failed"),
+                            body: L10n.t("notification.upload.could_not_encode_image"), event: .error)
             return
         }
         upload(UploadFile(data: data, fileName: fileName, mimeType: format.mimeType),
@@ -34,18 +35,20 @@ enum UploadCoordinator {
     static func uploadFile(at url: URL, settings: TaskSettings? = nil,
                            kind: UploadKind? = nil) {
         guard let data = try? Data(contentsOf: url) else {
-            Notifier.notify(title: "Upload failed", body: "Could not read \(url.lastPathComponent).",
+            Notifier.notify(title: L10n.t("notification.upload.failed"),
+                            body: L10n.t("notification.upload.could_not_read", url.lastPathComponent),
                             event: .error)
             return
         }
         let task = settings ?? TaskSettings.load()
         if ApplicationConfig.load().showLargeFileSizeWarning, data.count > largeFileWarningBytes {
             let alert = NSAlert()
-            alert.messageText = "Upload large file?"
-            alert.informativeText = "\(url.lastPathComponent) is "
-                + ByteCountFormatter.string(fromByteCount: Int64(data.count), countStyle: .file) + "."
-            alert.addButton(withTitle: "Upload")
-            alert.addButton(withTitle: "Cancel")
+            alert.messageText = L10n.t("alert.upload.large_file_question")
+            alert.informativeText = L10n.t(
+                "alert.upload.large_file_info", url.lastPathComponent,
+                ByteCountFormatter.string(fromByteCount: Int64(data.count), countStyle: .file))
+            alert.addButton(withTitle: L10n.t("alert.upload.upload_button"))
+            alert.addButton(withTitle: L10n.t("common.cancel"))
             NSApp.activate(ignoringOtherApps: true)
             guard alert.runModal() == .alertFirstButtonReturn else { return }
         }
@@ -77,10 +80,10 @@ enum UploadCoordinator {
     static func confirmMultiUpload(count: Int) -> Bool {
         guard count > 10, ApplicationConfig.load().showMultiUploadWarning else { return true }
         let alert = NSAlert()
-        alert.messageText = "Upload \(count) files?"
-        alert.informativeText = "This starts \(count) upload tasks."
-        alert.addButton(withTitle: "Upload All")
-        alert.addButton(withTitle: "Cancel")
+        alert.messageText = L10n.t("alert.upload.multi_question", count)
+        alert.informativeText = L10n.t("alert.upload.multi_info", count)
+        alert.addButton(withTitle: L10n.t("alert.upload.upload_all_button"))
+        alert.addButton(withTitle: L10n.t("common.cancel"))
         NSApp.activate(ignoringOtherApps: true)
         return alert.runModal() == .alertFirstButtonReturn
     }
@@ -103,8 +106,9 @@ enum UploadCoordinator {
         // Cap the relay so a hostile or runaway URL can't spill a huge file to
         // disk or push it on to the upload destination.
         guard data.count <= maxDownloadBytes else {
-            Notifier.notify(title: "Download too large",
-                            body: "\(url.lastPathComponent) exceeds the \(maxDownloadBytes / (1024 * 1024)) MB limit.")
+            Notifier.notify(title: L10n.t("notification.upload.download_too_large"),
+                            body: L10n.t("notification.upload.download_too_large_body",
+                                         url.lastPathComponent, maxDownloadBytes / (1024 * 1024)))
             return
         }
         // suggestedFilename is attacker-influenced; keep only the last path
@@ -130,9 +134,9 @@ enum UploadCoordinator {
         var errorDescription: String? {
             switch self {
             case .noCustomUploader:
-                return "No custom uploader configured. Import a .sxcu in Settings → Custom Uploader."
+                return L10n.t("notification.upload.error_no_custom_uploader")
             case .notImplemented(let destination):
-                return "Destination \"\(destination)\" is not implemented yet."
+                return L10n.t("notification.upload.error_not_implemented", destination)
             }
         }
     }
@@ -218,7 +222,8 @@ enum UploadCoordinator {
 
         // C# DisableUpload master switch: tasks silently no-op (tray shows state)
         if appConfig.disableUpload {
-            Notifier.notify(title: "Upload skipped", body: "Uploads are disabled in the tray menu.")
+            Notifier.notify(title: L10n.t("notification.upload.skipped"),
+                            body: L10n.t("notification.upload.disabled_in_tray"))
             return
         }
 
@@ -267,7 +272,7 @@ enum UploadCoordinator {
             } catch {
                 if error is CancellationError || (error as? URLError)?.code == .cancelled {
                     await MainActor.run {
-                        UploadTaskCenter.shared.finish(entryID, state: .failed(message: "Stopped"))
+                        UploadTaskCenter.shared.finish(entryID, state: .failed(message: L10n.t("notification.upload.stopped")))
                     }
                     return
                 }
@@ -288,7 +293,8 @@ enum UploadCoordinator {
                 }
                 await MainActor.run {
                     UploadTaskCenter.shared.finish(entryID, state: .failed(message: error.localizedDescription))
-                    Notifier.notify(title: "Upload failed", body: error.localizedDescription, event: .error)
+                    Notifier.notify(title: L10n.t("notification.upload.failed"),
+                                    body: error.localizedDescription, event: .error)
                 }
             }
         }
@@ -321,7 +327,8 @@ enum UploadCoordinator {
             do {
                 finalURL = try await URLShortener.shorten(finalURL, type: type)
             } catch {
-                Notifier.notify(title: "URL shortener failed", body: error.localizedDescription,
+                Notifier.notify(title: L10n.t("notification.url_shortener.failed"),
+                                body: error.localizedDescription,
                                 event: .error)
             }
         }
@@ -348,7 +355,7 @@ enum UploadCoordinator {
             AfterUploadWindow.present(result: result, finalURL: finalURL)
         }
 
-        Notifier.notify(title: "Upload complete",
+        Notifier.notify(title: L10n.t("notification.upload.complete"),
                         body: ResultURL.format(settings.balloonTipContentFormat, result: finalURL),
                         sound: settings.playSoundAfterUpload, url: finalURL, event: .taskCompleted)
     }

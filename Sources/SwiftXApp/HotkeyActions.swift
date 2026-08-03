@@ -105,7 +105,8 @@ enum UploadActions {
         var options = IndexerOptions()
         options.format = .html
         guard let html = try? FolderIndexer.index(folder: folder, options: options) else {
-            Notifier.notify(title: "Folder index failed", body: folder.lastPathComponent, event: .error)
+            Notifier.notify(title: L10n.t("notification.upload.folder_index_failed"),
+                            body: folder.lastPathComponent, event: .error)
             return
         }
         let temp = FileManager.default.temporaryDirectory
@@ -121,13 +122,14 @@ enum UploadActions {
         Task {
             let type = URLShortenerType(rawValue: TaskSettings.load().urlShortenerDestination) ?? .isgd
             guard let short = try? await URLShortener.shorten(urlString, type: type) else {
-                Notifier.notify(title: "URL shortener", body: "Could not shorten \(urlString).",
+                Notifier.notify(title: L10n.t("notification.url_shortener.title"),
+                                body: L10n.t("notification.url_shortener.could_not_shorten", urlString),
                                 event: .error)
                 return
             }
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(short, forType: .string)
-            Notifier.notify(title: "URL shortened", body: short, url: short)
+            Notifier.notify(title: L10n.t("notification.url_shortener.shortened"), body: short, url: short)
         }
     }
 
@@ -139,18 +141,19 @@ enum UploadActions {
         if let files = clipboardFileURLs(), !files.isEmpty {
             summary = files.map(\.lastPathComponent).joined(separator: "\n")
         } else if let image = NSImage(pasteboard: pasteboard) {
-            summary = "Image \(Int(image.size.width)) × \(Int(image.size.height))"
+            summary = L10n.t("alert.clipboard.image_summary", Int(image.size.width), Int(image.size.height))
         } else if let text = pasteboard.string(forType: .string), !text.isEmpty {
             summary = String(text.prefix(300))
         } else {
-            Notifier.notify(title: "Clipboard upload", body: "The clipboard is empty.")
+            Notifier.notify(title: L10n.t("notification.clipboard.upload_title"),
+                            body: L10n.t("notification.clipboard.empty"))
             return
         }
         let alert = NSAlert()
-        alert.messageText = "Upload clipboard content?"
+        alert.messageText = L10n.t("alert.clipboard.upload_content_question")
         alert.informativeText = summary
-        alert.addButton(withTitle: "Upload")
-        alert.addButton(withTitle: "Cancel")
+        alert.addButton(withTitle: L10n.t("alert.upload.upload_button"))
+        alert.addButton(withTitle: L10n.t("common.cancel"))
         NSApp.activate(ignoringOtherApps: true)
         guard alert.runModal() == .alertFirstButtonReturn else { return }
         clipboardUpload()
@@ -159,7 +162,7 @@ enum UploadActions {
     /// C# ShowTextUploadDialog.
     static func uploadTextPrompt() {
         let alert = NSAlert()
-        alert.messageText = "Upload text"
+        alert.messageText = L10n.t("alert.upload.text_title")
         let scroll = NSScrollView(frame: NSRect(x: 0, y: 0, width: 420, height: 160))
         let textView = NSTextView(frame: NSRect(origin: .zero, size: scroll.contentSize))
         textView.autoresizingMask = [.width]
@@ -167,8 +170,8 @@ enum UploadActions {
         scroll.documentView = textView
         scroll.hasVerticalScroller = true
         alert.accessoryView = scroll
-        alert.addButton(withTitle: "Upload")
-        alert.addButton(withTitle: "Cancel")
+        alert.addButton(withTitle: L10n.t("alert.upload.upload_button"))
+        alert.addButton(withTitle: L10n.t("common.cancel"))
         NSApp.activate(ignoringOtherApps: true)
         alert.window.initialFirstResponder = textView
         guard alert.runModal() == .alertFirstButtonReturn, !textView.string.isEmpty else { return }
@@ -177,23 +180,24 @@ enum UploadActions {
 
     /// C# UploadManager.UploadURL: prompt (clipboard URL prefilled) → download → upload.
     static func uploadURLPrompt() {
-        guard let entered = inputBox("URL to download from and upload", prefill: clipboardURL()),
+        guard let entered = inputBox(L10n.t("alert.upload.url_prompt"), prefill: clipboardURL()),
               let url = URL(string: entered) else { return }
         Task { await UploadCoordinator.downloadAndUpload(url) }
     }
 
     /// C# ShowShortenURLDialog; the short URL lands on the clipboard.
     static func shortenURLPrompt() {
-        guard let entered = inputBox("URL to shorten", prefill: clipboardURL()) else { return }
+        guard let entered = inputBox(L10n.t("alert.upload.shorten_url_prompt"), prefill: clipboardURL()) else { return }
         Task {
             let type = URLShortenerType(rawValue: TaskSettings.load().urlShortenerDestination) ?? .isgd
             guard let short = try? await URLShortener.shorten(entered, type: type) else {
-                Notifier.notify(title: "URL shortener", body: "Could not shorten \(entered).")
+                Notifier.notify(title: L10n.t("notification.url_shortener.title"),
+                                body: L10n.t("notification.url_shortener.could_not_shorten", entered))
                 return
             }
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(short, forType: .string)
-            Notifier.notify(title: "URL shortened", body: short, url: short)
+            Notifier.notify(title: L10n.t("notification.url_shortener.shortened"), body: short, url: short)
         }
     }
 
@@ -233,8 +237,8 @@ enum UploadActions {
         let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 420, height: 24))
         field.stringValue = prefill ?? ""
         alert.accessoryView = field
-        alert.addButton(withTitle: "OK")
-        alert.addButton(withTitle: "Cancel")
+        alert.addButton(withTitle: L10n.t("common.ok"))
+        alert.addButton(withTitle: L10n.t("common.cancel"))
         NSApp.activate(ignoringOtherApps: true)
         alert.window.initialFirstResponder = field
         guard alert.runModal() == .alertFirstButtonReturn else { return nil }
@@ -257,7 +261,7 @@ enum DropWindow {
         let panel = NSPanel(contentRect: NSRect(x: 0, y: 0, width: 200, height: 140),
                             styleMask: [.titled, .closable, .utilityWindow],
                             backing: .buffered, defer: false)
-        panel.title = "Drop to upload"
+        panel.title = L10n.t("pipeline.window.drop_to_upload")
         panel.level = .floating
         panel.isReleasedWhenClosed = false
         panel.contentView = NSHostingView(rootView: DropTargetView())
@@ -275,7 +279,7 @@ private struct DropTargetView: View {
             Image(systemName: "tray.and.arrow.down")
                 .font(.largeTitle)
                 .foregroundStyle(isTargeted ? Color.accentColor : .secondary)
-            Text("Drop files here")
+            Text(L10n.t("pipeline.drop_files_here"))
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -353,7 +357,7 @@ enum ActionsToolbar {
         let panel = NSPanel(contentRect: .zero,
                             styleMask: [.titled, .closable, .utilityWindow],
                             backing: .buffered, defer: false)
-        panel.title = "SwiftX"
+        panel.title = L10n.t("window.main")
         panel.level = .floating
         panel.isReleasedWhenClosed = false
         panel.isMovable = !config.actionsToolbarLockPosition
