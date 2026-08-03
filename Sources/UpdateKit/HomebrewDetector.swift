@@ -18,7 +18,8 @@ public enum HomebrewDetector {
         }
     }
 
-    static func candidatePrefixes() -> [String] {
+    // Public: default argument values of a public function must be public too.
+    public static func candidatePrefixes() -> [String] {
         var prefixes = ["/opt/homebrew", "/usr/local"]
         if let env = ProcessInfo.processInfo.environment["HOMEBREW_PREFIX"], !env.isEmpty {
             prefixes.insert(env, at: 0)
