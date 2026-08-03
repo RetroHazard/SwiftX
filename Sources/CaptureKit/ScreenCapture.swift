@@ -4,6 +4,7 @@
 
 import AppKit
 import ScreenCaptureKit
+import SharedKit
 
 public enum ScreenCaptureError: LocalizedError {
     case noDisplay
@@ -12,9 +13,9 @@ public enum ScreenCaptureError: LocalizedError {
 
     public var errorDescription: String? {
         switch self {
-        case .noDisplay: return "No display found for the capture area."
-        case .noWindow: return "No capturable window found for the frontmost app."
-        case .cropFailed: return "Failed to crop the captured image."
+        case .noDisplay: return L10n.t("capturekit.error.capture.no_display")
+        case .noWindow: return L10n.t("capturekit.error.capture.no_window")
+        case .cropFailed: return L10n.t("capturekit.error.capture.crop_failed")
         }
     }
 }

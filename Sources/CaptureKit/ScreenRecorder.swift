@@ -11,6 +11,7 @@ import AVFoundation
 import AppKit
 import ImageIO
 import ScreenCaptureKit
+import SharedKit
 import UniformTypeIdentifiers
 import VideoToolbox
 
@@ -34,10 +35,10 @@ public enum RecordingError: LocalizedError {
 
     public var errorDescription: String? {
         switch self {
-        case .noDisplay: return "No display found for the recording area."
-        case .noWindow: return "No recordable window found for the frontmost app."
-        case .noFrames: return "The recording captured no frames."
-        case .writerFailed(let reason): return "Could not write the recording: \(reason)"
+        case .noDisplay: return L10n.t("capturekit.error.recording.no_display")
+        case .noWindow: return L10n.t("capturekit.error.recording.no_window")
+        case .noFrames: return L10n.t("capturekit.error.recording.no_frames")
+        case .writerFailed(let reason): return L10n.t("capturekit.error.recording.writer_failed", reason)
         }
     }
 }
@@ -145,7 +146,7 @@ final class GIFEncoder {
         guard !frames.isEmpty else { throw RecordingError.noFrames }
         guard let destination = CGImageDestinationCreateWithURL(
             url as CFURL, UTType.gif.identifier as CFString, frames.count, nil
-        ) else { throw RecordingError.writerFailed("could not create GIF destination") }
+        ) else { throw RecordingError.writerFailed(L10n.t("capturekit.error.recording.gif_destination")) }
 
         let loopForever = [kCGImagePropertyGIFDictionary: [kCGImagePropertyGIFLoopCount: 0]]
         CGImageDestinationSetProperties(destination, loopForever as CFDictionary)
@@ -161,7 +162,7 @@ final class GIFEncoder {
             CGImageDestinationAddImage(destination, frame.image, properties as CFDictionary)
         }
         guard CGImageDestinationFinalize(destination) else {
-            throw RecordingError.writerFailed("could not finalize GIF")
+            throw RecordingError.writerFailed(L10n.t("capturekit.error.recording.gif_finalize"))
         }
     }
 }

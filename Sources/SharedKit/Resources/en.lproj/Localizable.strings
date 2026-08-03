@@ -806,3 +806,154 @@
 "settings.destinations.yourls_signature" = "YOURLS signature";
 "settings.destinations.zws_api_url" = "ZWS API URL (empty = api.zws.im)";
 "settings.destinations.zws_token" = "ZWS token (optional)";
+
+/* Sources/UploadKit/DestinationCatalog.swift */
+"destination.kind.image" = "image";
+"destination.kind.text" = "text";
+"destination.kind.file" = "file";
+"destination.custom_uploader" = "Custom uploader";
+
+/* Sources/UploadKit/URLShortener.swift */
+"upload.service.polr_self_hosted" = "Polr (self-hosted)";
+"upload.service.yourls_self_hosted" = "YOURLS (self-hosted)";
+"upload.error.shortener_failed" = "URL shortener failed: %@";
+"upload.error.shortener_empty_response" = "URL shortener returned an empty response.";
+"upload.error.shortener_not_configured" = "URL shortener is not configured: %@. See Settings → Destinations.";
+"upload.error.invalid_url" = "invalid URL";
+"upload.error.invalid_service_url" = "invalid %@ URL";
+"upload.error.config.bitly_token" = "bit.ly access token";
+"upload.error.config.polr" = "Polr API URL and key";
+"upload.error.config.kutt" = "Kutt API key";
+"upload.error.config.yourls_url" = "YOURLS API URL";
+"upload.error.config.yourls_credentials" = "YOURLS signature or username/password";
+
+/* Sources/UploadKit/URLSharingService.swift */
+"upload.service.email" = "Email";
+
+/* Sources/UploadKit/SimpleHostUploader.swift */
+"upload.service.pomf_clone" = "Pomf clone";
+"upload.service.chevereto_self_hosted" = "Chevereto (self-hosted)";
+"upload.error.host_generic" = "%@ error";
+"upload.error.puush.auth_failure" = "Authentication failure.";
+"upload.error.puush.checksum" = "Checksum error.";
+"upload.error.puush.storage_full" = "Insufficient account storage remaining.";
+"upload.error.puush.connection" = "Connection error.";
+
+/* Sources/UploadKit/SyntaxParser.swift */
+"upload.error.syntax.empty_function_name" = "Function name cannot be empty.";
+"upload.error.syntax.unknown_function" = "Invalid function name: %@";
+"upload.error.syntax.missing_parameters" = "Minimum parameter count for function \"%@\" is %d.";
+"upload.error.syntax.unsupported_function" = "Function \"%@\" is not supported on macOS yet.";
+"upload.error.syntax.no_response_available" = "Function \"%@\" requires a response and cannot be used in a request.";
+
+/* Sources/UploadKit/OAuth/OAuthCore.swift */
+"upload.error.oauth.not_configured" = "%@ needs OAuth app credentials. Add a client ID in Settings → Upload destination.";
+"upload.error.oauth.not_authenticated" = "Not connected to %@. Click Connect in Settings → Upload destination.";
+"upload.error.oauth.token_refresh_failed" = "Could not refresh the %@ session. Reconnect in Settings.";
+"upload.error.oauth.invalid_token_response" = "The authorization server returned an unexpected response.";
+"upload.error.oauth.authorization_failed" = "Authorization failed: %@";
+
+/* Sources/UploadKit/OAuth/LoopbackRedirect.swift */
+"upload.error.oauth.loopback_port_failed" = "could not open a loopback port: %@";
+"upload.error.oauth.loopback_port_timeout" = "could not open a loopback port (timed out)";
+"upload.error.oauth.browser_timeout" = "timed out waiting for the browser";
+"upload.service.oauth_close_page" = "You can close this window and return to SwiftX.";
+
+/* Sources/UploadKit/AmazonS3.swift */
+"upload.error.s3.incomplete_settings" = "Amazon S3 requires access key, secret key, region and bucket.";
+"upload.error.s3.invalid_endpoint" = "Invalid S3 endpoint: %@";
+
+/* Sources/UploadKit/AzureStorage.swift */
+"upload.error.azure.invalid_key" = "Azure access key is not valid base64.";
+
+/* Sources/UploadKit/BackblazeB2.swift */
+"upload.error.b2.bucket_not_found" = "B2 bucket \"%@\" not found.";
+
+/* Sources/UploadKit/CustomUploaderService.swift */
+"upload.error.missing_request_url" = "The custom uploader has no request URL.";
+"upload.error.invalid_request_url" = "Invalid request URL: %@";
+"upload.error.http_failed" = "Upload failed (HTTP %d): %@";
+"upload.error.empty_result" = "The uploader returned no URL.";
+
+/* Sources/UploadKit/TokenHostUploaders.swift */
+"upload.service.pushbullet_body" = "Sent via SwiftX";
+
+/* Sources/CaptureKit/FFmpeg.swift */
+"capture.format.h264_videotoolbox" = "H.264 (VideoToolbox hardware)";
+"capture.format.hevc_videotoolbox" = "HEVC (VideoToolbox hardware)";
+"capture.format.webp_animation" = "WebP animation";
+"capturekit.error.ffmpeg_not_installed" = "ffmpeg is not installed";
+"capturekit.error.ffmpeg_exit_status" = "ffmpeg exited with status %d";
+
+/* Sources/CaptureKit/ScreenCapture.swift */
+"capturekit.error.capture.no_display" = "No display found for the capture area.";
+"capturekit.error.capture.no_window" = "No capturable window found for the frontmost app.";
+"capturekit.error.capture.crop_failed" = "Failed to crop the captured image.";
+
+/* Sources/CaptureKit/ScreenRecorder.swift */
+"capturekit.error.recording.no_display" = "No display found for the recording area.";
+"capturekit.error.recording.no_window" = "No recordable window found for the frontmost app.";
+"capturekit.error.recording.no_frames" = "The recording captured no frames.";
+"capturekit.error.recording.writer_failed" = "Could not write the recording: %@";
+"capturekit.error.recording.gif_destination" = "could not create GIF destination";
+"capturekit.error.recording.gif_finalize" = "could not finalize GIF";
+
+/* Sources/CaptureKit/ImageWriter.swift */
+"capturekit.error.image_encoding_failed" = "Failed to encode the image.";
+
+/* Sources/ToolsKit/AIClient.swift */
+"toolskit.error.ai.missing_key" = "Set an API key in the AI analysis window first.";
+"toolskit.error.ai.bad_url" = "The AI base URL is not a valid URL.";
+"toolskit.error.ai.encoding_failed" = "The image could not be encoded.";
+"toolskit.error.ai.http" = "The AI service returned HTTP %d: %@";
+"toolskit.error.ai.empty_response" = "The AI service returned no content.";
+
+/* Sources/ToolsKit/BackgroundRemover.swift */
+"toolskit.error.background.no_subject" = "No foreground subject was detected in the image.";
+"toolskit.error.background.render_failed" = "Could not render the masked image.";
+
+/* Sources/ToolsKit/ImageMetadata.swift */
+"toolskit.error.metadata.unreadable" = "The file could not be read as an image.";
+"toolskit.error.metadata.unwritable" = "The image could not be rewritten.";
+
+/* Sources/HistoryKit/HistoryStats.swift */
+"history.stats.item_counts" = "History item counts:";
+"history.stats.total" = "Total: %d";
+"history.stats.yearly_usages" = "Yearly usages:";
+"history.stats.file_extensions" = "File extensions:";
+"history.stats.hosts" = "Hosts:";
+"history.stats.process_names" = "Process names:";
+"history.stats.empty" = "(empty)";
+
+/* Sources/SharedKit/TaskFlags.swift */
+"tasks.show_quick_task_menu" = "Show quick task menu";
+"tasks.show_after_capture_window" = "Show after capture window";
+"tasks.beautify_image" = "Beautify image";
+"tasks.add_image_effects" = "Add image effects";
+"tasks.annotate_image" = "Annotate image";
+"tasks.copy_image_to_clipboard" = "Copy image to clipboard";
+"tasks.pin_to_screen" = "Pin to screen";
+"tasks.send_image_to_printer" = "Send image to printer";
+"tasks.save_image_to_file" = "Save image to file";
+"tasks.save_image_to_file_with_dialog" = "Save image to file with dialog";
+"tasks.save_thumbnail_image_to_file" = "Save thumbnail image to file";
+"tasks.perform_actions" = "Perform actions";
+"tasks.copy_file_to_clipboard" = "Copy file to clipboard";
+"tasks.copy_file_path_to_clipboard" = "Copy file path to clipboard";
+"tasks.copy_folder_path_to_clipboard" = "Copy folder path to clipboard";
+"tasks.show_in_explorer" = "Show in explorer";
+"tasks.analyze_image" = "Analyze image";
+"tasks.scan_qr_code" = "Scan QR code";
+"tasks.do_ocr" = "Do OCR";
+"tasks.show_before_upload_window" = "Show before upload window";
+"tasks.upload_image_to_host" = "Upload image to host";
+"tasks.delete_file" = "Delete file";
+"tasks.show_after_upload_window" = "Show after upload window";
+"tasks.use_url_shortener" = "Use URL shortener";
+"tasks.share_url" = "Share URL";
+"tasks.copy_url_to_clipboard" = "Copy URL to clipboard";
+"tasks.open_url" = "Open URL";
+"tasks.show_qr_code" = "Show QR code";
+
+/* Sources/SharedKit/SettingsBackup.swift */
+"backup.tool_failed" = "The archive tool exited with status %d.";

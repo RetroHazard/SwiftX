@@ -7,36 +7,37 @@
 // totals, types, yearly usage, file extensions, hosts, process names.
 
 import Foundation
+import SharedKit
 
 public enum HistoryStats {
     public static func report(_ items: [HistoryItem]) -> String {
-        let empty = "(empty)"
+        let empty = L10n.t("history.stats.empty")
         var lines: [String] = []
 
-        lines.append("History item counts:")
-        lines.append("Total: \(items.count)")
+        lines.append(L10n.t("history.stats.item_counts"))
+        lines.append(L10n.t("history.stats.total", items.count))
         lines.append(contentsOf: percentGroups(items) { $0.type })
 
         lines.append("")
-        lines.append("Yearly usages:")
+        lines.append(L10n.t("history.stats.yearly_usages"))
         let calendar = Calendar.current
         lines.append(contentsOf: percentGroups(items, sortedByKeyDescending: true) {
             String(calendar.component(.year, from: $0.date))
         })
 
         lines.append("")
-        lines.append("File extensions:")
+        lines.append(L10n.t("history.stats.file_extensions"))
         // C# skips names ending in ")" — text uploads get names like "(clipboard)"
         let extensions = items.filter { !$0.fileName.isEmpty && !$0.fileName.hasSuffix(")") }
             .map { ($0.fileName as NSString).pathExtension }
         lines.append(contentsOf: countGroups(extensions.map { $0.isEmpty ? empty : $0 }))
 
         lines.append("")
-        lines.append("Hosts:")
+        lines.append(L10n.t("history.stats.hosts"))
         lines.append(contentsOf: countGroups(items.map { $0.host.isEmpty ? empty : $0.host }))
 
         lines.append("")
-        lines.append("Process names:")
+        lines.append(L10n.t("history.stats.process_names"))
         lines.append(contentsOf: countGroups(items.map { item in
             let name = item.tags["ProcessName"] ?? ""
             return name.isEmpty ? empty : name

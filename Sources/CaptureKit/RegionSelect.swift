@@ -9,11 +9,22 @@
 // F toggles fixed-size mode, drags auto-snap to preset sizes. Esc cancels.
 
 import AppKit
+import SharedKit
 
 public enum RegionShape: String, CaseIterable {
     case rectangle = "Rectangle"
     case ellipse = "Ellipse"
     case freehand = "Freehand"
+
+    /// Lowercase display name for the hint bar; the rawValue stays the
+    /// identity value.
+    public var localizedName: String {
+        switch self {
+        case .rectangle: return L10n.t("capture.region.shape.rectangle")
+        case .ellipse: return L10n.t("capture.region.shape.ellipse")
+        case .freehand: return L10n.t("capture.region.shape.freehand")
+        }
+    }
 }
 
 /// A completed region selection. `rect` is in Cocoa global coordinates;
@@ -430,9 +441,15 @@ private final class RegionSelectView: NSView {
     }
 
     private func drawHintBar() {
-        let magnifier = frozenScreen == nil ? "" : "   M magnifier \(state.showMagnifier ? "on" : "off")"
-        let fixed = state.fixedMode ? "on (\(Int(state.fixedSize.width))×\(Int(state.fixedSize.height)))" : "off"
-        let text = "⇥ shape: \(state.shape.rawValue.lowercased())\(magnifier)   F fixed size \(fixed)   esc cancel"
+        let magnifier = frozenScreen == nil
+            ? ""
+            : "   " + L10n.t(state.showMagnifier ? "capture.region.hint.magnifier_on"
+                                                 : "capture.region.hint.magnifier_off")
+        let fixed = state.fixedMode
+            ? L10n.t("capture.region.hint.fixed_on", Int(state.fixedSize.width), Int(state.fixedSize.height))
+            : L10n.t("capture.region.hint.fixed_off")
+        let text = L10n.t("capture.region.hint.shape", state.shape.localizedName)
+            + magnifier + "   " + fixed + "   " + L10n.t("capture.region.hint.esc")
         let attributes: [NSAttributedString.Key: Any] = [
             .font: NSFont.systemFont(ofSize: 12, weight: .medium),
             .foregroundColor: NSColor.white.withAlphaComponent(0.9)

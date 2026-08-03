@@ -206,7 +206,7 @@ public enum PushbulletUploader {
         push.setValue("application/json", forHTTPHeaderField: "Content-Type")
         push.httpBody = try JSONSerialization.data(withJSONObject: [
             "type": "file", "file_name": file.fileName, "file_url": slot.fileUrl,
-            "file_type": slot.fileType, "body": "Sent via SwiftX"
+            "file_type": slot.fileType, "body": L10n.t("upload.service.pushbullet_body")
         ])
         let (pushData, _) = try await checkedSend(push, step: "Pushbullet push")
         let iden = ((try? JSONSerialization.jsonObject(with: pushData)) as? [String: Any])?["iden"] as? String ?? ""

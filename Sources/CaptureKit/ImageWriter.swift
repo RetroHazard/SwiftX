@@ -5,12 +5,13 @@
 
 import AppKit
 import ImageIO
+import SharedKit
 import UniformTypeIdentifiers
 
 public enum ImageWriterError: LocalizedError {
     case encodingFailed
 
-    public var errorDescription: String? { "Failed to encode the image." }
+    public var errorDescription: String? { L10n.t("capturekit.error.image_encoding_failed") }
 }
 
 /// Screenshot output formats; raw values match the C# EImageFormat enum names

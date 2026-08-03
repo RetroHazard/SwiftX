@@ -48,9 +48,50 @@ public extension NamedOptionSet {
     }
 }
 
+/// L10n keys for the known flag labels. Only DISPLAY goes through these; the
+/// pascal names themselves are the persisted JSON values and never change.
+private let taskFlagTitleKeys: [String: String] = [
+    "ShowQuickTaskMenu": "tasks.show_quick_task_menu",
+    "ShowAfterCaptureWindow": "tasks.show_after_capture_window",
+    "BeautifyImage": "tasks.beautify_image",
+    "AddImageEffects": "tasks.add_image_effects",
+    "AnnotateImage": "tasks.annotate_image",
+    "CopyImageToClipboard": "tasks.copy_image_to_clipboard",
+    "PinToScreen": "tasks.pin_to_screen",
+    "SendImageToPrinter": "tasks.send_image_to_printer",
+    "SaveImageToFile": "tasks.save_image_to_file",
+    "SaveImageToFileWithDialog": "tasks.save_image_to_file_with_dialog",
+    "SaveThumbnailImageToFile": "tasks.save_thumbnail_image_to_file",
+    "PerformActions": "tasks.perform_actions",
+    "CopyFileToClipboard": "tasks.copy_file_to_clipboard",
+    "CopyFilePathToClipboard": "tasks.copy_file_path_to_clipboard",
+    "CopyFolderPathToClipboard": "tasks.copy_folder_path_to_clipboard",
+    "ShowInExplorer": "tasks.show_in_explorer",
+    "AnalyzeImage": "tasks.analyze_image",
+    "ScanQRCode": "tasks.scan_qr_code",
+    "DoOCR": "tasks.do_ocr",
+    "ShowBeforeUploadWindow": "tasks.show_before_upload_window",
+    "UploadImageToHost": "tasks.upload_image_to_host",
+    "DeleteFile": "tasks.delete_file",
+    "ShowAfterUploadWindow": "tasks.show_after_upload_window",
+    "UseURLShortener": "tasks.use_url_shortener",
+    "ShareURL": "tasks.share_url",
+    "CopyURLToClipboard": "tasks.copy_url_to_clipboard",
+    "OpenURL": "tasks.open_url",
+    "ShowQRCode": "tasks.show_qr_code"
+]
+
+/// Localized flag label ("SaveImageToFile" -> "Save image to file"). Known
+/// flags look up their translation; unknown names fall back to the generated
+/// English title below. Output is display-only — nothing persists it.
+public func taskFlagTitle(_ pascal: String) -> String {
+    guard let key = taskFlagTitleKeys[pascal] else { return englishTaskFlagTitle(pascal) }
+    return L10n.t(key)
+}
+
 /// "SaveImageToFile" -> "Save image to file"; acronym runs stay upper ("DoOCR" -> "Do OCR").
 /// Approximates the C# [Description] strings without a hand-written table.
-public func taskFlagTitle(_ pascal: String) -> String {
+func englishTaskFlagTitle(_ pascal: String) -> String {
     var words: [String] = []
     var current = ""
     let chars = Array(pascal)

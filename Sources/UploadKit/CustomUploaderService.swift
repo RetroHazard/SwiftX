@@ -39,13 +39,13 @@ public enum UploadError: LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .missingRequestURL:
-            return "The custom uploader has no request URL."
+            return L10n.t("upload.error.missing_request_url")
         case .invalidRequestURL(let url):
-            return "Invalid request URL: \(url)"
+            return L10n.t("upload.error.invalid_request_url", url)
         case .httpError(let statusCode, let message):
-            return "Upload failed (HTTP \(statusCode)): \(message)"
+            return L10n.t("upload.error.http_failed", statusCode, message)
         case .emptyResult:
-            return "The uploader returned no URL."
+            return L10n.t("upload.error.empty_result")
         }
     }
 }

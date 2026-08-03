@@ -26,9 +26,9 @@ public enum UploadKind: String, CaseIterable, Sendable {
     /// Label for the slot, used where a destination has to explain itself.
     public var displayName: String {
         switch self {
-        case .image: return "image"
-        case .text: return "text"
-        case .file: return "file"
+        case .image: return L10n.t("destination.kind.image")
+        case .text: return L10n.t("destination.kind.text")
+        case .file: return L10n.t("destination.kind.file")
         }
     }
 
@@ -83,9 +83,9 @@ public enum DestinationCatalog {
     /// Every destination, in picker order. The custom-uploader sentinel for a
     /// slot leads, then general storage, then the specialised hosts.
     public static let all: [UploadDestination] = [
-        UploadDestination(id: "CustomImageUploader", displayName: "Custom uploader", kinds: [.image]),
-        UploadDestination(id: "CustomTextUploader", displayName: "Custom uploader", kinds: [.text]),
-        UploadDestination(id: "CustomFileUploader", displayName: "Custom uploader", kinds: [.file]),
+        UploadDestination(id: "CustomImageUploader", displayName: L10n.t("destination.custom_uploader"), kinds: [.image]),
+        UploadDestination(id: "CustomTextUploader", displayName: L10n.t("destination.custom_uploader"), kinds: [.text]),
+        UploadDestination(id: "CustomFileUploader", displayName: L10n.t("destination.custom_uploader"), kinds: [.file]),
 
         // General-purpose storage and file hosts: any kind.
         UploadDestination(id: "AmazonS3", displayName: "Amazon S3", kinds: anyFile),

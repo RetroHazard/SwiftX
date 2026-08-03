@@ -7,6 +7,7 @@
 // model download and runs on the Neural Engine where available.
 
 import CoreImage
+import SharedKit
 import Vision
 
 public enum BackgroundRemoverError: LocalizedError {
@@ -15,8 +16,8 @@ public enum BackgroundRemoverError: LocalizedError {
 
     public var errorDescription: String? {
         switch self {
-        case .noSubject: return "No foreground subject was detected in the image."
-        case .renderFailed: return "Could not render the masked image."
+        case .noSubject: return L10n.t("toolskit.error.background.no_subject")
+        case .renderFailed: return L10n.t("toolskit.error.background.render_failed")
         }
     }
 }
