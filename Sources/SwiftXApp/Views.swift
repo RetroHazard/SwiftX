@@ -563,6 +563,28 @@ struct SettingsView: View {
         }
     }
 
+    /// Language lookups are pointed at the new table only on launch, so offer
+    /// a relaunch. Quit-then-open with a delay: the flock in SingleInstance
+    /// would make an instance opened before we exit bail out immediately.
+    private func promptRelaunch() {
+        let alert = NSAlert()
+        alert.messageText = L10n.t("settings.general.language.restart_title")
+        alert.informativeText = L10n.t("settings.general.language.restart_body")
+        alert.addButton(withTitle: L10n.t("settings.general.language.relaunch_now"))
+        alert.addButton(withTitle: L10n.t("settings.general.language.later"))
+        NSApp.activate(ignoringOtherApps: true)
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        let bundlePath = Bundle.main.bundlePath
+        if bundlePath.hasSuffix(".app") {
+            let script = "sleep 1; /usr/bin/open \"\(bundlePath)\""
+            let relauncher = Process()
+            relauncher.executableURL = URL(fileURLWithPath: "/bin/sh")
+            relauncher.arguments = ["-c", script]
+            try? relauncher.run()
+        }
+        NSApp.terminate(nil)
+    }
+
     private func exportSettings() {
         let panel = NSSavePanel()
         let stamp = DateFormatter()
@@ -766,6 +788,16 @@ struct SettingsView: View {
 
     @ViewBuilder
     private var generalPane: some View {
+        Section(L10n.t("settings.general.section.language")) {
+            Picker(L10n.t("settings.general.language.picker"),
+                   selection: configBinding(\.interfaceLanguage)) {
+                Text(L10n.t("settings.general.language.system_default")).tag("")
+                ForEach(L10n.availableLanguages, id: \.self) { code in
+                    Text(L10n.displayName(for: code)).tag(code)
+                }
+            }
+            .onChange(of: config.interfaceLanguage) { promptRelaunch() }
+        }
         Section("Permissions") {
             PermissionsView()
         }

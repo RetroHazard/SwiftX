@@ -216,6 +216,10 @@ public struct ApplicationConfig: SettingsFile {
     /// TrayMenuItemID raw values the user hid from the status-bar menu
     /// (macOS-only key; Settings and Quit are never hideable).
     public var trayMenuHiddenItems: [String] = []
+    /// BCP-47 code of the UI language override; "" = system default.
+    /// macOS-only key - deliberately not ShareX's "Language" enum key, whose
+    /// values ("English", "Automatic") would collide on .sxb import.
+    public var interfaceLanguage = ""
     public var disableHotkeysOnFullscreen = false
     /// Minimum milliseconds between repeats of the same hotkey (0 = off).
     public var hotkeyRepeatLimit = 500
@@ -263,6 +267,7 @@ public struct ApplicationConfig: SettingsFile {
         case trayLeftClickAction = "TrayLeftClickAction"
         case trayIconProgressEnabled = "TrayIconProgressEnabled"
         case trayMenuHiddenItems = "TrayMenuHiddenItems"
+        case interfaceLanguage = "InterfaceLanguage"
         case disableHotkeysOnFullscreen = "DisableHotkeysOnFullscreen"
         case hotkeyRepeatLimit = "HotkeyRepeatLimit"
         case actionsToolbarList = "ActionsToolbarList"
@@ -295,6 +300,7 @@ public struct ApplicationConfig: SettingsFile {
         trayLeftClickAction = try c.decodeIfPresent(String.self, forKey: .trayLeftClickAction) ?? "ToggleTrayMenu"
         trayIconProgressEnabled = try c.decodeIfPresent(Bool.self, forKey: .trayIconProgressEnabled) ?? true
         trayMenuHiddenItems = try c.decodeIfPresent([String].self, forKey: .trayMenuHiddenItems) ?? []
+        interfaceLanguage = try c.decodeIfPresent(String.self, forKey: .interfaceLanguage) ?? ""
         disableHotkeysOnFullscreen = try c.decodeIfPresent(Bool.self, forKey: .disableHotkeysOnFullscreen) ?? false
         hotkeyRepeatLimit = try c.decodeIfPresent(Int.self, forKey: .hotkeyRepeatLimit) ?? 500
         actionsToolbarList = try c.decodeIfPresent([String].self, forKey: .actionsToolbarList)

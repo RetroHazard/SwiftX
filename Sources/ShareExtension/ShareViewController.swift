@@ -37,11 +37,11 @@ final class ShareViewController: NSViewController {
         }
     }
 
-    private let titleLabel = NSTextField(labelWithString: "Upload with SwiftX")
-    private let summaryLabel = NSTextField(wrappingLabelWithString: "Collecting…")
+    private let titleLabel = NSTextField(labelWithString: L10n.t("share.title"))
+    private let summaryLabel = NSTextField(wrappingLabelWithString: L10n.t("share.collecting"))
     private let spinner = NSProgressIndicator()
-    private let uploadButton = NSButton(title: "Upload", target: nil, action: nil)
-    private let cancelButton = NSButton(title: "Cancel", target: nil, action: nil)
+    private let uploadButton = NSButton(title: L10n.t("share.upload"), target: nil, action: nil)
+    private let cancelButton = NSButton(title: L10n.t("common.cancel"), target: nil, action: nil)
     private var payloads: [Payload] = []
 
     // MARK: - View
@@ -125,7 +125,7 @@ final class ShareViewController: NSViewController {
         case swiftXUnreachable
 
         var errorDescription: String? {
-            "SwiftX could not be opened — check that SwiftX.app is still installed."
+            L10n.t("share.error.unreachable")
         }
     }
 
@@ -156,7 +156,7 @@ final class ShareViewController: NSViewController {
         spinner.stopAnimation(nil)
         spinner.isHidden = true
         cancelButton.isEnabled = true
-        cancelButton.title = "Close"
+        cancelButton.title = L10n.t("common.close")
         summaryLabel.stringValue = error.localizedDescription
     }
 
@@ -193,12 +193,12 @@ final class ShareViewController: NSViewController {
         spinner.stopAnimation(nil)
         spinner.isHidden = true
         guard !payloads.isEmpty else {
-            summaryLabel.stringValue = "Nothing here that SwiftX can upload."
-            cancelButton.title = "Close"
+            summaryLabel.stringValue = L10n.t("share.nothing_to_upload")
+            cancelButton.title = L10n.t("common.close")
             return
         }
         summaryLabel.stringValue = payloads.prefix(5).map(\.displayName).joined(separator: "\n")
-            + (payloads.count > 5 ? "\nand \(payloads.count - 5) more…" : "")
+            + (payloads.count > 5 ? "\n" + L10n.t("share.and_more", payloads.count - 5) : "")
         uploadButton.isEnabled = true
         view.window?.makeFirstResponder(uploadButton)
     }

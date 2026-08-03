@@ -49,17 +49,17 @@ enum Notifier {
             UNNotificationCategory(
                 identifier: urlCategory,
                 actions: [
-                    UNNotificationAction(identifier: copyURLAction, title: "Copy URL"),
-                    UNNotificationAction(identifier: openURLAction, title: "Open")
+                    UNNotificationAction(identifier: copyURLAction, title: L10n.t("notification.action.copy_url")),
+                    UNNotificationAction(identifier: openURLAction, title: L10n.t("notification.action.open"))
                 ],
                 intentIdentifiers: []
             ),
             UNNotificationCategory(
                 identifier: fileCategory,
                 actions: [
-                    UNNotificationAction(identifier: showFileAction, title: "Show in Finder"),
-                    UNNotificationAction(identifier: annotateFileAction, title: "Annotate"),
-                    UNNotificationAction(identifier: deleteFileAction, title: "Delete",
+                    UNNotificationAction(identifier: showFileAction, title: L10n.t("notification.action.show_in_finder")),
+                    UNNotificationAction(identifier: annotateFileAction, title: L10n.t("notification.action.annotate")),
+                    UNNotificationAction(identifier: deleteFileAction, title: L10n.t("notification.action.delete"),
                                          options: [.destructive])
                 ],
                 intentIdentifiers: []

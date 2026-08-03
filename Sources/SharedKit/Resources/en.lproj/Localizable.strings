@@ -1,0 +1,125 @@
+/* SwiftX - English (base) strings.
+   One file per language: copy this file to <code>.lproj/Localizable.strings,
+   translate the values (never the keys), and run Scripts/check-localizations.sh.
+   See /docs/LOCALIZATION.md for the contributor guide. */
+
+/* Common - shared buttons and labels */
+"common.ok" = "OK";
+"common.cancel" = "Cancel";
+"common.save" = "Save";
+"common.close" = "Close";
+"common.delete" = "Delete";
+"common.remove" = "Remove";
+"common.add" = "Add";
+"common.edit" = "Edit";
+"common.done" = "Done";
+"common.open" = "Open";
+"common.copy" = "Copy";
+"common.reset" = "Reset";
+"common.choose" = "Choose…";
+"common.browse" = "Browse…";
+"common.none" = "None";
+"common.none_chosen" = "None chosen";
+"common.name" = "Name";
+"common.enabled" = "Enabled";
+"common.continue" = "Continue";
+"common.quit" = "Quit";
+"common.show_in_finder" = "Show in Finder";
+
+/* Status-bar menu (AppDelegate) */
+"menu.capture_region" = "Capture Region";
+"menu.capture_full_screen" = "Capture Full Screen";
+"menu.capture_active_window" = "Capture Active Window";
+"menu.capture_screen" = "Capture Screen…";
+"menu.capture_window" = "Capture Window…";
+"menu.capture_last_region" = "Capture Last Region";
+"menu.scrolling_capture" = "Scrolling Capture…";
+"menu.auto_capture" = "Auto Capture…";
+"menu.screenshot_delay" = "Screenshot Delay";
+"menu.recording" = "Recording";
+"menu.record_screen_region" = "Record Screen (Region)…";
+"menu.record_gif_region" = "Record GIF (Region)…";
+"menu.stop_recording" = "Stop Recording";
+"menu.pause_recording" = "Pause Recording";
+"menu.resume_recording" = "Resume Recording";
+"menu.abort_recording" = "Abort Recording";
+"menu.upload" = "Upload";
+"menu.tools" = "Tools";
+"menu.recent" = "Recent";
+"menu.main_window" = "Main Window…";
+"menu.show_log" = "Show Log…";
+"menu.settings" = "Settings…";
+"menu.quit" = "Quit SwiftX";
+"menu.upload_file" = "Upload File…";
+"menu.upload_folder" = "Upload Folder…";
+"menu.upload_clipboard" = "Upload from Clipboard";
+"menu.upload_text" = "Upload Text…";
+"menu.upload_url" = "Upload URL…";
+"menu.shorten_url" = "Shorten URL…";
+"menu.drop_window" = "Drop Window";
+"menu.stop_all_uploads" = "Stop All Uploads";
+"menu.disable_uploads" = "Disable Uploads";
+"menu.recent_disabled" = "Disabled in Settings";
+"menu.recent_empty" = "No recent tasks";
+"menu.recent_copy_tooltip" = "Copy %@";
+"menu.delay_off" = "Off";
+"menu.delay_second" = "%d Second";
+"menu.delay_seconds" = "%d Seconds";
+"menu.no_capturable_windows" = "No capturable windows";
+
+/* Tools menu */
+"tools.color_picker" = "Color Picker…";
+"tools.screen_color_picker" = "Screen Color Picker";
+"tools.ruler" = "Ruler";
+"tools.pin_image_file" = "Pin Image File to Screen…";
+"tools.image_viewer" = "Image Viewer…";
+"tools.image_combiner" = "Image Combiner…";
+"tools.image_splitter" = "Image Splitter…";
+"tools.image_thumbnailer" = "Image Thumbnailer…";
+"tools.image_effects" = "Image Effects…";
+"tools.image_beautifier" = "Image Beautifier…";
+"tools.background_remover" = "Background Remover…";
+"tools.image_comparer" = "Image Comparer…";
+"tools.video_converter" = "Video Converter…";
+"tools.video_thumbnailer" = "Video Thumbnailer…";
+"tools.ai_image_analysis" = "AI Image Analysis…";
+"tools.ocr" = "OCR…";
+"tools.qr_code" = "QR Code…";
+"tools.hash_checker" = "Hash Checker…";
+"tools.image_metadata" = "Image Metadata…";
+"tools.index_folder" = "Index Folder…";
+"tools.clipboard_viewer" = "Clipboard Viewer…";
+"tools.inspect_window" = "Inspect Window…";
+"tools.monitor_test" = "Monitor Test";
+
+/* Window titles */
+"window.main" = "SwiftX";
+"window.settings" = "SwiftX Settings";
+
+/* Notifications */
+"notification.name_parser.title" = "Name parser";
+"notification.action.copy_url" = "Copy URL";
+"notification.action.open" = "Open";
+"notification.action.show_in_finder" = "Show in Finder";
+"notification.action.annotate" = "Annotate";
+"notification.action.delete" = "Delete";
+
+/* Accessibility */
+"accessibility.recording" = "SwiftX recording";
+
+/* Share extension */
+"share.title" = "Upload with SwiftX";
+"share.collecting" = "Collecting…";
+"share.upload" = "Upload";
+"share.nothing_to_upload" = "Nothing here that SwiftX can upload.";
+"share.and_more" = "and %d more…";
+"share.error.unreachable" = "SwiftX could not be opened — check that SwiftX.app is still installed.";
+
+/* Settings > General - language picker */
+"settings.general.section.language" = "Language";
+"settings.general.language.picker" = "App language";
+"settings.general.language.system_default" = "System default";
+"settings.general.language.restart_title" = "Relaunch to apply language";
+"settings.general.language.restart_body" = "SwiftX must relaunch to apply the new language.";
+"settings.general.language.relaunch_now" = "Relaunch Now";
+"settings.general.language.later" = "Later";
