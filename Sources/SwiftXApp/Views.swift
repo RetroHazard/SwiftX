@@ -389,7 +389,15 @@ struct UpdatesView: View {
     @ViewBuilder private var updateStatusRow: some View {
         switch updater.state {
         case .idle:
-            LabeledContent("Status") { Text("Not checked yet") }
+            // No check has run this session; fall back to the persisted
+            // timestamp so a relaunch doesn't read as "never checked".
+            LabeledContent("Status") {
+                if let date = updater.lastCheckDate {
+                    Text("Last checked \(date.formatted(.relative(presentation: .named)))")
+                } else {
+                    Text("Not checked yet")
+                }
+            }
         case .checking:
             LabeledContent("Status") {
                 HStack(spacing: 6) {

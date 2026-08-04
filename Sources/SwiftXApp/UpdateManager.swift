@@ -31,7 +31,15 @@ final class UpdateManager: ObservableObject {
     }
 
     @Published private(set) var state: State = .idle
+    /// Completion time of the most recent check, any outcome. Backed by
+    /// ApplicationConfig so "Last checked" survives a relaunch, unlike `state`.
+    @Published private(set) var lastCheckDate: Date?
     let isHomebrewManaged = HomebrewDetector.isHomebrewManaged()
+
+    private init() {
+        let stored = ApplicationConfig.load().updateLastCheckTime
+        if stored > 0 { lastCheckDate = Date(timeIntervalSince1970: stored) }
+    }
 
     private var loop: Task<Void, Never>?
     private var installInFlight = false
@@ -84,16 +92,22 @@ final class UpdateManager: ObservableObject {
         await backgroundCheck()
     }
 
+    private func recordCheckTime() {
+        let now = Date()
+        lastCheckDate = now
+        var config = ApplicationConfig.load()
+        config.updateLastCheckTime = now.timeIntervalSince1970
+        try? config.save()
+    }
+
     private func backgroundCheck() async {
         guard let current = Self.currentVersion() else { return }
         let outcome: UpdateChecker.Outcome
         do {
             let release = try await UpdateChecker.fetchLatestRelease()
-            var config = ApplicationConfig.load()
-            config.updateLastCheckTime = Date().timeIntervalSince1970
-            try? config.save()
+            recordCheckTime()
             outcome = try UpdateChecker.evaluate(current: current, release: release,
-                                                 skippedVersion: config.updateSkippedVersion)
+                                                 skippedVersion: ApplicationConfig.load().updateSkippedVersion)
         } catch {
             AppLog.updates.error("background check failed: \(error.localizedDescription, privacy: .public)")
             return
@@ -161,9 +175,7 @@ final class UpdateManager: ObservableObject {
         }
         do {
             let release = try await UpdateChecker.fetchLatestRelease()
-            var config = ApplicationConfig.load()
-            config.updateLastCheckTime = Date().timeIntervalSince1970
-            try? config.save()
+            recordCheckTime()
             let outcome = try UpdateChecker.evaluate(current: current, release: release,
                                                      skippedVersion: "")
             switch outcome {
