@@ -40,6 +40,12 @@ struct HotkeysSettingsView: View {
     }
 
     var body: some View {
+        Section("Hotkey guards") {
+            Toggle("Disable hotkeys while a fullscreen app is active",
+                   isOn: configBinding(\.disableHotkeysOnFullscreen))
+            TextField("Ignore hotkey repeats within (ms, 0 = off)",
+                      value: clampedConfigBinding(\.hotkeyRepeatLimit, 0...5000), format: .number)
+        }
         Section("Hotkeys") {
             ForEach(settings.hotkeys.indices, id: \.self) { index in
                 HStack {
@@ -75,12 +81,6 @@ struct HotkeysSettingsView: View {
             }
         }
         .onDisappear { stopRecording() }
-        Section("Hotkey guards") {
-            Toggle("Disable hotkeys while a fullscreen app is active",
-                   isOn: configBinding(\.disableHotkeysOnFullscreen))
-            TextField("Ignore hotkey repeats within (ms, 0 = off)",
-                      value: clampedConfigBinding(\.hotkeyRepeatLimit, 0...5000), format: .number)
-        }
     }
 
     private func buttonTitle(_ index: Int) -> String {
