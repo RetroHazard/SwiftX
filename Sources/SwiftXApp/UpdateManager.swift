@@ -3,7 +3,7 @@
 // Licensed under GPL v3 - see /LICENSE
 //
 // Update orchestration: background checks on the configured cadence, manual
-// checks from the status menu / About pane, and the install-relaunch flow.
+// checks from the status menu / Updates pane, and the install-relaunch flow.
 // Homebrew installs are never self-replaced - brew upgrade --cask swiftx owns
 // those - and any install failure falls back to the release page in the
 // browser. Auto-install never relaunches by itself: yanking a menu-bar app
@@ -105,7 +105,7 @@ final class UpdateManager: ObservableObject {
             state = .upToDate(Date())
             AppLog.updates.info("background check: up to date")
         case .skipped(let update):
-            lastUpdate = update // manual install from the About pane still works
+            lastUpdate = update // manual install from the Updates pane still works
             if case .available = state { state = .idle }
             AppLog.updates.info("background check: update skipped by user")
         case .available(let update):
@@ -142,7 +142,7 @@ final class UpdateManager: ObservableObject {
 
     // MARK: - Manual check
 
-    /// Menu item / About-pane button. Ignores cadence and skipped-version: an
+    /// Menu item / Updates-pane button. Ignores cadence and skipped-version: an
     /// explicit check always answers.
     func checkFromMenu() {
         if case .checking = state { return }

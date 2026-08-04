@@ -332,6 +332,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
     case destinations = "Destinations"
     case customUploader = "Custom Uploader"
     case hotkeys = "Hotkeys"
+    case updates = "Updates"
     case about = "About"
 
     var id: String { rawValue }
@@ -348,6 +349,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .destinations: "square.and.arrow.up"
         case .customUploader: "wrench.and.screwdriver"
         case .hotkeys: "keyboard"
+        case .updates: "arrow.triangle.2.circlepath"
         case .about: "info.circle"
         }
     }
@@ -360,22 +362,12 @@ enum SettingsPane: String, CaseIterable, Identifiable {
     @Published var pane: SettingsPane? = .general
 }
 
-/// About pane. Carries the GPL v3 "Appropriate Legal Notices": both copyright
-/// notices, the redistribution statement, the no-warranty statement, and a
-/// link to the bundled license text. Replaces the old AppKit About panel.
-struct AboutView: View {
+/// Updates pane: check/install controls, cadence, and Homebrew handoff.
+struct UpdatesView: View {
     @ObservedObject private var updater = UpdateManager.shared
     @State private var config = ApplicationConfig.load()
 
-    private var version: String {
-        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"
-    }
-    private var licenseURL: URL {
-        Bundle.main.url(forResource: "LICENSE", withExtension: "txt")
-            ?? URL(string: "https://www.gnu.org/licenses/gpl-3.0.html")!
-    }
-
-    /// AboutView has no access to SettingsView's configBinding; same
+    /// UpdatesView has no access to SettingsView's configBinding; same
     /// write-through shape, local copy.
     private func updateBinding<Value>(_ keyPath: WritableKeyPath<ApplicationConfig, Value>) -> Binding<Value> {
         Binding(
@@ -439,26 +431,6 @@ struct AboutView: View {
 
     var body: some View {
         Section {
-            HStack(spacing: 16) {
-                Image(nsImage: NSApp.applicationIconImage)
-                    .resizable()
-                    .frame(width: 72, height: 72)
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("SwiftX").font(.title).bold()
-                    Text("Version \(version)").foregroundStyle(.secondary)
-                    Text("© 2026 RetroHazard").font(.callout).foregroundStyle(.secondary)
-                    HStack(spacing: 12) {
-                        Link("Project page", destination: URL(string: "https://github.com/RetroHazard/SwiftX")!)
-                        Link("Report an issue", destination: URL(string: "https://github.com/RetroHazard/SwiftX/issues")!)
-                    }
-                    .font(.callout)
-                    .padding(.top, 2)
-                }
-                Spacer()
-            }
-            .padding(.vertical, 4)
-        }
-        Section("Updates") {
             updateStatusRow
             HStack {
                 Button("Check for Updates") { updater.checkFromMenu() }
@@ -494,6 +466,42 @@ struct AboutView: View {
                 Toggle("Automatically download and install updates",
                        isOn: updateBinding(\.updateAutoInstall))
             }
+        }
+    }
+}
+
+/// About pane. Carries the GPL v3 "Appropriate Legal Notices": both copyright
+/// notices, the redistribution statement, the no-warranty statement, and a
+/// link to the bundled license text. Replaces the old AppKit About panel.
+struct AboutView: View {
+    private var version: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"
+    }
+    private var licenseURL: URL {
+        Bundle.main.url(forResource: "LICENSE", withExtension: "txt")
+            ?? URL(string: "https://www.gnu.org/licenses/gpl-3.0.html")!
+    }
+
+    var body: some View {
+        Section {
+            HStack(spacing: 16) {
+                Image(nsImage: NSApp.applicationIconImage)
+                    .resizable()
+                    .frame(width: 72, height: 72)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("SwiftX").font(.title).bold()
+                    Text("Version \(version)").foregroundStyle(.secondary)
+                    Text("© 2026 RetroHazard").font(.callout).foregroundStyle(.secondary)
+                    HStack(spacing: 12) {
+                        Link("Project page", destination: URL(string: "https://github.com/RetroHazard/SwiftX")!)
+                        Link("Report an issue", destination: URL(string: "https://github.com/RetroHazard/SwiftX/issues")!)
+                    }
+                    .font(.callout)
+                    .padding(.top, 2)
+                }
+                Spacer()
+            }
+            .padding(.vertical, 4)
         }
         Section("Credits") {
             LabeledContent("Developed by") {
@@ -858,6 +866,7 @@ struct SettingsView: View {
                 case .destinations: destinationsPane
                 case .customUploader: CustomUploaderEditorView()
                 case .hotkeys: HotkeysSettingsView()
+                case .updates: UpdatesView()
                 case .about: AboutView()
                 }
             }
