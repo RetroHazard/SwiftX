@@ -7,8 +7,11 @@ cask "swiftx" do
   desc "Screenshot, screen recording, and file-sharing tool derived from ShareX"
   homepage "https://github.com/RetroHazard/SwiftX"
 
-  # Menu-bar (LSUIElement) app. No auto_updates stanza: `brew upgrade --cask` is
-  # the update channel, so Sparkle is unnecessary.
+  # Menu-bar (LSUIElement) app. No auto_updates stanza, even though the app has
+  # an in-app updater: it detects a Caskroom install and defers to
+  # `brew upgrade --cask swiftx` rather than replacing its own bundle, so brew
+  # stays the update channel — and the version it recorded stays accurate — for
+  # copies installed this way.
   # Matches Package.swift's .macOS(.v14) and the bundle's LSMinimumSystemVersion
   # 14.0. SwiftX calls SCScreenshotManager, which is macOS 14+, so a Ventura
   # install would place an app that cannot run.

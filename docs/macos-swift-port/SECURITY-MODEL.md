@@ -69,6 +69,28 @@ than by authenticating the peer. Replacing it with an `NSXPCConnection` whose
 peer code-signing requirement is verified would let us drop the "any local
 process can trigger a capture" surface entirely. Tracked as future hardening.
 
+## Software update boundary
+
+The in-app updater (`Sources/UpdateKit/`) downloads code from the network and
+replaces the running application with it, so it is a trust boundary in its own
+right: everything it installs must be proven to come from us before it is put
+anywhere the user will launch it.
+
+| Stage | Control |
+|-------|---------|
+| Which release to install | Only `releases/latest` from the SwiftX repository over HTTPS. Drafts and prereleases are never offered, and a tag that isn't CalVer is treated as "no update". |
+| Download integrity | The DMG must match the SHA-256 published as that release's `.dmg.sha256` asset. A release with no checksum asset **fails closed** — the updater refuses rather than installing something it cannot verify. |
+| Code authenticity | The mounted app must pass `SecStaticCodeCheckValidityWithErrors` (deep, all architectures) **and** carry the same Developer ID Team ID as the running process, plus the expected bundle identifier. Apple's Security framework is used rather than `spctl` because the question is "same publisher as me", not "what does Gatekeeper policy currently say". |
+| Time-of-check/time-of-use | The signature is re-verified on the staged copy *after* it is copied off the read-only disk image, so a swap on the mount between verification and install does not go unnoticed. |
+| Install atomicity | The bundle is replaced by two same-directory renames with rollback on failure; a crash mid-update leaves either the old or the new bundle in place, never a half-written one. Leftover staging is swept at next launch. |
+
+Two cases deliberately refuse to self-update rather than trying harder:
+**ad-hoc/dev builds** (no Team ID to match against) and **Homebrew installs**
+(detected via the Caskroom, deferred to `brew upgrade --cask swiftx` so brew's
+recorded version stays truthful). Any failure at any stage falls back to opening
+the release page in the browser — the updater never degrades to installing
+something unverified.
+
 ## Credential storage
 
 Secrets never sit in cleartext on disk. OAuth tokens live in the login Keychain

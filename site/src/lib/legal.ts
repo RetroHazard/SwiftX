@@ -48,7 +48,7 @@ export const privacy: LegalDoc = {
   title: "Privacy Policy",
   description:
     "SwiftX has no account, no server and no telemetry. What the app stores on your Mac, what it sends where, and how connected Google and Microsoft accounts are handled.",
-  effective: "25 July 2026",
+  effective: "4 August 2026",
   lede: "SwiftX has no account, no backend and no telemetry. Your captures stay on your Mac unless you set up a destination to send them to — and then they go straight there, never through us.",
   sections: [
     {
@@ -75,13 +75,13 @@ export const privacy: LegalDoc = {
             "**No account.** There is no sign-up, no login and no SwiftX user identity. Nothing about you is registered anywhere.",
             "**No backend.** The project runs no servers that receive your captures, recordings, files, settings or metadata.",
             "**No telemetry or analytics.** The app sends no usage statistics, crash reports, device identifiers or diagnostics — not to us, not to anyone.",
-            "**No update pings.** The app does not phone home to check for new versions.",
+            "**Nothing about you in the update check.** SwiftX asks GitHub for the version number of its latest release — the same public address anyone can open in a browser. It sends no identifiers and says nothing about you or your Mac, and you can turn it off entirely. \"Checking for updates\" below describes it in full.",
             "**No advertising, profiling or sale of data.** There is nothing to sell, because nothing reaches us.",
           ],
         },
         {
           kind: "p",
-          text: "That is a property of how the app is built rather than a promise you have to take on trust. The source is public at [github.com/RetroHazard/SwiftX](https://github.com/RetroHazard/SwiftX), and the network calls SwiftX makes are the ones described below — the destinations you configure, and nothing else.",
+          text: "That is a property of how the app is built rather than a promise you have to take on trust. The source is public at [github.com/RetroHazard/SwiftX](https://github.com/RetroHazard/SwiftX), and the network calls SwiftX makes are the ones described below — the destinations you configure, the update check, and nothing else.",
         },
       ],
     },
@@ -98,7 +98,7 @@ export const privacy: LegalDoc = {
           items: [
             "**Captures and recordings** — written to `~/Pictures/SwiftX` by default, or to whichever folder you choose.",
             "**History** — a `History.db` SQLite file in `~/Library/Application Support/SwiftX` recording each task's file name, path, date, type, destination host and resulting URLs.",
-            "**Settings** — JSON files in the same folder holding your hotkeys, capture preferences, workflows, watched folders, image-effect presets and destination configuration.",
+            "**Settings** — JSON files in the same folder holding your hotkeys, capture preferences, workflows, watched folders, image-effect presets, destination configuration, and update preferences (how often to check, and the time of the last check).",
             "**Logs** — a local troubleshooting log. It is written for you to read; it is never transmitted.",
             "**Credentials** — API keys, upload tokens and OAuth access and refresh tokens live in the macOS Keychain, not in the JSON settings.",
           ],
@@ -245,6 +245,24 @@ export const privacy: LegalDoc = {
       ],
     },
     {
+      id: "updates",
+      heading: "Checking for updates",
+      blocks: [
+        {
+          kind: "p",
+          text: "SwiftX can check whether a newer version has been released. It asks GitHub's public releases API for the latest release of the SwiftX repository — one request, to a public address, containing no account, no device identifier, no licence key and nothing about how you use the app. GitHub sees the request the same way it sees anyone opening the releases page in a browser; their handling of that is covered by GitHub's own privacy statement. The project runs no update server and receives nothing.",
+        },
+        {
+          kind: "p",
+          text: "You choose how often this happens in Settings → About: daily (the default), weekly, monthly, or off, and you can check by hand at any time from the menu bar. Set it to off and SwiftX makes no update request at all.",
+        },
+        {
+          kind: "p",
+          text: "If you choose to install an update, the app downloads that release's disk image from GitHub and verifies it before use: the download must match the SHA-256 checksum published with the release, and the new copy must carry a valid Apple code signature from the same Developer ID team as the copy already running. Only then is the app replaced. Nothing is uploaded as part of an update, and installs managed by Homebrew are left to `brew upgrade --cask swiftx` rather than replaced in place.",
+        },
+      ],
+    },
+    {
       id: "on-device",
       heading: "What never leaves the device",
       blocks: [
@@ -276,6 +294,7 @@ export const privacy: LegalDoc = {
             "Release builds are signed with an Apple Developer ID certificate and notarized by Apple, and the notarization ticket is stapled to the disk image — so macOS can verify the build is genuine and unaltered even with no network connection.",
             "They run under the macOS hardened runtime with no entitlement exceptions, so every protection it offers — library validation, no unsigned executable memory, no debugger attach — stays at its strictest setting.",
             "Releases are built and signed by a public automated workflow from tagged source in the repository, not assembled by hand on a maintainer's machine. What the release contains is what the public commit says it contains.",
+            "In-app updates are verified before they are installed: the downloaded disk image must match the SHA-256 checksum published with the release, and the replacement app must be validly signed by the same Apple Developer ID team as the running copy. A download that fails either check is discarded, and the app falls back to sending you to the release page rather than installing anything.",
           ],
         },
         {
