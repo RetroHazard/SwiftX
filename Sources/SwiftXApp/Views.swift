@@ -433,6 +433,7 @@ struct UpdatesView: View {
         Section {
             updateStatusRow
             HStack {
+                Spacer()
                 Button("Check for Updates") { updater.checkFromMenu() }
                     .disabled(updateActionInFlight)
                 if case .available = updater.state, !updater.isHomebrewManaged {
@@ -452,7 +453,6 @@ struct UpdatesView: View {
                 }
             }
             .pickerStyle(.menu)
-            .frame(maxWidth: 320)
             if updater.isHomebrewManaged {
                 LabeledContent("Managed by Homebrew") {
                     HStack(spacing: 8) {
