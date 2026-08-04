@@ -1,0 +1,1303 @@
+/* SwiftX - English (base) strings.
+   One file per language: copy this file to <code>.lproj/Localizable.strings,
+   translate the values (never the keys), and run Scripts/check-localizations.sh.
+   See /docs/LOCALIZATION.md for the contributor guide. */
+
+/* Common - shared buttons and labels */
+"common.ok" = "OK";
+"common.cancel" = "Annulla";
+"common.save" = "Salva";
+"common.close" = "Chiudi";
+"common.delete" = "Elimina";
+"common.remove" = "Rimuovi";
+"common.add" = "Aggiungi";
+"common.edit" = "Modifica";
+"common.done" = "Fine";
+"common.open" = "Apri";
+"common.copy" = "Copia";
+"common.reset" = "Ripristina";
+"common.choose" = "Scegli…";
+"common.browse" = "Sfoglia…";
+"common.none" = "Nessuno";
+"common.none_chosen" = "Nessuno selezionato";
+"common.name" = "Nome";
+"common.enabled" = "Attivo";
+"common.continue" = "Continua";
+"common.quit" = "Esci";
+"common.show_in_finder" = "Mostra nel Finder";
+
+/* Status-bar menu (AppDelegate) */
+"menu.capture_region" = "Cattura area";
+"menu.capture_full_screen" = "Cattura schermo intero";
+"menu.capture_active_window" = "Cattura finestra attiva";
+"menu.capture_screen" = "Cattura schermo…";
+"menu.capture_window" = "Cattura finestra…";
+"menu.capture_last_region" = "Cattura ultima area";
+"menu.scrolling_capture" = "Cattura con scorrimento…";
+"menu.auto_capture" = "Cattura automatica…";
+"menu.screenshot_delay" = "Ritardo screenshot";
+"menu.recording" = "Registrazione";
+"menu.record_screen_region" = "Registra schermo (area)…";
+"menu.record_gif_region" = "Registra GIF (area)…";
+"menu.stop_recording" = "Interrompi registrazione";
+"menu.pause_recording" = "Metti in pausa la registrazione";
+"menu.resume_recording" = "Riprendi registrazione";
+"menu.abort_recording" = "Annulla registrazione";
+"menu.upload" = "Carica";
+"menu.tools" = "Strumenti";
+"menu.recent" = "Recenti";
+"menu.main_window" = "Finestra principale…";
+"menu.show_log" = "Mostra registro…";
+"menu.check_for_updates" = "Controlla aggiornamenti…";
+"menu.settings" = "Preferenze…";
+"menu.quit" = "Esci da SwiftX";
+"menu.upload_file" = "Carica file…";
+"menu.upload_folder" = "Carica cartella…";
+"menu.upload_clipboard" = "Carica dagli appunti";
+"menu.upload_text" = "Carica testo…";
+"menu.upload_url" = "Carica URL…";
+"menu.shorten_url" = "Abbrevia URL…";
+"menu.drop_window" = "Finestra di trascinamento";
+"menu.stop_all_uploads" = "Interrompi tutti i caricamenti";
+"menu.disable_uploads" = "Disattiva caricamenti";
+"menu.recent_disabled" = "Disattivato nelle preferenze";
+"menu.recent_empty" = "Nessuna attività recente";
+"menu.recent_copy_tooltip" = "Copia %@";
+"menu.delay_off" = "Disattivato";
+"menu.delay_second" = "%d secondo";
+"menu.delay_seconds" = "%d secondi";
+"menu.no_capturable_windows" = "Nessuna finestra catturabile";
+
+/* Tools menu */
+"tools.color_picker" = "Selettore colore…";
+"tools.screen_color_picker" = "Selettore colore schermo";
+"tools.ruler" = "Righello";
+"tools.pin_image_file" = "Fissa file immagine sullo schermo…";
+"tools.image_viewer" = "Visualizzatore immagini…";
+"tools.image_combiner" = "Combinatore immagini…";
+"tools.image_splitter" = "Divisore immagini…";
+"tools.image_thumbnailer" = "Generatore miniature…";
+"tools.image_effects" = "Effetti immagine…";
+"tools.image_beautifier" = "Abbellitore immagini…";
+"tools.background_remover" = "Rimozione sfondo…";
+"tools.image_comparer" = "Confronto immagini…";
+"tools.video_converter" = "Convertitore video…";
+"tools.video_thumbnailer" = "Generatore miniature video…";
+"tools.ai_image_analysis" = "Analisi immagine IA…";
+"tools.ocr" = "OCR…";
+"tools.qr_code" = "Codice QR…";
+"tools.hash_checker" = "Verifica hash…";
+"tools.image_metadata" = "Metadati immagine…";
+"tools.index_folder" = "Indicizza cartella…";
+"tools.clipboard_viewer" = "Visualizzatore appunti…";
+"tools.inspect_window" = "Ispeziona finestra…";
+"tools.monitor_test" = "Test monitor";
+
+/* Window titles */
+"window.main" = "SwiftX";
+"window.settings" = "Preferenze di SwiftX";
+
+/* Notifications */
+"notification.name_parser.title" = "Analizzatore nomi";
+"notification.action.copy_url" = "Copia URL";
+"notification.action.open" = "Apri";
+"notification.action.show_in_finder" = "Mostra nel Finder";
+"notification.action.annotate" = "Annota";
+"notification.action.delete" = "Elimina";
+"notification.action.install_update" = "Installa aggiornamento";
+"notification.action.view_release" = "Visualizza release";
+"notification.action.skip_version" = "Ignora questa versione";
+"notification.action.relaunch" = "Riavvia";
+
+/* Accessibility */
+"accessibility.recording" = "Registrazione SwiftX";
+
+/* Quick task presets (stored names stay English in the user's config;
+   these translate the built-in defaults at display time only) */
+"quicktask.save_upload_copy_url" = "Salva, carica, copia URL";
+"quicktask.save_copy_image" = "Salva, copia immagine";
+"quicktask.save_copy_image_file" = "Salva, copia file immagine";
+"quicktask.annotate_save_upload_copy_url" = "Annota, salva, carica, copia URL";
+"quicktask.upload_copy_url" = "Carica, copia URL";
+"quicktask.save" = "Salva";
+"quicktask.copy_image" = "Copia immagine";
+"quicktask.annotate" = "Annota";
+
+/* Share extension */
+"share.title" = "Carica con SwiftX";
+"share.collecting" = "Raccolta in corso…";
+"share.upload" = "Carica";
+"share.nothing_to_upload" = "Non c'è nulla che SwiftX possa caricare.";
+"share.and_more" = "e altri %d…";
+"share.error.unreachable" = "Impossibile aprire SwiftX — verifica che SwiftX.app sia ancora installato.";
+
+/* Settings > General - language picker */
+"settings.general.section.language" = "Lingua";
+"settings.general.language.picker" = "Lingua dell'app";
+"settings.general.language.system_default" = "Predefinita di sistema";
+"settings.general.language.restart_title" = "Riavvia per applicare la lingua";
+"settings.general.language.restart_body" = "SwiftX deve riavviarsi per applicare la nuova lingua.";
+"settings.general.language.relaunch_now" = "Riavvia ora";
+"settings.general.language.later" = "Più tardi";
+
+/* ActionsSettingsView.swift */
+"settings.actions.help" = "I programmi vengono eseguiti sul file salvato, in ordine, quando “Esegui azioni” è attivo in Cattura. Segnaposto: $input, $output (%input/%output aggiungono le virgolette).";
+"settings.actions.program_path" = "Percorso programma (/usr/local/bin/…)";
+"settings.actions.arguments" = "Argomenti (vuoto = percorso del file)";
+"settings.actions.output_extension" = "Estensione di output (l'attività continua con il file di output)";
+"settings.actions.only_for_extensions" = "Solo per le estensioni (es. png, jpg — vuoto = tutte)";
+"settings.actions.move_input_to_trash" = "Sposta il file di input nel Cestino dopo una conversione riuscita";
+"settings.actions.unnamed_action" = "(azione senza nome)";
+"settings.actions.add_action" = "Aggiungi azione";
+
+/* HotkeysSettingsView.swift */
+"settings.hotkeys.section.behavior" = "Comportamento scorciatoie";
+"settings.hotkeys.disable_on_fullscreen" = "Disattiva le scorciatoie quando un'app a schermo intero è attiva";
+"settings.hotkeys.repeat_limit" = "Ignora le ripetizioni della scorciatoia entro (ms, 0 = disattivato)";
+"settings.hotkeys.add_hotkey" = "Aggiungi scorciatoia";
+"settings.hotkeys.recording_hint" = "Premi la nuova combinazione (con almeno un modificatore), o Esc per annullare.";
+"settings.hotkeys.press_keys" = "Premi i tasti…";
+"settings.hotkeys.record" = "Registra";
+
+/* HotkeysSettingsView.swift — HotkeyType labels (keys keep the rawValue's PascalCase; documented exception). Values are exactly what the previous camelCase-splitting derivation produced. */
+"hotkey.None" = "Nessuna";
+"hotkey.FileUpload" = "Caricamento file";
+"hotkey.FolderUpload" = "Caricamento cartella";
+"hotkey.ClipboardUpload" = "Caricamento appunti";
+"hotkey.ClipboardUploadWithContentViewer" = "Caricamento appunti con visualizzatore contenuto";
+"hotkey.UploadText" = "Carica testo";
+"hotkey.UploadURL" = "Carica URL";
+"hotkey.DragDropUpload" = "Caricamento trascina e rilascia";
+"hotkey.ShortenURL" = "Abbrevia URL";
+"hotkey.StopUploads" = "Interrompi caricamenti";
+"hotkey.PrintScreen" = "Stampa schermo";
+"hotkey.ActiveWindow" = "Finestra attiva";
+"hotkey.CustomWindow" = "Finestra personalizzata";
+"hotkey.ActiveMonitor" = "Monitor attivo";
+"hotkey.RectangleRegion" = "Area rettangolare";
+"hotkey.RectangleLight" = "Rettangolo chiaro";
+"hotkey.RectangleTransparent" = "Rettangolo trasparente";
+"hotkey.CustomRegion" = "Area personalizzata";
+"hotkey.LastRegion" = "Ultima area";
+"hotkey.ScrollingCapture" = "Cattura con scorrimento";
+"hotkey.AutoCapture" = "Cattura automatica";
+"hotkey.StartAutoCapture" = "Avvia cattura automatica";
+"hotkey.StopAutoCapture" = "Interrompi cattura automatica";
+"hotkey.ScreenRecorder" = "Registratore schermo";
+"hotkey.ScreenRecorderActiveWindow" = "Registratore schermo finestra attiva";
+"hotkey.ScreenRecorderCustomRegion" = "Registratore schermo area personalizzata";
+"hotkey.StartScreenRecorder" = "Avvia registratore schermo";
+"hotkey.ScreenRecorderGIF" = "Registratore schermo GIF";
+"hotkey.ScreenRecorderGIFActiveWindow" = "Registratore schermo GIF finestra attiva";
+"hotkey.ScreenRecorderGIFCustomRegion" = "Registratore schermo GIF area personalizzata";
+"hotkey.StartScreenRecorderGIF" = "Avvia registratore schermo GIF";
+"hotkey.StopScreenRecording" = "Interrompi registrazione schermo";
+"hotkey.PauseScreenRecording" = "Metti in pausa la registrazione schermo";
+"hotkey.AbortScreenRecording" = "Annulla registrazione schermo";
+"hotkey.ColorPicker" = "Selettore colore";
+"hotkey.ScreenColorPicker" = "Selettore colore schermo";
+"hotkey.Ruler" = "Righello";
+"hotkey.PinToScreen" = "Fissa sullo schermo";
+"hotkey.PinToScreenFromScreen" = "Fissa sullo schermo da schermo";
+"hotkey.PinToScreenFromClipboard" = "Fissa sullo schermo dagli appunti";
+"hotkey.PinToScreenFromFile" = "Fissa sullo schermo da file";
+"hotkey.PinToScreenCloseAll" = "Fissa sullo schermo chiudi tutto";
+"hotkey.ImageEditor" = "Editor immagine";
+"hotkey.ImageBeautifier" = "Abbellitore immagini";
+"hotkey.ImageEffects" = "Effetti immagine";
+"hotkey.ImageViewer" = "Visualizzatore immagini";
+"hotkey.BackgroundRemover" = "Rimozione sfondo";
+"hotkey.ImageComparer" = "Confronto immagini";
+"hotkey.ImageCombiner" = "Combinatore immagini";
+"hotkey.ImageSplitter" = "Divisore immagini";
+"hotkey.ImageThumbnailer" = "Generatore miniature immagine";
+"hotkey.VideoConverter" = "Convertitore video";
+"hotkey.VideoThumbnailer" = "Generatore miniature video";
+"hotkey.AnalyzeImage" = "Analizza immagine";
+"hotkey.OCR" = "OCR";
+"hotkey.QRCode" = "Codice QR";
+"hotkey.QRCodeDecodeFromScreen" = "Codice QR decodifica da schermo";
+"hotkey.QRCodeScanRegion" = "Codice QR scansiona area";
+"hotkey.HashCheck" = "Verifica hash";
+"hotkey.Metadata" = "Metadati";
+"hotkey.StripMetadata" = "Rimuovi metadati";
+"hotkey.IndexFolder" = "Indicizza cartella";
+"hotkey.ClipboardViewer" = "Visualizzatore appunti";
+"hotkey.InspectWindow" = "Ispeziona finestra";
+"hotkey.MonitorTest" = "Test monitor";
+"hotkey.DisableHotkeys" = "Disattiva scorciatoie";
+"hotkey.OpenMainWindow" = "Apri finestra principale";
+"hotkey.OpenScreenshotsFolder" = "Apri cartella screenshot";
+"hotkey.OpenHistory" = "Apri cronologia";
+"hotkey.OpenImageHistory" = "Apri cronologia immagini";
+"hotkey.ToggleActionsToolbar" = "Attiva/disattiva barra azioni";
+"hotkey.ToggleTrayMenu" = "Attiva/disattiva menu barra dei menu";
+"hotkey.ExitShareX" = "Esci da Share X";
+
+/* WatchFolders.swift */
+"settings.watchfolders.enable" = "Monitora cartelle e carica i nuovi file";
+"settings.watchfolders.filter" = "Filtro nome file (es. *.png, vuoto = tutti):";
+"settings.watchfolders.include_subdirectories" = "Includi sottocartelle";
+"settings.watchfolders.move_to_screenshots" = "Sposta i file nella cartella screenshot prima del caricamento";
+"settings.watchfolders.add_folder" = "Aggiungi cartella…";
+
+/* CustomUploaderEditorView.swift */
+"settings.customuploader.empty_hint" = "Nessun uploader personalizzato ancora. Creane uno, oppure importa un file .sxcu della community.";
+"settings.customuploader.uploader" = "Uploader";
+"settings.customuploader.active_suffix" = "  (attivo)";
+"settings.customuploader.new" = "Nuovo";
+"settings.customuploader.duplicate" = "Duplica";
+"settings.customuploader.delete" = "Elimina…";
+"settings.customuploader.import" = "Importa…";
+"settings.customuploader.export" = "Esporta…";
+"settings.customuploader.set_active" = "Imposta come attivo";
+"settings.customuploader.confirm_delete" = "Eliminare %@?";
+"settings.customuploader.request" = "Richiesta";
+"settings.customuploader.method" = "Metodo";
+"settings.customuploader.request_url" = "URL richiesta";
+"settings.customuploader.body" = "Corpo";
+"settings.customuploader.file_form_name" = "Nome campo file";
+"settings.customuploader.body_data" = "Dati corpo (supporta {input}, {filename}…)";
+"settings.customuploader.url_parameters" = "Parametri URL";
+"settings.customuploader.headers" = "Intestazioni";
+"settings.customuploader.body_arguments" = "Argomenti del corpo";
+"settings.customuploader.response" = "Risposta";
+"settings.customuploader.response_url" = "URL (es. {json:url})";
+"settings.customuploader.thumbnail_url" = "URL miniatura";
+"settings.customuploader.deletion_url" = "URL eliminazione";
+"settings.customuploader.error_message" = "Messaggio di errore";
+"settings.customuploader.syntax_help" = "Sintassi: {json:path}, {regex:pattern|group}, {response}, {filename}, {random:a|b}, {base64:text} — come in ShareX per Windows.";
+"settings.customuploader.value" = "Valore";
+"settings.customuploader.export_failed" = "Esportazione non riuscita";
+
+/* NativeMessagingSetup.swift */
+"settings.browser.accept_uploads" = "Accetta caricamenti dall'estensione browser ShareX";
+"settings.browser.host_missing" = "Binario host non trovato — esegui SwiftX.app incluso nel pacchetto (Scripts/make-app.sh).";
+"settings.browser.manifests_help" = "Registra i manifest di native messaging per Chrome, Edge e Firefox. Riavvia il browser al termine.";
+
+/* Sources/EditorKit/EditorView.swift */
+"editor.window_title" = "Editor immagini di SwiftX";
+"editor.stroke_color" = "Colore del tratto";
+"editor.fill_color_help" = "Colore di riempimento per rettangolo/ellisse (trasparente = nessun riempimento)";
+"editor.drop_shadow" = "Ombra";
+"editor.line_width" = "Spessore linea";
+"editor.arrow_head_style" = "Stile punta freccia";
+"editor.system_font" = "Carattere di sistema";
+"editor.font_family" = "Famiglia di caratteri";
+"editor.zoom_out" = "Riduci zoom";
+"editor.zoom_in" = "Aumenta zoom";
+"editor.zoom_percent" = "%d%%";
+"editor.expand_canvas" = "Espandi tela";
+"editor.expand_canvas_points" = "Espandi tela (punti)";
+"editor.edge_top" = "Alto";
+"editor.edge_bottom" = "Basso";
+"editor.edge_left" = "Sinistra";
+"editor.edge_right" = "Destra";
+"editor.fill_color" = "Colore di riempimento";
+"editor.expand" = "Espandi";
+
+/* Sources/EditorKit/AnnotationModel.swift */
+"editor.tool.select" = "Seleziona";
+"editor.tool.rectangle" = "Rettangolo";
+"editor.tool.ellipse" = "Ellisse";
+"editor.tool.line" = "Linea";
+"editor.tool.arrow" = "Freccia";
+"editor.tool.freehand" = "A mano libera";
+"editor.tool.text" = "Testo";
+"editor.tool.speech_balloon" = "Fumetto";
+"editor.tool.step" = "Numero passaggio";
+"editor.tool.magnify" = "Ingrandisci";
+"editor.tool.blur" = "Sfocatura";
+"editor.tool.pixelate" = "Pixelatura";
+"editor.tool.highlight" = "Evidenzia";
+"editor.tool.smart_eraser" = "Gomma intelligente";
+"editor.tool.spotlight" = "Riflettore";
+"editor.tool.image" = "Timbro immagine";
+"editor.tool.crop" = "Ritaglia";
+"editor.tool.cut_out" = "Ritaglio sagoma";
+"editor.arrow_style.classic" = "Classico";
+"editor.arrow_style.modern" = "Moderno";
+
+/* Sources/EffectsKit/EffectsCore.swift — effect-type display names (values are the original C# class names shown in the UI today) */
+"effects.filter.alpha" = "Alpha";
+"effects.filter.black_white" = "BlackWhite";
+"effects.filter.brightness" = "Brightness";
+"effects.filter.colorize" = "Colorize";
+"effects.filter.contrast" = "Contrast";
+"effects.filter.gamma" = "Gamma";
+"effects.filter.grayscale" = "Grayscale";
+"effects.filter.hue" = "Hue";
+"effects.filter.inverse" = "Inverse";
+"effects.filter.matrix_color" = "MatrixColor";
+"effects.filter.polaroid" = "Polaroid";
+"effects.filter.replace_color" = "ReplaceColor";
+"effects.filter.saturation" = "Saturation";
+"effects.filter.selective_color" = "SelectiveColor";
+"effects.filter.sepia" = "Sepia";
+"effects.filter.blur" = "Blur";
+"effects.filter.color_depth" = "ColorDepth";
+"effects.filter.edge_detect" = "EdgeDetect";
+"effects.filter.emboss" = "Emboss";
+"effects.filter.gaussian_blur" = "GaussianBlur";
+"effects.filter.glow" = "Glow";
+"effects.filter.matrix_convolution" = "MatrixConvolution";
+"effects.filter.mean_removal" = "MeanRemoval";
+"effects.filter.outline" = "Outline";
+"effects.filter.pixelate" = "Pixelate";
+"effects.filter.reflection" = "Reflection";
+"effects.filter.rgb_split" = "RGBSplit";
+"effects.filter.shadow" = "Shadow";
+"effects.filter.sharpen" = "Sharpen";
+"effects.filter.slice" = "Slice";
+"effects.filter.smooth" = "Smooth";
+"effects.filter.torn_edge" = "TornEdge";
+"effects.filter.wave_edge" = "WaveEdge";
+"effects.filter.auto_crop" = "AutoCrop";
+"effects.filter.canvas" = "Canvas";
+"effects.filter.crop" = "Crop";
+"effects.filter.flip" = "Flip";
+"effects.filter.force_proportions" = "ForceProportions";
+"effects.filter.resize" = "Resize";
+"effects.filter.rotate" = "Rotate";
+"effects.filter.rounded_corners" = "RoundedCorners";
+"effects.filter.scale" = "Scale";
+"effects.filter.skew" = "Skew";
+"effects.filter.draw_background" = "DrawBackground";
+"effects.filter.draw_background_image" = "DrawBackgroundImage";
+"effects.filter.draw_border" = "DrawBorder";
+"effects.filter.draw_checkerboard" = "DrawCheckerboard";
+"effects.filter.draw_image" = "DrawImage";
+"effects.filter.draw_particles" = "DrawParticles";
+"effects.filter.draw_text" = "DrawText";
+"effects.filter.draw_text_ex" = "DrawTextEx";
+
+/* Sources/EffectsKit/EffectsCore.swift — categories and errors */
+"effects.core.category.drawings" = "Disegni";
+"effects.core.category.manipulations" = "Manipolazioni";
+"effects.core.category.adjustments" = "Regolazioni";
+"effects.core.category.filters" = "Filtri";
+"effects.core.error.invalid_config" = "Il file non contiene un preset di effetti immagine valido.";
+"effects.core.error.packaging_failed" = "Impossibile creare il pacchetto del preset di effetti immagine.";
+
+/* HotkeyActions.swift */
+"notification.upload.folder_index_failed" = "Indicizzazione cartella non riuscita";
+"notification.url_shortener.title" = "Abbreviatore URL";
+"notification.url_shortener.could_not_shorten" = "Impossibile abbreviare %@.";
+"notification.url_shortener.shortened" = "URL abbreviato";
+"alert.clipboard.image_summary" = "Immagine %d × %d";
+"notification.clipboard.upload_title" = "Caricamento appunti";
+"notification.clipboard.empty" = "Gli appunti sono vuoti.";
+"alert.clipboard.upload_content_question" = "Caricare il contenuto degli appunti?";
+"alert.upload.upload_button" = "Carica";
+"alert.upload.text_title" = "Carica testo";
+"alert.upload.url_prompt" = "URL da cui scaricare e caricare";
+"alert.upload.shorten_url_prompt" = "URL da abbreviare";
+"pipeline.window.drop_to_upload" = "Trascina per caricare";
+"pipeline.drop_files_here" = "Trascina qui i file";
+
+/* UploadCoordinator.swift */
+"notification.upload.failed" = "Caricamento non riuscito";
+"notification.upload.could_not_encode_image" = "Impossibile codificare l'immagine.";
+"notification.upload.could_not_read" = "Impossibile leggere %@.";
+"alert.upload.large_file_question" = "Caricare il file di grandi dimensioni?";
+"alert.upload.large_file_info" = "%@ è %@.";
+"alert.upload.multi_question" = "Caricare %d file?";
+"alert.upload.multi_info" = "Questo avvia %d attività di caricamento.";
+"alert.upload.upload_all_button" = "Carica tutti";
+"notification.upload.download_too_large" = "Download troppo grande";
+"notification.upload.download_too_large_body" = "%@ supera il limite di %d MB.";
+"notification.upload.error_no_custom_uploader" = "Nessun uploader personalizzato configurato. Importa un file .sxcu in Preferenze → Uploader personalizzati.";
+"notification.upload.error_not_implemented" = "La destinazione \"%@\" non è ancora implementata.";
+"notification.upload.skipped" = "Caricamento saltato";
+"notification.upload.disabled_in_tray" = "I caricamenti sono disattivati nel menu della barra dei menu.";
+"notification.upload.stopped" = "Interrotto";
+"notification.url_shortener.failed" = "Abbreviazione URL non riuscita";
+"notification.upload.complete" = "Caricamento completato";
+
+/* AfterCapturePipeline.swift */
+"notification.capture.action_failed" = "Azione non riuscita";
+"alert.capture.file_exists" = "“%@” esiste già";
+"alert.capture.file_exists_info" = "Scegli cosa fare con la nuova cattura.";
+"alert.capture.keep_both" = "Mantieni entrambi";
+"alert.capture.overwrite" = "Sovrascrivi";
+"alert.capture.task_failed" = "Attività post-cattura non riuscita";
+"notification.pin.title" = "Fissa sullo schermo";
+"notification.pin.no_image" = "Nessuna immagine negli appunti.";
+"pipeline.pin.copy_image" = "Copia immagine";
+"pipeline.pin.save_as" = "Salva come…";
+"pipeline.pin.close_all" = "Chiudi tutti i fissaggi";
+
+/* RecordingCoordinator.swift */
+"notification.recording.converting" = "Conversione in %@…";
+"notification.recording.conversion_failed_kept_mp4" = "Conversione %@ non riuscita — mantenuto MP4";
+"notification.recording.failed" = "Registrazione non riuscita";
+"alert.recording.abort_question" = "Annullare la registrazione?";
+"alert.recording.abort_info" = "La registrazione verrà eliminata.";
+"alert.recording.abort_button" = "Annulla";
+"alert.recording.keep_recording" = "Mantieni registrazione";
+"notification.recording.ffmpeg_not_found" = "ffmpeg non trovato — registrazione in H.264";
+"notification.recording.install_ffmpeg" = "Installa ffmpeg dalle preferenze di SwiftX per abilitare WebM/WebP/APNG.";
+"alert.recording.failed" = "Registrazione non riuscita";
+"notification.recording.saved" = "Registrazione salvata";
+
+/* CaptureCoordinator.swift */
+"notification.capture.custom_window_title" = "Cattura finestra personalizzata";
+"notification.capture.custom_window_unset" = "Imposta prima CaptureCustomWindow in TaskSettings.json.";
+"notification.capture.custom_window_no_match" = "Nessuna finestra corrisponde a \"%@\".";
+"alert.capture.failed" = "Cattura non riuscita";
+"alert.capture.failed_info" = "%@\n\nSe si tratta di un problema di autorizzazioni, concedi l'accesso alla registrazione dello schermo nelle preferenze di SwiftX.";
+
+/* CLI.swift */
+"notification.cli.action_download_and_upload" = "scaricare e caricare %@";
+"notification.cli.action_upload_local_file" = "caricare il file locale %@";
+"alert.cli.action_import_custom_uploader" = "Importare la configurazione dell'uploader personalizzato da %@";
+"alert.cli.action_import_image_effect" = "Importare il preset di effetti immagine da %@";
+"alert.cli.action_run_on_file" = "Eseguire %@ sul file locale %@";
+"alert.cli.action_run_clipboard_upload" = "Eseguire %@, che carica il contenuto attuale degli appunti";
+"alert.cli.allow_action_question" = "Consentire questa azione di SwiftX?";
+"alert.cli.allow_action_info" = "Un'altra app o una pagina web ha chiesto a SwiftX di:\n\n%@\n\nContinua solo se hai avviato tu questa azione.";
+"notification.cli.blocked_request" = "SwiftX ha bloccato una richiesta";
+"notification.cli.blocked_request_body" = "Ignorata una richiesta da un'altra app o pagina web di %@.";
+"alert.cli.action_browser_download_upload" = "Scaricare e caricare dall'estensione browser:\n%@";
+"alert.cli.action_browser_upload_text" = "Caricare il testo inviato dall'estensione browser";
+
+/* OAuthConnect.swift */
+"oauth.no_credentials" = "Questa build di SwiftX non include le credenziali dell'app %@, quindi non può connettersi.";
+"oauth.error.browser_open_failed" = "impossibile aprire la pagina di accesso nel browser";
+"oauth.error.unexpected_response" = "il browser ha restituito una risposta imprevista";
+"oauth.error.token_exchange_failed" = "scambio del token non riuscito: %@";
+"oauth.connected" = "Connesso. %@ è pronto all'uso.";
+"oauth.connection_failed" = "Connessione a %@ non riuscita";
+
+/* PipelineWindows.swift */
+"pipeline.window.after_capture_tasks" = "Attività post-cattura";
+"pipeline.file_name_label" = "Nome file:";
+"pipeline.section.after_capture" = "Dopo la cattura";
+"pipeline.section.after_upload" = "Dopo il caricamento";
+"pipeline.window.before_upload" = "Prima del caricamento";
+"pipeline.before_upload_message" = "%@ sta per essere caricato su %@. Puoi scegliere una destinazione diversa.";
+"pipeline.destination_label" = "Destinazione:";
+"pipeline.destination.custom_uploader" = "Uploader personalizzato";
+"pipeline.window.upload_complete" = "Caricamento completato";
+"pipeline.link.url" = "URL";
+"pipeline.link.original_url" = "URL originale";
+"pipeline.link.thumbnail_url" = "URL miniatura";
+"pipeline.link.deletion_url" = "URL eliminazione";
+"pipeline.link.forum_bbcode" = "Forum (BBCode)";
+"pipeline.link.html" = "HTML";
+"pipeline.link.markdown" = "Markdown";
+"pipeline.link.wiki" = "Wiki";
+
+/* QuickTaskMenu.swift */
+"quicktaskmenu.edit_this_menu" = "Modifica questo menu…";
+"quicktaskmenu.window_title" = "Menu attività rapide";
+"quicktaskmenu.separator" = "— separatore —";
+"quicktaskmenu.separator_button" = "Separatore";
+"quicktaskmenu.name_label" = "Nome:";
+"quicktaskmenu.select_preset_hint" = "Seleziona un preset per modificarlo.";
+
+/* Notifier.swift */
+"notification.capture.screenshot_captured" = "Screenshot catturato";
+
+/* Sources/SwiftXApp/Views.swift — main window */
+"main.timerange.any" = "Qualsiasi momento";
+"main.timerange.today" = "Oggi";
+"main.timerange.week" = "Ultimi 7 giorni";
+"main.timerange.month" = "Ultimi 30 giorni";
+"main.search_placeholder" = "Cerca nella cronologia";
+"main.show_favorites_only" = "Mostra solo i preferiti";
+"main.import_history" = "Importa cronologia…";
+"main.import_folder" = "Importa cartella…";
+"main.statistics" = "Statistiche…";
+"main.settings" = "Preferenze";
+"main.empty_placeholder" = "Le catture appariranno qui";
+"main.no_matches" = "Nessuna corrispondenza";
+"main.remove_favorite" = "Rimuovi dai preferiti";
+"main.add_favorite" = "Aggiungi ai preferiti";
+"main.open_url" = "Apri URL";
+"main.copy_file_path" = "Copia percorso file";
+"main.import_folder_message" = "Scegli una cartella di immagini o registrazioni da aggiungere alla cronologia";
+"main.import_folder_title" = "Importazione cartella";
+"main.import_items_body" = "Importati %d elementi.";
+"main.import_history_message" = "Scegli un file History.json o History.xml di ShareX per Windows";
+"main.import_history_title" = "Importazione cronologia";
+"main.import_history_failed" = "Importazione cronologia non riuscita";
+"main.history_stats_title" = "Statistiche cronologia";
+
+/* Sources/SwiftXApp/Views.swift — settings sidebar groups */
+"settings.group.app" = "App";
+"settings.group.capture" = "Cattura";
+"settings.group.sharing" = "Condivisione";
+"settings.group.automation" = "Automazione";
+"settings.group.about" = "Informazioni";
+
+/* Sources/SwiftXApp/Views.swift — settings panes (sidebar / navigation titles) */
+"settings.pane.general" = "Generali";
+"settings.pane.menu_bar" = "Barra dei menu";
+"settings.pane.notifications" = "Notifiche";
+"settings.pane.capture" = "Cattura";
+"settings.pane.recording" = "Registrazione";
+"settings.pane.actions" = "Programmi esterni";
+"settings.pane.watch_folders" = "Cartelle monitorate";
+"settings.pane.destinations" = "Destinazioni";
+"settings.pane.uploads" = "Caricamenti";
+"settings.pane.custom_uploader" = "Uploader personalizzati";
+"settings.pane.hotkeys" = "Scorciatoie";
+"settings.pane.updates" = "Aggiornamenti";
+"settings.pane.about" = "Informazioni";
+
+/* Sources/SwiftXApp/Views.swift — About pane */
+"settings.about.version" = "Versione %@";
+"settings.about.project_page" = "Pagina del progetto";
+"settings.about.report_issue" = "Segnala un problema";
+"settings.about.section.credits" = "Crediti";
+"settings.about.developed_by" = "Sviluppato da";
+"settings.about.derived_from" = "Derivato da";
+"settings.about.not_affiliated" = "SwiftX non è affiliato né approvato dal team di ShareX.";
+"settings.about.section.license" = "Licenza";
+"settings.about.license_body" = "SwiftX è software libero: puoi redistribuirlo e/o modificarlo secondo i termini della GNU General Public License v3. Viene fornito SENZA ALCUNA GARANZIA.";
+"settings.about.view_license" = "Visualizza la licenza completa";
+
+/* Sources/SwiftXApp/Views.swift — General pane (incl. backup import/export and permissions) */
+"settings.general.section.permissions" = "Autorizzazioni";
+"settings.general.section.browser_extension" = "Estensione browser";
+"settings.general.section.backup" = "Backup";
+"settings.general.export_settings" = "Esporta preferenze…";
+"settings.general.import_settings" = "Importa preferenze…";
+"settings.general.backup_hint" = "I backup contengono preferenze, scorciatoie, preset di effetti e uploader personalizzati. Le chiavi API e i token OAuth risiedono nel Portachiavi e non vengono mai esportati — reinseriscili o riconnettili dopo il ripristino su un altro Mac. La cronologia non è inclusa; usa gli strumenti di importazione della finestra principale per quella. L'importazione accetta anche i backup .sxb di ShareX per Windows, inclusa la relativa cronologia dei caricamenti.";
+"settings.general.section.saved_files" = "File salvati";
+"settings.general.screenshots_folder" = "Cartella screenshot";
+"settings.general.subfolder_pattern" = "Schema sottocartella (vuoto = nessuna sottocartella)";
+"settings.general.name_pattern" = "Schema nome file";
+"settings.general.name_pattern_active_window" = "Schema nome file (finestra attiva)";
+"settings.general.name_pattern_hint" = "Segnaposto: %y anno, %mo mese, %d giorno, %h ora, %mi minuto, %s secondo, %pn nome app, %t titolo finestra, %width, %height, %rn{6} cifre casuali. Esempio: %y-%mo-%d_%h-%mi-%s";
+"settings.general.file_exist_action" = "Quando il nome file esiste già";
+"settings.general.exist_unique" = "Aggiungi un numero (nome_1)";
+"settings.general.exist_ask" = "Chiedi";
+"settings.general.exist_overwrite" = "Sovrascrivi";
+"settings.general.exist_skip" = "Salta salvataggio";
+"settings.general.export_failed" = "Esportazione preferenze non riuscita";
+"settings.general.import_panel_message" = "Scegli un backup delle preferenze di SwiftX o un backup .sxb di ShareX per Windows";
+"settings.general.import_failed" = "Importazione preferenze non riuscita";
+"settings.general.replace_title" = "Sostituire le preferenze attuali?";
+"settings.general.replace_body" = "Le preferenze, le scorciatoie e gli uploader personalizzati verranno sostituiti con il contenuto del backup. I segreti nel Portachiavi non fanno parte dei backup e devono essere reinseriti.";
+"settings.general.replace" = "Sostituisci";
+"settings.general.restored_title" = "Preferenze ripristinate";
+"settings.general.sharex_import_title" = "Importare il backup di ShareX per Windows?";
+"settings.general.sharex_import_body" = "Le preferenze, le scorciatoie e gli uploader personalizzati da %@ verranno uniti alla tua configurazione attuale. I valori senza equivalente su macOS (percorsi Windows, account OAuth, scorciatoie solo Windows) vengono ignorati. È possibile importare anche la cronologia dei caricamenti — ripetere l'importazione in seguito la duplicherebbe.";
+"settings.general.import" = "Importa";
+"settings.general.import_without_history" = "Importa senza cronologia";
+"settings.general.summary.settings_imported" = "Preferenze importate.";
+"settings.general.summary.uploaders" = "%d uploader personalizzati.";
+"settings.general.summary.hotkeys" = "%d scorciatoie.";
+"settings.general.summary.hotkeys_skipped" = "%d scorciatoie, %d senza un tasto macOS ignorate.";
+"settings.general.summary.history" = "%d voci di cronologia.";
+"settings.general.sharex_imported_title" = "Backup ShareX importato";
+"settings.general.sharex_import_failed" = "Importazione ShareX non riuscita";
+"settings.general.permission.screen_recording" = "Registrazione schermo";
+"settings.general.permission.screen_recording_detail" = "Necessaria per tutte le funzioni di cattura e registrazione.";
+"settings.general.permission.accessibility" = "Accessibilità";
+"settings.general.permission.accessibility_detail" = "Necessaria per l'aggancio delle finestre, la cattura con scorrimento e gli strumenti per le finestre.";
+"settings.general.permission.request" = "Richiedi";
+"settings.general.permission.open_system_settings" = "Apri Impostazioni di Sistema";
+
+/* Sources/SwiftXApp/Views.swift — Menu Bar pane */
+"settings.menubar.section.icon" = "Icona nella barra dei menu";
+"settings.menubar.left_click" = "Clic sinistro";
+"settings.menubar.action.open_menu" = "Apri il menu";
+"settings.menubar.action.open_main_window" = "Apri finestra principale";
+"settings.menubar.action.capture_region" = "Cattura area";
+"settings.menubar.action.capture_fullscreen" = "Cattura schermo intero";
+"settings.menubar.action.capture_active_window" = "Cattura finestra attiva";
+"settings.menubar.action.upload_clipboard" = "Carica dagli appunti";
+"settings.menubar.action.upload_file" = "Carica file…";
+"settings.menubar.action.image_editor" = "Editor immagini";
+"settings.menubar.action.open_screenshots_folder" = "Apri cartella screenshot";
+"settings.menubar.right_click_hint" = "Il clic destro apre sempre il menu.";
+"settings.menubar.show_progress" = "Mostra l'avanzamento del caricamento nell'icona";
+"settings.menubar.show_recent" = "Mostra sottomenu Recenti";
+"settings.menubar.recent_count" = "Voci recenti mostrate (1–30)";
+"settings.menubar.section.menu_items" = "Contenuti del menu";
+"settings.menubar.menu_items" = "Voci del menu";
+"settings.menubar.menu_items_hint" = "Le voci non selezionate sono nascoste dal menu della barra dei menu. Preferenze ed Esci restano sempre visibili, e una registrazione in corso mantiene visibili i suoi comandi di interruzione.";
+"settings.menubar.section.actions_toolbar" = "Barra degli strumenti azioni";
+"settings.menubar.add_button" = "Aggiungi pulsante";
+"settings.menubar.lock_toolbar" = "Blocca posizione barra strumenti";
+"settings.menubar.toolbar_at_launch" = "Apri la barra strumenti all'avvio";
+"settings.menubar.toolbar_reopen_hint" = "Una barra flottante di pulsanti di cattura, separata dall'icona nella barra dei menu. Riaprila per applicare le modifiche a pulsanti e blocco.";
+
+/* Sources/SwiftXApp/Views.swift — Notifications pane */
+"settings.notifications.section.banners" = "Banner";
+"settings.notifications.section.sounds" = "Suoni";
+"settings.notifications.show_banners" = "Mostra i banner di notifica";
+"settings.notifications.suppress_fullscreen" = "Disattiva mentre un'app a schermo intero è attiva";
+"settings.notifications.sound_after_capture" = "Riproduci un suono dopo la cattura";
+"settings.notifications.custom_capture_sound" = "Suono di cattura personalizzato";
+"settings.notifications.sound_after_upload" = "Riproduci un suono dopo il caricamento";
+"settings.notifications.custom_completion_sound" = "Suono di completamento personalizzato";
+"settings.notifications.custom_error_sound" = "Suono di errore personalizzato";
+"settings.notifications.sound_file" = "File audio";
+"settings.notifications.banner_hint" = "I banner di caricamento offrono i pulsanti Copia URL / Apri; i banner di file offrono Mostra nel Finder / Annota / Elimina. Facendo clic sul banner si apre l'URL o si rivela il file.";
+
+/* Sources/SwiftXApp/Views.swift — Capture pane */
+"settings.capture.screenshot_delay" = "Ritardo screenshot (secondi, 0 = disattivato)";
+"settings.capture.show_cursor" = "Mostra il cursore negli screenshot";
+"settings.capture.section.after_capture" = "Dopo la cattura";
+"settings.capture.after_capture_hint" = "Le attività vengono eseguite dall'alto verso il basso a ogni cattura. Lo stesso elenco appare nella finestra post-cattura e nei preset delle attività rapide.";
+"settings.capture.section.effects" = "Pipeline effetti immagine";
+"settings.capture.effects_window" = "Apri la finestra effetti dopo la cattura";
+"settings.capture.effects_region_only" = "Applica gli effetti solo alle catture di area";
+"settings.capture.effects_random" = "Usa un preset casuale a ogni cattura";
+"settings.capture.effects_hint" = "Si applica quando viene eseguita l'attività “Aggiungi effetti immagine” (attività rapide, finestra post-cattura). I preset si gestiscono in Strumenti → Effetti immagine.";
+"settings.capture.section.image_format" = "Formato immagine";
+"settings.capture.format" = "Formato";
+"settings.capture.jpeg_quality" = "Qualità JPEG (1–100)";
+"settings.capture.png_bit_depth" = "Profondità bit PNG";
+"settings.capture.automatic" = "Automatico";
+"settings.capture.png_32bit" = "32 bit (mantiene la trasparenza)";
+"settings.capture.png_24bit" = "24 bit (appiattisce la trasparenza)";
+"settings.capture.gif_palette" = "Tavolozza GIF";
+"settings.capture.gif_256" = "256 colori";
+"settings.capture.gif_16" = "16 colori (codificati come 256 su macOS)";
+"settings.capture.gif_grayscale" = "Scala di grigi";
+"settings.capture.auto_jpeg" = "Usa JPEG per le catture di grandi dimensioni";
+"settings.capture.auto_jpeg_size" = "JPEG quando larghezza o altezza superano (px)";
+"settings.capture.auto_jpeg_quality" = "Qualità Auto-JPEG (1–100)";
+"settings.capture.section.thumbnail" = "Miniatura";
+"settings.capture.thumbnail_width" = "Larghezza miniatura (0 = deriva dall'altezza)";
+"settings.capture.thumbnail_height" = "Altezza miniatura (0 = deriva dalla larghezza)";
+"settings.capture.thumbnail_name" = "Suffisso nome";
+"settings.capture.thumbnail_check_size" = "Solo se l'immagine è più grande della miniatura";
+"settings.capture.thumbnail_hint" = "Salvata accanto allo screenshot, con il suffisso sopra aggiunto al nome, quando “Salva immagine miniatura su file” è attivo.";
+
+/* Sources/SwiftXApp/Views.swift — Recording pane (incl. ffmpeg status) */
+"settings.recording.section.video" = "Video";
+"settings.recording.video_codec" = "Codec video";
+"settings.recording.codec_h264" = "H.264 (più compatibile)";
+"settings.recording.codec_hevc" = "HEVC (file più piccoli)";
+"settings.recording.codec_vp9" = "WebM / VP9 (richiede ffmpeg)";
+"settings.recording.codec_vp8" = "WebM / VP8 (richiede ffmpeg)";
+"settings.recording.codec_webp" = "Animazione WebP (richiede ffmpeg)";
+"settings.recording.codec_apng" = "Animazione APNG (richiede ffmpeg)";
+"settings.recording.video_fps" = "Frequenza fotogrammi video (1–60 fps)";
+"settings.recording.gif_fps" = "Frequenza fotogrammi GIF (1–30 fps)";
+"settings.recording.two_pass" = "Codifica a due passaggi (VP9/VP8, richiede ffmpeg)";
+"settings.recording.section.session" = "Sessione";
+"settings.recording.start_delay" = "Conto alla rovescia iniziale (secondi, 0 = immediato)";
+"settings.recording.fixed_duration" = "Durata fissa";
+"settings.recording.stop_after" = "Interrompi dopo (secondi)";
+"settings.recording.confirm_abort" = "Conferma prima di annullare una registrazione";
+"settings.recording.show_cursor" = "Mostra il cursore nelle registrazioni";
+"settings.recording.section.audio" = "Audio";
+"settings.recording.system_audio" = "Registra audio di sistema";
+"settings.recording.microphone" = "Registra microfono";
+"settings.recording.audio_hint" = "L'audio si applica solo alle registrazioni video; le GIF sono sempre mute. La cattura dal microfono richiede macOS 15 e l'autorizzazione al microfono (richiesta al primo utilizzo).";
+"settings.recording.section.external_tools" = "Strumenti esterni";
+"settings.recording.custom_ffmpeg_args" = "Argomenti ffmpeg personalizzati";
+"settings.recording.ffmpeg_args_hint" = "Applicati ai formati transcodificati (VP9/VP8/WebP/APNG) al posto del preset integrato. Esempio: -c:v libvpx-vp9 -crf 24 -b:v 0";
+"settings.recording.ffmpeg_installed" = "ffmpeg installato";
+"settings.recording.ffmpeg_not_installed" = "ffmpeg non installato";
+"settings.recording.ffmpeg_hint" = "Necessario per l'esportazione in WebM/WebP/APNG. Senza di esso, queste registrazioni ripiegano su H.264.";
+"settings.recording.install_homebrew" = "Installa tramite Homebrew";
+"settings.recording.get_homebrew" = "Ottieni Homebrew";
+
+/* Sources/SwiftXApp/Views.swift — Destinations pane */
+"settings.destinations.section.upload_destinations" = "Destinazioni di caricamento";
+"settings.destinations.image_uploads" = "Caricamenti immagini";
+"settings.destinations.text_uploads" = "Caricamenti testo";
+"settings.destinations.file_uploads" = "Caricamenti file e video";
+"settings.destinations.destinations_hint" = "Gli screenshot usano la destinazione immagini; le registrazioni e gli altri file la destinazione file. Finché non viene scelto un uploader personalizzato distinto qui sotto, i caricamenti di testo e file seguono la destinazione immagini.";
+"settings.destinations.not_valid_for" = "%@ — non valido per i caricamenti %@";
+"settings.destinations.unavailable_suffix" = "%@ — non disponibile";
+"settings.destinations.section.custom_uploaders" = "Uploader personalizzati";
+"settings.destinations.no_custom_uploaders" = "Nessun uploader personalizzato importato. Usa Importa… in Preferenze → Uploader personalizzati — funziona qualsiasi file .sxcu della community.";
+"settings.destinations.image_uploader" = "Uploader immagini";
+"settings.destinations.text_uploader" = "Uploader testo";
+"settings.destinations.file_uploader" = "Uploader file";
+"settings.destinations.same_as_image" = "Come per le immagini";
+"settings.destinations.reconnect" = "Riconnetti %@…";
+"settings.destinations.connect" = "Connetti %@…";
+"settings.destinations.connected" = "Connesso";
+"settings.destinations.disconnect" = "Disconnetti";
+"settings.destinations.oauth_connected_hint" = "SwiftX è autorizzato a caricare sul tuo account %@.";
+"settings.destinations.oauth_signin_hint" = "Accedi con il tuo account %@ per autorizzare SwiftX.";
+"settings.destinations.oauth_unavailable_hint" = "I caricamenti %@ non sono disponibili in questa build, che non include le credenziali dell'app %@. Le release ufficiali le includono.";
+"settings.destinations.s3_access_key" = "ID chiave di accesso";
+"settings.destinations.s3_secret_key" = "Chiave di accesso segreta";
+"settings.destinations.s3_region" = "Regione";
+"settings.destinations.s3_bucket" = "Bucket";
+"settings.destinations.s3_object_prefix" = "Prefisso oggetto";
+"settings.destinations.s3_endpoint" = "Endpoint personalizzato (opzionale, per host compatibili S3)";
+"settings.destinations.b2_key_id" = "ID chiave applicazione B2";
+"settings.destinations.b2_key" = "Chiave applicazione B2";
+"settings.destinations.b2_bucket" = "Bucket B2";
+"settings.destinations.upload_path" = "Percorso di caricamento (sono ammessi gli schemi nome)";
+"settings.destinations.b2_use_custom_url" = "Usa URL personalizzato";
+"settings.destinations.b2_custom_url" = "URL personalizzato (es. https://cdn.example.com)";
+"settings.destinations.azure_account" = "Nome account Azure";
+"settings.destinations.azure_key" = "Chiave di accesso Azure";
+"settings.destinations.azure_container" = "Contenitore";
+"settings.destinations.azure_environment" = "Ambiente";
+"settings.destinations.azure_custom_domain" = "Dominio personalizzato (opzionale)";
+"settings.destinations.owncloud_server" = "URL server (https://cloud.example.com)";
+"settings.destinations.owncloud_username" = "Nome utente";
+"settings.destinations.owncloud_password" = "Password (usa una password per app)";
+"settings.destinations.remote_folder" = "Cartella remota";
+"settings.destinations.seafile_api_url" = "URL API Seafile (https://seafile.example.com/api2)";
+"settings.destinations.seafile_token" = "Token di autenticazione";
+"settings.destinations.seafile_repo_id" = "ID libreria (repo)";
+"settings.destinations.pushbullet_token" = "Token di accesso Pushbullet";
+"settings.destinations.pushbullet_hint" = "Invia il file a tutti i dispositivi dell'account.";
+"settings.destinations.pomf_upload_url" = "URL di caricamento Pomf (https://yourhost/upload.php)";
+"settings.destinations.pomf_result_url" = "URL risultato Pomf (anteposto ai nomi file relativi)";
+"settings.destinations.vgyme_user_key" = "Chiave utente vgy.me (opzionale, collega i caricamenti al tuo account)";
+"settings.destinations.sul_api_key" = "Chiave API s-ul";
+"settings.destinations.lobfile_api_key" = "Chiave API LobFile";
+"settings.destinations.puush_api_key" = "Chiave API Puush (puush.me → Account → Settings)";
+"settings.destinations.chevereto_upload_url" = "URL di caricamento Chevereto (https://yoursite/api/1/upload)";
+"settings.destinations.chevereto_api_key" = "Chiave API Chevereto";
+"settings.destinations.chevereto_direct_url" = "Usa URL immagine diretto";
+"settings.destinations.streamable_email" = "Email Streamable";
+"settings.destinations.streamable_password" = "Password Streamable";
+"settings.destinations.uguu_hint" = "Nessuna configurazione necessaria — i file sono temporanei (fino a 48 ore).";
+
+/* Sources/SwiftXApp/UploadsSettingsView.swift — Uploads pane */
+"settings.uploads.section.upload_behavior" = "Comportamento di caricamento";
+"settings.uploads.disable_uploads" = "Disattiva tutti i caricamenti";
+"settings.uploads.upload_limit" = "Caricamenti simultanei massimi (1–25)";
+"settings.uploads.retry_uploads" = "Riprova i caricamenti non riusciti";
+"settings.uploads.retry_attempts" = "Tentativi di ripetizione (1–10)";
+"settings.uploads.multi_upload_warning" = "Avvisa prima di caricare più di 10 file";
+"settings.uploads.large_file_warning" = "Avvisa prima di caricare file superiori a 100 MB";
+"settings.uploads.section.file_naming" = "Denominazione file caricati";
+"settings.uploads.use_name_pattern" = "Rinomina i caricamenti con lo schema nome";
+"settings.uploads.name_pattern_hint" = "I caricamenti vengono rinominati con lo schema da Preferenze → Generali → File salvati. Se disattivato, viene mantenuto il nome file originale.";
+"settings.uploads.replace_problematic" = "Sostituisci caratteri problematici (spazi → trattini bassi)";
+"settings.uploads.custom_timezone" = "Usa fuso orario personalizzato negli schemi nome";
+"settings.uploads.timezone_identifier" = "Identificatore fuso orario";
+"settings.uploads.timezone_hint" = "Esempi: UTC, America/New_York, Asia/Tokyo. Gli identificatori sconosciuti ripiegano sull'ora locale.";
+"settings.uploads.section.clipboard_upload" = "Caricamento dagli appunti";
+"settings.uploads.clipboard_url_contents" = "URL copiato: carica il suo contenuto";
+"settings.uploads.clipboard_shorten" = "URL copiato: abbrevia invece di caricare";
+"settings.uploads.clipboard_share" = "URL copiato: condividi invece di caricare";
+"settings.uploads.clipboard_index_folder" = "Cartella copiata: carica un indice HTML";
+"settings.uploads.clear_clipboard" = "Svuota gli appunti dopo il caricamento dagli appunti";
+"settings.uploads.section.after_upload" = "Dopo il caricamento";
+"settings.uploads.copy_url" = "Copia URL negli appunti";
+"settings.uploads.open_url" = "Apri URL nel browser";
+"settings.uploads.shorten_url" = "Abbrevia URL dopo il caricamento";
+"settings.uploads.url_shortener" = "Abbreviatore URL";
+"settings.uploads.bitly_token" = "Token di accesso bit.ly";
+"settings.uploads.bitly_domain" = "Dominio personalizzato bit.ly (opzionale)";
+"settings.uploads.bitly_hint" = "Genera un token su bitly.com → Settings → Developer settings → API.";
+"settings.uploads.polr_api_url" = "URL API Polr (https://yoursite/api/v2/action/shorten)";
+"settings.uploads.polr_api_key" = "Chiave API Polr";
+"settings.uploads.kutt_host" = "Host Kutt";
+"settings.uploads.kutt_api_key" = "Chiave API Kutt";
+"settings.uploads.yourls_api_url" = "URL API YOURLS (https://yoursite/yourls-api.php)";
+"settings.uploads.yourls_signature" = "Firma YOURLS";
+"settings.uploads.zws_api_url" = "URL API ZWS (vuoto = api.zws.im)";
+"settings.uploads.zws_token" = "Token ZWS (opzionale)";
+"settings.uploads.share_url" = "Condividi URL dopo il caricamento (apre il browser)";
+"settings.uploads.sharing_service" = "Servizio di condivisione";
+"settings.uploads.show_qr_code" = "Mostra un codice QR per l'URL";
+"settings.uploads.show_after_upload_window" = "Mostra la finestra post-caricamento";
+"settings.uploads.section.url_processing" = "Elaborazione URL";
+"settings.uploads.clipboard_format" = "Formato appunti";
+"settings.uploads.open_url_format" = "Formato apertura URL";
+"settings.uploads.notification_format" = "Formato notifica";
+"settings.uploads.result_hint" = "$result viene sostituito con l'URL finale — es. ![]($result) per Markdown.";
+"settings.uploads.early_copy" = "Copia URL in anticipo (prima dell'abbreviazione e della formattazione)";
+"settings.uploads.force_https" = "Forza HTTPS negli URL risultanti";
+"settings.uploads.regex_replace" = "Sostituzione regex degli URL risultanti";
+"settings.uploads.regex_pattern" = "Modello";
+"settings.uploads.regex_replacement" = "Sostituzione ($1 per i gruppi)";
+"settings.uploads.auto_shorten_length" = "Abbrevia automaticamente gli URL più lunghi di (caratteri, 0 = disattivato)";
+
+/* Sources/UploadKit/DestinationCatalog.swift */
+"destination.kind.image" = "immagine";
+"destination.kind.text" = "testo";
+"destination.kind.file" = "file";
+"destination.custom_uploader" = "Uploader personalizzato";
+
+/* Sources/UploadKit/URLShortener.swift */
+"upload.service.polr_self_hosted" = "Polr (self-hosted)";
+"upload.service.yourls_self_hosted" = "YOURLS (self-hosted)";
+"upload.error.shortener_failed" = "Abbreviazione URL non riuscita: %@";
+"upload.error.shortener_empty_response" = "L'abbreviatore URL ha restituito una risposta vuota.";
+"upload.error.shortener_not_configured" = "L'abbreviatore URL non è configurato: %@. Vedi Preferenze → Caricamenti.";
+"upload.error.invalid_url" = "URL non valido";
+"upload.error.invalid_service_url" = "URL %@ non valido";
+"upload.error.config.bitly_token" = "Token di accesso bit.ly";
+"upload.error.config.polr" = "URL e chiave API Polr";
+"upload.error.config.kutt" = "Chiave API Kutt";
+"upload.error.config.yourls_url" = "URL API YOURLS";
+"upload.error.config.yourls_credentials" = "Firma YOURLS o nome utente/password";
+
+/* Sources/UploadKit/URLSharingService.swift */
+"upload.service.email" = "Email";
+
+/* Sources/UploadKit/SimpleHostUploader.swift */
+"upload.service.pomf_clone" = "Clone Pomf";
+"upload.service.chevereto_self_hosted" = "Chevereto (self-hosted)";
+"upload.error.host_generic" = "Errore %@";
+"upload.error.puush.auth_failure" = "Autenticazione non riuscita.";
+"upload.error.puush.checksum" = "Errore di checksum.";
+"upload.error.puush.storage_full" = "Spazio di archiviazione dell'account insufficiente.";
+"upload.error.puush.connection" = "Errore di connessione.";
+
+/* Sources/UploadKit/SyntaxParser.swift */
+"upload.error.syntax.empty_function_name" = "Il nome della funzione non può essere vuoto.";
+"upload.error.syntax.unknown_function" = "Nome funzione non valido: %@";
+"upload.error.syntax.missing_parameters" = "Il numero minimo di parametri per la funzione \"%@\" è %d.";
+"upload.error.syntax.unsupported_function" = "La funzione \"%@\" non è ancora supportata su macOS.";
+"upload.error.syntax.no_response_available" = "La funzione \"%@\" richiede una risposta e non può essere usata in una richiesta.";
+
+/* Sources/UploadKit/OAuth/OAuthCore.swift */
+"upload.error.oauth.not_configured" = "%@ richiede credenziali dell'app OAuth. Aggiungi un ID client in Preferenze → Destinazioni.";
+"upload.error.oauth.not_authenticated" = "Non connesso a %@. Fai clic su Connetti in Preferenze → Destinazioni.";
+"upload.error.oauth.token_refresh_failed" = "Impossibile aggiornare la sessione %@. Riconnettiti nelle preferenze.";
+"upload.error.oauth.invalid_token_response" = "Il server di autorizzazione ha restituito una risposta imprevista.";
+"upload.error.oauth.authorization_failed" = "Autorizzazione non riuscita: %@";
+
+/* Sources/UploadKit/OAuth/LoopbackRedirect.swift */
+"upload.error.oauth.loopback_port_failed" = "impossibile aprire una porta di loopback: %@";
+"upload.error.oauth.loopback_port_timeout" = "impossibile aprire una porta di loopback (tempo scaduto)";
+"upload.error.oauth.browser_timeout" = "tempo scaduto in attesa del browser";
+"upload.service.oauth_close_page" = "Puoi chiudere questa finestra e tornare a SwiftX.";
+
+/* Sources/UploadKit/AmazonS3.swift */
+"upload.error.s3.incomplete_settings" = "Amazon S3 richiede chiave di accesso, chiave segreta, regione e bucket.";
+"upload.error.s3.invalid_endpoint" = "Endpoint S3 non valido: %@";
+
+/* Sources/UploadKit/AzureStorage.swift */
+"upload.error.azure.invalid_key" = "La chiave di accesso Azure non è un base64 valido.";
+
+/* Sources/UploadKit/BackblazeB2.swift */
+"upload.error.b2.bucket_not_found" = "Bucket B2 \"%@\" non trovato.";
+
+/* Sources/UploadKit/CustomUploaderService.swift */
+"upload.error.missing_request_url" = "L'uploader personalizzato non ha un URL di richiesta.";
+"upload.error.invalid_request_url" = "URL di richiesta non valido: %@";
+"upload.error.http_failed" = "Caricamento non riuscito (HTTP %d): %@";
+"upload.error.empty_result" = "L'uploader non ha restituito alcun URL.";
+
+/* Sources/UploadKit/TokenHostUploaders.swift */
+"upload.service.pushbullet_body" = "Inviato tramite SwiftX";
+
+/* Sources/CaptureKit/FFmpeg.swift */
+"capture.format.h264_videotoolbox" = "H.264 (hardware VideoToolbox)";
+"capture.format.hevc_videotoolbox" = "HEVC (hardware VideoToolbox)";
+"capture.format.webp_animation" = "Animazione WebP";
+"capturekit.error.ffmpeg_not_installed" = "ffmpeg non è installato";
+"capturekit.error.ffmpeg_exit_status" = "ffmpeg è terminato con stato %d";
+
+/* Sources/CaptureKit/ScreenCapture.swift */
+"capturekit.error.capture.no_display" = "Nessun display trovato per l'area di cattura.";
+"capturekit.error.capture.no_window" = "Nessuna finestra catturabile trovata per l'app in primo piano.";
+"capturekit.error.capture.crop_failed" = "Impossibile ritagliare l'immagine catturata.";
+
+/* Sources/CaptureKit/ScreenRecorder.swift */
+"capturekit.error.recording.no_display" = "Nessun display trovato per l'area di registrazione.";
+"capturekit.error.recording.no_window" = "Nessuna finestra registrabile trovata per l'app in primo piano.";
+"capturekit.error.recording.no_frames" = "La registrazione non ha catturato alcun fotogramma.";
+"capturekit.error.recording.writer_failed" = "Impossibile scrivere la registrazione: %@";
+"capturekit.error.recording.gif_destination" = "impossibile creare la destinazione GIF";
+"capturekit.error.recording.gif_finalize" = "impossibile finalizzare la GIF";
+
+/* Sources/CaptureKit/ImageWriter.swift */
+"capturekit.error.image_encoding_failed" = "Impossibile codificare l'immagine.";
+
+/* Sources/ToolsKit/AIClient.swift */
+"toolskit.error.ai.missing_key" = "Imposta prima una chiave API nella finestra di analisi IA.";
+"toolskit.error.ai.bad_url" = "L'URL di base dell'IA non è un URL valido.";
+"toolskit.error.ai.encoding_failed" = "Impossibile codificare l'immagine.";
+"toolskit.error.ai.http" = "Il servizio IA ha restituito HTTP %d: %@";
+"toolskit.error.ai.empty_response" = "Il servizio IA non ha restituito alcun contenuto.";
+
+/* Sources/ToolsKit/BackgroundRemover.swift */
+"toolskit.error.background.no_subject" = "Nessun soggetto in primo piano rilevato nell'immagine.";
+"toolskit.error.background.render_failed" = "Impossibile visualizzare l'immagine mascherata.";
+
+/* Sources/ToolsKit/ImageMetadata.swift */
+"toolskit.error.metadata.unreadable" = "Il file non può essere letto come immagine.";
+"toolskit.error.metadata.unwritable" = "Impossibile riscrivere l'immagine.";
+
+/* Sources/HistoryKit/HistoryStats.swift */
+"history.stats.item_counts" = "Numero di elementi nella cronologia:";
+"history.stats.total" = "Totale: %d";
+"history.stats.yearly_usages" = "Utilizzi annuali:";
+"history.stats.file_extensions" = "Estensioni file:";
+"history.stats.hosts" = "Host:";
+"history.stats.process_names" = "Nomi processo:";
+"history.stats.empty" = "(vuoto)";
+
+/* Sources/SharedKit/TaskFlags.swift */
+"tasks.show_quick_task_menu" = "Mostra menu attività rapide";
+"tasks.show_after_capture_window" = "Mostra finestra post-cattura";
+"tasks.beautify_image" = "Abbellisci immagine";
+"tasks.add_image_effects" = "Aggiungi effetti immagine";
+"tasks.annotate_image" = "Annota immagine";
+"tasks.copy_image_to_clipboard" = "Copia immagine negli appunti";
+"tasks.pin_to_screen" = "Fissa sullo schermo";
+"tasks.send_image_to_printer" = "Invia immagine alla stampante";
+"tasks.save_image_to_file" = "Salva immagine su file";
+"tasks.save_image_to_file_with_dialog" = "Salva immagine su file con finestra di dialogo";
+"tasks.save_thumbnail_image_to_file" = "Salva immagine miniatura su file";
+"tasks.perform_actions" = "Esegui azioni";
+"tasks.copy_file_to_clipboard" = "Copia file negli appunti";
+"tasks.copy_file_path_to_clipboard" = "Copia percorso file negli appunti";
+"tasks.copy_folder_path_to_clipboard" = "Copia percorso cartella negli appunti";
+"tasks.show_in_explorer" = "Mostra nel Finder";
+"tasks.analyze_image" = "Analizza immagine";
+"tasks.scan_qr_code" = "Scansiona codice QR";
+"tasks.do_ocr" = "Esegui OCR";
+"tasks.show_before_upload_window" = "Mostra finestra pre-caricamento";
+"tasks.upload_image_to_host" = "Carica immagine sull'host";
+"tasks.delete_file" = "Elimina file";
+"tasks.show_after_upload_window" = "Mostra finestra post-caricamento";
+"tasks.use_url_shortener" = "Usa abbreviatore URL";
+"tasks.share_url" = "Condividi URL";
+"tasks.copy_url_to_clipboard" = "Copia URL negli appunti";
+"tasks.open_url" = "Apri URL";
+"tasks.show_qr_code" = "Mostra codice QR";
+
+/* Sources/SharedKit/SettingsBackup.swift */
+"backup.tool_failed" = "Lo strumento di archiviazione è terminato con stato %d.";
+
+/* Sources/SwiftXApp/ToolWindows.swift */
+"toolui.window.ocr" = "OCR";
+"toolui.ocr.failed_title" = "OCR non riuscito";
+"toolui.ruler.title" = "Righello — %d × %d";
+"toolui.ruler.body" = "Diagonale %.1f px, angolo %.1f° — dimensione copiata negli appunti";
+"toolui.window.metadata" = "Metadati — %@";
+"toolui.metadata.strip_panel_message" = "L'immagine selezionata verrà riscritta senza metadati.";
+"toolui.metadata.stripped_title" = "Metadati rimossi";
+"toolui.metadata.strip_failed_title" = "Rimozione metadati non riuscita";
+"toolui.metadata.strip_button" = "Rimuovi metadati";
+"toolui.metadata.read_failed" = "Impossibile leggere i metadati.";
+"toolui.window.hash_checker" = "Verifica hash";
+"toolui.window.qr_code" = "Codice QR";
+"toolui.window.qr_decoded" = "Codice QR — Decodificato";
+"toolui.window.color_picker" = "Selettore colore";
+"toolui.qr.notify_title" = "Codice QR";
+"toolui.qr.none_found" = "Nessun codice QR trovato.";
+"toolui.qr.content" = "Contenuto";
+"toolui.qr.image_label" = "Codice QR";
+"toolui.qr.enter_content" = "Inserisci il contenuto da codificare";
+"toolui.qr.copy_image" = "Copia immagine";
+"toolui.qr.save" = "Salva…";
+"toolui.qr.decode_file" = "Decodifica file…";
+"toolui.qr.scan_region" = "Scansiona area…";
+"toolui.color.screen_picker_title" = "Selettore colore schermo";
+"toolui.color.copied_body" = "%@ — RGB %@ copiato";
+"toolui.color.color" = "Colore";
+"toolui.color.pick_from_screen" = "Preleva dallo schermo…";
+"toolui.color.copy_as" = "Copia come";
+"toolui.color.hex" = "Hex";
+"toolui.color.rgb" = "RGB";
+"toolui.color.hsb" = "HSB";
+"toolui.color.cmyk" = "CMYK";
+"toolui.color.decimal" = "Decimale";
+"toolui.color.copy_help" = "Copia %@";
+"toolui.hash.file" = "File";
+"toolui.hash.algorithm" = "Algoritmo";
+"toolui.hash.result" = "Risultato";
+"toolui.hash.target" = "Destinazione (incolla per confrontare)";
+"toolui.hash.match" = "Gli hash corrispondono";
+"toolui.hash.mismatch" = "Gli hash non corrispondono";
+"toolui.hash.read_failed" = "Impossibile leggere il file";
+"toolui.text_result.characters" = "%d caratteri";
+"toolui.copy_all" = "Copia tutto";
+"toolui.no_file_selected" = "Nessun file selezionato";
+
+/* Sources/SwiftXApp/ImageToolViews.swift */
+"toolui.window.image_viewer" = "Visualizzatore immagini";
+"toolui.window.image_combiner" = "Combinatore immagini";
+"toolui.window.image_splitter" = "Divisore immagini";
+"toolui.window.image_thumbnailer" = "Generatore miniature immagine";
+"toolui.window.background_remover" = "Rimozione sfondo — %@";
+"toolui.window.image_comparer" = "Confronto immagini";
+"toolui.viewer.load_failed" = "Impossibile caricare %@";
+"toolui.viewer.position" = "%@ (%d di %d)";
+"toolui.filelist.add_images" = "Aggiungi immagini…";
+"toolui.filelist.clear" = "Svuota";
+"toolui.filelist.count" = "%d immagini";
+"toolui.combiner.orientation" = "Orientamento";
+"toolui.combiner.alignment" = "Allineamento";
+"toolui.combiner.orientation.horizontal" = "Orizzontale";
+"toolui.combiner.orientation.vertical" = "Verticale";
+"toolui.combiner.alignment.leading_or_top" = "Sinistra / Alto";
+"toolui.combiner.alignment.center" = "Centro";
+"toolui.combiner.alignment.trailing_or_bottom" = "Destra / Basso";
+"toolui.combiner.spacing" = "Spaziatura: %d px";
+"toolui.combiner.wrap_after" = "A capo dopo: %d";
+"toolui.combiner.wrap_help" = "0 = riga/colonna singola";
+"toolui.combiner.combine_save" = "Combina e salva…";
+"toolui.combiner.notify_title" = "Combinatore immagini";
+"toolui.combiner.read_failed" = "Alcuni file non sono stati letti.";
+"toolui.splitter.image" = "Immagine";
+"toolui.splitter.rows" = "Righe: %d";
+"toolui.splitter.columns" = "Colonne: %d";
+"toolui.splitter.split_save" = "Dividi e salva…";
+"toolui.splitter.choose_folder" = "Scegli dove salvare i riquadri";
+"toolui.splitter.notify_title" = "Divisore immagini";
+"toolui.splitter.grid_too_large" = "La griglia è più grande dell'immagine.";
+"toolui.thumbnailer.max_width" = "Larghezza massima: %d px";
+"toolui.thumbnailer.max_height" = "Altezza massima: %d px";
+"toolui.thumbnailer.choose_folder" = "Scegli dove salvare le miniature";
+"toolui.thumbnailer.notify_title" = "Generatore miniature immagine";
+"toolui.thumbnailer.saved" = "%d di %d miniature salvate.";
+"toolui.generate" = "Genera…";
+"toolui.bgremover.isolating" = "Isolamento soggetto…";
+"toolui.bgremover.save_as" = "Salva come…";
+"toolui.comparer.first" = "Prima immagine…";
+"toolui.comparer.first_done" = "Prima immagine ✓";
+"toolui.comparer.second" = "Seconda immagine…";
+"toolui.comparer.second_done" = "Seconda immagine ✓";
+"toolui.comparer.slider" = "Cursore";
+"toolui.comparer.side_by_side" = "Affiancate";
+"toolui.comparer.choose_two" = "Scegli due immagini da confrontare.";
+
+/* Sources/SwiftXApp/UtilityToolViews.swift */
+"toolui.window.index_folder" = "Indicizza cartella";
+"toolui.window.clipboard_viewer" = "Visualizzatore appunti";
+"toolui.window.inspect_window" = "Ispeziona finestra";
+"toolui.indexer.folder" = "Cartella";
+"toolui.indexer.no_folder" = "Nessuna cartella selezionata";
+"toolui.indexer.choose_folder" = "Scegli la cartella da indicizzare";
+"toolui.indexer.format" = "Formato";
+"toolui.indexer.format.text" = "Testo";
+"toolui.indexer.format.html" = "HTML";
+"toolui.indexer.skip_hidden" = "Ignora file nascosti";
+"toolui.indexer.show_sizes" = "Mostra dimensioni";
+"toolui.indexer.depth_unlimited" = "Profondità: illimitata";
+"toolui.indexer.depth" = "Profondità: %d";
+"toolui.indexer.failed_title" = "Indicizzazione cartella non riuscita";
+"toolui.refresh" = "Aggiorna";
+"toolui.clipboard.binary" = "%d byte di dati binari";
+"toolui.clipboard.select_format" = "Seleziona un formato degli appunti";
+"toolui.monitor.pattern.white" = "Bianco";
+"toolui.monitor.pattern.black" = "Nero";
+"toolui.monitor.pattern.red" = "Rosso";
+"toolui.monitor.pattern.green" = "Verde";
+"toolui.monitor.pattern.blue" = "Blu";
+"toolui.monitor.pattern.grayscale_gradient" = "Gradiente scala di grigi";
+"toolui.monitor.pattern.color_gradient" = "Gradiente colore";
+"toolui.monitor.hint" = "%@ — frecce o clic per scorrere, Esc per uscire";
+"toolui.inspect.window" = "Finestra";
+"toolui.inspect.title" = "Titolo";
+"toolui.inspect.application" = "Applicazione";
+"toolui.inspect.process_id" = "ID processo";
+"toolui.inspect.window_id" = "ID finestra";
+"toolui.inspect.position" = "Posizione";
+"toolui.inspect.size" = "Dimensione";
+"toolui.inspect.layer" = "Livello";
+"toolui.inspect.opacity" = "Opacità";
+"toolui.inspect.copy_info" = "Copia informazioni";
+"toolui.inspect.copy_template" = "Titolo: %@\nApplicazione: %@ (pid %d)\nID finestra: %d\nLimiti: %d, %d, %d × %d\nLivello: %d, Opacità: %d%%";
+
+/* Sources/SwiftXApp/VideoToolViews.swift */
+"toolui.window.video_converter" = "Convertitore video";
+"toolui.window.video_thumbnailer" = "Generatore miniature video";
+"toolui.video.video" = "Video";
+"toolui.video.codec" = "Codec";
+"toolui.video.quality_crf" = "Qualità (CRF %d)";
+"toolui.video.crf_help" = "Un valore più basso indica qualità migliore e file più grandi";
+"toolui.video.bitrate" = "Bitrate (kbps)";
+"toolui.video.custom_args" = "Argomenti ffmpeg personalizzati (sostituisce il preset)";
+"toolui.video.ffmpeg_missing" = "ffmpeg non è installato — installalo da Preferenze → Registrazione.";
+"toolui.video.convert" = "Converti…";
+"toolui.video.converted_title" = "Video convertito";
+"toolui.video.convert_failed_title" = "Conversione video non riuscita";
+"toolui.video.thumbnails_count" = "Miniature: %d";
+"toolui.video.thumb_columns" = "Colonne: %d";
+"toolui.video.add_timestamps" = "Aggiungi indicazioni orarie";
+"toolui.video.thumbs_saved_title" = "Miniature video salvate";
+"toolui.video.thumbs_failed_title" = "Generazione miniature video non riuscita";
+
+/* Sources/SwiftXApp/ImageEffectsViews.swift */
+"effects.ui.window.title" = "Effetti immagine";
+"effects.ui.window.beautifier" = "Abbellitore immagini — %@";
+"effects.ui.preset_n" = "Preset %d";
+"effects.ui.preset_name_placeholder" = "Nome preset";
+"effects.ui.import" = "Importa…";
+"effects.ui.export" = "Esporta…";
+"effects.ui.select_effect" = "Seleziona un effetto per modificarne i parametri.";
+"effects.ui.preview" = "Anteprima";
+"effects.ui.import_failed" = "Importazione non riuscita";
+"effects.ui.export_failed" = "Esportazione non riuscita";
+"effects.ui.continue_without" = "Continua senza effetti";
+"effects.ui.apply" = "Applica";
+"effects.ui.dash.solid" = "Continua";
+"effects.ui.dash.dash" = "Tratteggiata";
+"effects.ui.dash.dot" = "Punteggiata";
+"effects.ui.dash.dash_dot" = "Tratto-punto";
+"effects.ui.dash.dash_dot_dot" = "Tratto-punto-punto";
+"effects.ui.font.family" = "Famiglia";
+"effects.ui.font.size" = "Dimensione";
+"effects.ui.anchor.top" = "Alto";
+"effects.ui.anchor.bottom" = "Basso";
+"effects.ui.anchor.left" = "Sinistra";
+"effects.ui.anchor.right" = "Destra";
+"effects.ui.gradient.type" = "Tipo";
+"effects.ui.gradient.horizontal" = "Orizzontale";
+"effects.ui.gradient.vertical" = "Verticale";
+"effects.ui.gradient.forward_diagonal" = "Diagonale in avanti";
+"effects.ui.gradient.backward_diagonal" = "Diagonale all'indietro";
+"effects.ui.gradient.location" = "Posizione %%";
+"effects.ui.gradient.add_stop" = "Aggiungi punto di interruzione";
+"effects.ui.beautifier.layout" = "Layout";
+"effects.ui.beautifier.margin" = "Margine";
+"effects.ui.beautifier.padding" = "Spaziatura interna";
+"effects.ui.beautifier.smart_padding" = "Spaziatura interna intelligente";
+"effects.ui.beautifier.rounded_corner" = "Angolo arrotondato";
+"effects.ui.beautifier.shadow" = "Ombra";
+"effects.ui.beautifier.radius" = "Raggio";
+"effects.ui.beautifier.opacity" = "Opacità";
+"effects.ui.beautifier.distance" = "Distanza";
+"effects.ui.beautifier.angle" = "Angolo";
+"effects.ui.beautifier.background" = "Sfondo";
+"effects.ui.beautifier.type" = "Tipo";
+"effects.ui.beautifier.gradient" = "Gradiente";
+"effects.ui.beautifier.color" = "Colore";
+"effects.ui.beautifier.image" = "Immagine";
+"effects.ui.beautifier.transparent" = "Trasparente";
+"effects.ui.beautifier.save" = "Salva…";
+
+/* Sources/SwiftXApp/AIAnalysisView.swift */
+"toolui.ai.window_title" = "Analisi immagine IA";
+"toolui.ai.image_label" = "Immagine da analizzare";
+"toolui.ai.prompt" = "Prompt";
+"toolui.ai.analyzing" = "Analisi in corso…";
+"toolui.ai.analyze" = "Analizza";
+"toolui.ai.provider" = "Provider…";
+"toolui.ai.copy_response" = "Copia risposta";
+"toolui.ai.base_url" = "URL di base";
+"toolui.ai.api_key" = "Chiave API";
+"toolui.ai.model" = "Modello";
+
+/* Sources/SwiftXApp/LogViewer.swift */
+"log.window_title" = "Registro di SwiftX";
+"log.loading" = "Caricamento…";
+"log.footer" = "Il registro di questa sessione (sottosistema %@); il registro unificato gestisce l'archiviazione, quindi non c'è nulla da ripulire.";
+"log.refresh" = "Aggiorna";
+"log.empty" = "Nessuna voce di registro in questa sessione.";
+"log.read_failed" = "Impossibile leggere il registro: %@";
+
+/* Sources/SwiftXApp/ScrollingCapture.swift */
+"capture.scrolling.window_title" = "Cattura con scorrimento";
+"capture.scrolling.seams_warning" = "Alcuni fotogrammi non si sono allineati correttamente; il risultato potrebbe presentare giunture visibili.";
+"capture.scrolling.stitch_failed" = "Impossibile unire i fotogrammi.";
+"capture.scrolling.start_delay" = "Ritardo iniziale (ms)";
+"capture.scrolling.scroll_delay" = "Ritardo di scorrimento (ms)";
+"capture.scrolling.scroll_amount" = "Quantità di scorrimento (righe)";
+"capture.scrolling.scroll_to_top" = "Scorri all'inizio prima di catturare";
+"capture.scrolling.ignore_bottom_edge" = "Ignora automaticamente il bordo inferiore fisso";
+"capture.scrolling.stop" = "Interrompi";
+"capture.scrolling.frames" = "%d fotogrammi";
+"capture.scrolling.select_start" = "Seleziona area e avvia";
+
+/* Sources/SwiftXApp/AutoCapture.swift */
+"capture.auto.window_title" = "Cattura automatica";
+"capture.auto.region" = "Area";
+"capture.auto.not_set" = "Non impostata";
+"capture.auto.select_region" = "Seleziona area…";
+"capture.auto.full_screen" = "Schermo intero";
+"capture.auto.repeat_every" = "Ripeti ogni (secondi)";
+"capture.auto.wait_uploads" = "Attendi il completamento dei caricamenti prima di catturare";
+"capture.auto.stop" = "Interrompi";
+"capture.auto.start" = "Avvia";
+"capture.auto.status" = "Tempo rimanente %ds • %d catturati";
+"capture.auto.captured" = "%d catturati";
+
+/* Sources/SwiftXApp/RecordingHUD.swift */
+"recording.hud.countdown" = "Registrazione tra %d…";
+"recording.hud.resume" = "Riprendi";
+"recording.hud.pause" = "Pausa";
+"recording.hud.stop_save" = "Interrompi e salva";
+"recording.hud.abort_discard" = "Annulla ed elimina";
+
+/* Sources/CaptureKit/RegionSelect.swift */
+"capture.region.shape.rectangle" = "rettangolo";
+"capture.region.shape.ellipse" = "ellisse";
+"capture.region.shape.freehand" = "a mano libera";
+"capture.region.hint.shape" = "⇥ forma: %@";
+"capture.region.hint.magnifier_on" = "M lente d'ingrandimento attiva";
+"capture.region.hint.magnifier_off" = "M lente d'ingrandimento disattivata";
+"capture.region.hint.fixed_on" = "F dimensione fissa attiva (%d×%d)";
+"capture.region.hint.fixed_off" = "F dimensione fissa disattivata";
+"capture.region.hint.esc" = "esc annulla";
+
+/* Sources/SwiftXApp/Views.swift — Updates pane */
+"settings.updates.status" = "Stato";
+"settings.updates.not_checked" = "Non ancora controllato";
+"settings.updates.last_checked" = "Ultimo controllo %@";
+"settings.updates.checking" = "Controllo in corso…";
+"settings.updates.up_to_date" = "Aggiornato (controllato il %@)";
+"settings.updates.version_available" = "Versione %@ disponibile";
+"settings.updates.release_notes" = "Note di rilascio";
+"settings.updates.downloading" = "Download e installazione in corso…";
+"settings.updates.installed_relaunch" = "Versione %@ installata — riavvia per completare";
+"settings.updates.relaunch_now" = "Riavvia ora";
+"settings.updates.check_automatically" = "Controlla automaticamente";
+"settings.updates.managed_by_homebrew" = "Gestito da Homebrew";
+"settings.updates.copy_command" = "Copia comando";
+"settings.updates.auto_install" = "Scarica e installa automaticamente gli aggiornamenti";
+"settings.updates.check_for_updates" = "Controlla aggiornamenti";
+"settings.updates.install_update" = "Installa aggiornamento";
+"settings.updates.open_release_page" = "Apri pagina di rilascio";
+"settings.updates.skip_version" = "Ignora questa versione";
+/* UpdateCheckFrequency raw values (looked up dynamically; PascalCase keys on purpose) */
+"settings.updates.frequency.Off" = "Disattivato";
+"settings.updates.frequency.Daily" = "Giornaliero";
+"settings.updates.frequency.Weekly" = "Settimanale";
+"settings.updates.frequency.Monthly" = "Mensile";
+
+/* Sources/SwiftXApp/UpdateManager.swift — update notifications and alerts */
+"update.notify.available_title" = "SwiftX %@ è disponibile";
+"update.notify.available_body_brew" = "Aggiorna con %@";
+"update.notify.available_body" = "Hai la versione %@. Installa ora o visualizza le note di rilascio.";
+"update.notify.installed_title" = "SwiftX %@ installato";
+"update.notify.installed_body" = "Riavvia per completare l'aggiornamento.";
+"update.notify.failed_title" = "Aggiornamento di SwiftX non riuscito";
+"update.alert.no_version" = "Questa build non ha una versione, quindi gli aggiornamenti non possono essere confrontati.";
+"update.alert.up_to_date_title" = "SwiftX è aggiornato";
+"update.alert.up_to_date_body" = "La versione %@ è l'ultima release.";
+"update.alert.available_title" = "SwiftX %@ è disponibile";
+"update.alert.you_have" = "Hai la versione %@.";
+"update.alert.copy_brew_command" = "Copia comando brew";
+"update.alert.brew_managed_suffix" = "Questa copia è gestita da Homebrew; aggiorna con %@.";
+"update.alert.install_update" = "Installa aggiornamento";
+"update.alert.open_release_page" = "Apri pagina di rilascio";
+"update.alert.view_release_page" = "Visualizza pagina di rilascio";
+"update.alert.skip_version" = "Ignora questa versione";
+"update.alert.brew_title" = "Aggiorna con Homebrew";
+"update.alert.brew_body" = "Questa copia di SwiftX è gestita da Homebrew. Aggiornala con:\n\n%@";
+"update.alert.copy_command" = "Copia comando";
+"update.alert.installed_title" = "SwiftX %@ installato";
+"update.alert.installed_body" = "L'aggiornamento avrà effetto dopo un riavvio.";
+"update.alert.relaunch_now" = "Riavvia ora";
+"update.alert.later" = "Più tardi";
+"update.alert.install_failed_title" = "Impossibile installare l'aggiornamento";
+"update.alert.install_failed_suffix" = "Puoi scaricare l'aggiornamento dalla pagina di rilascio.";
+"update.alert.check_failed_title" = "Controllo aggiornamenti non riuscito";
+"update.alert.open_releases_page" = "Apri pagina delle release";
+
+/* Sources/UpdateKit — update check/install errors */
+"update.error.http" = "GitHub ha restituito HTTP %@: %@";
+"update.error.bad_version" = "Il tag di rilascio \"%@\" non è una versione di SwiftX.";
+"update.error.no_dmg_asset" = "La release %@ non ha un'immagine disco scaricabile.";
+"update.error.not_app_bundle" = "SwiftX non è in esecuzione da un pacchetto app, quindi non può aggiornarsi da solo.";
+"update.error.translocated" = "SwiftX è in esecuzione da un'immagine disco o da una posizione in quarantena. Spostalo prima in /Applications.";
+"update.error.dev_signed" = "Questa build non è firmata con Developer ID, quindi non può aggiornarsi da sola.";
+"update.error.not_writable" = "La posizione %@ non è scrivibile.";
+"update.error.download_failed" = "Il download non è riuscito con HTTP %@.";
+"update.error.checksum_unavailable" = "La release non pubblica un checksum, quindi il download non può essere verificato.";
+"update.error.checksum_mismatch" = "L'immagine disco scaricata non ha superato la verifica del checksum.";
+"update.error.mount_failed" = "Impossibile montare l'immagine disco: %@";
+"update.error.app_missing_in_dmg" = "L'immagine disco non contiene SwiftX.app.";
+"update.error.signature_invalid" = "L'app scaricata non ha superato la verifica della firma del codice: %@";
+"update.error.team_id_mismatch" = "L'app scaricata è firmata da %@, non da %@.";
+"update.error.unknown_team" = "un team sconosciuto";
+"update.error.swap_failed" = "Impossibile sostituire l'app installata: %@";
