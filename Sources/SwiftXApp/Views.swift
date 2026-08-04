@@ -450,7 +450,15 @@ struct UpdatesView: View {
     @ViewBuilder private var updateStatusRow: some View {
         switch updater.state {
         case .idle:
-            LabeledContent(L10n.t("settings.updates.status")) { Text(L10n.t("settings.updates.not_checked")) }
+            // No check has run this session; fall back to the persisted
+            // timestamp so a relaunch doesn't read as "never checked".
+            LabeledContent(L10n.t("settings.updates.status")) {
+                if let date = updater.lastCheckDate {
+                    Text(L10n.t("settings.updates.last_checked", date.formatted(.relative(presentation: .named))))
+                } else {
+                    Text(L10n.t("settings.updates.not_checked"))
+                }
+            }
         case .checking:
             LabeledContent(L10n.t("settings.updates.status")) {
                 HStack(spacing: 6) {
