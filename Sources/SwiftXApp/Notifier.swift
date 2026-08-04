@@ -73,16 +73,16 @@ enum Notifier {
             UNNotificationCategory(
                 identifier: updateCategory,
                 actions: [
-                    UNNotificationAction(identifier: installUpdateAction, title: "Install Update"),
-                    UNNotificationAction(identifier: viewReleaseAction, title: "View Release"),
-                    UNNotificationAction(identifier: skipUpdateAction, title: "Skip This Version")
+                    UNNotificationAction(identifier: installUpdateAction, title: L10n.t("notification.action.install_update")),
+                    UNNotificationAction(identifier: viewReleaseAction, title: L10n.t("notification.action.view_release")),
+                    UNNotificationAction(identifier: skipUpdateAction, title: L10n.t("notification.action.skip_version"))
                 ],
                 intentIdentifiers: []
             ),
             UNNotificationCategory(
                 identifier: updateInstalledCategory,
                 actions: [
-                    UNNotificationAction(identifier: relaunchAction, title: "Relaunch")
+                    UNNotificationAction(identifier: relaunchAction, title: L10n.t("notification.action.relaunch"))
                 ],
                 intentIdentifiers: []
             )

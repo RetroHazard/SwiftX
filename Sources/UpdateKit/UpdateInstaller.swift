@@ -33,29 +33,30 @@ public enum UpdateInstaller {
         public var errorDescription: String? {
             switch self {
             case .notAnAppBundle:
-                return "SwiftX is not running from an app bundle, so it cannot update itself."
+                return L10n.t("update.error.not_app_bundle")
             case .translocated:
-                return "SwiftX is running from a disk image or quarantined location. Move it to /Applications first."
+                return L10n.t("update.error.translocated")
             case .devSignedBuild:
-                return "This build is not Developer ID signed, so it cannot update itself."
+                return L10n.t("update.error.dev_signed")
             case .destinationNotWritable(let path):
-                return "The location \(path) is not writable."
+                return L10n.t("update.error.not_writable", path)
             case .downloadFailed(let status):
-                return "The download failed with HTTP \(status)."
+                return L10n.t("update.error.download_failed", "\(status)")
             case .checksumUnavailable:
-                return "The release does not publish a checksum, so the download cannot be verified."
+                return L10n.t("update.error.checksum_unavailable")
             case .checksumMismatch:
-                return "The downloaded disk image failed checksum verification."
+                return L10n.t("update.error.checksum_mismatch")
             case .mountFailed(let detail):
-                return "The disk image could not be mounted: \(detail)"
+                return L10n.t("update.error.mount_failed", detail)
             case .appMissingInDMG:
-                return "The disk image does not contain SwiftX.app."
+                return L10n.t("update.error.app_missing_in_dmg")
             case .signatureInvalid(let detail):
-                return "The downloaded app failed code signature verification: \(detail)"
+                return L10n.t("update.error.signature_invalid", detail)
             case .teamIDMismatch(let got, let expected):
-                return "The downloaded app is signed by \(got ?? "an unknown team"), not \(expected)."
+                return L10n.t("update.error.team_id_mismatch",
+                              got ?? L10n.t("update.error.unknown_team"), expected)
             case .swapFailed(let detail):
-                return "The installed app could not be replaced: \(detail)"
+                return L10n.t("update.error.swap_failed", detail)
             }
         }
     }

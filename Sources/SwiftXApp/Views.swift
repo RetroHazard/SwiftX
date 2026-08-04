@@ -419,41 +419,41 @@ struct UpdatesView: View {
     @ViewBuilder private var updateStatusRow: some View {
         switch updater.state {
         case .idle:
-            LabeledContent("Status") { Text("Not checked yet") }
+            LabeledContent(L10n.t("settings.updates.status")) { Text(L10n.t("settings.updates.not_checked")) }
         case .checking:
-            LabeledContent("Status") {
+            LabeledContent(L10n.t("settings.updates.status")) {
                 HStack(spacing: 6) {
                     ProgressView().controlSize(.small)
-                    Text("Checking…")
+                    Text(L10n.t("settings.updates.checking"))
                 }
             }
         case .upToDate(let date):
-            LabeledContent("Status") {
-                Text("Up to date (checked \(date.formatted(.relative(presentation: .named))))")
+            LabeledContent(L10n.t("settings.updates.status")) {
+                Text(L10n.t("settings.updates.up_to_date", date.formatted(.relative(presentation: .named))))
             }
         case .available(let update):
-            LabeledContent("Status") {
+            LabeledContent(L10n.t("settings.updates.status")) {
                 HStack(spacing: 8) {
-                    Text("Version \(String(describing: update.version)) available")
-                    Link("Release notes", destination: update.release.htmlURL)
+                    Text(L10n.t("settings.updates.version_available", String(describing: update.version)))
+                    Link(L10n.t("settings.updates.release_notes"), destination: update.release.htmlURL)
                 }
             }
         case .downloading:
-            LabeledContent("Status") {
+            LabeledContent(L10n.t("settings.updates.status")) {
                 HStack(spacing: 6) {
                     ProgressView().controlSize(.small)
-                    Text("Downloading and installing…")
+                    Text(L10n.t("settings.updates.downloading"))
                 }
             }
         case .installed(let installedVersion):
-            LabeledContent("Status") {
+            LabeledContent(L10n.t("settings.updates.status")) {
                 HStack(spacing: 8) {
-                    Text("Version \(String(describing: installedVersion)) installed — relaunch to finish")
-                    Button("Relaunch Now") { updater.relaunchNow() }
+                    Text(L10n.t("settings.updates.installed_relaunch", String(describing: installedVersion)))
+                    Button(L10n.t("settings.updates.relaunch_now")) { updater.relaunchNow() }
                 }
             }
         case .failed(let message):
-            LabeledContent("Status") {
+            LabeledContent(L10n.t("settings.updates.status")) {
                 Text(message).foregroundStyle(.red)
             }
         }
@@ -462,40 +462,43 @@ struct UpdatesView: View {
     var body: some View {
         Section {
             updateStatusRow
-            Picker("Check automatically", selection: updateBinding(\.updateCheckFrequency)) {
+            Picker(L10n.t("settings.updates.check_automatically"), selection: updateBinding(\.updateCheckFrequency)) {
                 ForEach(UpdateCheckFrequency.allCases, id: \.rawValue) { frequency in
-                    Text(frequency.displayName).tag(frequency.rawValue)
+                    let key = "settings.updates.frequency.\(frequency.rawValue)"
+                    Text(L10n.t(key)).tag(frequency.rawValue)
                 }
             }
             .pickerStyle(.menu)
             if updater.isHomebrewManaged {
-                LabeledContent("Managed by Homebrew") {
+                LabeledContent(L10n.t("settings.updates.managed_by_homebrew")) {
                     HStack(spacing: 8) {
                         Text(UpdateManager.brewUpgradeCommand)
                             .font(.callout.monospaced())
                             .foregroundStyle(.secondary)
-                        Button("Copy Command") { updater.copyBrewCommand() }
+                        Button(L10n.t("settings.updates.copy_command")) { updater.copyBrewCommand() }
                     }
                 }
             } else {
-                Toggle("Automatically download and install updates",
+                Toggle(L10n.t("settings.updates.auto_install"),
                        isOn: updateBinding(\.updateAutoInstall))
             }
         } footer: {
             // footers render below the grouped box, so the buttons escape the row card
             HStack {
                 Spacer()
-                Button("Check for Updates") { updater.checkFromMenu() }
+                Button(L10n.t("settings.updates.check_for_updates")) { updater.checkFromMenu() }
                     .disabled(updateActionInFlight)
                 if case .available = updater.state, !updater.isHomebrewManaged {
-                    Button(updater.canSelfInstall ? "Install Update" : "Open Release Page") {
+                    Button(updater.canSelfInstall
+                           ? L10n.t("settings.updates.install_update")
+                           : L10n.t("settings.updates.open_release_page")) {
                         if updater.canSelfInstall {
                             updater.installCurrentUpdate()
                         } else {
                             updater.openReleasePage()
                         }
                     }
-                    Button("Skip This Version") { updater.skipCurrentUpdate() }
+                    Button(L10n.t("settings.updates.skip_version")) { updater.skipCurrentUpdate() }
                 }
             }
             .padding(.top, 4)

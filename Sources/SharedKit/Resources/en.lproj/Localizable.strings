@@ -104,6 +104,10 @@
 "notification.action.show_in_finder" = "Show in Finder";
 "notification.action.annotate" = "Annotate";
 "notification.action.delete" = "Delete";
+"notification.action.install_update" = "Install Update";
+"notification.action.view_release" = "View Release";
+"notification.action.skip_version" = "Skip This Version";
+"notification.action.relaunch" = "Relaunch";
 
 /* Accessibility */
 "accessibility.recording" = "SwiftX recording";
@@ -1223,3 +1227,75 @@
 "capture.region.hint.fixed_on" = "F fixed size on (%d×%d)";
 "capture.region.hint.fixed_off" = "F fixed size off";
 "capture.region.hint.esc" = "esc cancel";
+
+/* Sources/SwiftXApp/Views.swift — Updates pane */
+"settings.updates.status" = "Status";
+"settings.updates.not_checked" = "Not checked yet";
+"settings.updates.checking" = "Checking…";
+"settings.updates.up_to_date" = "Up to date (checked %@)";
+"settings.updates.version_available" = "Version %@ available";
+"settings.updates.release_notes" = "Release notes";
+"settings.updates.downloading" = "Downloading and installing…";
+"settings.updates.installed_relaunch" = "Version %@ installed — relaunch to finish";
+"settings.updates.relaunch_now" = "Relaunch Now";
+"settings.updates.check_automatically" = "Check automatically";
+"settings.updates.managed_by_homebrew" = "Managed by Homebrew";
+"settings.updates.copy_command" = "Copy Command";
+"settings.updates.auto_install" = "Automatically download and install updates";
+"settings.updates.check_for_updates" = "Check for Updates";
+"settings.updates.install_update" = "Install Update";
+"settings.updates.open_release_page" = "Open Release Page";
+"settings.updates.skip_version" = "Skip This Version";
+/* UpdateCheckFrequency raw values (looked up dynamically; PascalCase keys on purpose) */
+"settings.updates.frequency.Off" = "Off";
+"settings.updates.frequency.Daily" = "Daily";
+"settings.updates.frequency.Weekly" = "Weekly";
+"settings.updates.frequency.Monthly" = "Monthly";
+
+/* Sources/SwiftXApp/UpdateManager.swift — update notifications and alerts */
+"update.notify.available_title" = "SwiftX %@ is available";
+"update.notify.available_body_brew" = "Update with %@";
+"update.notify.available_body" = "You have %@. Install now or view the release notes.";
+"update.notify.installed_title" = "SwiftX %@ installed";
+"update.notify.installed_body" = "Relaunch to finish updating.";
+"update.notify.failed_title" = "SwiftX update failed";
+"update.alert.no_version" = "This build has no version, so updates cannot be compared.";
+"update.alert.up_to_date_title" = "SwiftX is up to date";
+"update.alert.up_to_date_body" = "Version %@ is the latest release.";
+"update.alert.available_title" = "SwiftX %@ is available";
+"update.alert.you_have" = "You have %@.";
+"update.alert.copy_brew_command" = "Copy brew Command";
+"update.alert.brew_managed_suffix" = "This copy is managed by Homebrew; update with %@.";
+"update.alert.install_update" = "Install Update";
+"update.alert.open_release_page" = "Open Release Page";
+"update.alert.view_release_page" = "View Release Page";
+"update.alert.skip_version" = "Skip This Version";
+"update.alert.brew_title" = "Update with Homebrew";
+"update.alert.brew_body" = "This copy of SwiftX is managed by Homebrew. Update it with:\n\n%@";
+"update.alert.copy_command" = "Copy Command";
+"update.alert.installed_title" = "SwiftX %@ installed";
+"update.alert.installed_body" = "The update takes effect after a relaunch.";
+"update.alert.relaunch_now" = "Relaunch Now";
+"update.alert.later" = "Later";
+"update.alert.install_failed_title" = "Update could not be installed";
+"update.alert.install_failed_suffix" = "You can download the update from the release page instead.";
+"update.alert.check_failed_title" = "Update check failed";
+"update.alert.open_releases_page" = "Open Releases Page";
+
+/* Sources/UpdateKit — update check/install errors */
+"update.error.http" = "GitHub returned HTTP %@: %@";
+"update.error.bad_version" = "The release tag \"%@\" is not a SwiftX version.";
+"update.error.no_dmg_asset" = "The release %@ has no downloadable disk image.";
+"update.error.not_app_bundle" = "SwiftX is not running from an app bundle, so it cannot update itself.";
+"update.error.translocated" = "SwiftX is running from a disk image or quarantined location. Move it to /Applications first.";
+"update.error.dev_signed" = "This build is not Developer ID signed, so it cannot update itself.";
+"update.error.not_writable" = "The location %@ is not writable.";
+"update.error.download_failed" = "The download failed with HTTP %@.";
+"update.error.checksum_unavailable" = "The release does not publish a checksum, so the download cannot be verified.";
+"update.error.checksum_mismatch" = "The downloaded disk image failed checksum verification.";
+"update.error.mount_failed" = "The disk image could not be mounted: %@";
+"update.error.app_missing_in_dmg" = "The disk image does not contain SwiftX.app.";
+"update.error.signature_invalid" = "The downloaded app failed code signature verification: %@";
+"update.error.team_id_mismatch" = "The downloaded app is signed by %@, not %@.";
+"update.error.unknown_team" = "an unknown team";
+"update.error.swap_failed" = "The installed app could not be replaced: %@";

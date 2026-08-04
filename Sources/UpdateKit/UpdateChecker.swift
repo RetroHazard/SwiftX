@@ -9,6 +9,7 @@
 // orders of magnitude above the background cadence.
 
 import Foundation
+import SharedKit
 
 /// How often the background update check runs. Raw values are stored in
 /// ApplicationConfig.updateCheckFrequency.
@@ -56,9 +57,9 @@ public enum UpdateChecker {
 
         public var errorDescription: String? {
             switch self {
-            case .http(let status, let body): return "GitHub returned HTTP \(status): \(body)"
-            case .badVersion(let tag): return "The release tag \"\(tag)\" is not a SwiftX version."
-            case .noDMGAsset(let tag): return "The release \(tag) has no downloadable disk image."
+            case .http(let status, let body): return L10n.t("update.error.http", "\(status)", body)
+            case .badVersion(let tag): return L10n.t("update.error.bad_version", tag)
+            case .noDMGAsset(let tag): return L10n.t("update.error.no_dmg_asset", tag)
             }
         }
     }
