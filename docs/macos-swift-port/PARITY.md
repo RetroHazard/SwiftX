@@ -27,7 +27,7 @@ audit are tracked below as Phases 12–15.
 | Region select overlay — rectangle, dimming, crosshair, size label, multi-display, Esc cancel | Ported |
 | Region overlay — window snapping (hover highlight, click captures), last region (menu + hotkey) | Ported |
 | Region overlay extras — ellipse/freehand, magnifier, fixed size, snap sizes | Ported — Tab cycles shape, M toggles magnifier, F toggles fixed size, drags auto-snap to presets; ruler and screen color picker shipped as standalone tools (Phase 8) |
-| Save to file + subfolder patterns (name parser), clipboard copy | Ported — FileExistAction honored (Ask/Overwrite/UniqueName/Cancel); default stays UniqueName auto-numbering (C# defaults to Ask) |
+| Save to file + subfolder patterns (name parser), clipboard copy | Ported — file name, active-window name and subfolder patterns are editable in Settings → General → Saved files, with FileExistAction (Ask/Overwrite/UniqueName/Cancel) beside them; default stays UniqueName auto-numbering (C# defaults to Ask) |
 | JPEG/GIF/BMP/TIFF encoders + quality, auto-JPEG for large captures | Ported — C# EImageFormat set; WebP is not a C# image format either; PNG bit depth, GIF palette and auto-JPEG quality knobs shipped (13) |
 | Screenshot delay, cursor-capture toggle | Ported (13) — ScreenshotDelay before every capture verb (incl. region picker) + tray Screenshot Delay submenu; ShowCursor toggle threaded into all capture paths |
 | Cross-display region selection (stitching) | Ported — per-display captures composited at the highest backing scale |
@@ -37,7 +37,7 @@ audit are tracked below as Phases 12–15.
 
 | Feature | Status |
 |---|---|
-| After-capture pipeline (C#-compatible flag serialization) | Ported — all 22 flags: beautify, effects, annotate, image/file/paths to clipboard, pin, print, save, save-dialog, thumbnail, actions, show in Finder, analyze (AI), scan QR, OCR, upload, delete (Trash), quick task menu, after-capture window, before-upload window |
+| After-capture pipeline (C#-compatible flag serialization) | Ported — all 22 flags: beautify, effects, annotate, image/file/paths to clipboard, pin, print, save, save-dialog, thumbnail, actions, show in Finder, analyze (AI), scan QR, OCR, upload, delete (Trash), quick task menu, after-capture window, before-upload window. Settings → Capture → After capture and the after-capture window render the same list from `AfterCapturePipeline.implemented`, so all 22 are reachable from both |
 | Pin to screen (from capture, clipboard, file, screen region, close all) | Ported — drag to move, double-click to close, scroll/± to scale, ⌘-scroll/⌘± for opacity (C# 10% steps), right-click menu (copy, save, close all) |
 | After-upload tasks (6) | Ported — shorten, copy URL, open URL, share URL, QR code window, after-upload window (link formats + copy buttons) |
 | Global hotkey engine (Carbon), defaults ⌃⇧3/4/5, DisableHotkeys toggle | Ported — recorder UI in Settings, live re-registration |
@@ -149,7 +149,7 @@ audit are tracked below as Phases 12–15.
 | Watch folders | Ported — FSEvents watcher with glob filter, subdirectories, move-to-screenshots, C# size-stability gate; Settings → Watch Folders pane |
 | Auto capture | Ported — region/full-screen repeat timer, wait-for-uploads, C# AutoCapture* keys; annotate/menus stripped per shot like C# |
 | Scrolling capture | Ported — synthetic scroll-wheel events + C# CombineImages row-matching stitcher (side margins, auto bottom-edge trim, best-guess fallback); Windows-message scroll methods N/A |
-| Quick task menu (ShowQuickTaskMenu) + editor | Ported — C# QuickTaskPresets JSON incl. separators; menu at cursor |
+| Quick task menu (ShowQuickTaskMenu) + editor | Ported — C# QuickTaskPresets JSON incl. separators; menu at cursor. Turn it on in Settings → Capture → After capture; the menu's "Edit this menu…" opens the preset editor |
 | After-capture / before-upload windows | Ported — filename + task toggles; destination override before upload (all sources) |
 | CLI verbs, workflows | Partial — -HotkeyTypeName [file], -workflow, -CustomUploader .sxcu, -ImageEffect .sxie, -NativeMessagingInput .json, bare path/URL upload; second instance forwards to primary. Verb dispatch is ported, but hotkeys carry no per-workflow TaskSettings overrides (names, destinations, after-capture chains) — Planned (12) |
 | Native messaging host (Chrome/Edge/Firefox) | Ported — SwiftXHost binary in bundle speaks the Chrome stdio protocol; manifest install toggle in General settings |
