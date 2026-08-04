@@ -5,7 +5,6 @@
 <div align="center">
   <a href="https://github.com/RetroHazard/SwiftX/releases/latest"><img src="https://img.shields.io/github/v/release/RetroHazard/SwiftX?label=Latest&cacheSeconds=3600" alt="Latest release"/></a>
   <a href="https://github.com/RetroHazard/SwiftX/actions/workflows/release.yml"><img src="https://img.shields.io/github/actions/workflow/status/RetroHazard/SwiftX/release.yml?label=Release%20pipeline&cacheSeconds=3600" alt="Release pipeline status"/></a>
-  <a href="https://github.com/RetroHazard/SwiftX/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/RetroHazard/SwiftX/ci.yml?branch=master&event=schedule&label=Weekly%20build&cacheSeconds=3600" alt="Weekly build status"/></a>
   <a href="./LICENSE"><img src="https://img.shields.io/github/license/RetroHazard/SwiftX?label=License&color=brightgreen&cacheSeconds=3600" alt="License"/></a>
   <img src="https://img.shields.io/badge/macOS-14%2B-lightgrey" alt="macOS 14+"/>
   <img src="https://img.shields.io/badge/Swift-5.10%2B-orange" alt="Swift 5.10+"/>
