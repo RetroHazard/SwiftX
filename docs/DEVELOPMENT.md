@@ -119,6 +119,25 @@ Cutting a release, in order of preference:
 3. **Tag push** — `git tag v2026.7.1 && git push origin v2026.7.1` still works and skips the
    version computation.
 
+### The release format is a compatibility contract
+
+Shipped copies of SwiftX read `releases/latest` from the GitHub API to find and install updates
+(`Sources/UpdateKit/`), so three properties of a published release are consumed by software already
+on users' machines, not just by this repository:
+
+- **Asset names.** `UpdateKit` looks up `SwiftX-<version>.dmg` and `SwiftX-<version>.dmg.sha256`
+  by exact name. Renaming either asset leaves installed copies unable to find the download; they
+  fall back to opening the release page, but the in-place update is gone.
+- **The `.dmg.sha256` asset holds the bare digest** (`shasum -a 256 | awk '{print $1}'`). The
+  updater refuses to install anything it cannot verify against it, so dropping the asset disables
+  self-update rather than weakening it.
+- **Tag shape.** Tags are parsed as CalVer with an optional `v` prefix. A tag that doesn't parse
+  (`nightly`, `2026.8`) is treated as "no update available".
+
+Drafts and prereleases are never offered — `releases/latest` excludes them, and `UpdateKit` skips
+them again on its own side. Changing any of the above is a breaking change for every installed
+copy, including ones too old to be told about it, so treat the format as append-only.
+
 ## Regenerating the app icon
 
 `Scripts/make-icon.swift` is a standalone CoreGraphics script (no dependencies) that regenerates
@@ -194,6 +213,7 @@ Sources/
   EffectsKit/           image effects and beautifier
   HistoryKit/           SQLite history store
   ToolsKit/             color picker, ruler, OCR/QR, hash checker, converters, indexer
+  UpdateKit/            release check, download verification, bundle swap
   NativeMessagingHost/  swiftx-host, the browser native messaging binary
   ShareExtension/       SwiftXShare.appex, the macOS Share… menu entry
 Tests/                  one test target per *Kit module above

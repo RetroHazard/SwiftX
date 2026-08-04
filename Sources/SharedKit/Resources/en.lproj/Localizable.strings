@@ -48,6 +48,7 @@
 "menu.recent" = "Recent";
 "menu.main_window" = "Main Window…";
 "menu.show_log" = "Show Log…";
+"menu.check_for_updates" = "Check for Updates…";
 "menu.settings" = "Settings…";
 "menu.quit" = "Quit SwiftX";
 "menu.upload_file" = "Upload File…";
@@ -148,6 +149,9 @@
 
 /* HotkeysSettingsView.swift */
 "settings.hotkeys.title" = "Hotkeys";
+"settings.hotkeys.section.guards" = "Hotkey guards";
+"settings.hotkeys.disable_on_fullscreen" = "Disable hotkeys while a fullscreen app is active";
+"settings.hotkeys.repeat_limit" = "Ignore hotkey repeats within (ms, 0 = off)";
 "settings.hotkeys.add_hotkey" = "Add Hotkey";
 "settings.hotkeys.recording_hint" = "Press the new shortcut (with at least one modifier), or Esc to cancel.";
 "settings.hotkeys.press_keys" = "Press keys…";
@@ -531,6 +535,7 @@
 "settings.pane.destinations" = "Destinations";
 "settings.pane.custom_uploader" = "Custom Uploader";
 "settings.pane.hotkeys" = "Hotkeys";
+"settings.pane.updates" = "Updates";
 "settings.pane.about" = "About";
 
 /* Sources/SwiftXApp/Views.swift — About pane */
@@ -562,9 +567,6 @@
 
 /* Sources/SwiftXApp/Views.swift — General pane (incl. backup import/export and permissions) */
 "settings.general.section.permissions" = "Permissions";
-"settings.general.section.hotkey_guards" = "Hotkey guards";
-"settings.general.disable_hotkeys_fullscreen" = "Disable hotkeys while a fullscreen app is active";
-"settings.general.hotkey_repeat_limit" = "Ignore hotkey repeats within (ms, 0 = off)";
 "settings.general.section.actions_toolbar" = "Actions toolbar";
 "settings.general.add_button" = "Add Button";
 "settings.general.lock_toolbar" = "Lock toolbar position";

@@ -14,8 +14,38 @@ struct HotkeysSettingsView: View {
     @State private var settings = HotkeySettings.load()
     @State private var recordingIndex: Int?
     @State private var monitor: Any?
+    @State private var config = ApplicationConfig.load()
+
+    /// No access to SettingsView's configBinding; same write-through shape,
+    /// local copy.
+    private func configBinding<T>(_ keyPath: WritableKeyPath<ApplicationConfig, T>) -> Binding<T> {
+        Binding(
+            get: { config[keyPath: keyPath] },
+            set: { value in
+                config[keyPath: keyPath] = value
+                try? config.save()
+            }
+        )
+    }
+
+    private func clampedConfigBinding(_ keyPath: WritableKeyPath<ApplicationConfig, Int>,
+                                      _ range: ClosedRange<Int>) -> Binding<Int> {
+        Binding(
+            get: { config[keyPath: keyPath] },
+            set: { value in
+                config[keyPath: keyPath] = min(max(value, range.lowerBound), range.upperBound)
+                try? config.save()
+            }
+        )
+    }
 
     var body: some View {
+        Section(L10n.t("settings.hotkeys.section.guards")) {
+            Toggle(L10n.t("settings.hotkeys.disable_on_fullscreen"),
+                   isOn: configBinding(\.disableHotkeysOnFullscreen))
+            TextField(L10n.t("settings.hotkeys.repeat_limit"),
+                      value: clampedConfigBinding(\.hotkeyRepeatLimit, 0...5000), format: .number)
+        }
         Section(L10n.t("settings.hotkeys.title")) {
             ForEach(settings.hotkeys.indices, id: \.self) { index in
                 HStack {

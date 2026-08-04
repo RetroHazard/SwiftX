@@ -16,7 +16,7 @@ export type Release = {
   brewCommand: string;
 };
 
-const version = "2026.7.1";
+const version = "2026.8.1";
 
 export const release: Release = {
   version,
@@ -148,7 +148,12 @@ export const faqs: FaqItem[] = [
   {
     question: "How will I install it?",
     answer:
-      "Two ways: download the .dmg straight from the GitHub releases page, or tap the SwiftX repo with `brew tap retrohazard/swiftx https://github.com/RetroHazard/SwiftX`, install with `brew install --cask swiftx`, and get updates through `brew upgrade`. Builds are signed with an Apple Developer ID and notarized, so Gatekeeper opens them without a right-click or a trip to System Settings. Building from source works too, if you'd rather compile it yourself.",
+      "Two ways: download the .dmg straight from the GitHub releases page, or tap the SwiftX repo with `brew tap retrohazard/swiftx https://github.com/RetroHazard/SwiftX` and install with `brew install --cask swiftx`. Builds are signed with an Apple Developer ID and notarized, so Gatekeeper opens them without a right-click or a trip to System Settings. Either way the app keeps itself up to date afterwards. Building from source works too, if you'd rather compile it yourself.",
+  },
+  {
+    question: "How do I get updates?",
+    answer:
+      "SwiftX checks for them itself. Choose Check for Updates… from the menu bar whenever you like, or leave the automatic check on — daily by default, with weekly, monthly and off as alternatives in Settings → About. When a new version is out you get a notification and can install it in place; turn on automatic installs and it handles that too. Downloads are checked against the release's published SHA-256 and must be signed by the same Apple Developer ID as the copy you're running before anything is replaced. Installed with Homebrew? SwiftX notices and points you at `brew upgrade --cask swiftx` instead, so brew stays the source of truth for that copy.",
   },
   {
     question: "What does it need to run?",

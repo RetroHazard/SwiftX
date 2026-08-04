@@ -11,6 +11,7 @@ import {
   Hash,
   Pause,
   Check,
+  Download,
   type LucideIcon,
 } from "lucide-react";
 import { destinations, effectSwatches, hotkeys } from "@/lib/content";
@@ -289,6 +290,74 @@ function OcrVisual() {
 }
 
 /* ------------------------------------------------------------------ */
+/* Updates — the About pane offering the version that just shipped     */
+/* ------------------------------------------------------------------ */
+
+function UpdatesVisual() {
+  return (
+    <div className="grid h-full gap-3 sm:grid-cols-3">
+      {/* the notification: a release you didn't go looking for */}
+      <div className="flex flex-col rounded-lg border border-line bg-panel p-3.5 sm:col-span-2">
+        <div className="flex items-center gap-2.5">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-accent text-accent-ink">
+            <Download size={13} strokeWidth={2.5} />
+          </span>
+          <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-ink-soft">
+            SwiftX 2026.8.1 is available
+          </span>
+          <span className="readout shrink-0 text-[10px] text-muted">
+            you have 2026.7.1
+          </span>
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-2">
+          <span className="rounded-md bg-accent px-2.5 py-1 text-[11px] font-medium text-accent-ink">
+            Install Update
+          </span>
+          <span className="rounded-md border border-line-strong px-2.5 py-1 text-[11px] text-muted">
+            View Release
+          </span>
+          <span className="rounded-md border border-line-strong px-2.5 py-1 text-[11px] text-muted">
+            Skip This Version
+          </span>
+        </div>
+
+        <div className="mt-auto flex items-center gap-2.5 pt-3.5">
+          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-live/15 text-live">
+            <Check size={12} strokeWidth={3} />
+          </span>
+          <span className="min-w-0 flex-1 truncate text-[11.5px] text-muted">
+            Checksum and Developer ID verified before install
+          </span>
+        </div>
+      </div>
+
+      {/* the cadence you picked, including not at all */}
+      <div className="flex flex-col rounded-lg border border-line bg-panel p-3.5">
+        <span className="text-[12px] text-ink-soft">Check automatically</span>
+        <ul className="mt-2.5 flex flex-col gap-1.5">
+          {["Daily", "Weekly", "Monthly", "Off"].map((choice) => (
+            <li
+              key={choice}
+              className={`readout flex items-center justify-between rounded-[5px] border px-2 py-1 text-[11px] ${
+                choice === "Daily"
+                  ? "border-accent/40 bg-accent/10 text-ink-soft"
+                  : "border-line-strong text-muted"
+              }`}
+            >
+              {choice}
+              {choice === "Daily" && (
+                <Check size={11} strokeWidth={3} className="text-accent" />
+              )}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 
 export function Features() {
   return (
@@ -348,6 +417,14 @@ export function Features() {
             delay={0.06}
           >
             <OcrVisual />
+          </Panel>
+
+          <Panel
+            className="lg:col-span-3"
+            title="Updates that find you"
+            description="SwiftX watches for its own releases — daily, weekly, monthly or never, your call — and installs them in place once the download matches the published checksum and carries the same Developer ID signature. Installed through Homebrew? It defers to brew upgrade instead."
+          >
+            <UpdatesVisual />
           </Panel>
         </div>
       </div>

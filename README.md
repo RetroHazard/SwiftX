@@ -3,7 +3,8 @@
 <h3 align="center">A native macOS screenshot, screen recording &amp; file-sharing tool</h3>
 <br>
 <div align="center">
-  <a href="https://github.com/RetroHazard/SwiftX/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/RetroHazard/SwiftX/ci.yml?branch=master&label=Build&cacheSeconds=3600" alt="Build status"/></a>
+  <a href="https://github.com/RetroHazard/SwiftX/releases/latest"><img src="https://img.shields.io/github/v/release/RetroHazard/SwiftX?label=Latest&cacheSeconds=3600" alt="Latest release"/></a>
+  <a href="https://github.com/RetroHazard/SwiftX/actions/workflows/release.yml"><img src="https://img.shields.io/github/actions/workflow/status/RetroHazard/SwiftX/release.yml?label=Release%20pipeline&cacheSeconds=3600" alt="Release pipeline status"/></a>
   <a href="./LICENSE"><img src="https://img.shields.io/github/license/RetroHazard/SwiftX?label=License&color=brightgreen&cacheSeconds=3600" alt="License"/></a>
   <img src="https://img.shields.io/badge/macOS-14%2B-lightgrey" alt="macOS 14+"/>
   <img src="https://img.shields.io/badge/Swift-5.10%2B-orange" alt="Swift 5.10+"/>
@@ -24,8 +25,9 @@ preserved alongside the SwiftX copyright — see [License &amp; credits](#licens
 ## Status
 
 SwiftX is under active development, with [signed, notarized releases](https://github.com/RetroHazard/SwiftX/releases)
-built by the [release pipeline](.github/workflows/release.yml) and available via Homebrew. Most of
-the ShareX feature set already runs on macOS; see the
+built by the [release pipeline](.github/workflows/release.yml) and available via Homebrew. Installed
+copies keep themselves current — SwiftX checks for its own releases and can install them in place.
+Most of the ShareX feature set already runs on macOS; see the
 [feature parity tracker](docs/macos-swift-port/PARITY.md) for what's ported, partial, or still
 planned. To build a development copy from source instead, see below.
 
@@ -62,6 +64,10 @@ Keychain, with no SwiftX server in the path. Every other destination is unaffect
 - **System integration** — SwiftX in the macOS **Share…** menu / share sheet (files, images, movies,
   text and links) via an embedded share extension, plus an "Upload with SwiftX" right-click
   Services entry
+- **In-app updates** — Check for Updates… from the menu bar, or an automatic check on a cadence you
+  pick (daily/weekly/monthly/off); updates are verified against the release's published SHA-256 and
+  Developer ID team before replacing the app in place, and Homebrew installs are deferred to
+  `brew upgrade --cask swiftx`
 - **Tools** — color/screen color picker, ruler, OCR (Vision), QR generate/decode/scan, hash
   checker, metadata viewer/stripper, image and video converters, background remover, image
   comparer, folder indexer, and AI-assisted image analysis (OpenAI-compatible providers)
@@ -112,6 +118,7 @@ this and other gotchas discovered while porting.
 | `EffectsKit` | Image effects and beautifier |
 | `HistoryKit` | SQLite history store |
 | `ToolsKit` | Color picker, ruler, OCR/QR, hash checker, converters, indexer |
+| `UpdateKit` | Release check, download verification, in-place bundle update |
 | `SwiftXApp` | The app itself — menu bar shell, settings, CLI |
 | `NativeMessagingHost` | `swiftx-host` — browser native messaging binary |
 | `ShareExtension` | `SwiftXShare.appex` — the macOS Share menu entry |

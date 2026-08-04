@@ -9,6 +9,7 @@ import CaptureKit
 import HistoryKit
 import SharedKit
 import UniformTypeIdentifiers
+import UpdateKit
 import UploadKit
 
 enum TimeRange: String, CaseIterable {
@@ -343,6 +344,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
     case destinations = "Destinations"
     case customUploader = "Custom Uploader"
     case hotkeys = "Hotkeys"
+    case updates = "Updates"
     case about = "About"
 
     var id: String { rawValue }
@@ -360,6 +362,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .destinations: L10n.t("settings.pane.destinations")
         case .customUploader: L10n.t("settings.pane.custom_uploader")
         case .hotkeys: L10n.t("settings.pane.hotkeys")
+        case .updates: L10n.t("settings.pane.updates")
         case .about: L10n.t("settings.pane.about")
         }
     }
@@ -376,6 +379,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .destinations: "square.and.arrow.up"
         case .customUploader: "wrench.and.screwdriver"
         case .hotkeys: "keyboard"
+        case .updates: "arrow.triangle.2.circlepath"
         case .about: "info.circle"
         }
     }
@@ -386,6 +390,117 @@ enum SettingsPane: String, CaseIterable, Identifiable {
 @MainActor final class SettingsNavigator: ObservableObject {
     static let shared = SettingsNavigator()
     @Published var pane: SettingsPane? = .general
+}
+
+/// Updates pane: check/install controls, cadence, and Homebrew handoff.
+struct UpdatesView: View {
+    @ObservedObject private var updater = UpdateManager.shared
+    @State private var config = ApplicationConfig.load()
+
+    /// UpdatesView has no access to SettingsView's configBinding; same
+    /// write-through shape, local copy.
+    private func updateBinding<Value>(_ keyPath: WritableKeyPath<ApplicationConfig, Value>) -> Binding<Value> {
+        Binding(
+            get: { config[keyPath: keyPath] },
+            set: { newValue in
+                config[keyPath: keyPath] = newValue
+                try? config.save()
+            }
+        )
+    }
+
+    private var updateActionInFlight: Bool {
+        switch updater.state {
+        case .checking, .downloading: return true
+        default: return false
+        }
+    }
+
+    @ViewBuilder private var updateStatusRow: some View {
+        switch updater.state {
+        case .idle:
+            LabeledContent("Status") { Text("Not checked yet") }
+        case .checking:
+            LabeledContent("Status") {
+                HStack(spacing: 6) {
+                    ProgressView().controlSize(.small)
+                    Text("Checking…")
+                }
+            }
+        case .upToDate(let date):
+            LabeledContent("Status") {
+                Text("Up to date (checked \(date.formatted(.relative(presentation: .named))))")
+            }
+        case .available(let update):
+            LabeledContent("Status") {
+                HStack(spacing: 8) {
+                    Text("Version \(String(describing: update.version)) available")
+                    Link("Release notes", destination: update.release.htmlURL)
+                }
+            }
+        case .downloading:
+            LabeledContent("Status") {
+                HStack(spacing: 6) {
+                    ProgressView().controlSize(.small)
+                    Text("Downloading and installing…")
+                }
+            }
+        case .installed(let installedVersion):
+            LabeledContent("Status") {
+                HStack(spacing: 8) {
+                    Text("Version \(String(describing: installedVersion)) installed — relaunch to finish")
+                    Button("Relaunch Now") { updater.relaunchNow() }
+                }
+            }
+        case .failed(let message):
+            LabeledContent("Status") {
+                Text(message).foregroundStyle(.red)
+            }
+        }
+    }
+
+    var body: some View {
+        Section {
+            updateStatusRow
+            Picker("Check automatically", selection: updateBinding(\.updateCheckFrequency)) {
+                ForEach(UpdateCheckFrequency.allCases, id: \.rawValue) { frequency in
+                    Text(frequency.displayName).tag(frequency.rawValue)
+                }
+            }
+            .pickerStyle(.menu)
+            if updater.isHomebrewManaged {
+                LabeledContent("Managed by Homebrew") {
+                    HStack(spacing: 8) {
+                        Text(UpdateManager.brewUpgradeCommand)
+                            .font(.callout.monospaced())
+                            .foregroundStyle(.secondary)
+                        Button("Copy Command") { updater.copyBrewCommand() }
+                    }
+                }
+            } else {
+                Toggle("Automatically download and install updates",
+                       isOn: updateBinding(\.updateAutoInstall))
+            }
+        } footer: {
+            // footers render below the grouped box, so the buttons escape the row card
+            HStack {
+                Spacer()
+                Button("Check for Updates") { updater.checkFromMenu() }
+                    .disabled(updateActionInFlight)
+                if case .available = updater.state, !updater.isHomebrewManaged {
+                    Button(updater.canSelfInstall ? "Install Update" : "Open Release Page") {
+                        if updater.canSelfInstall {
+                            updater.installCurrentUpdate()
+                        } else {
+                            updater.openReleasePage()
+                        }
+                    }
+                    Button("Skip This Version") { updater.skipCurrentUpdate() }
+                }
+            }
+            .padding(.top, 4)
+        }
+    }
 }
 
 /// About pane. Carries the GPL v3 "Appropriate Legal Notices": both copyright
@@ -805,6 +920,7 @@ struct SettingsView: View {
                 case .destinations: destinationsPane
                 case .customUploader: CustomUploaderEditorView()
                 case .hotkeys: HotkeysSettingsView()
+                case .updates: UpdatesView()
                 case .about: AboutView()
                 }
             }
@@ -828,12 +944,6 @@ struct SettingsView: View {
         }
         Section(L10n.t("settings.general.section.permissions")) {
             PermissionsView()
-        }
-        Section(L10n.t("settings.general.section.hotkey_guards")) {
-            Toggle(L10n.t("settings.general.disable_hotkeys_fullscreen"),
-                   isOn: configBinding(\.disableHotkeysOnFullscreen))
-            TextField(L10n.t("settings.general.hotkey_repeat_limit"),
-                      value: clampedConfigBinding(\.hotkeyRepeatLimit, 0...5000), format: .number)
         }
         Section(L10n.t("settings.general.section.actions_toolbar")) {
             ForEach(config.actionsToolbarList.indices, id: \.self) { index in
