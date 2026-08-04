@@ -1232,6 +1232,7 @@
 /* Sources/SwiftXApp/Views.swift — Updates pane */
 "settings.updates.status" = "Status";
 "settings.updates.not_checked" = "Noch nicht geprüft";
+"settings.updates.last_checked" = "Zuletzt geprüft am %@";
 "settings.updates.checking" = "Wird geprüft…";
 "settings.updates.up_to_date" = "Aktuell (geprüft am %@)";
 "settings.updates.version_available" = "Version %@ verfügbar";
