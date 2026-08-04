@@ -902,20 +902,9 @@ struct SettingsView: View {
         )
     }
 
-    /// Sidebar column sized to the widest localized pane title so no tab
-    /// truncates. The allowance covers the Label icon column, icon-text
-    /// spacing and the List/sidebar row and content insets - sized generously
-    /// because those metrics aren't queryable and undershooting means "…";
-    /// the clamp keeps a runaway translation from eating the window.
-    /// Measured once - pane titles are fixed for the process lifetime
-    /// because language changes relaunch.
-    private static let sidebarWidth: CGFloat = {
-        let font = NSFont.preferredFont(forTextStyle: .body)
-        let widest = SettingsPane.allCases
-            .map { ($0.title as NSString).size(withAttributes: [.font: font]).width }
-            .max() ?? 0
-        return min(max(widest.rounded(.up) + 105, 180), 320)
-    }()
+    /// Fixed sidebar width, like System Settings. Wide enough for the longest
+    /// English pane title; revisit if a translation needs more room.
+    private static let sidebarWidth: CGFloat = 175
 
     var body: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
@@ -928,9 +917,9 @@ struct SettingsView: View {
             // The column-width modifier alone is advisory in a hand-hosted
             // NSWindow - the split view restores its own position over it and
             // titles ellipsize. The List's frame goes through Auto Layout and
-            // is enforced, so pin both; all-equal bounds make the sidebar
-            // fixed-width like System Settings.
-            .frame(minWidth: Self.sidebarWidth)
+            // is enforced, so pin both; all-equal bounds lock the sidebar and
+            // leave the divider with nothing to drag.
+            .frame(width: Self.sidebarWidth)
             .navigationSplitViewColumnWidth(min: Self.sidebarWidth, ideal: Self.sidebarWidth,
                                             max: Self.sidebarWidth)
             // the toggle floats misaligned in a hand-made NSWindow's title bar;
