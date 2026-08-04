@@ -74,7 +74,7 @@ struct WatchFoldersSettingsView: View {
     @State private var task = TaskSettings.load()
 
     var body: some View {
-        Section(L10n.t("settings.watchfolders.title")) {
+        Section {
             Toggle(L10n.t("settings.watchfolders.enable"), isOn: Binding(
                 get: { task.watchFolderEnabled },
                 set: { task.watchFolderEnabled = $0; apply() }

@@ -36,6 +36,11 @@ public enum SettingsPaths {
 public protocol SettingsFile: Codable {
     static var fileName: String { get }
     init()
+    /// Requirements, not just extension members: the Keychain-backed types
+    /// override them, and generic code (the settings bindings) must reach the
+    /// override rather than the plain-JSON default.
+    static func load() -> Self
+    func save() throws
 }
 
 public extension SettingsFile {

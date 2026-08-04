@@ -333,21 +333,62 @@ enum ThumbnailLoader {
     }
 }
 
+/// Sidebar grouping. Twelve flat rows read as one undifferentiated list; the
+/// groups say which question each pane answers, and let the high-traffic panes
+/// (hotkeys, capture) sit near the top without losing the setup panes.
+enum SettingsPaneGroup: String, CaseIterable, Identifiable {
+    case app = "App"
+    case capture = "Capture"
+    case sharing = "Sharing"
+    case automation = "Automation"
+    case about = "About"
+
+    var id: String { rawValue }
+
+    /// Localized label; rawValue stays untouched as identity.
+    var title: String {
+        switch self {
+        case .app: L10n.t("settings.group.app")
+        case .capture: L10n.t("settings.group.capture")
+        case .sharing: L10n.t("settings.group.sharing")
+        case .automation: L10n.t("settings.group.automation")
+        case .about: L10n.t("settings.group.about")
+        }
+    }
+
+    var panes: [SettingsPane] {
+        SettingsPane.allCases.filter { $0.group == self }
+    }
+}
+
 enum SettingsPane: String, CaseIterable, Identifiable {
+    // rawValues are identity (SettingsNavigator, restored selection); the
+    // sidebar order comes from `allCases`, so reordering here reorders the UI
     case general = "General"
     case menuBar = "Menu Bar"
+    case hotkeys = "Hotkeys"
     case notifications = "Notifications"
     case capture = "Capture"
     case recording = "Recording"
+    case destinations = "Destinations"
+    case uploads = "Uploads"
+    case customUploader = "Custom Uploader"
     case actions = "Actions"
     case watchFolders = "Watch Folders"
-    case destinations = "Destinations"
-    case customUploader = "Custom Uploader"
-    case hotkeys = "Hotkeys"
     case updates = "Updates"
     case about = "About"
 
     var id: String { rawValue }
+
+    var group: SettingsPaneGroup {
+        switch self {
+        case .general, .menuBar, .hotkeys, .notifications: .app
+        case .capture, .recording: .capture
+        case .destinations, .uploads, .customUploader: .sharing
+        case .actions, .watchFolders: .automation
+        case .updates, .about: .about
+        }
+    }
 
     /// Localized label; rawValue stays untouched as identity.
     var title: String {
@@ -360,6 +401,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .actions: L10n.t("settings.pane.actions")
         case .watchFolders: L10n.t("settings.pane.watch_folders")
         case .destinations: L10n.t("settings.pane.destinations")
+        case .uploads: L10n.t("settings.pane.uploads")
         case .customUploader: L10n.t("settings.pane.custom_uploader")
         case .hotkeys: L10n.t("settings.pane.hotkeys")
         case .updates: L10n.t("settings.pane.updates")
@@ -377,6 +419,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .actions: "terminal"
         case .watchFolders: "folder.badge.gearshape"
         case .destinations: "square.and.arrow.up"
+        case .uploads: "arrow.up.circle"
         case .customUploader: "wrench.and.screwdriver"
         case .hotkeys: "keyboard"
         case .updates: "arrow.triangle.2.circlepath"
@@ -396,18 +439,6 @@ enum SettingsPane: String, CaseIterable, Identifiable {
 struct UpdatesView: View {
     @ObservedObject private var updater = UpdateManager.shared
     @State private var config = ApplicationConfig.load()
-
-    /// UpdatesView has no access to SettingsView's configBinding; same
-    /// write-through shape, local copy.
-    private func updateBinding<Value>(_ keyPath: WritableKeyPath<ApplicationConfig, Value>) -> Binding<Value> {
-        Binding(
-            get: { config[keyPath: keyPath] },
-            set: { newValue in
-                config[keyPath: keyPath] = newValue
-                try? config.save()
-            }
-        )
-    }
 
     private var updateActionInFlight: Bool {
         switch updater.state {
@@ -462,7 +493,7 @@ struct UpdatesView: View {
     var body: some View {
         Section {
             updateStatusRow
-            Picker(L10n.t("settings.updates.check_automatically"), selection: updateBinding(\.updateCheckFrequency)) {
+            Picker(L10n.t("settings.updates.check_automatically"), selection: $config.field(\.updateCheckFrequency)) {
                 ForEach(UpdateCheckFrequency.allCases, id: \.rawValue) { frequency in
                     let key = "settings.updates.frequency.\(frequency.rawValue)"
                     Text(L10n.t(key)).tag(frequency.rawValue)
@@ -480,7 +511,7 @@ struct UpdatesView: View {
                 }
             } else {
                 Toggle(L10n.t("settings.updates.auto_install"),
-                       isOn: updateBinding(\.updateAutoInstall))
+                       isOn: $config.field(\.updateAutoInstall))
             }
         } footer: {
             // footers render below the grouped box, so the buttons escape the row card
@@ -576,27 +607,61 @@ struct AboutView: View {
 private struct SidebarLock: NSViewRepresentable {
     let width: CGFloat
 
-    func makeNSView(context: Context) -> NSView {
-        let view = NSView()
-        // defer until the view is parented into the split view hierarchy
-        DispatchQueue.main.async { lock(from: view) }
+    func makeNSView(context: Context) -> LockView {
+        let view = LockView()
+        view.width = width
         return view
     }
 
-    func updateNSView(_ nsView: NSView, context: Context) {
-        DispatchQueue.main.async { lock(from: nsView) } // SwiftUI may reconfigure items
+    func updateNSView(_ nsView: LockView, context: Context) {
+        nsView.width = width
+        nsView.lock()
     }
 
-    private func lock(from view: NSView) {
-        var ancestor = view.superview
-        while let current = ancestor, !(current is NSSplitView) { ancestor = current.superview }
-        guard let splitView = ancestor as? NSSplitView,
-              let controller = splitView.delegate as? NSSplitViewController,
-              let sidebar = controller.splitViewItems.first
-        else { return }
-        sidebar.minimumThickness = width
-        sidebar.maximumThickness = width
-        sidebar.canCollapse = false
+    final class LockView: NSView {
+        var width: CGFloat = 0
+        private var observer: NSObjectProtocol?
+        // setPosition posts didResizeSubviews synchronously, which calls
+        // lock() again before the frame reflects the move - unguarded, that
+        // recurses until the stack overflows
+        private var relocking = false
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            // defer until the split view hierarchy above us has settled
+            DispatchQueue.main.async { self.lock() }
+        }
+
+        func lock() {
+            var ancestor = superview
+            while let current = ancestor, !(current is NSSplitView) { ancestor = current.superview }
+            guard let splitView = ancestor as? NSSplitView,
+                  let controller = splitView.delegate as? NSSplitViewController,
+                  let sidebar = controller.splitViewItems.first
+            else { return }
+            sidebar.minimumThickness = width
+            sidebar.maximumThickness = width
+            sidebar.canCollapse = false
+            // A one-shot lock is not enough: SwiftUI rebuilds and re-bounds
+            // its split view items behind our back (state restoration, pane
+            // switches), which un-pins the thickness. Re-assert after every
+            // divider move so a drag snaps straight back.
+            if observer == nil {
+                observer = NotificationCenter.default.addObserver(
+                    forName: NSSplitView.didResizeSubviewsNotification,
+                    object: splitView, queue: .main
+                ) { [weak self] _ in self?.lock() }
+            }
+            if !relocking, let pane = splitView.arrangedSubviews.first, abs(pane.frame.width - width) > 0.5 {
+                relocking = true
+                defer { relocking = false }
+                splitView.setPosition(width, ofDividerAt: 0)
+            }
+        }
+
+        deinit {
+            if let observer { NotificationCenter.default.removeObserver(observer) }
+        }
     }
 }
 
@@ -604,6 +669,10 @@ struct SettingsView: View {
     @State private var config = ApplicationConfig.load()
     @State private var task = TaskSettings.load()
     @ObservedObject private var nav = SettingsNavigator.shared
+    // The settings window is cached (AppDelegate keeps it alive), so these
+    // @State copies would otherwise outlive every other writer of the same
+    // files. Used below to re-sync them whenever the window regains key.
+    @Environment(\.controlActiveState) private var activeState
     // UploadersConfig/OAuthTokenStore are read straight from disk/Keychain on
     // every body evaluation, so nothing marks the view dirty when they change
     // out from under it (connecting, disconnecting). Bumping this forces
@@ -614,124 +683,12 @@ struct SettingsView: View {
     // visibility so a collapse can be snapped back open (see body).
     @State private var columnVisibility = NavigationSplitViewVisibility.all
 
-    private static let afterCaptureToggles: [(AfterCaptureTasks, String)] = [
-        (.annotateImage, L10n.t("aftercapture.annotate_image")),
-        (.copyImageToClipboard, L10n.t("aftercapture.copy_image_to_clipboard")),
-        (.pinToScreen, L10n.t("aftercapture.pin_to_screen")),
-        (.sendImageToPrinter, L10n.t("aftercapture.send_image_to_printer")),
-        (.saveImageToFile, L10n.t("aftercapture.save_image_to_file")),
-        (.saveImageToFileWithDialog, L10n.t("aftercapture.save_image_with_dialog")),
-        (.saveThumbnailImageToFile, L10n.t("aftercapture.save_thumbnail_to_file")),
-        (.performActions, L10n.t("aftercapture.perform_actions")),
-        (.copyFileToClipboard, L10n.t("aftercapture.copy_file_to_clipboard")),
-        (.copyFilePathToClipboard, L10n.t("aftercapture.copy_file_path_to_clipboard")),
-        (.copyFolderPathToClipboard, L10n.t("aftercapture.copy_folder_path_to_clipboard")),
-        (.showInExplorer, L10n.t("common.show_in_finder")),
-        (.uploadImageToHost, L10n.t("aftercapture.upload_image_to_host")),
-        (.deleteFile, L10n.t("aftercapture.delete_file"))
-    ]
-
-    private func destinationBinding(_ keyPath: WritableKeyPath<TaskSettings, String>) -> Binding<String> {
-        Binding(
-            get: { task[keyPath: keyPath] },
-            set: { value in
-                task[keyPath: keyPath] = value
-                try? task.save()
-            }
-        )
-    }
-
-    private func s3Binding(_ keyPath: WritableKeyPath<AmazonS3Settings, String>) -> Binding<String> {
-        uploadersBinding((\UploadersConfig.amazonS3).appending(path: keyPath))
-    }
-
-    private func uploadersBinding<T>(_ keyPath: WritableKeyPath<UploadersConfig, T>) -> Binding<T> {
-        Binding(
-            get: { UploadersConfig.load()[keyPath: keyPath] },
-            set: { value in
-                var config = UploadersConfig.load()
-                config[keyPath: keyPath] = value
-                try? config.save()
-            }
-        )
-    }
-
-    private func afterUploadBinding(_ flag: AfterUploadTasks) -> Binding<Bool> {
-        Binding(
-            get: { task.afterUploadJob.contains(flag) },
-            set: { enabled in
-                if enabled {
-                    task.afterUploadJob.insert(flag)
-                } else {
-                    task.afterUploadJob.remove(flag)
-                }
-                try? task.save()
-            }
-        )
-    }
-
-    private func uploaderBinding(_ keyPath: WritableKeyPath<UploadersConfig, String>
-                                    = \.activeCustomUploader) -> Binding<String> {
-        Binding(
-            get: { UploadersConfig.load()[keyPath: keyPath] },
-            set: { name in
-                var config = UploadersConfig.load()
-                config[keyPath: keyPath] = name
-                try? config.save()
-            }
-        )
-    }
-
-    /// Text entry can produce anything; clamp to the valid range on commit.
-    private func clampedBinding(_ keyPath: WritableKeyPath<TaskSettings, Int>,
-                                _ range: ClosedRange<Int>) -> Binding<Int> {
-        Binding(
-            get: { task[keyPath: keyPath] },
-            set: { value in
-                task[keyPath: keyPath] = min(max(value, range.lowerBound), range.upperBound)
-                try? task.save()
-            }
-        )
-    }
-
-    private func clampedDoubleBinding(_ keyPath: WritableKeyPath<TaskSettings, Double>,
-                                      _ range: ClosedRange<Double>) -> Binding<Double> {
-        Binding(
-            get: { task[keyPath: keyPath] },
-            set: { value in
-                task[keyPath: keyPath] = min(max(value, range.lowerBound), range.upperBound)
-                try? task.save()
-            }
-        )
-    }
-
-    private func configBinding<T>(_ keyPath: WritableKeyPath<ApplicationConfig, T>) -> Binding<T> {
-        Binding(
-            get: { config[keyPath: keyPath] },
-            set: { value in
-                config[keyPath: keyPath] = value
-                try? config.save()
-            }
-        )
-    }
-
-    private func clampedConfigBinding(_ keyPath: WritableKeyPath<ApplicationConfig, Int>,
-                                      _ range: ClosedRange<Int>) -> Binding<Int> {
-        Binding(
-            get: { config[keyPath: keyPath] },
-            set: { value in
-                config[keyPath: keyPath] = min(max(value, range.lowerBound), range.upperBound)
-                try? config.save()
-            }
-        )
-    }
-
     /// Toggle + file picker pair for the C# custom notification sound slots.
     @ViewBuilder
     private func customSoundRows(_ label: String,
                                  use: WritableKeyPath<TaskSettings, Bool>,
                                  path: WritableKeyPath<TaskSettings, String>) -> some View {
-        Toggle(label, isOn: taskBinding(use))
+        Toggle(label, isOn: $task.field(use))
         if task[keyPath: use] {
             LabeledContent(L10n.t("settings.notifications.sound_file")) {
                 HStack {
@@ -911,41 +868,23 @@ struct SettingsView: View {
         try? task.save()
     }
 
-    private func taskBinding<T>(_ keyPath: WritableKeyPath<TaskSettings, T>) -> Binding<T> {
-        Binding(
-            get: { task[keyPath: keyPath] },
-            set: { value in
-                task[keyPath: keyPath] = value
-                try? task.save()
-            }
-        )
-    }
-
-    private func afterCaptureBinding(_ flag: AfterCaptureTasks) -> Binding<Bool> {
-        Binding(
-            get: { task.afterCaptureJob.contains(flag) },
-            set: { enabled in
-                if enabled {
-                    task.afterCaptureJob.insert(flag)
-                } else {
-                    task.afterCaptureJob.remove(flag)
-                }
-                try? task.save()
-            }
-        )
-    }
-
     /// Fixed sidebar width, like System Settings. Wide enough for the longest
     /// English pane title; revisit if a translation needs more room.
-    private static let sidebarWidth: CGFloat = 175
+    private static let sidebarWidth: CGFloat = 185
 
     var body: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
-            List(SettingsPane.allCases, selection: $nav.pane) { pane in
-                // explicit tag: List's implicit selection value is the String id,
-                // which never matches our SettingsPane? binding
-                Label(pane.title, systemImage: pane.icon)
-                    .tag(pane)
+            List(selection: $nav.pane) {
+                ForEach(SettingsPaneGroup.allCases) { group in
+                    Section(group.title) {
+                        // explicit tag: List's implicit selection value is the
+                        // String id, which never matches our SettingsPane? binding
+                        ForEach(group.panes) { pane in
+                            Label(pane.title, systemImage: pane.icon)
+                                .tag(pane)
+                        }
+                    }
+                }
             }
             // The column-width modifier alone is advisory in a hand-hosted
             // NSWindow - the split view restores its own position over it and
@@ -970,6 +909,7 @@ struct SettingsView: View {
                 case .actions: ActionsSettingsView()
                 case .watchFolders: WatchFoldersSettingsView()
                 case .destinations: destinationsPane
+                case .uploads: UploadsSettingsView()
                 case .customUploader: CustomUploaderEditorView()
                 case .hotkeys: HotkeysSettingsView()
                 case .updates: UpdatesView()
@@ -984,13 +924,26 @@ struct SettingsView: View {
         .onChange(of: columnVisibility) {
             if columnVisibility != .all { columnVisibility = .all }
         }
+        // Re-sync the long-lived copies whenever another surface may have
+        // written the files: entering a pane (the Uploads/Hotkeys/Watch
+        // Folders panes hold their own copies), or the window regaining key
+        // (after-capture window, panels, or reopening the cached window).
+        .onChange(of: nav.pane) { reloadSettingsFiles() }
+        .onChange(of: activeState) {
+            if activeState == .key { reloadSettingsFiles() }
+        }
+    }
+
+    private func reloadSettingsFiles() {
+        config = ApplicationConfig.load()
+        task = TaskSettings.load()
     }
 
     @ViewBuilder
     private var generalPane: some View {
         Section(L10n.t("settings.general.section.language")) {
             Picker(L10n.t("settings.general.language.picker"),
-                   selection: configBinding(\.interfaceLanguage)) {
+                   selection: $config.field(\.interfaceLanguage)) {
                 Text(L10n.t("settings.general.language.system_default")).tag("")
                 ForEach(L10n.availableLanguages, id: \.self) { code in
                     Text(L10n.displayName(for: code)).tag(code)
@@ -998,10 +951,96 @@ struct SettingsView: View {
             }
             .onChange(of: config.interfaceLanguage) { promptRelaunch() }
         }
+        // where captures land and what they are called, together: the folder
+        // alone left the name and subfolder patterns editable only in JSON
+        Section(L10n.t("settings.general.section.saved_files")) {
+            LabeledContent(L10n.t("settings.general.screenshots_folder")) {
+                HStack {
+                    Text(config.screenshotsFolder.path)
+                        .truncationMode(.middle)
+                        .lineLimit(1)
+                    Button(L10n.t("common.choose")) { chooseFolder() }
+                    if config.useCustomScreenshotsPath {
+                        Button(L10n.t("common.reset")) {
+                            config.useCustomScreenshotsPath = false
+                            config.customScreenshotsPath = ""
+                            try? config.save()
+                        }
+                    }
+                }
+            }
+            TextField(L10n.t("settings.general.subfolder_pattern"), text: $config.field(\.saveImageSubFolderPattern))
+                .font(.body.monospaced())
+            TextField(L10n.t("settings.general.name_pattern"), text: $task.field(\.nameFormatPattern))
+                .font(.body.monospaced())
+            TextField(L10n.t("settings.general.name_pattern_active_window"),
+                      text: $task.field(\.nameFormatPatternActiveWindow))
+                .font(.body.monospaced())
+            Text(L10n.t("settings.general.name_pattern_hint"))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Picker(L10n.t("settings.general.file_exist_action"), selection: $task.field(\.fileExistAction)) {
+                Text(L10n.t("settings.general.exist_unique")).tag("UniqueName")
+                Text(L10n.t("settings.general.exist_ask")).tag("Ask")
+                Text(L10n.t("settings.general.exist_overwrite")).tag("Overwrite")
+                Text(L10n.t("settings.general.exist_skip")).tag("Cancel")
+            }
+        }
         Section(L10n.t("settings.general.section.permissions")) {
             PermissionsView()
         }
-        Section(L10n.t("settings.general.section.actions_toolbar")) {
+        Section(L10n.t("settings.general.section.browser_extension")) {
+            NativeMessagingSection()
+        }
+        Section(L10n.t("settings.general.section.backup")) {
+            HStack {
+                Button(L10n.t("settings.general.export_settings")) { exportSettings() }
+                Button(L10n.t("settings.general.import_settings")) { importSettings() }
+            }
+            Text(L10n.t("settings.general.backup_hint"))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    @ViewBuilder
+    private var menuBarPane: some View {
+        Section(L10n.t("settings.menubar.section.icon")) {
+            Picker(L10n.t("settings.menubar.left_click"), selection: $config.field(\.trayLeftClickAction)) {
+                Text(L10n.t("settings.menubar.action.open_menu")).tag("ToggleTrayMenu")
+                Text(L10n.t("settings.menubar.action.open_main_window")).tag("OpenMainWindow")
+                Text(L10n.t("settings.menubar.action.capture_region")).tag("RectangleRegion")
+                Text(L10n.t("settings.menubar.action.capture_fullscreen")).tag("PrintScreen")
+                Text(L10n.t("settings.menubar.action.capture_active_window")).tag("ActiveWindow")
+                Text(L10n.t("settings.menubar.action.upload_clipboard")).tag("ClipboardUpload")
+                Text(L10n.t("settings.menubar.action.upload_file")).tag("FileUpload")
+                Text(L10n.t("settings.menubar.action.image_editor")).tag("ImageEditor")
+                Text(L10n.t("settings.menubar.action.open_screenshots_folder")).tag("OpenScreenshotsFolder")
+            }
+            Text(L10n.t("settings.menubar.right_click_hint"))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Toggle(L10n.t("settings.menubar.show_progress"), isOn: $config.field(\.trayIconProgressEnabled))
+            Toggle(L10n.t("settings.menubar.show_recent"), isOn: $config.field(\.recentTasksShowInTrayMenu))
+            if config.recentTasksShowInTrayMenu {
+                TextField(L10n.t("settings.menubar.recent_count"),
+                          value: $config.field(\.recentTasksMaxCount, in: 1...30), format: .number)
+            }
+        }
+        Section(L10n.t("settings.menubar.section.menu_items")) {
+            DisclosureGroup(L10n.t("settings.menubar.menu_items")) {
+                ForEach(TrayMenuItemID.allCases, id: \.rawValue) { id in
+                    Toggle(id.displayName, isOn: trayItemVisibleBinding(id))
+                }
+            }
+            Text(L10n.t("settings.menubar.menu_items_hint"))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        // the floating capture toolbar is a second menu surface, not a general
+        // app preference - it sat in General next to the language picker, and
+        // its name collided with the unrelated Actions pane
+        Section(L10n.t("settings.menubar.section.actions_toolbar")) {
             ForEach(config.actionsToolbarList.indices, id: \.self) { index in
                 let type = HotkeyType(rawValue: config.actionsToolbarList[index])
                 HStack {
@@ -1023,7 +1062,7 @@ struct SettingsView: View {
                         .buttonStyle(.borderless)
                 }
             }
-            Menu(L10n.t("settings.general.add_button")) {
+            Menu(L10n.t("settings.menubar.add_button")) {
                 ForEach(ActionsToolbar.symbols.keys.sorted { $0.rawValue < $1.rawValue },
                         id: \.rawValue) { type in
                     Button {
@@ -1035,163 +1074,102 @@ struct SettingsView: View {
                     }
                 }
             }
-            Toggle(L10n.t("settings.general.lock_toolbar"), isOn: configBinding(\.actionsToolbarLockPosition))
-            Toggle(L10n.t("settings.general.toolbar_at_launch"), isOn: configBinding(\.actionsToolbarRunAtStartup))
-            Text(L10n.t("settings.general.toolbar_reopen_hint"))
+            Toggle(L10n.t("settings.menubar.lock_toolbar"), isOn: $config.field(\.actionsToolbarLockPosition))
+            Toggle(L10n.t("settings.menubar.toolbar_at_launch"), isOn: $config.field(\.actionsToolbarRunAtStartup))
+            Text(L10n.t("settings.menubar.toolbar_reopen_hint"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
-        }
-        Section(L10n.t("settings.general.section.browser_extension")) {
-            NativeMessagingSection()
-        }
-        Section(L10n.t("settings.general.section.backup")) {
-            HStack {
-                Button(L10n.t("settings.general.export_settings")) { exportSettings() }
-                Button(L10n.t("settings.general.import_settings")) { importSettings() }
-            }
-            Text(L10n.t("settings.general.backup_hint"))
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
-        Section(L10n.t("settings.general.section.paths")) {
-            LabeledContent(L10n.t("settings.general.screenshots_folder")) {
-                HStack {
-                    Text(config.screenshotsFolder.path)
-                        .truncationMode(.middle)
-                        .lineLimit(1)
-                    Button(L10n.t("common.choose")) { chooseFolder() }
-                    if config.useCustomScreenshotsPath {
-                        Button(L10n.t("common.reset")) {
-                            config.useCustomScreenshotsPath = false
-                            config.customScreenshotsPath = ""
-                            try? config.save()
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var menuBarPane: some View {
-        Section(L10n.t("settings.menubar.section.menu_bar")) {
-            Picker(L10n.t("settings.menubar.left_click"), selection: configBinding(\.trayLeftClickAction)) {
-                Text(L10n.t("settings.menubar.action.open_menu")).tag("ToggleTrayMenu")
-                Text(L10n.t("settings.menubar.action.open_main_window")).tag("OpenMainWindow")
-                Text(L10n.t("settings.menubar.action.capture_region")).tag("RectangleRegion")
-                Text(L10n.t("settings.menubar.action.capture_fullscreen")).tag("PrintScreen")
-                Text(L10n.t("settings.menubar.action.capture_active_window")).tag("ActiveWindow")
-                Text(L10n.t("settings.menubar.action.upload_clipboard")).tag("ClipboardUpload")
-                Text(L10n.t("settings.menubar.action.upload_file")).tag("FileUpload")
-                Text(L10n.t("settings.menubar.action.image_editor")).tag("ImageEditor")
-                Text(L10n.t("settings.menubar.action.open_screenshots_folder")).tag("OpenScreenshotsFolder")
-            }
-            Text(L10n.t("settings.menubar.right_click_hint"))
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            Toggle(L10n.t("settings.menubar.show_progress"), isOn: configBinding(\.trayIconProgressEnabled))
-            Toggle(L10n.t("settings.menubar.show_recent"), isOn: configBinding(\.recentTasksShowInTrayMenu))
-            if config.recentTasksShowInTrayMenu {
-                TextField(L10n.t("settings.menubar.recent_count"),
-                          value: clampedConfigBinding(\.recentTasksMaxCount, 1...30), format: .number)
-            }
-            DisclosureGroup(L10n.t("settings.menubar.menu_items")) {
-                ForEach(TrayMenuItemID.allCases, id: \.rawValue) { id in
-                    Toggle(id.displayName, isOn: trayItemVisibleBinding(id))
-                }
-                Text(L10n.t("settings.menubar.menu_items_hint"))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
         }
     }
 
     @ViewBuilder
     private var notificationsPane: some View {
-        Section(L10n.t("settings.notifications.section.notifications")) {
-            Toggle(L10n.t("settings.notifications.show_banners"), isOn: taskBinding(\.showToastNotificationAfterTaskCompleted))
+        Section(L10n.t("settings.notifications.section.banners")) {
+            Toggle(L10n.t("settings.notifications.show_banners"), isOn: $task.field(\.showToastNotificationAfterTaskCompleted))
             Toggle(L10n.t("settings.notifications.suppress_fullscreen"),
-                   isOn: taskBinding(\.disableNotificationsOnFullscreen))
-            Toggle(L10n.t("settings.notifications.sound_after_capture"), isOn: taskBinding(\.playSoundAfterCapture))
+                   isOn: $task.field(\.disableNotificationsOnFullscreen))
+            Text(L10n.t("settings.notifications.banner_hint"))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        Section(L10n.t("settings.notifications.section.sounds")) {
+            Toggle(L10n.t("settings.notifications.sound_after_capture"), isOn: $task.field(\.playSoundAfterCapture))
             customSoundRows(L10n.t("settings.notifications.custom_capture_sound"),
                             use: \.useCustomCaptureSound, path: \.customCaptureSoundPath)
-            Toggle(L10n.t("settings.notifications.sound_after_upload"), isOn: taskBinding(\.playSoundAfterUpload))
+            Toggle(L10n.t("settings.notifications.sound_after_upload"), isOn: $task.field(\.playSoundAfterUpload))
             customSoundRows(L10n.t("settings.notifications.custom_completion_sound"),
                             use: \.useCustomTaskCompletedSound, path: \.customTaskCompletedSoundPath)
             customSoundRows(L10n.t("settings.notifications.custom_error_sound"),
                             use: \.useCustomErrorSound, path: \.customErrorSoundPath)
-            Text(L10n.t("settings.notifications.banner_hint"))
-                .font(.caption)
-                .foregroundStyle(.secondary)
         }
     }
 
     @ViewBuilder
     private var capturePane: some View {
-        Section(L10n.t("settings.capture.section.capture")) {
+        Section {
             TextField(L10n.t("settings.capture.screenshot_delay"),
-                      value: clampedDoubleBinding(\.screenshotDelay, 0...60), format: .number)
-            Toggle(L10n.t("settings.capture.show_cursor"), isOn: taskBinding(\.showCursor))
+                      value: $task.field(\.screenshotDelay, in: 0...60), format: .number)
+            Toggle(L10n.t("settings.capture.show_cursor"), isOn: $task.field(\.showCursor))
         }
+        // Same component and labels as the after-capture window, driven by the
+        // pipeline's own flag set - the previous hand-kept list had drifted to
+        // 14 of the 22 implemented tasks and used a second set of translations.
         Section(L10n.t("settings.capture.section.after_capture")) {
-            ForEach(Self.afterCaptureToggles, id: \.1) { flag, label in
-                Toggle(label, isOn: afterCaptureBinding(flag))
-            }
+            TaskFlagToggles(value: $task.field(\.afterCaptureJob),
+                            excluded: AfterCaptureTasks.all.subtracting(AfterCapturePipeline.implemented))
+            Text(L10n.t("settings.capture.after_capture_hint"))
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
         Section(L10n.t("settings.capture.section.effects")) {
-            Toggle(L10n.t("settings.capture.effects_window"), isOn: taskBinding(\.showImageEffectsWindowAfterCapture))
-            Toggle(L10n.t("settings.capture.effects_region_only"), isOn: taskBinding(\.imageEffectOnlyRegionCapture))
-            Toggle(L10n.t("settings.capture.effects_random"), isOn: taskBinding(\.useRandomImageEffect))
+            Toggle(L10n.t("settings.capture.effects_window"), isOn: $task.field(\.showImageEffectsWindowAfterCapture))
+            Toggle(L10n.t("settings.capture.effects_region_only"), isOn: $task.field(\.imageEffectOnlyRegionCapture))
+            Toggle(L10n.t("settings.capture.effects_random"), isOn: $task.field(\.useRandomImageEffect))
             Text(L10n.t("settings.capture.effects_hint"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
         Section(L10n.t("settings.capture.section.image_format")) {
-            Picker(L10n.t("settings.capture.format"), selection: taskBinding(\.imageFormat)) {
+            Picker(L10n.t("settings.capture.format"), selection: $task.field(\.imageFormat)) {
                 ForEach(ImageFileFormat.allCases, id: \.rawValue) { format in
                     Text(format.rawValue).tag(format.rawValue)
                 }
             }
             if task.imageFormat == "JPEG" {
                 TextField(L10n.t("settings.capture.jpeg_quality"),
-                          value: clampedBinding(\.imageJPEGQuality, 1...100), format: .number)
+                          value: $task.field(\.imageJPEGQuality, in: 1...100), format: .number)
             }
             if task.imageFormat == "PNG" {
-                Picker(L10n.t("settings.capture.png_bit_depth"), selection: taskBinding(\.imagePNGBitDepth)) {
+                Picker(L10n.t("settings.capture.png_bit_depth"), selection: $task.field(\.imagePNGBitDepth)) {
                     Text(L10n.t("settings.capture.automatic")).tag("Default")
                     Text(L10n.t("settings.capture.png_32bit")).tag("Bit32")
                     Text(L10n.t("settings.capture.png_24bit")).tag("Bit24")
                 }
             }
             if task.imageFormat == "GIF" {
-                Picker(L10n.t("settings.capture.gif_palette"), selection: taskBinding(\.imageGIFQuality)) {
+                Picker(L10n.t("settings.capture.gif_palette"), selection: $task.field(\.imageGIFQuality)) {
                     Text(L10n.t("settings.capture.automatic")).tag("Default")
                     Text(L10n.t("settings.capture.gif_256")).tag("Bit8")
                     Text(L10n.t("settings.capture.gif_16")).tag("Bit4")
                     Text(L10n.t("settings.capture.gif_grayscale")).tag("Grayscale")
                 }
             }
-            Toggle(L10n.t("settings.capture.auto_jpeg"), isOn: taskBinding(\.imageAutoUseJPEG))
+            Toggle(L10n.t("settings.capture.auto_jpeg"), isOn: $task.field(\.imageAutoUseJPEG))
             if task.imageAutoUseJPEG {
                 TextField(L10n.t("settings.capture.auto_jpeg_size"),
-                          value: clampedBinding(\.imageAutoUseJPEGSize, 64...16384), format: .number)
+                          value: $task.field(\.imageAutoUseJPEGSize, in: 64...16384), format: .number)
                 TextField(L10n.t("settings.capture.auto_jpeg_quality"),
-                          value: clampedBinding(\.imageAutoJPEGQuality, 1...100), format: .number)
-            }
-            Picker(L10n.t("settings.capture.file_exist_action"), selection: taskBinding(\.fileExistAction)) {
-                Text(L10n.t("settings.capture.exist_unique")).tag("UniqueName")
-                Text(L10n.t("settings.capture.exist_ask")).tag("Ask")
-                Text(L10n.t("settings.capture.exist_overwrite")).tag("Overwrite")
-                Text(L10n.t("settings.capture.exist_skip")).tag("Cancel")
+                          value: $task.field(\.imageAutoJPEGQuality, in: 1...100), format: .number)
             }
         }
         Section(L10n.t("settings.capture.section.thumbnail")) {
             TextField(L10n.t("settings.capture.thumbnail_width"),
-                      value: clampedBinding(\.thumbnailWidth, 0...4096), format: .number)
+                      value: $task.field(\.thumbnailWidth, in: 0...4096), format: .number)
             TextField(L10n.t("settings.capture.thumbnail_height"),
-                      value: clampedBinding(\.thumbnailHeight, 0...4096), format: .number)
-            Toggle(L10n.t("settings.capture.thumbnail_check_size"), isOn: taskBinding(\.thumbnailCheckSize))
-            Text(L10n.t("settings.capture.thumbnail_hint", task.thumbnailName))
+                      value: $task.field(\.thumbnailHeight, in: 0...4096), format: .number)
+            TextField(L10n.t("settings.capture.thumbnail_name"), text: $task.field(\.thumbnailName))
+            Toggle(L10n.t("settings.capture.thumbnail_check_size"), isOn: $task.field(\.thumbnailCheckSize))
+            Text(L10n.t("settings.capture.thumbnail_hint"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -1200,7 +1178,7 @@ struct SettingsView: View {
     @ViewBuilder
     private var recordingPane: some View {
         Section(L10n.t("settings.recording.section.video")) {
-            Picker(L10n.t("settings.recording.video_codec"), selection: taskBinding(\.screenRecordCodec)) {
+            Picker(L10n.t("settings.recording.video_codec"), selection: $task.field(\.screenRecordCodec)) {
                 Text(L10n.t("settings.recording.codec_h264")).tag("H264")
                 Text(L10n.t("settings.recording.codec_hevc")).tag("HEVC")
                 Text(L10n.t("settings.recording.codec_vp9")).tag("VP9")
@@ -1209,34 +1187,34 @@ struct SettingsView: View {
                 Text(L10n.t("settings.recording.codec_apng")).tag("APNG")
             }
             TextField(L10n.t("settings.recording.video_fps"),
-                      value: clampedBinding(\.screenRecordFPS, 1...60), format: .number)
+                      value: $task.field(\.screenRecordFPS, in: 1...60), format: .number)
             TextField(L10n.t("settings.recording.gif_fps"),
-                      value: clampedBinding(\.gifFPS, 1...30), format: .number)
+                      value: $task.field(\.gifFPS, in: 1...30), format: .number)
             Toggle(L10n.t("settings.recording.two_pass"),
-                   isOn: taskBinding(\.screenRecordTwoPassEncoding))
+                   isOn: $task.field(\.screenRecordTwoPassEncoding))
         }
         Section(L10n.t("settings.recording.section.session")) {
             TextField(L10n.t("settings.recording.start_delay"),
-                      value: clampedDoubleBinding(\.screenRecordStartDelay, 0...60), format: .number)
-            Toggle(L10n.t("settings.recording.fixed_duration"), isOn: taskBinding(\.screenRecordFixedDuration))
+                      value: $task.field(\.screenRecordStartDelay, in: 0...60), format: .number)
+            Toggle(L10n.t("settings.recording.fixed_duration"), isOn: $task.field(\.screenRecordFixedDuration))
             if task.screenRecordFixedDuration {
                 TextField(L10n.t("settings.recording.stop_after"),
-                          value: clampedDoubleBinding(\.screenRecordDuration, 1...86400), format: .number)
+                          value: $task.field(\.screenRecordDuration, in: 1...86400), format: .number)
             }
             Toggle(L10n.t("settings.recording.confirm_abort"),
-                   isOn: taskBinding(\.screenRecordAskConfirmationOnAbort))
-            Toggle(L10n.t("settings.recording.show_cursor"), isOn: taskBinding(\.screenRecordShowCursor))
+                   isOn: $task.field(\.screenRecordAskConfirmationOnAbort))
+            Toggle(L10n.t("settings.recording.show_cursor"), isOn: $task.field(\.screenRecordShowCursor))
         }
         Section(L10n.t("settings.recording.section.audio")) {
-            Toggle(L10n.t("settings.recording.system_audio"), isOn: taskBinding(\.screenRecordSystemAudio))
-            Toggle(L10n.t("settings.recording.microphone"), isOn: taskBinding(\.screenRecordMicrophone))
+            Toggle(L10n.t("settings.recording.system_audio"), isOn: $task.field(\.screenRecordSystemAudio))
+            Toggle(L10n.t("settings.recording.microphone"), isOn: $task.field(\.screenRecordMicrophone))
             Text(L10n.t("settings.recording.audio_hint"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
         Section(L10n.t("settings.recording.section.external_tools")) {
             FFmpegStatusView()
-            TextField(L10n.t("settings.recording.custom_ffmpeg_args"), text: taskBinding(\.screenRecordCustomFFmpegArgs))
+            TextField(L10n.t("settings.recording.custom_ffmpeg_args"), text: $task.field(\.screenRecordCustomFFmpegArgs))
                 .font(.body.monospaced())
             Text(L10n.t("settings.recording.ffmpeg_args_hint"))
                 .font(.caption)
@@ -1294,11 +1272,11 @@ struct SettingsView: View {
     private var destinationsPane: some View {
         Section(L10n.t("settings.destinations.section.upload_destinations")) {
             destinationPicker(L10n.t("settings.destinations.image_uploads"), kind: .image,
-                              selection: destinationBinding(\.imageDestination))
+                              selection: $task.field(\.imageDestination))
             destinationPicker(L10n.t("settings.destinations.text_uploads"), kind: .text,
-                              selection: destinationBinding(\.textDestination))
+                              selection: $task.field(\.textDestination))
             destinationPicker(L10n.t("settings.destinations.file_uploads"), kind: .file,
-                              selection: destinationBinding(\.fileDestination))
+                              selection: $task.field(\.fileDestination))
             Text(L10n.t("settings.destinations.destinations_hint"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -1313,77 +1291,6 @@ struct SettingsView: View {
                 cloudHostFields(for: destination)
                 oauthFields(for: destination)
             }
-        }
-        Section(L10n.t("settings.destinations.section.upload_behavior")) {
-            Toggle(L10n.t("settings.destinations.disable_uploads"), isOn: configBinding(\.disableUpload))
-            TextField(L10n.t("settings.destinations.upload_limit"),
-                      value: clampedConfigBinding(\.uploadLimit, 1...25), format: .number)
-            Toggle(L10n.t("settings.destinations.retry_uploads"), isOn: configBinding(\.retryUpload))
-            if config.retryUpload {
-                TextField(L10n.t("settings.destinations.retry_attempts"),
-                          value: clampedConfigBinding(\.maxUploadFailRetry, 1...10), format: .number)
-            }
-            Toggle(L10n.t("settings.destinations.multi_upload_warning"), isOn: configBinding(\.showMultiUploadWarning))
-            Toggle(L10n.t("settings.destinations.large_file_warning"), isOn: configBinding(\.showLargeFileSizeWarning))
-        }
-        Section(L10n.t("settings.destinations.section.file_naming")) {
-            Toggle(L10n.t("settings.destinations.use_name_pattern"), isOn: taskBinding(\.fileUploadUseNamePattern))
-            Toggle(L10n.t("settings.destinations.replace_problematic"),
-                   isOn: taskBinding(\.fileUploadReplaceProblematicCharacters))
-            Toggle(L10n.t("settings.destinations.custom_timezone"), isOn: taskBinding(\.useCustomTimeZone))
-            if task.useCustomTimeZone {
-                TextField(L10n.t("settings.destinations.timezone_identifier"), text: taskBinding(\.customTimeZoneIdentifier))
-                Text(L10n.t("settings.destinations.timezone_hint"))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-        }
-        Section(L10n.t("settings.destinations.section.clipboard_upload")) {
-            Toggle(L10n.t("settings.destinations.clipboard_url_contents"), isOn: taskBinding(\.clipboardUploadURLContents))
-            Toggle(L10n.t("settings.destinations.clipboard_shorten"), isOn: taskBinding(\.clipboardUploadShortenURL))
-            Toggle(L10n.t("settings.destinations.clipboard_share"), isOn: taskBinding(\.clipboardUploadShareURL))
-            Toggle(L10n.t("settings.destinations.clipboard_index_folder"), isOn: taskBinding(\.clipboardUploadAutoIndexFolder))
-            Toggle(L10n.t("settings.destinations.clear_clipboard"), isOn: taskBinding(\.autoClearClipboard))
-        }
-        Section(L10n.t("settings.destinations.section.after_upload")) {
-            Toggle(L10n.t("settings.destinations.copy_url"), isOn: afterUploadBinding(.copyURLToClipboard))
-            Toggle(L10n.t("settings.destinations.open_url"), isOn: afterUploadBinding(.openURL))
-            Toggle(L10n.t("settings.destinations.shorten_url"), isOn: afterUploadBinding(.useURLShortener))
-            Picker(L10n.t("settings.destinations.url_shortener"), selection: taskBinding(\.urlShortenerDestination)) {
-                ForEach(URLShortenerType.allCases, id: \.rawValue) { type in
-                    Text(type.displayName).tag(type.rawValue)
-                }
-            }
-            shortenerFields
-
-            Toggle(L10n.t("settings.destinations.share_url"), isOn: afterUploadBinding(.shareURL))
-            Picker(L10n.t("settings.destinations.sharing_service"), selection: taskBinding(\.urlSharingServiceDestination)) {
-                ForEach(URLSharingService.allCases, id: \.rawValue) { service in
-                    Text(service.displayName).tag(service.rawValue)
-                }
-            }
-        }
-        Section(L10n.t("settings.destinations.section.url_processing")) {
-            TextField(L10n.t("settings.destinations.clipboard_format"), text: taskBinding(\.clipboardContentFormat))
-                .font(.body.monospaced())
-            TextField(L10n.t("settings.destinations.open_url_format"), text: taskBinding(\.openURLFormat))
-                .font(.body.monospaced())
-            TextField(L10n.t("settings.destinations.notification_format"), text: taskBinding(\.balloonTipContentFormat))
-                .font(.body.monospaced())
-            Text(L10n.t("settings.destinations.result_hint"))
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            Toggle(L10n.t("settings.destinations.early_copy"), isOn: taskBinding(\.earlyCopyURL))
-            Toggle(L10n.t("settings.destinations.force_https"), isOn: taskBinding(\.resultForceHTTPS))
-            Toggle(L10n.t("settings.destinations.regex_replace"), isOn: taskBinding(\.urlRegexReplace))
-            if task.urlRegexReplace {
-                TextField(L10n.t("settings.destinations.regex_pattern"), text: taskBinding(\.urlRegexReplacePattern))
-                    .font(.body.monospaced())
-                TextField(L10n.t("settings.destinations.regex_replacement"), text: taskBinding(\.urlRegexReplaceReplacement))
-                    .font(.body.monospaced())
-            }
-            TextField(L10n.t("settings.destinations.auto_shorten_length"),
-                      value: clampedBinding(\.autoShortenURLLength, 0...4096), format: .number)
         }
     }
 
@@ -1406,14 +1313,14 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
             } else {
                 if task.imageDestination == "CustomImageUploader" {
-                    Picker(L10n.t("settings.destinations.image_uploader"), selection: uploaderBinding()) {
+                    Picker(L10n.t("settings.destinations.image_uploader"), selection: SettingsBinding.onDisk(\UploadersConfig.activeCustomUploader)) {
                         ForEach(uploaders, id: \.self) { name in
                             Text(name).tag(name)
                         }
                     }
                 }
                 if task.textDestination == "CustomTextUploader" {
-                    Picker(L10n.t("settings.destinations.text_uploader"), selection: uploaderBinding(\.activeTextCustomUploader)) {
+                    Picker(L10n.t("settings.destinations.text_uploader"), selection: SettingsBinding.onDisk(\UploadersConfig.activeTextCustomUploader)) {
                         Text(L10n.t("settings.destinations.same_as_image")).tag("")
                         ForEach(uploaders, id: \.self) { name in
                             Text(name).tag(name)
@@ -1421,7 +1328,7 @@ struct SettingsView: View {
                     }
                 }
                 if task.fileDestination == "CustomFileUploader" {
-                    Picker(L10n.t("settings.destinations.file_uploader"), selection: uploaderBinding(\.activeFileCustomUploader)) {
+                    Picker(L10n.t("settings.destinations.file_uploader"), selection: SettingsBinding.onDisk(\UploadersConfig.activeFileCustomUploader)) {
                         Text(L10n.t("settings.destinations.same_as_image")).tag("")
                         ForEach(uploaders, id: \.self) { name in
                             Text(name).tag(name)
@@ -1483,38 +1390,38 @@ struct SettingsView: View {
     private func cloudHostFields(for destination: String) -> some View {
         switch destination {
         case "AmazonS3":
-            TextField(L10n.t("settings.destinations.s3_access_key"), text: s3Binding(\.accessKeyID))
-            SecureField(L10n.t("settings.destinations.s3_secret_key"), text: s3Binding(\.secretAccessKey))
-            TextField(L10n.t("settings.destinations.s3_region"), text: s3Binding(\.region))
-            TextField(L10n.t("settings.destinations.s3_bucket"), text: s3Binding(\.bucket))
-            TextField(L10n.t("settings.destinations.s3_object_prefix"), text: s3Binding(\.objectPrefix))
-            TextField(L10n.t("settings.destinations.s3_endpoint"), text: s3Binding(\.endpoint))
+            TextField(L10n.t("settings.destinations.s3_access_key"), text: SettingsBinding.onDisk(\UploadersConfig.amazonS3.accessKeyID))
+            SecureField(L10n.t("settings.destinations.s3_secret_key"), text: SettingsBinding.onDisk(\UploadersConfig.amazonS3.secretAccessKey))
+            TextField(L10n.t("settings.destinations.s3_region"), text: SettingsBinding.onDisk(\UploadersConfig.amazonS3.region))
+            TextField(L10n.t("settings.destinations.s3_bucket"), text: SettingsBinding.onDisk(\UploadersConfig.amazonS3.bucket))
+            TextField(L10n.t("settings.destinations.s3_object_prefix"), text: SettingsBinding.onDisk(\UploadersConfig.amazonS3.objectPrefix))
+            TextField(L10n.t("settings.destinations.s3_endpoint"), text: SettingsBinding.onDisk(\UploadersConfig.amazonS3.endpoint))
         case "BackblazeB2":
-            TextField(L10n.t("settings.destinations.b2_key_id"), text: uploadersBinding(\.b2ApplicationKeyId))
-            SecureField(L10n.t("settings.destinations.b2_key"), text: uploadersBinding(\.b2ApplicationKey))
-            TextField(L10n.t("settings.destinations.b2_bucket"), text: uploadersBinding(\.b2BucketName))
-            TextField(L10n.t("settings.destinations.upload_path"), text: uploadersBinding(\.b2UploadPath))
-            Toggle(L10n.t("settings.destinations.b2_use_custom_url"), isOn: uploadersBinding(\.b2UseCustomUrl))
-            TextField(L10n.t("settings.destinations.b2_custom_url"), text: uploadersBinding(\.b2CustomUrl))
+            TextField(L10n.t("settings.destinations.b2_key_id"), text: SettingsBinding.onDisk(\UploadersConfig.b2ApplicationKeyId))
+            SecureField(L10n.t("settings.destinations.b2_key"), text: SettingsBinding.onDisk(\UploadersConfig.b2ApplicationKey))
+            TextField(L10n.t("settings.destinations.b2_bucket"), text: SettingsBinding.onDisk(\UploadersConfig.b2BucketName))
+            TextField(L10n.t("settings.destinations.upload_path"), text: SettingsBinding.onDisk(\UploadersConfig.b2UploadPath))
+            Toggle(L10n.t("settings.destinations.b2_use_custom_url"), isOn: SettingsBinding.onDisk(\UploadersConfig.b2UseCustomUrl))
+            TextField(L10n.t("settings.destinations.b2_custom_url"), text: SettingsBinding.onDisk(\UploadersConfig.b2CustomUrl))
         case "AzureStorage":
-            TextField(L10n.t("settings.destinations.azure_account"), text: uploadersBinding(\.azureStorageAccountName))
-            SecureField(L10n.t("settings.destinations.azure_key"), text: uploadersBinding(\.azureStorageAccountAccessKey))
-            TextField(L10n.t("settings.destinations.azure_container"), text: uploadersBinding(\.azureStorageContainer))
-            TextField(L10n.t("settings.destinations.azure_environment"), text: uploadersBinding(\.azureStorageEnvironment))
-            TextField(L10n.t("settings.destinations.azure_custom_domain"), text: uploadersBinding(\.azureStorageCustomDomain))
-            TextField(L10n.t("settings.destinations.upload_path"), text: uploadersBinding(\.azureStorageUploadPath))
+            TextField(L10n.t("settings.destinations.azure_account"), text: SettingsBinding.onDisk(\UploadersConfig.azureStorageAccountName))
+            SecureField(L10n.t("settings.destinations.azure_key"), text: SettingsBinding.onDisk(\UploadersConfig.azureStorageAccountAccessKey))
+            TextField(L10n.t("settings.destinations.azure_container"), text: SettingsBinding.onDisk(\UploadersConfig.azureStorageContainer))
+            TextField(L10n.t("settings.destinations.azure_environment"), text: SettingsBinding.onDisk(\UploadersConfig.azureStorageEnvironment))
+            TextField(L10n.t("settings.destinations.azure_custom_domain"), text: SettingsBinding.onDisk(\UploadersConfig.azureStorageCustomDomain))
+            TextField(L10n.t("settings.destinations.upload_path"), text: SettingsBinding.onDisk(\UploadersConfig.azureStorageUploadPath))
         case "OwnCloud":
-            TextField(L10n.t("settings.destinations.owncloud_server"), text: uploadersBinding(\.ownCloudHost))
-            TextField(L10n.t("settings.destinations.owncloud_username"), text: uploadersBinding(\.ownCloudUsername))
-            SecureField(L10n.t("settings.destinations.owncloud_password"), text: uploadersBinding(\.ownCloudPassword))
-            TextField(L10n.t("settings.destinations.remote_folder"), text: uploadersBinding(\.ownCloudPath))
+            TextField(L10n.t("settings.destinations.owncloud_server"), text: SettingsBinding.onDisk(\UploadersConfig.ownCloudHost))
+            TextField(L10n.t("settings.destinations.owncloud_username"), text: SettingsBinding.onDisk(\UploadersConfig.ownCloudUsername))
+            SecureField(L10n.t("settings.destinations.owncloud_password"), text: SettingsBinding.onDisk(\UploadersConfig.ownCloudPassword))
+            TextField(L10n.t("settings.destinations.remote_folder"), text: SettingsBinding.onDisk(\UploadersConfig.ownCloudPath))
         case "Seafile":
-            TextField(L10n.t("settings.destinations.seafile_api_url"), text: uploadersBinding(\.seafileAPIURL))
-            SecureField(L10n.t("settings.destinations.seafile_token"), text: uploadersBinding(\.seafileAuthToken))
-            TextField(L10n.t("settings.destinations.seafile_repo_id"), text: uploadersBinding(\.seafileRepoID))
-            TextField(L10n.t("settings.destinations.remote_folder"), text: uploadersBinding(\.seafilePath))
+            TextField(L10n.t("settings.destinations.seafile_api_url"), text: SettingsBinding.onDisk(\UploadersConfig.seafileAPIURL))
+            SecureField(L10n.t("settings.destinations.seafile_token"), text: SettingsBinding.onDisk(\UploadersConfig.seafileAuthToken))
+            TextField(L10n.t("settings.destinations.seafile_repo_id"), text: SettingsBinding.onDisk(\UploadersConfig.seafileRepoID))
+            TextField(L10n.t("settings.destinations.remote_folder"), text: SettingsBinding.onDisk(\UploadersConfig.seafilePath))
         case "Pushbullet":
-            SecureField(L10n.t("settings.destinations.pushbullet_token"), text: uploadersBinding(\.pushbulletAPIKey))
+            SecureField(L10n.t("settings.destinations.pushbullet_token"), text: SettingsBinding.onDisk(\UploadersConfig.pushbulletAPIKey))
             Text(L10n.t("settings.destinations.pushbullet_hint"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -1528,54 +1435,27 @@ struct SettingsView: View {
     private func simpleHostFields(for destination: String) -> some View {
         switch SimpleHostDestination(rawValue: destination) {
         case .pomf:
-            TextField(L10n.t("settings.destinations.pomf_upload_url"), text: uploadersBinding(\.pomf.uploadURL))
-            TextField(L10n.t("settings.destinations.pomf_result_url"), text: uploadersBinding(\.pomf.resultURL))
+            TextField(L10n.t("settings.destinations.pomf_upload_url"), text: SettingsBinding.onDisk(\UploadersConfig.pomf.uploadURL))
+            TextField(L10n.t("settings.destinations.pomf_result_url"), text: SettingsBinding.onDisk(\UploadersConfig.pomf.resultURL))
         case .vgyme:
-            SecureField(L10n.t("settings.destinations.vgyme_user_key"), text: uploadersBinding(\.vgymeUserKey))
+            SecureField(L10n.t("settings.destinations.vgyme_user_key"), text: SettingsBinding.onDisk(\UploadersConfig.vgymeUserKey))
         case .sul:
-            SecureField(L10n.t("settings.destinations.sul_api_key"), text: uploadersBinding(\.sulAPIKey))
+            SecureField(L10n.t("settings.destinations.sul_api_key"), text: SettingsBinding.onDisk(\UploadersConfig.sulAPIKey))
         case .lobfile:
-            SecureField(L10n.t("settings.destinations.lobfile_api_key"), text: uploadersBinding(\.lithiio.userAPIKey))
+            SecureField(L10n.t("settings.destinations.lobfile_api_key"), text: SettingsBinding.onDisk(\UploadersConfig.lithiio.userAPIKey))
         case .puush:
-            SecureField(L10n.t("settings.destinations.puush_api_key"), text: uploadersBinding(\.puushAPIKey))
+            SecureField(L10n.t("settings.destinations.puush_api_key"), text: SettingsBinding.onDisk(\UploadersConfig.puushAPIKey))
         case .chevereto:
-            TextField(L10n.t("settings.destinations.chevereto_upload_url"), text: uploadersBinding(\.chevereto.uploadURL))
-            SecureField(L10n.t("settings.destinations.chevereto_api_key"), text: uploadersBinding(\.chevereto.apiKey))
-            Toggle(L10n.t("settings.destinations.chevereto_direct_url"), isOn: uploadersBinding(\.cheveretoDirectURL))
+            TextField(L10n.t("settings.destinations.chevereto_upload_url"), text: SettingsBinding.onDisk(\UploadersConfig.chevereto.uploadURL))
+            SecureField(L10n.t("settings.destinations.chevereto_api_key"), text: SettingsBinding.onDisk(\UploadersConfig.chevereto.apiKey))
+            Toggle(L10n.t("settings.destinations.chevereto_direct_url"), isOn: SettingsBinding.onDisk(\UploadersConfig.cheveretoDirectURL))
         case .streamable:
-            TextField(L10n.t("settings.destinations.streamable_email"), text: uploadersBinding(\.streamableUsername))
-            SecureField(L10n.t("settings.destinations.streamable_password"), text: uploadersBinding(\.streamablePassword))
+            TextField(L10n.t("settings.destinations.streamable_email"), text: SettingsBinding.onDisk(\UploadersConfig.streamableUsername))
+            SecureField(L10n.t("settings.destinations.streamable_password"), text: SettingsBinding.onDisk(\UploadersConfig.streamablePassword))
         case .uguu:
             Text(L10n.t("settings.destinations.uguu_hint"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
-        default:
-            EmptyView()
-        }
-    }
-
-    /// Credential fields for the selected shortener; keyless services need none.
-    @ViewBuilder
-    private var shortenerFields: some View {
-        switch URLShortenerType(rawValue: task.urlShortenerDestination) {
-        case .bitly:
-            SecureField(L10n.t("settings.destinations.bitly_token"), text: uploadersBinding(\.bitlyAccessToken))
-            TextField(L10n.t("settings.destinations.bitly_domain"), text: uploadersBinding(\.bitlyDomain))
-            Text(L10n.t("settings.destinations.bitly_hint"))
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        case .polr:
-            TextField(L10n.t("settings.destinations.polr_api_url"), text: uploadersBinding(\.polrAPIHostname))
-            SecureField(L10n.t("settings.destinations.polr_api_key"), text: uploadersBinding(\.polrAPIKey))
-        case .kutt:
-            TextField(L10n.t("settings.destinations.kutt_host"), text: uploadersBinding(\.kutt.host))
-            SecureField(L10n.t("settings.destinations.kutt_api_key"), text: uploadersBinding(\.kutt.apiKey))
-        case .yourls:
-            TextField(L10n.t("settings.destinations.yourls_api_url"), text: uploadersBinding(\.yourlsAPIURL))
-            SecureField(L10n.t("settings.destinations.yourls_signature"), text: uploadersBinding(\.yourlsSignature))
-        case .zws:
-            TextField(L10n.t("settings.destinations.zws_api_url"), text: uploadersBinding(\.zeroWidthShortenerURL))
-            SecureField(L10n.t("settings.destinations.zws_token"), text: uploadersBinding(\.zeroWidthShortenerToken))
         default:
             EmptyView()
         }

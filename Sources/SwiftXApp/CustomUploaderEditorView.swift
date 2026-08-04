@@ -33,7 +33,7 @@ struct CustomUploaderEditorView: View {
     private static let methods = ["GET", "POST", "PUT", "PATCH", "DELETE"]
 
     var body: some View {
-        Section(L10n.t("settings.customuploader.uploaders")) {
+        Section {
             if files.isEmpty {
                 Text(L10n.t("settings.customuploader.empty_hint"))
                     .font(.caption)

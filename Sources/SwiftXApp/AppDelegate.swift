@@ -511,7 +511,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc func showSettingsWindow() {
         if settingsWindow == nil {
-            settingsWindow = makeWindow(title: L10n.t("window.settings"), size: NSSize(width: 700, height: 460), view: AnyView(SettingsView()))
+            // Fixed height like System Settings: pin the whole frame (title
+            // bar included), leave the width user-resizable. The content
+            // height passed here is a placeholder - the pin below replaces it.
+            let height: CGFloat = 635
+            let window = makeWindow(title: L10n.t("window.settings"), size: NSSize(width: 700, height: height), view: AnyView(SettingsView()))
+            var frame = window.frame
+            frame.size.height = height
+            window.setFrame(frame, display: false)
+            window.minSize = NSSize(width: 0, height: height)
+            window.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: height)
+            // re-center: makeWindow centered the shorter frame, and growing it
+            // keeps the bottom edge, pushing the title bar up off centre
+            window.center()
+            settingsWindow = window
         }
         present(settingsWindow)
     }

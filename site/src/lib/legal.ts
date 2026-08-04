@@ -254,7 +254,7 @@ export const privacy: LegalDoc = {
         },
         {
           kind: "p",
-          text: "You choose how often this happens in Settings → About: daily (the default), weekly, monthly, or off, and you can check by hand at any time from the menu bar. Set it to off and SwiftX makes no update request at all.",
+          text: "You choose how often this happens in Settings → Updates: daily (the default), weekly, monthly, or off, and you can check by hand at any time from the menu bar. Set it to off and SwiftX makes no update request at all.",
         },
         {
           kind: "p",

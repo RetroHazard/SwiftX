@@ -153,7 +153,7 @@ export const faqs: FaqItem[] = [
   {
     question: "How do I get updates?",
     answer:
-      "SwiftX checks for them itself. Choose Check for Updates… from the menu bar whenever you like, or leave the automatic check on — daily by default, with weekly, monthly and off as alternatives in Settings → About. When a new version is out you get a notification and can install it in place; turn on automatic installs and it handles that too. Downloads are checked against the release's published SHA-256 and must be signed by the same Apple Developer ID as the copy you're running before anything is replaced. Installed with Homebrew? SwiftX notices and points you at `brew upgrade --cask swiftx` instead, so brew stays the source of truth for that copy.",
+      "SwiftX checks for them itself. Choose Check for Updates… from the menu bar whenever you like, or leave the automatic check on — daily by default, with weekly, monthly and off as alternatives in Settings → Updates. When a new version is out you get a notification and can install it in place; turn on automatic installs and it handles that too. Downloads are checked against the release's published SHA-256 and must be signed by the same Apple Developer ID as the copy you're running before anything is replaced. Installed with Homebrew? SwiftX notices and points you at `brew upgrade --cask swiftx` instead, so brew stays the source of truth for that copy.",
   },
   {
     question: "What does it need to run?",
