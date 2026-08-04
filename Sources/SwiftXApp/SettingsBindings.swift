@@ -34,13 +34,13 @@ extension Binding where Value: SettingsFile {
     func field(_ keyPath: WritableKeyPath<Value, Int>, in range: ClosedRange<Int>) -> Binding<Int> {
         let base: Binding<Int> = field(keyPath)
         return Binding<Int>(get: { base.wrappedValue },
-                             set: { base.wrappedValue = Swift.min(Swift.max($0, range.lowerBound), range.upperBound) })
+                            set: { base.wrappedValue = Swift.min(Swift.max($0, range.lowerBound), range.upperBound) })
     }
 
     func field(_ keyPath: WritableKeyPath<Value, Double>, in range: ClosedRange<Double>) -> Binding<Double> {
         let base: Binding<Double> = field(keyPath)
         return Binding<Double>(get: { base.wrappedValue },
-                                set: { base.wrappedValue = Swift.min(Swift.max($0, range.lowerBound), range.upperBound) })
+                               set: { base.wrappedValue = Swift.min(Swift.max($0, range.lowerBound), range.upperBound) })
     }
 }
 
