@@ -451,25 +451,25 @@ struct UpdatesView: View {
                 Toggle("Automatically download and install updates",
                        isOn: updateBinding(\.updateAutoInstall))
             }
-        }
-        // below the grouped box, not a row in it
-        HStack {
-            Spacer()
-            Button("Check for Updates") { updater.checkFromMenu() }
-                .disabled(updateActionInFlight)
-            if case .available = updater.state, !updater.isHomebrewManaged {
-                Button(updater.canSelfInstall ? "Install Update" : "Open Release Page") {
-                    if updater.canSelfInstall {
-                        updater.installCurrentUpdate()
-                    } else {
-                        updater.openReleasePage()
+        } footer: {
+            // footers render below the grouped box, so the buttons escape the row card
+            HStack {
+                Spacer()
+                Button("Check for Updates") { updater.checkFromMenu() }
+                    .disabled(updateActionInFlight)
+                if case .available = updater.state, !updater.isHomebrewManaged {
+                    Button(updater.canSelfInstall ? "Install Update" : "Open Release Page") {
+                        if updater.canSelfInstall {
+                            updater.installCurrentUpdate()
+                        } else {
+                            updater.openReleasePage()
+                        }
                     }
+                    Button("Skip This Version") { updater.skipCurrentUpdate() }
                 }
-                Button("Skip This Version") { updater.skipCurrentUpdate() }
             }
+            .padding(.top, 4)
         }
-        .listRowBackground(Color.clear)
-        .listRowInsets(EdgeInsets())
     }
 }
 
