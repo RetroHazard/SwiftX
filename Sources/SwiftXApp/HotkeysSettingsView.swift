@@ -14,6 +14,30 @@ struct HotkeysSettingsView: View {
     @State private var settings = HotkeySettings.load()
     @State private var recordingIndex: Int?
     @State private var monitor: Any?
+    @State private var config = ApplicationConfig.load()
+
+    /// No access to SettingsView's configBinding; same write-through shape,
+    /// local copy.
+    private func configBinding<T>(_ keyPath: WritableKeyPath<ApplicationConfig, T>) -> Binding<T> {
+        Binding(
+            get: { config[keyPath: keyPath] },
+            set: { value in
+                config[keyPath: keyPath] = value
+                try? config.save()
+            }
+        )
+    }
+
+    private func clampedConfigBinding(_ keyPath: WritableKeyPath<ApplicationConfig, Int>,
+                                      _ range: ClosedRange<Int>) -> Binding<Int> {
+        Binding(
+            get: { config[keyPath: keyPath] },
+            set: { value in
+                config[keyPath: keyPath] = min(max(value, range.lowerBound), range.upperBound)
+                try? config.save()
+            }
+        )
+    }
 
     var body: some View {
         Section("Hotkeys") {
@@ -51,6 +75,12 @@ struct HotkeysSettingsView: View {
             }
         }
         .onDisappear { stopRecording() }
+        Section("Hotkey guards") {
+            Toggle("Disable hotkeys while a fullscreen app is active",
+                   isOn: configBinding(\.disableHotkeysOnFullscreen))
+            TextField("Ignore hotkey repeats within (ms, 0 = off)",
+                      value: clampedConfigBinding(\.hotkeyRepeatLimit, 0...5000), format: .number)
+        }
     }
 
     private func buttonTitle(_ index: Int) -> String {

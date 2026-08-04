@@ -881,12 +881,6 @@ struct SettingsView: View {
         Section("Permissions") {
             PermissionsView()
         }
-        Section("Hotkey guards") {
-            Toggle("Disable hotkeys while a fullscreen app is active",
-                   isOn: configBinding(\.disableHotkeysOnFullscreen))
-            TextField("Ignore hotkey repeats within (ms, 0 = off)",
-                      value: clampedConfigBinding(\.hotkeyRepeatLimit, 0...5000), format: .number)
-        }
         Section("Actions toolbar") {
             ForEach(config.actionsToolbarList.indices, id: \.self) { index in
                 let type = HotkeyType(rawValue: config.actionsToolbarList[index])
