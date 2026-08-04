@@ -295,8 +295,26 @@ jobs:
           SWIFTX_UNIVERSAL: "1"
         run: ./Scripts/make-app.sh
 
+      # `lipo -info` lists slices in fat-header order (x86_64 first), so
+      # grepping its prose for a literal 'arm64 x86_64' failed on binaries that
+      # were correctly universal. `-archs` prints just the list; match each
+      # slice independently, and report what was actually found on failure.
       - name: Both architectures are present
-        run: lipo -info build/SwiftX.app/Contents/MacOS/SwiftX | grep -q 'arm64 x86_64'
+        run: |
+          for binary in \
+            build/SwiftX.app/Contents/MacOS/SwiftX \
+            build/SwiftX.app/Contents/MacOS/SwiftXHost \
+            build/SwiftX.app/Contents/PlugIns/SwiftXShare.appex/Contents/MacOS/SwiftXShare
+          do
+            archs=$(lipo -archs "$binary")
+            echo "$binary: $archs"
+            for arch in arm64 x86_64; do
+              case " $archs " in
+                *" $arch "*) ;;
+                *) echo "::error::$binary is missing $arch (got: $archs)"; exit 1 ;;
+              esac
+            done
+          done
 
   # THE required status check. Every job above is path-gated and may
   # legitimately not run; this one never is, so branch protection always gets a
