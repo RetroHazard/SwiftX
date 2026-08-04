@@ -921,7 +921,14 @@ struct SettingsView: View {
                 Label(pane.title, systemImage: pane.icon)
                     .tag(pane)
             }
-            .navigationSplitViewColumnWidth(min: Self.sidebarWidth, ideal: Self.sidebarWidth)
+            // The column-width modifier alone is advisory in a hand-hosted
+            // NSWindow - the split view restores its own position over it and
+            // titles ellipsize. The List's frame goes through Auto Layout and
+            // is enforced, so pin both; all-equal bounds make the sidebar
+            // fixed-width like System Settings.
+            .frame(minWidth: Self.sidebarWidth)
+            .navigationSplitViewColumnWidth(min: Self.sidebarWidth, ideal: Self.sidebarWidth,
+                                            max: Self.sidebarWidth)
             // the toggle floats misaligned in a hand-made NSWindow's title bar;
             // a fixed settings sidebar doesn't need collapsing anyway
             .toolbar(removing: .sidebarToggle)
