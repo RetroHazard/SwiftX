@@ -16,37 +16,10 @@ struct HotkeysSettingsView: View {
     @State private var monitor: Any?
     @State private var config = ApplicationConfig.load()
 
-    /// No access to SettingsView's configBinding; same write-through shape,
-    /// local copy.
-    private func configBinding<T>(_ keyPath: WritableKeyPath<ApplicationConfig, T>) -> Binding<T> {
-        Binding(
-            get: { config[keyPath: keyPath] },
-            set: { value in
-                config[keyPath: keyPath] = value
-                try? config.save()
-            }
-        )
-    }
-
-    private func clampedConfigBinding(_ keyPath: WritableKeyPath<ApplicationConfig, Int>,
-                                      _ range: ClosedRange<Int>) -> Binding<Int> {
-        Binding(
-            get: { config[keyPath: keyPath] },
-            set: { value in
-                config[keyPath: keyPath] = min(max(value, range.lowerBound), range.upperBound)
-                try? config.save()
-            }
-        )
-    }
-
     var body: some View {
-        Section("Hotkey guards") {
-            Toggle("Disable hotkeys while a fullscreen app is active",
-                   isOn: configBinding(\.disableHotkeysOnFullscreen))
-            TextField("Ignore hotkey repeats within (ms, 0 = off)",
-                      value: clampedConfigBinding(\.hotkeyRepeatLimit, 0...5000), format: .number)
-        }
-        Section("Hotkeys") {
+        // the list first: it is what the pane is for. The two guards below are
+        // set once and never revisited, so they no longer lead the pane.
+        Section {
             ForEach(settings.hotkeys.indices, id: \.self) { index in
                 HStack {
                     Picker("", selection: taskTypeBinding(index)) {
@@ -70,26 +43,35 @@ struct HotkeysSettingsView: View {
                 settings.hotkeys.append(HotkeyConfig(taskType: HotkeyType.none.rawValue))
                 persist()
             } label: {
-                Label("Add Hotkey", systemImage: "plus.circle.fill")
+                Label(L10n.t("settings.hotkeys.add_hotkey"), systemImage: "plus.circle.fill")
             }
             .buttonStyle(.borderless)
 
             if recordingIndex != nil {
-                Text("Press the new shortcut (with at least one modifier), or Esc to cancel.")
+                Text(L10n.t("settings.hotkeys.recording_hint"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
         }
         .onDisappear { stopRecording() }
+        Section(L10n.t("settings.hotkeys.section.behavior")) {
+            Toggle(L10n.t("settings.hotkeys.disable_on_fullscreen"),
+                   isOn: $config.field(\.disableHotkeysOnFullscreen))
+            TextField(L10n.t("settings.hotkeys.repeat_limit"),
+                      value: $config.field(\.hotkeyRepeatLimit, in: 0...5000), format: .number)
+        }
     }
 
     private func buttonTitle(_ index: Int) -> String {
-        if recordingIndex == index { return "Press keys…" }
-        return settings.hotkeys[index].combo?.displayString ?? "Record"
+        if recordingIndex == index { return L10n.t("settings.hotkeys.press_keys") }
+        return settings.hotkeys[index].combo?.displayString ?? L10n.t("settings.hotkeys.record")
     }
 
     /// "ScreenRecorderGIF" -> "Screen Recorder GIF"
     static func displayName(for type: HotkeyType) -> String {
+        let key = "hotkey.\(type.rawValue)"
+        if L10n.has(key) { return L10n.t(key) }
+        // fallback: derived label for cases without a translation entry
         var result = ""
         var previous: Character = " "
         for char in type.rawValue {

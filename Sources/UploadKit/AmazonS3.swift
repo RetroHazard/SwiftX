@@ -16,9 +16,9 @@ public enum AmazonS3Error: LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .incompleteSettings:
-            return "Amazon S3 requires access key, secret key, region and bucket."
+            return L10n.t("upload.error.s3.incomplete_settings")
         case .invalidEndpoint(let endpoint):
-            return "Invalid S3 endpoint: \(endpoint)"
+            return L10n.t("upload.error.s3.invalid_endpoint", endpoint)
         }
     }
 }

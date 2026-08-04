@@ -44,6 +44,14 @@ APP="build/SwiftX.app"
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
+# CFBundleLocalizations, generated from the shipped translation tables so a
+# new <code>.lproj never requires a script edit. The strings themselves live
+# inside SwiftX_SharedKit.bundle (see docs/LOCALIZATION.md).
+LOCALIZATIONS=""
+for LPROJ in Sources/SharedKit/Resources/*.lproj; do
+    LOCALIZATIONS+="        <string>$(basename "$LPROJ" .lproj)</string>"$'\n'
+done
+
 cp "$BIN/swiftx" "$APP/Contents/MacOS/SwiftX"
 # browser native messaging host, launched by Chrome/Edge/Firefox
 cp "$BIN/swiftx-host" "$APP/Contents/MacOS/SwiftXHost"
@@ -110,6 +118,11 @@ cat > "$APPEX/Contents/Info.plist" <<PLIST
     <string>${VERSION}</string>
     <key>CFBundleVersion</key>
     <string>${VERSION}</string>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
+    <key>CFBundleLocalizations</key>
+    <array>
+${LOCALIZATIONS}    </array>
     <key>LSMinimumSystemVersion</key>
     <string>14.0</string>
     <key>NSHumanReadableCopyright</key>
@@ -165,6 +178,11 @@ cat > "$APP/Contents/Info.plist" <<PLIST
     <string>${VERSION}</string>
     <key>CFBundleVersion</key>
     <string>${VERSION}</string>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
+    <key>CFBundleLocalizations</key>
+    <array>
+${LOCALIZATIONS}    </array>
     <!-- Must match Package.swift's platforms: [.macOS(.v14)] — SwiftX calls
          SCScreenshotManager, which does not exist before macOS 14. -->
     <key>LSMinimumSystemVersion</key>

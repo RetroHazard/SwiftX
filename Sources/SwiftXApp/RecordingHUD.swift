@@ -10,6 +10,7 @@
 // for SCStream filter exclusion, so they never appear in the recording.
 
 import AppKit
+import SharedKit
 import SwiftUI
 
 @MainActor
@@ -183,11 +184,11 @@ private struct RecordingStripView: View {
             case .countdown(let remaining):
                 Image(systemName: "record.circle")
                     .foregroundStyle(.secondary)
-                Text("Recording in \(remaining)…")
+                Text(L10n.t("recording.hud.countdown", remaining))
                     .monospacedDigit()
                 Button { onAbort() } label: { Image(systemName: "xmark.circle.fill") }
                     .buttonStyle(.borderless)
-                    .help("Cancel")
+                    .help(L10n.t("common.cancel"))
             case .recording, .paused:
                 Circle()
                     .fill(model.phase == .paused ? Color.secondary : Color.red)
@@ -198,13 +199,13 @@ private struct RecordingStripView: View {
                     Image(systemName: model.phase == .paused ? "play.fill" : "pause.fill")
                 }
                 .buttonStyle(.borderless)
-                .help(model.phase == .paused ? "Resume" : "Pause")
+                .help(model.phase == .paused ? L10n.t("recording.hud.resume") : L10n.t("recording.hud.pause"))
                 Button { onStop() } label: { Image(systemName: "stop.fill") }
                     .buttonStyle(.borderless)
-                    .help("Stop and save")
+                    .help(L10n.t("recording.hud.stop_save"))
                 Button { onAbort() } label: { Image(systemName: "xmark.circle.fill") }
                     .buttonStyle(.borderless)
-                    .help("Abort and discard")
+                    .help(L10n.t("recording.hud.abort_discard"))
             }
         }
         .padding(.horizontal, 12)

@@ -26,7 +26,7 @@ final class OAuthConnectCoordinator {
             // unreachable from the UI — the button only renders when
             // isConfigured(id) is true — but a URL-scheme or CLI entry point
             // can still land here on a build with no credentials.
-            presentError(id, message: "This build of SwiftX ships without \(id.displayName) app credentials, so it can't connect.")
+            presentError(id, message: L10n.t("oauth.no_credentials", id.displayName))
             return
         }
         do {
@@ -40,7 +40,7 @@ final class OAuthConnectCoordinator {
                 redirectURI: redirect.redirectURI, state: state, pkce: pkce)
             AppLog.upload.info("OAuth connect \(id.rawValue, privacy: .public): listening on \(redirect.redirectURI, privacy: .public), opening browser")
             guard NSWorkspace.shared.open(authorizeURL) else {
-                throw OAuthError.authorizationFailed("the sign-in page could not be opened in your browser")
+                throw OAuthError.authorizationFailed(L10n.t("oauth.error.browser_open_failed"))
             }
 
             let params = try await redirect.waitForCallback()
@@ -49,7 +49,7 @@ final class OAuthConnectCoordinator {
             }
             // state check defeats CSRF / stray callbacks
             guard params["state"] == state, let code = params["code"] else {
-                throw OAuthError.authorizationFailed("the browser returned an unexpected response")
+                throw OAuthError.authorizationFailed(L10n.t("oauth.error.unexpected_response"))
             }
 
             let request = OAuth2Flow.tokenExchangeRequest(
@@ -58,12 +58,13 @@ final class OAuthConnectCoordinator {
             let (data, response) = try await UploadHTTP.data(for: request)
             guard (response as? HTTPURLResponse).map({ (200..<300).contains($0.statusCode) }) == true else {
                 let body = String(data: data, encoding: .utf8) ?? ""
-                throw OAuthError.authorizationFailed("token exchange failed: \(body.prefix(200))")
+                throw OAuthError.authorizationFailed(L10n.t("oauth.error.token_exchange_failed",
+                                                            String(body.prefix(200))))
             }
             let token = try OAuth2Flow.parseTokenResponse(data)
             OAuthTokenStore.save(token, for: id)
             AppLog.upload.info("OAuth connect \(id.rawValue, privacy: .public): connected")
-            Notifier.notify(title: id.displayName, body: "Connected. \(id.displayName) is ready to use.")
+            Notifier.notify(title: id.displayName, body: L10n.t("oauth.connected", id.displayName))
         } catch is CancellationError {
             // user closed the flow — nothing to report
         } catch {
@@ -79,7 +80,7 @@ final class OAuthConnectCoordinator {
     private func presentError(_ id: OAuthProviderID, message: String) {
         let alert = NSAlert()
         alert.alertStyle = .warning
-        alert.messageText = "\(id.displayName) connection failed"
+        alert.messageText = L10n.t("oauth.connection_failed", id.displayName)
         alert.informativeText = message
         alert.runModal()
     }

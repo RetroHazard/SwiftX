@@ -7,6 +7,7 @@
 
 import Foundation
 import ImageIO
+import SharedKit
 import UniformTypeIdentifiers
 
 public enum ImageMetadata {
@@ -15,8 +16,8 @@ public enum ImageMetadata {
 
         public var errorDescription: String? {
             switch self {
-            case .unreadable: return "The file could not be read as an image."
-            case .unwritable: return "The image could not be rewritten."
+            case .unreadable: return L10n.t("toolskit.error.metadata.unreadable")
+            case .unwritable: return L10n.t("toolskit.error.metadata.unwritable")
             }
         }
     }

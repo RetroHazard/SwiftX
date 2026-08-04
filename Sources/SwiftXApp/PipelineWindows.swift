@@ -38,7 +38,7 @@ enum AfterCaptureWindow {
             let window = NSWindow(contentRect: .zero,
                                   styleMask: [.titled, .closable],
                                   backing: .buffered, defer: false)
-            window.title = "After Capture Tasks"
+            window.title = L10n.t("pipeline.window.after_capture_tasks")
             window.isReleasedWhenClosed = false
             window.delegate = delegate
 
@@ -84,13 +84,13 @@ private struct AfterCaptureWindowView: View {
                     .border(Color(nsColor: .separatorColor))
 
                 Form {
-                    TextField("File name:", text: $fileName)
+                    TextField(L10n.t("pipeline.file_name_label"), text: $fileName)
                         .onSubmit { proceed() }
-                    Section("After capture") {
+                    Section(L10n.t("pipeline.section.after_capture")) {
                         TaskFlagToggles(value: $settings.afterCaptureJob,
                                         excluded: [.showQuickTaskMenu, .showAfterCaptureWindow])
                     }
-                    Section("After upload") {
+                    Section(L10n.t("pipeline.section.after_upload")) {
                         TaskFlagToggles(value: $settings.afterUploadJob)
                     }
                 }
@@ -100,14 +100,14 @@ private struct AfterCaptureWindowView: View {
 
             HStack {
                 Spacer()
-                Button("Cancel") { onFinish(.cancel) }
+                Button(L10n.t("common.cancel")) { onFinish(.cancel) }
                     .keyboardShortcut(.cancelAction)
-                Button("Copy") {
+                Button(L10n.t("common.copy")) {
                     // C#: Copy short-circuits the chain to clipboard only
                     settings.afterCaptureJob = .copyImageToClipboard
                     proceed()
                 }
-                Button("Continue") { proceed() }
+                Button(L10n.t("common.continue")) { proceed() }
                     .keyboardShortcut(.defaultAction)
             }
         }
@@ -140,7 +140,7 @@ enum BeforeUploadWindow {
             let window = NSWindow(contentRect: .zero,
                                   styleMask: [.titled, .closable],
                                   backing: .buffered, defer: false)
-            window.title = "Before Upload"
+            window.title = L10n.t("pipeline.window.before_upload")
             window.isReleasedWhenClosed = false
             window.delegate = delegate
 
@@ -178,7 +178,7 @@ private struct BeforeUploadView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("\(fileName) is about to be uploaded to \(destinationTitle). You may choose a different destination.")
+            Text(L10n.t("pipeline.before_upload_message", fileName, destinationTitle))
                 .frame(maxWidth: 440, alignment: .leading)
 
             if let preview {
@@ -189,8 +189,8 @@ private struct BeforeUploadView: View {
                     .border(Color(nsColor: .separatorColor))
             }
 
-            Picker("Destination:", selection: $settings.imageDestination) {
-                Text("Custom uploader").tag("CustomImageUploader")
+            Picker(L10n.t("pipeline.destination_label"), selection: $settings.imageDestination) {
+                Text(L10n.t("pipeline.destination.custom_uploader")).tag("CustomImageUploader")
                 Text("Amazon S3").tag("AmazonS3")
                 Text("Backblaze B2").tag("BackblazeB2")
                 Text("Azure Storage").tag("AzureStorage")
@@ -204,9 +204,9 @@ private struct BeforeUploadView: View {
 
             HStack {
                 Spacer()
-                Button("Cancel") { onFinish(nil) }
+                Button(L10n.t("common.cancel")) { onFinish(nil) }
                     .keyboardShortcut(.cancelAction)
-                Button("Upload") {
+                Button(L10n.t("alert.upload.upload_button")) {
                     // the picker shows one destination; make it authoritative
                     // for this run regardless of the upload's type routing
                     var chosen = settings
@@ -232,7 +232,7 @@ private struct BeforeUploadView: View {
 @MainActor
 enum AfterUploadWindow {
     static func present(result: UploadResult, finalURL: String) {
-        ToolWindows.present(title: "Upload complete", resizable: true,
+        ToolWindows.present(title: L10n.t("pipeline.window.upload_complete"), resizable: true,
                             content: AfterUploadLinksView(result: result, finalURL: finalURL))
     }
 }
@@ -242,17 +242,17 @@ private struct AfterUploadLinksView: View {
     let finalURL: String
 
     private var formats: [(String, String)] {
-        var rows: [(String, String)] = [("URL", finalURL)]
-        if finalURL != result.url { rows.append(("Original URL", result.url)) }
-        if !result.thumbnailURL.isEmpty { rows.append(("Thumbnail URL", result.thumbnailURL)) }
-        if !result.deletionURL.isEmpty { rows.append(("Deletion URL", result.deletionURL)) }
+        var rows: [(String, String)] = [(L10n.t("pipeline.link.url"), finalURL)]
+        if finalURL != result.url { rows.append((L10n.t("pipeline.link.original_url"), result.url)) }
+        if !result.thumbnailURL.isEmpty { rows.append((L10n.t("pipeline.link.thumbnail_url"), result.thumbnailURL)) }
+        if !result.deletionURL.isEmpty { rows.append((L10n.t("pipeline.link.deletion_url"), result.deletionURL)) }
         // C# hides the image markups for non-image URLs
         let ext = URL(string: result.url)?.pathExtension.lowercased() ?? ""
         if ["png", "jpg", "jpeg", "gif", "bmp", "tif", "tiff", "webp"].contains(ext) {
-            rows.append(("Forum (BBCode)", "[img]\(result.url)[/img]"))
-            rows.append(("HTML", "<img src=\"\(result.url)\"/>"))
-            rows.append(("Markdown", "![](\(result.url))"))
-            rows.append(("Wiki", "[\(result.url)]"))
+            rows.append((L10n.t("pipeline.link.forum_bbcode"), "[img]\(result.url)[/img]"))
+            rows.append((L10n.t("pipeline.link.html"), "<img src=\"\(result.url)\"/>"))
+            rows.append((L10n.t("pipeline.link.markdown"), "![](\(result.url))"))
+            rows.append((L10n.t("pipeline.link.wiki"), "[\(result.url)]"))
         }
         return rows
     }
@@ -266,7 +266,7 @@ private struct AfterUploadLinksView: View {
                             .textSelection(.enabled)
                             .lineLimit(1)
                             .truncationMode(.middle)
-                        Button("Copy") {
+                        Button(L10n.t("common.copy")) {
                             NSPasteboard.general.clearContents()
                             NSPasteboard.general.setString(value, forType: .string)
                         }

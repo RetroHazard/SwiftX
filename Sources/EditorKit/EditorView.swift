@@ -4,6 +4,7 @@
 // Licensed under GPL v3 - see /LICENSE
 
 import AppKit
+import SharedKit
 import SwiftUI
 
 @MainActor
@@ -55,43 +56,43 @@ public struct EditorView: View {
 
                 ColorPicker("", selection: $state.color, supportsOpacity: false)
                     .labelsHidden()
-                    .help("Stroke color")
+                    .help(L10n.t("editor.stroke_color"))
 
                 ColorPicker("", selection: $state.fillColor, supportsOpacity: true)
                     .labelsHidden()
-                    .help("Fill color for rectangle/ellipse (transparent = no fill)")
+                    .help(L10n.t("editor.fill_color_help"))
 
                 Toggle(isOn: $state.shadow) {
                     Image(systemName: "square.fill.on.square")
                 }
                 .toggleStyle(.button)
-                .help("Drop shadow")
+                .help(L10n.t("editor.drop_shadow"))
 
                 Slider(value: $state.lineWidth, in: 1...10) {
                     EmptyView()
                 }
                 .frame(width: 100)
-                .help("Line width")
+                .help(L10n.t("editor.line_width"))
 
                 if state.tool == .arrow {
                     Picker("", selection: $state.arrowStyle) {
                         ForEach(ArrowHeadStyle.allCases, id: \.self) { style in
-                            Text(style.rawValue).tag(style)
+                            Text(style.localizedName).tag(style)
                         }
                     }
                     .fixedSize()
-                    .help("Arrow head style")
+                    .help(L10n.t("editor.arrow_head_style"))
                 }
 
                 if state.tool == .text || state.tool == .speechBalloon {
                     Picker("", selection: $state.fontFamily) {
-                        Text("System Font").tag("")
+                        Text(L10n.t("editor.system_font")).tag("")
                         ForEach(NSFontManager.shared.availableFontFamilies, id: \.self) { family in
                             Text(family).tag(family)
                         }
                     }
                     .frame(maxWidth: 160)
-                    .help("Font family")
+                    .help(L10n.t("editor.font_family"))
                 }
 
                 Spacer()
@@ -102,9 +103,9 @@ public struct EditorView: View {
                     Image(systemName: "minus.magnifyingglass")
                 }
                 .keyboardShortcut("-", modifiers: .command)
-                .help("Zoom out")
+                .help(L10n.t("editor.zoom_out"))
 
-                Text("\(Int((state.zoom * 100).rounded()))%")
+                Text(L10n.t("editor.zoom_percent", Int((state.zoom * 100).rounded())))
                     .font(.caption.monospacedDigit())
                     .frame(width: 40)
                     .onTapGesture { state.zoom = 1 }
@@ -115,14 +116,14 @@ public struct EditorView: View {
                     Image(systemName: "plus.magnifyingglass")
                 }
                 .keyboardShortcut("+", modifiers: .command)
-                .help("Zoom in")
+                .help(L10n.t("editor.zoom_in"))
 
                 Button {
                     showExpandCanvas.toggle()
                 } label: {
                     Image(systemName: "arrow.up.left.and.arrow.down.right.square")
                 }
-                .help("Expand canvas")
+                .help(L10n.t("editor.expand_canvas"))
                 .popover(isPresented: $showExpandCanvas) {
                     ExpandCanvasForm(state: state, isPresented: $showExpandCanvas)
                 }
@@ -157,11 +158,11 @@ public struct EditorView: View {
 
             HStack {
                 Spacer()
-                Button("Cancel") {
+                Button(L10n.t("common.cancel")) {
                     onComplete(nil)
                 }
                 .keyboardShortcut(.cancelAction)
-                Button("Continue") {
+                Button(L10n.t("common.continue")) {
                     onComplete(state.canvas?.renderFinalImage())
                 }
                 .keyboardShortcut(.defaultAction)
@@ -214,19 +215,19 @@ private struct ExpandCanvasForm: View {
 
     var body: some View {
         VStack(spacing: 10) {
-            Text("Expand canvas (points)").font(.headline)
+            Text(L10n.t("editor.expand_canvas_points")).font(.headline)
             Grid {
                 GridRow {
-                    Text("Top"); TextField("", value: $top, format: .number).frame(width: 60)
-                    Text("Bottom"); TextField("", value: $bottom, format: .number).frame(width: 60)
+                    Text(L10n.t("editor.edge_top")); TextField("", value: $top, format: .number).frame(width: 60)
+                    Text(L10n.t("editor.edge_bottom")); TextField("", value: $bottom, format: .number).frame(width: 60)
                 }
                 GridRow {
-                    Text("Left"); TextField("", value: $left, format: .number).frame(width: 60)
-                    Text("Right"); TextField("", value: $right, format: .number).frame(width: 60)
+                    Text(L10n.t("editor.edge_left")); TextField("", value: $left, format: .number).frame(width: 60)
+                    Text(L10n.t("editor.edge_right")); TextField("", value: $right, format: .number).frame(width: 60)
                 }
             }
-            ColorPicker("Fill color", selection: $fill, supportsOpacity: true)
-            Button("Expand") {
+            ColorPicker(L10n.t("editor.fill_color"), selection: $fill, supportsOpacity: true)
+            Button(L10n.t("editor.expand")) {
                 state.canvas?.expandCanvas(
                     top: CGFloat(top), left: CGFloat(left),
                     bottom: CGFloat(bottom), right: CGFloat(right),
@@ -268,7 +269,7 @@ public enum ImageEditorPresenter {
                 backing: .buffered,
                 defer: false
             )
-            window.title = "SwiftX Image Editor"
+            window.title = L10n.t("editor.window_title")
             window.isReleasedWhenClosed = false
             window.delegate = delegate
 

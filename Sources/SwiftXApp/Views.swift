@@ -18,6 +18,16 @@ enum TimeRange: String, CaseIterable {
     case week = "Last 7 days"
     case month = "Last 30 days"
 
+    /// Localized label; rawValue stays untouched as identity.
+    var title: String {
+        switch self {
+        case .any: L10n.t("main.timerange.any")
+        case .today: L10n.t("main.timerange.today")
+        case .week: L10n.t("main.timerange.week")
+        case .month: L10n.t("main.timerange.month")
+        }
+    }
+
     var startDate: Date? {
         let calendar = Calendar.current
         switch self {
@@ -39,11 +49,11 @@ struct MainWindowView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 8) {
-                TextField("Search history", text: $search)
+                TextField(L10n.t("main.search_placeholder"), text: $search)
                     .textFieldStyle(.roundedBorder)
                 Picker("", selection: $timeRange) {
                     ForEach(TimeRange.allCases, id: \.self) { range in
-                        Text(range.rawValue).tag(range)
+                        Text(range.title).tag(range)
                     }
                 }
                 .fixedSize()
@@ -51,7 +61,7 @@ struct MainWindowView: View {
                     Image(systemName: favoritesOnly ? "star.fill" : "star")
                 }
                 .toggleStyle(.button)
-                .help("Show favorites only")
+                .help(L10n.t("main.show_favorites_only"))
                 Picker("", selection: $viewMode) {
                     Image(systemName: "list.bullet").tag("ListView")
                     Image(systemName: "square.grid.2x2").tag("ThumbnailView")
@@ -59,9 +69,9 @@ struct MainWindowView: View {
                 .pickerStyle(.segmented)
                 .fixedSize()
                 Menu {
-                    Button("Import History…") { importHistory() }
-                    Button("Import Folder…") { importFolder() }
-                    Button("Statistics…") { showStats() }
+                    Button(L10n.t("main.import_history")) { importHistory() }
+                    Button(L10n.t("main.import_folder")) { importFolder() }
+                    Button(L10n.t("main.statistics")) { showStats() }
                 } label: {
                     Image(systemName: "ellipsis.circle")
                 }
@@ -74,7 +84,7 @@ struct MainWindowView: View {
                     Image(systemName: "gearshape")
                 }
                 .buttonStyle(.borderless)
-                .help("Settings")
+                .help(L10n.t("main.settings"))
             }
             .padding(8)
 
@@ -86,7 +96,7 @@ struct MainWindowView: View {
                         .font(.system(size: 48))
                         .foregroundStyle(.secondary)
                     Text(search.isEmpty && !favoritesOnly && timeRange == .any
-                         ? "Captures will appear here" : "No matches")
+                         ? L10n.t("main.empty_placeholder") : L10n.t("main.no_matches"))
                         .foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -131,21 +141,21 @@ struct MainWindowView: View {
 
     @ViewBuilder
     private func contextMenu(for item: HistoryItem) -> some View {
-        Button(item.isFavorite ? "Remove Favorite" : "Add Favorite") {
+        Button(item.isFavorite ? L10n.t("main.remove_favorite") : L10n.t("main.add_favorite")) {
             HistoryStore.shared.setFavorite(id: item.id, !item.isFavorite)
         }
         Divider()
         if !item.url.isEmpty {
-            Button("Copy URL") { copyString(item.url) }
-            Button("Open URL") {
+            Button(L10n.t("notification.action.copy_url")) { copyString(item.url) }
+            Button(L10n.t("main.open_url")) {
                 if let url = URL(string: item.url) { NSWorkspace.shared.open(url) }
             }
         }
         if FileManager.default.fileExists(atPath: item.filePath) {
-            Button("Show in Finder") {
+            Button(L10n.t("common.show_in_finder")) {
                 NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: item.filePath)])
             }
-            Button("Copy File Path") { copyString(item.filePath) }
+            Button(L10n.t("main.copy_file_path")) { copyString(item.filePath) }
         }
     }
 
@@ -160,25 +170,27 @@ struct MainWindowView: View {
         let panel = NSOpenPanel()
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
-        panel.message = "Choose a folder of images or recordings to add to history"
+        panel.message = L10n.t("main.import_folder_message")
         NSApp.activate(ignoringOtherApps: true)
         guard panel.runModal() == .OK, let url = panel.url else { return }
         let imported = HistoryStore.shared.appendAll(HistoryImport.items(fromFolder: url))
-        Notifier.notify(title: "Folder import", body: "Imported \(imported) items.")
+        Notifier.notify(title: L10n.t("main.import_folder_title"),
+                        body: L10n.t("main.import_items_body", imported))
     }
 
     /// C# History.json/xml migration (HistoryManagerJSON/XML loaders).
     private func importHistory() {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [.json, .xml]
-        panel.message = "Choose a Windows ShareX History.json or History.xml"
+        panel.message = L10n.t("main.import_history_message")
         NSApp.activate(ignoringOtherApps: true)
         guard panel.runModal() == .OK, let url = panel.url else { return }
         do {
             let imported = HistoryStore.shared.appendAll(try HistoryImport.items(fromFile: url))
-            Notifier.notify(title: "History import", body: "Imported \(imported) items.")
+            Notifier.notify(title: L10n.t("main.import_history_title"),
+                            body: L10n.t("main.import_items_body", imported))
         } catch {
-            Notifier.notify(title: "History import failed", body: error.localizedDescription)
+            Notifier.notify(title: L10n.t("main.import_history_failed"), body: error.localizedDescription)
         }
     }
 
@@ -186,7 +198,7 @@ struct MainWindowView: View {
         // ponytail: loads every row to group in memory, same as C#; stream via
         // SQL GROUP BY if million-row databases ever show up
         let all = HistoryStore.shared.recent(limit: Int(Int32.max))
-        ToolWindows.present(title: "History Stats", resizable: true,
+        ToolWindows.present(title: L10n.t("main.history_stats_title"), resizable: true,
                             content: HistoryStatsView(text: HistoryStats.report(all)))
     }
 }
@@ -205,7 +217,7 @@ private struct HistoryStatsView: View {
             }
             HStack {
                 Spacer()
-                Button("Copy") {
+                Button(L10n.t("common.copy")) {
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(text, forType: .string)
                 }
@@ -321,21 +333,81 @@ enum ThumbnailLoader {
     }
 }
 
+/// Sidebar grouping. Twelve flat rows read as one undifferentiated list; the
+/// groups say which question each pane answers, and let the high-traffic panes
+/// (hotkeys, capture) sit near the top without losing the setup panes.
+enum SettingsPaneGroup: String, CaseIterable, Identifiable {
+    case app = "App"
+    case capture = "Capture"
+    case sharing = "Sharing"
+    case automation = "Automation"
+    case about = "About"
+
+    var id: String { rawValue }
+
+    /// Localized label; rawValue stays untouched as identity.
+    var title: String {
+        switch self {
+        case .app: L10n.t("settings.group.app")
+        case .capture: L10n.t("settings.group.capture")
+        case .sharing: L10n.t("settings.group.sharing")
+        case .automation: L10n.t("settings.group.automation")
+        case .about: L10n.t("settings.group.about")
+        }
+    }
+
+    var panes: [SettingsPane] {
+        SettingsPane.allCases.filter { $0.group == self }
+    }
+}
+
 enum SettingsPane: String, CaseIterable, Identifiable {
+    // rawValues are identity (SettingsNavigator, restored selection); the
+    // sidebar order comes from `allCases`, so reordering here reorders the UI
     case general = "General"
     case menuBar = "Menu Bar"
+    case hotkeys = "Hotkeys"
     case notifications = "Notifications"
     case capture = "Capture"
     case recording = "Recording"
+    case destinations = "Destinations"
+    case uploads = "Uploads"
+    case customUploader = "Custom Uploader"
     case actions = "Actions"
     case watchFolders = "Watch Folders"
-    case destinations = "Destinations"
-    case customUploader = "Custom Uploader"
-    case hotkeys = "Hotkeys"
     case updates = "Updates"
     case about = "About"
 
     var id: String { rawValue }
+
+    var group: SettingsPaneGroup {
+        switch self {
+        case .general, .menuBar, .hotkeys, .notifications: .app
+        case .capture, .recording: .capture
+        case .destinations, .uploads, .customUploader: .sharing
+        case .actions, .watchFolders: .automation
+        case .updates, .about: .about
+        }
+    }
+
+    /// Localized label; rawValue stays untouched as identity.
+    var title: String {
+        switch self {
+        case .general: L10n.t("settings.pane.general")
+        case .menuBar: L10n.t("settings.pane.menu_bar")
+        case .notifications: L10n.t("settings.pane.notifications")
+        case .capture: L10n.t("settings.pane.capture")
+        case .recording: L10n.t("settings.pane.recording")
+        case .actions: L10n.t("settings.pane.actions")
+        case .watchFolders: L10n.t("settings.pane.watch_folders")
+        case .destinations: L10n.t("settings.pane.destinations")
+        case .uploads: L10n.t("settings.pane.uploads")
+        case .customUploader: L10n.t("settings.pane.custom_uploader")
+        case .hotkeys: L10n.t("settings.pane.hotkeys")
+        case .updates: L10n.t("settings.pane.updates")
+        case .about: L10n.t("settings.pane.about")
+        }
+    }
 
     var icon: String {
         switch self {
@@ -347,6 +419,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .actions: "terminal"
         case .watchFolders: "folder.badge.gearshape"
         case .destinations: "square.and.arrow.up"
+        case .uploads: "arrow.up.circle"
         case .customUploader: "wrench.and.screwdriver"
         case .hotkeys: "keyboard"
         case .updates: "arrow.triangle.2.circlepath"
@@ -367,18 +440,6 @@ struct UpdatesView: View {
     @ObservedObject private var updater = UpdateManager.shared
     @State private var config = ApplicationConfig.load()
 
-    /// UpdatesView has no access to SettingsView's configBinding; same
-    /// write-through shape, local copy.
-    private func updateBinding<Value>(_ keyPath: WritableKeyPath<ApplicationConfig, Value>) -> Binding<Value> {
-        Binding(
-            get: { config[keyPath: keyPath] },
-            set: { newValue in
-                config[keyPath: keyPath] = newValue
-                try? config.save()
-            }
-        )
-    }
-
     private var updateActionInFlight: Bool {
         switch updater.state {
         case .checking, .downloading: return true
@@ -391,47 +452,47 @@ struct UpdatesView: View {
         case .idle:
             // No check has run this session; fall back to the persisted
             // timestamp so a relaunch doesn't read as "never checked".
-            LabeledContent("Status") {
+            LabeledContent(L10n.t("settings.updates.status")) {
                 if let date = updater.lastCheckDate {
-                    Text("Last checked \(date.formatted(.relative(presentation: .named)))")
+                    Text(L10n.t("settings.updates.last_checked", date.formatted(.relative(presentation: .named))))
                 } else {
-                    Text("Not checked yet")
+                    Text(L10n.t("settings.updates.not_checked"))
                 }
             }
         case .checking:
-            LabeledContent("Status") {
+            LabeledContent(L10n.t("settings.updates.status")) {
                 HStack(spacing: 6) {
                     ProgressView().controlSize(.small)
-                    Text("Checking…")
+                    Text(L10n.t("settings.updates.checking"))
                 }
             }
         case .upToDate(let date):
-            LabeledContent("Status") {
-                Text("Up to date (checked \(date.formatted(.relative(presentation: .named))))")
+            LabeledContent(L10n.t("settings.updates.status")) {
+                Text(L10n.t("settings.updates.up_to_date", date.formatted(.relative(presentation: .named))))
             }
         case .available(let update):
-            LabeledContent("Status") {
+            LabeledContent(L10n.t("settings.updates.status")) {
                 HStack(spacing: 8) {
-                    Text("Version \(String(describing: update.version)) available")
-                    Link("Release notes", destination: update.release.htmlURL)
+                    Text(L10n.t("settings.updates.version_available", String(describing: update.version)))
+                    Link(L10n.t("settings.updates.release_notes"), destination: update.release.htmlURL)
                 }
             }
         case .downloading:
-            LabeledContent("Status") {
+            LabeledContent(L10n.t("settings.updates.status")) {
                 HStack(spacing: 6) {
                     ProgressView().controlSize(.small)
-                    Text("Downloading and installing…")
+                    Text(L10n.t("settings.updates.downloading"))
                 }
             }
         case .installed(let installedVersion):
-            LabeledContent("Status") {
+            LabeledContent(L10n.t("settings.updates.status")) {
                 HStack(spacing: 8) {
-                    Text("Version \(String(describing: installedVersion)) installed — relaunch to finish")
-                    Button("Relaunch Now") { updater.relaunchNow() }
+                    Text(L10n.t("settings.updates.installed_relaunch", String(describing: installedVersion)))
+                    Button(L10n.t("settings.updates.relaunch_now")) { updater.relaunchNow() }
                 }
             }
         case .failed(let message):
-            LabeledContent("Status") {
+            LabeledContent(L10n.t("settings.updates.status")) {
                 Text(message).foregroundStyle(.red)
             }
         }
@@ -440,40 +501,43 @@ struct UpdatesView: View {
     var body: some View {
         Section {
             updateStatusRow
-            Picker("Check automatically", selection: updateBinding(\.updateCheckFrequency)) {
+            Picker(L10n.t("settings.updates.check_automatically"), selection: $config.field(\.updateCheckFrequency)) {
                 ForEach(UpdateCheckFrequency.allCases, id: \.rawValue) { frequency in
-                    Text(frequency.displayName).tag(frequency.rawValue)
+                    let key = "settings.updates.frequency.\(frequency.rawValue)"
+                    Text(L10n.t(key)).tag(frequency.rawValue)
                 }
             }
             .pickerStyle(.menu)
             if updater.isHomebrewManaged {
-                LabeledContent("Managed by Homebrew") {
+                LabeledContent(L10n.t("settings.updates.managed_by_homebrew")) {
                     HStack(spacing: 8) {
                         Text(UpdateManager.brewUpgradeCommand)
                             .font(.callout.monospaced())
                             .foregroundStyle(.secondary)
-                        Button("Copy Command") { updater.copyBrewCommand() }
+                        Button(L10n.t("settings.updates.copy_command")) { updater.copyBrewCommand() }
                     }
                 }
             } else {
-                Toggle("Automatically download and install updates",
-                       isOn: updateBinding(\.updateAutoInstall))
+                Toggle(L10n.t("settings.updates.auto_install"),
+                       isOn: $config.field(\.updateAutoInstall))
             }
         } footer: {
             // footers render below the grouped box, so the buttons escape the row card
             HStack {
                 Spacer()
-                Button("Check for Updates") { updater.checkFromMenu() }
+                Button(L10n.t("settings.updates.check_for_updates")) { updater.checkFromMenu() }
                     .disabled(updateActionInFlight)
                 if case .available = updater.state, !updater.isHomebrewManaged {
-                    Button(updater.canSelfInstall ? "Install Update" : "Open Release Page") {
+                    Button(updater.canSelfInstall
+                           ? L10n.t("settings.updates.install_update")
+                           : L10n.t("settings.updates.open_release_page")) {
                         if updater.canSelfInstall {
                             updater.installCurrentUpdate()
                         } else {
                             updater.openReleasePage()
                         }
                     }
-                    Button("Skip This Version") { updater.skipCurrentUpdate() }
+                    Button(L10n.t("settings.updates.skip_version")) { updater.skipCurrentUpdate() }
                 }
             }
             .padding(.top, 4)
@@ -501,11 +565,11 @@ struct AboutView: View {
                     .frame(width: 72, height: 72)
                 VStack(alignment: .leading, spacing: 3) {
                     Text("SwiftX").font(.title).bold()
-                    Text("Version \(version)").foregroundStyle(.secondary)
+                    Text(L10n.t("settings.about.version", version)).foregroundStyle(.secondary)
                     Text("© 2026 RetroHazard").font(.callout).foregroundStyle(.secondary)
                     HStack(spacing: 12) {
-                        Link("Project page", destination: URL(string: "https://github.com/RetroHazard/SwiftX")!)
-                        Link("Report an issue", destination: URL(string: "https://github.com/RetroHazard/SwiftX/issues")!)
+                        Link(L10n.t("settings.about.project_page"), destination: URL(string: "https://github.com/RetroHazard/SwiftX")!)
+                        Link(L10n.t("settings.about.report_issue"), destination: URL(string: "https://github.com/RetroHazard/SwiftX/issues")!)
                     }
                     .font(.callout)
                     .padding(.top, 2)
@@ -514,30 +578,97 @@ struct AboutView: View {
             }
             .padding(.vertical, 4)
         }
-        Section("Credits") {
-            LabeledContent("Developed by") {
+        Section(L10n.t("settings.about.section.credits")) {
+            LabeledContent(L10n.t("settings.about.developed_by")) {
                 Link("RetroHazard", destination: URL(string: "https://github.com/RetroHazard")!)
             }
-            LabeledContent("Derived from") {
+            LabeledContent(L10n.t("settings.about.derived_from")) {
                 Link("ShareX", destination: URL(string: "https://github.com/ShareX/ShareX")!)
             }
-            Text("SwiftX is not affiliated with or endorsed by the ShareX Team.")
+            Text(L10n.t("settings.about.not_affiliated"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
-        Section("License") {
+        Section(L10n.t("settings.about.section.license")) {
             // GPL v3 §5(d) copyright notice: SwiftX's own plus the preserved
             // upstream notice, matching the source-file header wording
             Text("© 2026 RetroHazard.\nContains code derived from ShareX, © 2007–2026 ShareX Team.")
                 .font(.callout)
-            Text("SwiftX is free software: you may redistribute it and/or modify it under the terms of the GNU General Public License v3. It comes with ABSOLUTELY NO WARRANTY.")
+            Text(L10n.t("settings.about.license_body"))
                 .font(.callout)
                 .foregroundStyle(.secondary)
             // SwiftUI Link won't open file:// URLs; NSWorkspace opens the
             // bundled LICENSE (or the gnu.org fallback) reliably
-            Button("View the full license") {
+            Button(L10n.t("settings.about.view_license")) {
                 NSWorkspace.shared.open(licenseURL)
             }
+        }
+    }
+}
+
+/// Hard-locks the settings sidebar at a fixed width: no divider drag, no
+/// collapse. NavigationSplitView's width modifiers are advisory in a
+/// hand-hosted NSWindow, so climb from inside the sidebar column to the
+/// underlying NSSplitViewItem and pin its thickness directly. If SwiftUI's
+/// internal hierarchy ever stops matching, the walk finds nothing and the
+/// sidebar just stays SwiftUI-managed.
+private struct SidebarLock: NSViewRepresentable {
+    let width: CGFloat
+
+    func makeNSView(context: Context) -> LockView {
+        let view = LockView()
+        view.width = width
+        return view
+    }
+
+    func updateNSView(_ nsView: LockView, context: Context) {
+        nsView.width = width
+        nsView.lock()
+    }
+
+    final class LockView: NSView {
+        var width: CGFloat = 0
+        private var observer: NSObjectProtocol?
+        // setPosition posts didResizeSubviews synchronously, which calls
+        // lock() again before the frame reflects the move - unguarded, that
+        // recurses until the stack overflows
+        private var relocking = false
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            // defer until the split view hierarchy above us has settled
+            DispatchQueue.main.async { self.lock() }
+        }
+
+        func lock() {
+            var ancestor = superview
+            while let current = ancestor, !(current is NSSplitView) { ancestor = current.superview }
+            guard let splitView = ancestor as? NSSplitView,
+                  let controller = splitView.delegate as? NSSplitViewController,
+                  let sidebar = controller.splitViewItems.first
+            else { return }
+            sidebar.minimumThickness = width
+            sidebar.maximumThickness = width
+            sidebar.canCollapse = false
+            // A one-shot lock is not enough: SwiftUI rebuilds and re-bounds
+            // its split view items behind our back (state restoration, pane
+            // switches), which un-pins the thickness. Re-assert after every
+            // divider move so a drag snaps straight back.
+            if observer == nil {
+                observer = NotificationCenter.default.addObserver(
+                    forName: NSSplitView.didResizeSubviewsNotification,
+                    object: splitView, queue: .main
+                ) { [weak self] _ in self?.lock() }
+            }
+            if !relocking, let pane = splitView.arrangedSubviews.first, abs(pane.frame.width - width) > 0.5 {
+                relocking = true
+                defer { relocking = false }
+                splitView.setPosition(width, ofDividerAt: 0)
+            }
+        }
+
+        deinit {
+            if let observer { NotificationCenter.default.removeObserver(observer) }
         }
     }
 }
@@ -546,143 +677,61 @@ struct SettingsView: View {
     @State private var config = ApplicationConfig.load()
     @State private var task = TaskSettings.load()
     @ObservedObject private var nav = SettingsNavigator.shared
+    // The settings window is cached (AppDelegate keeps it alive), so these
+    // @State copies would otherwise outlive every other writer of the same
+    // files. Used below to re-sync them whenever the window regains key.
+    @Environment(\.controlActiveState) private var activeState
     // UploadersConfig/OAuthTokenStore are read straight from disk/Keychain on
     // every body evaluation, so nothing marks the view dirty when they change
     // out from under it (connecting, disconnecting). Bumping this forces
     // SwiftUI to re-evaluate oauthFields.
     @State private var oauthRefresh = 0
-
-    private static let afterCaptureToggles: [(AfterCaptureTasks, String)] = [
-        (.annotateImage, "Annotate image (editor)"),
-        (.copyImageToClipboard, "Copy image to clipboard"),
-        (.pinToScreen, "Pin to screen"),
-        (.sendImageToPrinter, "Send image to printer"),
-        (.saveImageToFile, "Save image to file"),
-        (.saveImageToFileWithDialog, "Save image with dialog"),
-        (.saveThumbnailImageToFile, "Save thumbnail image to file"),
-        (.performActions, "Perform actions (external programs)"),
-        (.copyFileToClipboard, "Copy file to clipboard"),
-        (.copyFilePathToClipboard, "Copy file path to clipboard"),
-        (.copyFolderPathToClipboard, "Copy folder path to clipboard"),
-        (.showInExplorer, "Show in Finder"),
-        (.uploadImageToHost, "Upload image to host"),
-        (.deleteFile, "Delete file locally (moves to Trash)")
-    ]
-
-    private func destinationBinding(_ keyPath: WritableKeyPath<TaskSettings, String>) -> Binding<String> {
-        Binding(
-            get: { task[keyPath: keyPath] },
-            set: { value in
-                task[keyPath: keyPath] = value
-                try? task.save()
-            }
-        )
-    }
-
-    private func s3Binding(_ keyPath: WritableKeyPath<AmazonS3Settings, String>) -> Binding<String> {
-        uploadersBinding((\UploadersConfig.amazonS3).appending(path: keyPath))
-    }
-
-    private func uploadersBinding<T>(_ keyPath: WritableKeyPath<UploadersConfig, T>) -> Binding<T> {
-        Binding(
-            get: { UploadersConfig.load()[keyPath: keyPath] },
-            set: { value in
-                var config = UploadersConfig.load()
-                config[keyPath: keyPath] = value
-                try? config.save()
-            }
-        )
-    }
-
-    private func afterUploadBinding(_ flag: AfterUploadTasks) -> Binding<Bool> {
-        Binding(
-            get: { task.afterUploadJob.contains(flag) },
-            set: { enabled in
-                if enabled {
-                    task.afterUploadJob.insert(flag)
-                } else {
-                    task.afterUploadJob.remove(flag)
-                }
-                try? task.save()
-            }
-        )
-    }
-
-    private func uploaderBinding(_ keyPath: WritableKeyPath<UploadersConfig, String>
-                                    = \.activeCustomUploader) -> Binding<String> {
-        Binding(
-            get: { UploadersConfig.load()[keyPath: keyPath] },
-            set: { name in
-                var config = UploadersConfig.load()
-                config[keyPath: keyPath] = name
-                try? config.save()
-            }
-        )
-    }
-
-    /// Text entry can produce anything; clamp to the valid range on commit.
-    private func clampedBinding(_ keyPath: WritableKeyPath<TaskSettings, Int>,
-                                _ range: ClosedRange<Int>) -> Binding<Int> {
-        Binding(
-            get: { task[keyPath: keyPath] },
-            set: { value in
-                task[keyPath: keyPath] = min(max(value, range.lowerBound), range.upperBound)
-                try? task.save()
-            }
-        )
-    }
-
-    private func clampedDoubleBinding(_ keyPath: WritableKeyPath<TaskSettings, Double>,
-                                      _ range: ClosedRange<Double>) -> Binding<Double> {
-        Binding(
-            get: { task[keyPath: keyPath] },
-            set: { value in
-                task[keyPath: keyPath] = min(max(value, range.lowerBound), range.upperBound)
-                try? task.save()
-            }
-        )
-    }
-
-    private func configBinding<T>(_ keyPath: WritableKeyPath<ApplicationConfig, T>) -> Binding<T> {
-        Binding(
-            get: { config[keyPath: keyPath] },
-            set: { value in
-                config[keyPath: keyPath] = value
-                try? config.save()
-            }
-        )
-    }
-
-    private func clampedConfigBinding(_ keyPath: WritableKeyPath<ApplicationConfig, Int>,
-                                      _ range: ClosedRange<Int>) -> Binding<Int> {
-        Binding(
-            get: { config[keyPath: keyPath] },
-            set: { value in
-                config[keyPath: keyPath] = min(max(value, range.lowerBound), range.upperBound)
-                try? config.save()
-            }
-        )
-    }
+    // Dragging the divider past the sidebar's minimum collapses the column,
+    // and with the sidebar toggle removed there is no way back. Track
+    // visibility so a collapse can be snapped back open (see body).
+    @State private var columnVisibility = NavigationSplitViewVisibility.all
 
     /// Toggle + file picker pair for the C# custom notification sound slots.
     @ViewBuilder
     private func customSoundRows(_ label: String,
                                  use: WritableKeyPath<TaskSettings, Bool>,
                                  path: WritableKeyPath<TaskSettings, String>) -> some View {
-        Toggle(label, isOn: taskBinding(use))
+        Toggle(label, isOn: $task.field(use))
         if task[keyPath: use] {
-            LabeledContent("Sound file") {
+            LabeledContent(L10n.t("settings.notifications.sound_file")) {
                 HStack {
                     Text(task[keyPath: path].isEmpty
-                         ? "None chosen"
+                         ? L10n.t("common.none_chosen")
                          : (task[keyPath: path] as NSString).lastPathComponent)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                         .truncationMode(.middle)
-                    Button("Choose…") { chooseSoundFile(path) }
+                    Button(L10n.t("common.choose")) { chooseSoundFile(path) }
                 }
             }
         }
+    }
+
+    /// Language lookups are pointed at the new table only on launch, so offer
+    /// a relaunch. Quit-then-open with a delay: the flock in SingleInstance
+    /// would make an instance opened before we exit bail out immediately.
+    private func promptRelaunch() {
+        let alert = NSAlert()
+        alert.messageText = L10n.t("settings.general.language.restart_title")
+        alert.informativeText = L10n.t("settings.general.language.restart_body")
+        alert.addButton(withTitle: L10n.t("settings.general.language.relaunch_now"))
+        alert.addButton(withTitle: L10n.t("settings.general.language.later"))
+        NSApp.activate(ignoringOtherApps: true)
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        let bundlePath = Bundle.main.bundlePath
+        if bundlePath.hasSuffix(".app") {
+            let script = "sleep 1; /usr/bin/open \"\(bundlePath)\""
+            let relauncher = Process()
+            relauncher.executableURL = URL(fileURLWithPath: "/bin/sh")
+            relauncher.arguments = ["-c", script]
+            try? relauncher.run()
+        }
+        NSApp.terminate(nil)
     }
 
     private func exportSettings() {
@@ -696,7 +745,7 @@ struct SettingsView: View {
             try SettingsBackup.export(to: url)
             NSWorkspace.shared.activateFileViewerSelecting([url])
         } catch {
-            Notifier.notify(title: "Settings export failed", body: error.localizedDescription,
+            Notifier.notify(title: L10n.t("settings.general.export_failed"), body: error.localizedDescription,
                             event: .error)
         }
     }
@@ -704,7 +753,7 @@ struct SettingsView: View {
     private func importSettings() {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [.zip, .init(filenameExtension: "sxb") ?? .zip]
-        panel.message = "Choose a SwiftX settings backup or a Windows ShareX .sxb backup"
+        panel.message = L10n.t("settings.general.import_panel_message")
         NSApp.activate(ignoringOtherApps: true)
         guard panel.runModal() == .OK, let url = panel.url else { return }
 
@@ -716,7 +765,7 @@ struct SettingsView: View {
         do {
             try SettingsBackup.extract(url, to: staging)
         } catch {
-            Notifier.notify(title: "Settings import failed", body: error.localizedDescription,
+            Notifier.notify(title: L10n.t("settings.general.import_failed"), body: error.localizedDescription,
                             event: .error)
             return
         }
@@ -727,19 +776,18 @@ struct SettingsView: View {
         }
 
         let alert = NSAlert()
-        alert.messageText = "Replace current settings?"
-        alert.informativeText = "Settings, hotkeys and custom uploaders will be replaced with "
-            + "the backup's contents. Keychain secrets are not part of backups and must be re-entered."
-        alert.addButton(withTitle: "Replace")
-        alert.addButton(withTitle: "Cancel")
+        alert.messageText = L10n.t("settings.general.replace_title")
+        alert.informativeText = L10n.t("settings.general.replace_body")
+        alert.addButton(withTitle: L10n.t("settings.general.replace"))
+        alert.addButton(withTitle: L10n.t("common.cancel"))
         guard alert.runModal() == .alertFirstButtonReturn else { return }
 
         do {
             try SettingsBackup.restore(from: url)
             reloadAfterImport()
-            Notifier.notify(title: "Settings restored", body: url.lastPathComponent)
+            Notifier.notify(title: L10n.t("settings.general.restored_title"), body: url.lastPathComponent)
         } catch {
-            Notifier.notify(title: "Settings import failed", body: error.localizedDescription,
+            Notifier.notify(title: L10n.t("settings.general.import_failed"), body: error.localizedDescription,
                             event: .error)
         }
     }
@@ -749,14 +797,11 @@ struct SettingsView: View {
     /// backup's upload history along.
     private func importWindowsBackup(extractedAt staging: URL, named name: String) {
         let alert = NSAlert()
-        alert.messageText = "Import Windows ShareX backup?"
-        alert.informativeText = "Settings, hotkeys and custom uploaders from \(name) will be "
-            + "merged into your current configuration. Values with no macOS equivalent "
-            + "(Windows paths, OAuth accounts, Windows-only hotkeys) are skipped. "
-            + "Upload history can be imported too — repeating the import later would duplicate it."
-        alert.addButton(withTitle: "Import")
-        alert.addButton(withTitle: "Import Without History")
-        alert.addButton(withTitle: "Cancel")
+        alert.messageText = L10n.t("settings.general.sharex_import_title")
+        alert.informativeText = L10n.t("settings.general.sharex_import_body", name)
+        alert.addButton(withTitle: L10n.t("settings.general.import"))
+        alert.addButton(withTitle: L10n.t("settings.general.import_without_history"))
+        alert.addButton(withTitle: L10n.t("common.cancel"))
         let response = alert.runModal()
         guard response != .alertThirdButtonReturn else { return }
 
@@ -769,21 +814,24 @@ struct SettingsView: View {
             }
             reloadAfterImport()
 
-            var parts = ["Settings imported."]
+            var parts = [L10n.t("settings.general.summary.settings_imported")]
             if !summary.importedUploaders.isEmpty {
-                parts.append("\(summary.importedUploaders.count) custom uploader(s).")
+                parts.append(L10n.t("settings.general.summary.uploaders",
+                                    summary.importedUploaders.count))
             }
             if summary.importedHotkeys > 0 || summary.skippedHotkeys > 0 {
-                parts.append("\(summary.importedHotkeys) hotkey(s)"
-                    + (summary.skippedHotkeys > 0
-                       ? ", \(summary.skippedHotkeys) without a macOS key skipped." : "."))
+                parts.append(summary.skippedHotkeys > 0
+                    ? L10n.t("settings.general.summary.hotkeys_skipped",
+                             summary.importedHotkeys, summary.skippedHotkeys)
+                    : L10n.t("settings.general.summary.hotkeys", summary.importedHotkeys))
             }
             if importedHistory > 0 {
-                parts.append("\(importedHistory) history entries.")
+                parts.append(L10n.t("settings.general.summary.history", importedHistory))
             }
-            Notifier.notify(title: "ShareX backup imported", body: parts.joined(separator: " "))
+            Notifier.notify(title: L10n.t("settings.general.sharex_imported_title"),
+                            body: parts.joined(separator: " "))
         } catch {
-            Notifier.notify(title: "ShareX import failed", body: error.localizedDescription,
+            Notifier.notify(title: L10n.t("settings.general.sharex_import_failed"), body: error.localizedDescription,
                             event: .error)
         }
     }
@@ -828,39 +876,33 @@ struct SettingsView: View {
         try? task.save()
     }
 
-    private func taskBinding<T>(_ keyPath: WritableKeyPath<TaskSettings, T>) -> Binding<T> {
-        Binding(
-            get: { task[keyPath: keyPath] },
-            set: { value in
-                task[keyPath: keyPath] = value
-                try? task.save()
-            }
-        )
-    }
-
-    private func afterCaptureBinding(_ flag: AfterCaptureTasks) -> Binding<Bool> {
-        Binding(
-            get: { task.afterCaptureJob.contains(flag) },
-            set: { enabled in
-                if enabled {
-                    task.afterCaptureJob.insert(flag)
-                } else {
-                    task.afterCaptureJob.remove(flag)
-                }
-                try? task.save()
-            }
-        )
-    }
+    /// Fixed sidebar width, like System Settings. Wide enough for the longest
+    /// English pane title; revisit if a translation needs more room.
+    private static let sidebarWidth: CGFloat = 185
 
     var body: some View {
-        NavigationSplitView {
-            List(SettingsPane.allCases, selection: $nav.pane) { pane in
-                // explicit tag: List's implicit selection value is the String id,
-                // which never matches our SettingsPane? binding
-                Label(pane.rawValue, systemImage: pane.icon)
-                    .tag(pane)
+        NavigationSplitView(columnVisibility: $columnVisibility) {
+            List(selection: $nav.pane) {
+                ForEach(SettingsPaneGroup.allCases) { group in
+                    Section(group.title) {
+                        // explicit tag: List's implicit selection value is the
+                        // String id, which never matches our SettingsPane? binding
+                        ForEach(group.panes) { pane in
+                            Label(pane.title, systemImage: pane.icon)
+                                .tag(pane)
+                        }
+                    }
+                }
             }
-            .navigationSplitViewColumnWidth(min: 150, ideal: 170)
+            // The column-width modifier alone is advisory in a hand-hosted
+            // NSWindow - the split view restores its own position over it and
+            // titles ellipsize. The List's frame goes through Auto Layout and
+            // is enforced, so pin both; all-equal bounds lock the sidebar and
+            // leave the divider with nothing to drag.
+            .frame(width: Self.sidebarWidth)
+            .navigationSplitViewColumnWidth(min: Self.sidebarWidth, ideal: Self.sidebarWidth,
+                                            max: Self.sidebarWidth)
+            .background(SidebarLock(width: Self.sidebarWidth))
             // the toggle floats misaligned in a hand-made NSWindow's title bar;
             // a fixed settings sidebar doesn't need collapsing anyway
             .toolbar(removing: .sidebarToggle)
@@ -875,6 +917,7 @@ struct SettingsView: View {
                 case .actions: ActionsSettingsView()
                 case .watchFolders: WatchFoldersSettingsView()
                 case .destinations: destinationsPane
+                case .uploads: UploadsSettingsView()
                 case .customUploader: CustomUploaderEditorView()
                 case .hotkeys: HotkeysSettingsView()
                 case .updates: UpdatesView()
@@ -882,17 +925,135 @@ struct SettingsView: View {
                 }
             }
             .formStyle(.grouped)
-            .navigationTitle((nav.pane ?? .general).rawValue)
+            .navigationTitle((nav.pane ?? .general).title)
         }
-        .frame(minWidth: 640, minHeight: 420)
+        .frame(minWidth: Self.sidebarWidth + 480, minHeight: 420)
+        // a divider drag past the minimum collapses the sidebar; reopen it
+        .onChange(of: columnVisibility) {
+            if columnVisibility != .all { columnVisibility = .all }
+        }
+        // Re-sync the long-lived copies whenever another surface may have
+        // written the files: entering a pane (the Uploads/Hotkeys/Watch
+        // Folders panes hold their own copies), or the window regaining key
+        // (after-capture window, panels, or reopening the cached window).
+        .onChange(of: nav.pane) { reloadSettingsFiles() }
+        .onChange(of: activeState) {
+            if activeState == .key { reloadSettingsFiles() }
+        }
+    }
+
+    private func reloadSettingsFiles() {
+        config = ApplicationConfig.load()
+        task = TaskSettings.load()
     }
 
     @ViewBuilder
     private var generalPane: some View {
-        Section("Permissions") {
+        Section(L10n.t("settings.general.section.language")) {
+            Picker(L10n.t("settings.general.language.picker"),
+                   selection: $config.field(\.interfaceLanguage)) {
+                Text(L10n.t("settings.general.language.system_default")).tag("")
+                ForEach(L10n.availableLanguages, id: \.self) { code in
+                    Text(L10n.displayName(for: code)).tag(code)
+                }
+            }
+            // Deferred: onChange runs inside the picker's update transaction,
+            // where runModal cannot start its modal session and the alert
+            // silently never appears.
+            .onChange(of: config.interfaceLanguage) {
+                DispatchQueue.main.async { promptRelaunch() }
+            }
+        }
+        // where captures land and what they are called, together: the folder
+        // alone left the name and subfolder patterns editable only in JSON
+        Section(L10n.t("settings.general.section.saved_files")) {
+            LabeledContent(L10n.t("settings.general.screenshots_folder")) {
+                HStack {
+                    Text(config.screenshotsFolder.path)
+                        .truncationMode(.middle)
+                        .lineLimit(1)
+                    Button(L10n.t("common.choose")) { chooseFolder() }
+                    if config.useCustomScreenshotsPath {
+                        Button(L10n.t("common.reset")) {
+                            config.useCustomScreenshotsPath = false
+                            config.customScreenshotsPath = ""
+                            try? config.save()
+                        }
+                    }
+                }
+            }
+            TextField(L10n.t("settings.general.subfolder_pattern"), text: $config.field(\.saveImageSubFolderPattern))
+                .font(.body.monospaced())
+            TextField(L10n.t("settings.general.name_pattern"), text: $task.field(\.nameFormatPattern))
+                .font(.body.monospaced())
+            TextField(L10n.t("settings.general.name_pattern_active_window"),
+                      text: $task.field(\.nameFormatPatternActiveWindow))
+                .font(.body.monospaced())
+            Text(L10n.t("settings.general.name_pattern_hint"))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Picker(L10n.t("settings.general.file_exist_action"), selection: $task.field(\.fileExistAction)) {
+                Text(L10n.t("settings.general.exist_unique")).tag("UniqueName")
+                Text(L10n.t("settings.general.exist_ask")).tag("Ask")
+                Text(L10n.t("settings.general.exist_overwrite")).tag("Overwrite")
+                Text(L10n.t("settings.general.exist_skip")).tag("Cancel")
+            }
+        }
+        Section(L10n.t("settings.general.section.permissions")) {
             PermissionsView()
         }
-        Section("Actions toolbar") {
+        Section(L10n.t("settings.general.section.browser_extension")) {
+            NativeMessagingSection()
+        }
+        Section(L10n.t("settings.general.section.backup")) {
+            HStack {
+                Button(L10n.t("settings.general.export_settings")) { exportSettings() }
+                Button(L10n.t("settings.general.import_settings")) { importSettings() }
+            }
+            Text(L10n.t("settings.general.backup_hint"))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    @ViewBuilder
+    private var menuBarPane: some View {
+        Section(L10n.t("settings.menubar.section.icon")) {
+            Picker(L10n.t("settings.menubar.left_click"), selection: $config.field(\.trayLeftClickAction)) {
+                Text(L10n.t("settings.menubar.action.open_menu")).tag("ToggleTrayMenu")
+                Text(L10n.t("settings.menubar.action.open_main_window")).tag("OpenMainWindow")
+                Text(L10n.t("settings.menubar.action.capture_region")).tag("RectangleRegion")
+                Text(L10n.t("settings.menubar.action.capture_fullscreen")).tag("PrintScreen")
+                Text(L10n.t("settings.menubar.action.capture_active_window")).tag("ActiveWindow")
+                Text(L10n.t("settings.menubar.action.upload_clipboard")).tag("ClipboardUpload")
+                Text(L10n.t("settings.menubar.action.upload_file")).tag("FileUpload")
+                Text(L10n.t("settings.menubar.action.image_editor")).tag("ImageEditor")
+                Text(L10n.t("settings.menubar.action.open_screenshots_folder")).tag("OpenScreenshotsFolder")
+            }
+            Text(L10n.t("settings.menubar.right_click_hint"))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Toggle(L10n.t("settings.menubar.show_progress"), isOn: $config.field(\.trayIconProgressEnabled))
+            Toggle(L10n.t("settings.menubar.show_recent"), isOn: $config.field(\.recentTasksShowInTrayMenu))
+            if config.recentTasksShowInTrayMenu {
+                TextField(L10n.t("settings.menubar.recent_count"),
+                          value: $config.field(\.recentTasksMaxCount, in: 1...30), format: .number)
+            }
+        }
+        Section(L10n.t("settings.menubar.section.menu_items")) {
+            DisclosureGroup(L10n.t("settings.menubar.menu_items")) {
+                ForEach(TrayMenuItemID.allCases, id: \.rawValue) { id in
+                    Toggle(id.displayName, isOn: trayItemVisibleBinding(id))
+                }
+            }
+            Text(L10n.t("settings.menubar.menu_items_hint"))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        // the floating capture toolbar is a second menu surface, not a general
+        // app preference - it sat in General next to the language picker, and
+        // its name collided with the unrelated Actions pane
+        Section(L10n.t("settings.menubar.section.actions_toolbar")) {
             ForEach(config.actionsToolbarList.indices, id: \.self) { index in
                 let type = HotkeyType(rawValue: config.actionsToolbarList[index])
                 HStack {
@@ -914,7 +1075,7 @@ struct SettingsView: View {
                         .buttonStyle(.borderless)
                 }
             }
-            Menu("Add Button") {
+            Menu(L10n.t("settings.menubar.add_button")) {
                 ForEach(ActionsToolbar.symbols.keys.sorted { $0.rawValue < $1.rawValue },
                         id: \.rawValue) { type in
                     Button {
@@ -926,171 +1087,102 @@ struct SettingsView: View {
                     }
                 }
             }
-            Toggle("Lock toolbar position", isOn: configBinding(\.actionsToolbarLockPosition))
-            Toggle("Open toolbar at launch", isOn: configBinding(\.actionsToolbarRunAtStartup))
-            Text("Reopen the toolbar to apply button and lock changes.")
+            Toggle(L10n.t("settings.menubar.lock_toolbar"), isOn: $config.field(\.actionsToolbarLockPosition))
+            Toggle(L10n.t("settings.menubar.toolbar_at_launch"), isOn: $config.field(\.actionsToolbarRunAtStartup))
+            Text(L10n.t("settings.menubar.toolbar_reopen_hint"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
-        }
-        Section("Browser extension") {
-            NativeMessagingSection()
-        }
-        Section("Backup") {
-            HStack {
-                Button("Export Settings…") { exportSettings() }
-                Button("Import Settings…") { importSettings() }
-            }
-            Text("Backups contain settings, hotkeys, effects presets and custom uploaders. "
-                 + "API keys and OAuth tokens live in the Keychain and are never exported — "
-                 + "re-enter or reconnect them after restoring on another Mac. History is "
-                 + "not included; use the main window's import tools for it. Import also "
-                 + "accepts Windows ShareX .sxb backups, including their upload history.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
-        Section("Paths") {
-            LabeledContent("Screenshots folder") {
-                HStack {
-                    Text(config.screenshotsFolder.path)
-                        .truncationMode(.middle)
-                        .lineLimit(1)
-                    Button("Choose…") { chooseFolder() }
-                    if config.useCustomScreenshotsPath {
-                        Button("Reset") {
-                            config.useCustomScreenshotsPath = false
-                            config.customScreenshotsPath = ""
-                            try? config.save()
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var menuBarPane: some View {
-        Section("Menu bar") {
-            Picker("Left click", selection: configBinding(\.trayLeftClickAction)) {
-                Text("Open the menu").tag("ToggleTrayMenu")
-                Text("Open main window").tag("OpenMainWindow")
-                Text("Capture region").tag("RectangleRegion")
-                Text("Capture full screen").tag("PrintScreen")
-                Text("Capture active window").tag("ActiveWindow")
-                Text("Upload from clipboard").tag("ClipboardUpload")
-                Text("Upload file…").tag("FileUpload")
-                Text("Image editor").tag("ImageEditor")
-                Text("Open screenshots folder").tag("OpenScreenshotsFolder")
-            }
-            Text("Right click always opens the menu.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            Toggle("Show upload progress in the icon", isOn: configBinding(\.trayIconProgressEnabled))
-            Toggle("Show Recent submenu", isOn: configBinding(\.recentTasksShowInTrayMenu))
-            if config.recentTasksShowInTrayMenu {
-                TextField("Recent entries shown (1–30)",
-                          value: clampedConfigBinding(\.recentTasksMaxCount, 1...30), format: .number)
-            }
-            DisclosureGroup("Menu items") {
-                ForEach(TrayMenuItemID.allCases, id: \.rawValue) { id in
-                    Toggle(id.displayName, isOn: trayItemVisibleBinding(id))
-                }
-                Text("Unchecked items are hidden from the menu bar menu. Settings and Quit "
-                     + "always stay, and a running recording keeps its stop controls visible.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
         }
     }
 
     @ViewBuilder
     private var notificationsPane: some View {
-        Section("Notifications") {
-            Toggle("Show notification banners", isOn: taskBinding(\.showToastNotificationAfterTaskCompleted))
-            Toggle("Suppress while a fullscreen app is active",
-                   isOn: taskBinding(\.disableNotificationsOnFullscreen))
-            Toggle("Play sound after capture", isOn: taskBinding(\.playSoundAfterCapture))
-            customSoundRows("Custom capture sound",
-                            use: \.useCustomCaptureSound, path: \.customCaptureSoundPath)
-            Toggle("Play sound after upload", isOn: taskBinding(\.playSoundAfterUpload))
-            customSoundRows("Custom completion sound",
-                            use: \.useCustomTaskCompletedSound, path: \.customTaskCompletedSoundPath)
-            customSoundRows("Custom error sound",
-                            use: \.useCustomErrorSound, path: \.customErrorSoundPath)
-            Text("Upload banners offer Copy URL / Open buttons; file banners offer "
-                 + "Show in Finder / Annotate / Delete. Clicking the banner itself opens the "
-                 + "URL or reveals the file.")
+        Section(L10n.t("settings.notifications.section.banners")) {
+            Toggle(L10n.t("settings.notifications.show_banners"), isOn: $task.field(\.showToastNotificationAfterTaskCompleted))
+            Toggle(L10n.t("settings.notifications.suppress_fullscreen"),
+                   isOn: $task.field(\.disableNotificationsOnFullscreen))
+            Text(L10n.t("settings.notifications.banner_hint"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
+        }
+        Section(L10n.t("settings.notifications.section.sounds")) {
+            Toggle(L10n.t("settings.notifications.sound_after_capture"), isOn: $task.field(\.playSoundAfterCapture))
+            customSoundRows(L10n.t("settings.notifications.custom_capture_sound"),
+                            use: \.useCustomCaptureSound, path: \.customCaptureSoundPath)
+            Toggle(L10n.t("settings.notifications.sound_after_upload"), isOn: $task.field(\.playSoundAfterUpload))
+            customSoundRows(L10n.t("settings.notifications.custom_completion_sound"),
+                            use: \.useCustomTaskCompletedSound, path: \.customTaskCompletedSoundPath)
+            customSoundRows(L10n.t("settings.notifications.custom_error_sound"),
+                            use: \.useCustomErrorSound, path: \.customErrorSoundPath)
         }
     }
 
     @ViewBuilder
     private var capturePane: some View {
-        Section("Capture") {
-            TextField("Screenshot delay (seconds, 0 = off)",
-                      value: clampedDoubleBinding(\.screenshotDelay, 0...60), format: .number)
-            Toggle("Show cursor in screenshots", isOn: taskBinding(\.showCursor))
+        Section {
+            TextField(L10n.t("settings.capture.screenshot_delay"),
+                      value: $task.field(\.screenshotDelay, in: 0...60), format: .number)
+            Toggle(L10n.t("settings.capture.show_cursor"), isOn: $task.field(\.showCursor))
         }
-        Section("After capture") {
-            ForEach(Self.afterCaptureToggles, id: \.1) { flag, label in
-                Toggle(label, isOn: afterCaptureBinding(flag))
-            }
-        }
-        Section("Image effects pipeline") {
-            Toggle("Open the effects window after capture", isOn: taskBinding(\.showImageEffectsWindowAfterCapture))
-            Toggle("Apply effects to region captures only", isOn: taskBinding(\.imageEffectOnlyRegionCapture))
-            Toggle("Use a random preset each capture", isOn: taskBinding(\.useRandomImageEffect))
-            Text("Applies when the “Add image effects” task runs (quick tasks, after-capture window). "
-                 + "Presets are managed in Tools → Image Effects.")
+        // Same component and labels as the after-capture window, driven by the
+        // pipeline's own flag set - the previous hand-kept list had drifted to
+        // 14 of the 22 implemented tasks and used a second set of translations.
+        Section(L10n.t("settings.capture.section.after_capture")) {
+            TaskFlagToggles(value: $task.field(\.afterCaptureJob),
+                            excluded: AfterCaptureTasks.all.subtracting(AfterCapturePipeline.implemented))
+            Text(L10n.t("settings.capture.after_capture_hint"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
-        Section("Image format") {
-            Picker("Format", selection: taskBinding(\.imageFormat)) {
+        Section(L10n.t("settings.capture.section.effects")) {
+            Toggle(L10n.t("settings.capture.effects_window"), isOn: $task.field(\.showImageEffectsWindowAfterCapture))
+            Toggle(L10n.t("settings.capture.effects_region_only"), isOn: $task.field(\.imageEffectOnlyRegionCapture))
+            Toggle(L10n.t("settings.capture.effects_random"), isOn: $task.field(\.useRandomImageEffect))
+            Text(L10n.t("settings.capture.effects_hint"))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        Section(L10n.t("settings.capture.section.image_format")) {
+            Picker(L10n.t("settings.capture.format"), selection: $task.field(\.imageFormat)) {
                 ForEach(ImageFileFormat.allCases, id: \.rawValue) { format in
                     Text(format.rawValue).tag(format.rawValue)
                 }
             }
             if task.imageFormat == "JPEG" {
-                TextField("JPEG quality (1–100)",
-                          value: clampedBinding(\.imageJPEGQuality, 1...100), format: .number)
+                TextField(L10n.t("settings.capture.jpeg_quality"),
+                          value: $task.field(\.imageJPEGQuality, in: 1...100), format: .number)
             }
             if task.imageFormat == "PNG" {
-                Picker("PNG bit depth", selection: taskBinding(\.imagePNGBitDepth)) {
-                    Text("Automatic").tag("Default")
-                    Text("32-bit (keeps transparency)").tag("Bit32")
-                    Text("24-bit (flattens transparency)").tag("Bit24")
+                Picker(L10n.t("settings.capture.png_bit_depth"), selection: $task.field(\.imagePNGBitDepth)) {
+                    Text(L10n.t("settings.capture.automatic")).tag("Default")
+                    Text(L10n.t("settings.capture.png_32bit")).tag("Bit32")
+                    Text(L10n.t("settings.capture.png_24bit")).tag("Bit24")
                 }
             }
             if task.imageFormat == "GIF" {
-                Picker("GIF palette", selection: taskBinding(\.imageGIFQuality)) {
-                    Text("Automatic").tag("Default")
-                    Text("256 colors").tag("Bit8")
-                    Text("16 colors (encodes as 256 on macOS)").tag("Bit4")
-                    Text("Grayscale").tag("Grayscale")
+                Picker(L10n.t("settings.capture.gif_palette"), selection: $task.field(\.imageGIFQuality)) {
+                    Text(L10n.t("settings.capture.automatic")).tag("Default")
+                    Text(L10n.t("settings.capture.gif_256")).tag("Bit8")
+                    Text(L10n.t("settings.capture.gif_16")).tag("Bit4")
+                    Text(L10n.t("settings.capture.gif_grayscale")).tag("Grayscale")
                 }
             }
-            Toggle("Use JPEG for large captures", isOn: taskBinding(\.imageAutoUseJPEG))
+            Toggle(L10n.t("settings.capture.auto_jpeg"), isOn: $task.field(\.imageAutoUseJPEG))
             if task.imageAutoUseJPEG {
-                TextField("JPEG when width or height exceeds (px)",
-                          value: clampedBinding(\.imageAutoUseJPEGSize, 64...16384), format: .number)
-                TextField("Auto-JPEG quality (1–100)",
-                          value: clampedBinding(\.imageAutoJPEGQuality, 1...100), format: .number)
-            }
-            Picker("When the file name exists", selection: taskBinding(\.fileExistAction)) {
-                Text("Add a number (name_1)").tag("UniqueName")
-                Text("Ask").tag("Ask")
-                Text("Overwrite").tag("Overwrite")
-                Text("Skip saving").tag("Cancel")
+                TextField(L10n.t("settings.capture.auto_jpeg_size"),
+                          value: $task.field(\.imageAutoUseJPEGSize, in: 64...16384), format: .number)
+                TextField(L10n.t("settings.capture.auto_jpeg_quality"),
+                          value: $task.field(\.imageAutoJPEGQuality, in: 1...100), format: .number)
             }
         }
-        Section("Thumbnail") {
-            TextField("Thumbnail width (0 = derive from height)",
-                      value: clampedBinding(\.thumbnailWidth, 0...4096), format: .number)
-            TextField("Thumbnail height (0 = derive from width)",
-                      value: clampedBinding(\.thumbnailHeight, 0...4096), format: .number)
-            Toggle("Only if image is larger than the thumbnail", isOn: taskBinding(\.thumbnailCheckSize))
-            Text("Saved next to the screenshot as “name\(task.thumbnailName)” when “Save thumbnail image to file” is on.")
+        Section(L10n.t("settings.capture.section.thumbnail")) {
+            TextField(L10n.t("settings.capture.thumbnail_width"),
+                      value: $task.field(\.thumbnailWidth, in: 0...4096), format: .number)
+            TextField(L10n.t("settings.capture.thumbnail_height"),
+                      value: $task.field(\.thumbnailHeight, in: 0...4096), format: .number)
+            TextField(L10n.t("settings.capture.thumbnail_name"), text: $task.field(\.thumbnailName))
+            Toggle(L10n.t("settings.capture.thumbnail_check_size"), isOn: $task.field(\.thumbnailCheckSize))
+            Text(L10n.t("settings.capture.thumbnail_hint"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -1098,48 +1190,46 @@ struct SettingsView: View {
 
     @ViewBuilder
     private var recordingPane: some View {
-        Section("Video") {
-            Picker("Video codec", selection: taskBinding(\.screenRecordCodec)) {
-                Text("H.264 (most compatible)").tag("H264")
-                Text("HEVC (smaller files)").tag("HEVC")
-                Text("WebM / VP9 (requires ffmpeg)").tag("VP9")
-                Text("WebM / VP8 (requires ffmpeg)").tag("VP8")
-                Text("WebP animation (requires ffmpeg)").tag("WEBP")
-                Text("APNG animation (requires ffmpeg)").tag("APNG")
+        Section(L10n.t("settings.recording.section.video")) {
+            Picker(L10n.t("settings.recording.video_codec"), selection: $task.field(\.screenRecordCodec)) {
+                Text(L10n.t("settings.recording.codec_h264")).tag("H264")
+                Text(L10n.t("settings.recording.codec_hevc")).tag("HEVC")
+                Text(L10n.t("settings.recording.codec_vp9")).tag("VP9")
+                Text(L10n.t("settings.recording.codec_vp8")).tag("VP8")
+                Text(L10n.t("settings.recording.codec_webp")).tag("WEBP")
+                Text(L10n.t("settings.recording.codec_apng")).tag("APNG")
             }
-            TextField("Video frame rate (1–60 fps)",
-                      value: clampedBinding(\.screenRecordFPS, 1...60), format: .number)
-            TextField("GIF frame rate (1–30 fps)",
-                      value: clampedBinding(\.gifFPS, 1...30), format: .number)
-            Toggle("Two-pass encoding (VP9/VP8, needs ffmpeg)",
-                   isOn: taskBinding(\.screenRecordTwoPassEncoding))
+            TextField(L10n.t("settings.recording.video_fps"),
+                      value: $task.field(\.screenRecordFPS, in: 1...60), format: .number)
+            TextField(L10n.t("settings.recording.gif_fps"),
+                      value: $task.field(\.gifFPS, in: 1...30), format: .number)
+            Toggle(L10n.t("settings.recording.two_pass"),
+                   isOn: $task.field(\.screenRecordTwoPassEncoding))
         }
-        Section("Session") {
-            TextField("Start countdown (seconds, 0 = immediate)",
-                      value: clampedDoubleBinding(\.screenRecordStartDelay, 0...60), format: .number)
-            Toggle("Fixed duration", isOn: taskBinding(\.screenRecordFixedDuration))
+        Section(L10n.t("settings.recording.section.session")) {
+            TextField(L10n.t("settings.recording.start_delay"),
+                      value: $task.field(\.screenRecordStartDelay, in: 0...60), format: .number)
+            Toggle(L10n.t("settings.recording.fixed_duration"), isOn: $task.field(\.screenRecordFixedDuration))
             if task.screenRecordFixedDuration {
-                TextField("Stop after (seconds)",
-                          value: clampedDoubleBinding(\.screenRecordDuration, 1...86400), format: .number)
+                TextField(L10n.t("settings.recording.stop_after"),
+                          value: $task.field(\.screenRecordDuration, in: 1...86400), format: .number)
             }
-            Toggle("Confirm before aborting a recording",
-                   isOn: taskBinding(\.screenRecordAskConfirmationOnAbort))
-            Toggle("Show cursor in recordings", isOn: taskBinding(\.screenRecordShowCursor))
+            Toggle(L10n.t("settings.recording.confirm_abort"),
+                   isOn: $task.field(\.screenRecordAskConfirmationOnAbort))
+            Toggle(L10n.t("settings.recording.show_cursor"), isOn: $task.field(\.screenRecordShowCursor))
         }
-        Section("Audio") {
-            Toggle("Record system audio", isOn: taskBinding(\.screenRecordSystemAudio))
-            Toggle("Record microphone", isOn: taskBinding(\.screenRecordMicrophone))
-            Text("Audio applies to video recordings only; GIFs are always silent. "
-                 + "Microphone capture needs macOS 15 and Microphone permission (asked on first use).")
+        Section(L10n.t("settings.recording.section.audio")) {
+            Toggle(L10n.t("settings.recording.system_audio"), isOn: $task.field(\.screenRecordSystemAudio))
+            Toggle(L10n.t("settings.recording.microphone"), isOn: $task.field(\.screenRecordMicrophone))
+            Text(L10n.t("settings.recording.audio_hint"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
-        Section("External tools") {
+        Section(L10n.t("settings.recording.section.external_tools")) {
             FFmpegStatusView()
-            TextField("Custom ffmpeg arguments", text: taskBinding(\.screenRecordCustomFFmpegArgs))
+            TextField(L10n.t("settings.recording.custom_ffmpeg_args"), text: $task.field(\.screenRecordCustomFFmpegArgs))
                 .font(.body.monospaced())
-            Text("Applied to transcoded formats (VP9/VP8/WebP/APNG) instead of the built-in preset. "
-                 + "Example: -c:v libvpx-vp9 -crf 24 -b:v 0")
+            Text(L10n.t("settings.recording.ffmpeg_args_hint"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -1177,7 +1267,8 @@ struct SettingsView: View {
                 Text(destinationPickerLabel(destination)).tag(destination.id)
             }
             if !available.contains(where: { $0.id == current }) {
-                Text("\(destinationDisplayName(current)) — not valid for \(kind.displayName) uploads")
+                Text(L10n.t("settings.destinations.not_valid_for",
+                            destinationDisplayName(current), kind.displayName))
                     .tag(current)
             }
         }
@@ -1192,16 +1283,14 @@ struct SettingsView: View {
 
     @ViewBuilder
     private var destinationsPane: some View {
-        Section("Upload destinations") {
-            destinationPicker("Image uploads", kind: .image,
-                              selection: destinationBinding(\.imageDestination))
-            destinationPicker("Text uploads", kind: .text,
-                              selection: destinationBinding(\.textDestination))
-            destinationPicker("File & video uploads", kind: .file,
-                              selection: destinationBinding(\.fileDestination))
-            Text("Screenshots use the image destination; recordings and other files the "
-                 + "file destination. Until a separate custom uploader is chosen below, text "
-                 + "and file uploads follow the image destination.")
+        Section(L10n.t("settings.destinations.section.upload_destinations")) {
+            destinationPicker(L10n.t("settings.destinations.image_uploads"), kind: .image,
+                              selection: $task.field(\.imageDestination))
+            destinationPicker(L10n.t("settings.destinations.text_uploads"), kind: .text,
+                              selection: $task.field(\.textDestination))
+            destinationPicker(L10n.t("settings.destinations.file_uploads"), kind: .file,
+                              selection: $task.field(\.fileDestination))
+            Text(L10n.t("settings.destinations.destinations_hint"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -1216,113 +1305,44 @@ struct SettingsView: View {
                 oauthFields(for: destination)
             }
         }
-        Section("Upload behavior") {
-            Toggle("Disable all uploads", isOn: configBinding(\.disableUpload))
-            TextField("Maximum simultaneous uploads (1–25)",
-                      value: clampedConfigBinding(\.uploadLimit, 1...25), format: .number)
-            Toggle("Retry failed uploads", isOn: configBinding(\.retryUpload))
-            if config.retryUpload {
-                TextField("Retry attempts (1–10)",
-                          value: clampedConfigBinding(\.maxUploadFailRetry, 1...10), format: .number)
-            }
-            Toggle("Warn before uploading more than 10 files", isOn: configBinding(\.showMultiUploadWarning))
-            Toggle("Warn before uploading files over 100 MB", isOn: configBinding(\.showLargeFileSizeWarning))
-        }
-        Section("File upload naming") {
-            Toggle("Rename uploads with the name pattern", isOn: taskBinding(\.fileUploadUseNamePattern))
-            Toggle("Replace problematic characters (spaces → underscores)",
-                   isOn: taskBinding(\.fileUploadReplaceProblematicCharacters))
-            Toggle("Use custom time zone in name patterns", isOn: taskBinding(\.useCustomTimeZone))
-            if task.useCustomTimeZone {
-                TextField("Time zone identifier", text: taskBinding(\.customTimeZoneIdentifier))
-                Text("Examples: UTC, America/New_York, Asia/Tokyo. Unknown identifiers fall back to local time.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-        }
-        Section("Clipboard upload") {
-            Toggle("Copied URL: upload its contents", isOn: taskBinding(\.clipboardUploadURLContents))
-            Toggle("Copied URL: shorten instead of uploading", isOn: taskBinding(\.clipboardUploadShortenURL))
-            Toggle("Copied URL: share instead of uploading", isOn: taskBinding(\.clipboardUploadShareURL))
-            Toggle("Copied folder: upload an HTML index", isOn: taskBinding(\.clipboardUploadAutoIndexFolder))
-            Toggle("Clear clipboard after clipboard upload", isOn: taskBinding(\.autoClearClipboard))
-        }
-        Section("After upload") {
-            Toggle("Copy URL to clipboard", isOn: afterUploadBinding(.copyURLToClipboard))
-            Toggle("Open URL in browser", isOn: afterUploadBinding(.openURL))
-            Toggle("Shorten URL after upload", isOn: afterUploadBinding(.useURLShortener))
-            Picker("URL shortener", selection: taskBinding(\.urlShortenerDestination)) {
-                ForEach(URLShortenerType.allCases, id: \.rawValue) { type in
-                    Text(type.displayName).tag(type.rawValue)
-                }
-            }
-            shortenerFields
-
-            Toggle("Share URL after upload (opens browser)", isOn: afterUploadBinding(.shareURL))
-            Picker("Sharing service", selection: taskBinding(\.urlSharingServiceDestination)) {
-                ForEach(URLSharingService.allCases, id: \.rawValue) { service in
-                    Text(service.displayName).tag(service.rawValue)
-                }
-            }
-        }
-        Section("URL processing") {
-            TextField("Clipboard format", text: taskBinding(\.clipboardContentFormat))
-                .font(.body.monospaced())
-            TextField("Open-URL format", text: taskBinding(\.openURLFormat))
-                .font(.body.monospaced())
-            TextField("Notification format", text: taskBinding(\.balloonTipContentFormat))
-                .font(.body.monospaced())
-            Text("$result is replaced with the final URL — e.g. ![]($result) for Markdown.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            Toggle("Copy URL early (before shortening and formatting)", isOn: taskBinding(\.earlyCopyURL))
-            Toggle("Force HTTPS in result URLs", isOn: taskBinding(\.resultForceHTTPS))
-            Toggle("Regex-replace result URLs", isOn: taskBinding(\.urlRegexReplace))
-            if task.urlRegexReplace {
-                TextField("Pattern", text: taskBinding(\.urlRegexReplacePattern))
-                    .font(.body.monospaced())
-                TextField("Replacement ($1 for groups)", text: taskBinding(\.urlRegexReplaceReplacement))
-                    .font(.body.monospaced())
-            }
-            TextField("Auto-shorten URLs longer than (characters, 0 = off)",
-                      value: clampedBinding(\.autoShortenURLLength, 0...4096), format: .number)
-        }
     }
 
     private func oauthPickerLabel(_ id: OAuthProviderID) -> String {
         // hosts without baked-in (or override) credentials read "unavailable"
-        UploadersConfig.load().isConfigured(id) ? id.displayName : "\(id.displayName) — unavailable"
+        UploadersConfig.load().isConfigured(id)
+            ? id.displayName
+            : L10n.t("settings.destinations.unavailable_suffix", id.displayName)
     }
 
     /// Per-type custom uploader pickers. Text and file uploads can follow the
     /// image uploader (empty selection) or pin their own .sxcu.
     @ViewBuilder
     private var customUploaderSection: some View {
-        Section("Custom uploaders") {
+        Section(L10n.t("settings.destinations.section.custom_uploaders")) {
             let uploaders = CustomUploaderStore.list()
             if uploaders.isEmpty {
-                Text("No custom uploaders imported. Use Import… in Settings → Custom Uploader — any community .sxcu file works.")
+                Text(L10n.t("settings.destinations.no_custom_uploaders"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             } else {
                 if task.imageDestination == "CustomImageUploader" {
-                    Picker("Image uploader", selection: uploaderBinding()) {
+                    Picker(L10n.t("settings.destinations.image_uploader"), selection: SettingsBinding.onDisk(\UploadersConfig.activeCustomUploader)) {
                         ForEach(uploaders, id: \.self) { name in
                             Text(name).tag(name)
                         }
                     }
                 }
                 if task.textDestination == "CustomTextUploader" {
-                    Picker("Text uploader", selection: uploaderBinding(\.activeTextCustomUploader)) {
-                        Text("Same as image").tag("")
+                    Picker(L10n.t("settings.destinations.text_uploader"), selection: SettingsBinding.onDisk(\UploadersConfig.activeTextCustomUploader)) {
+                        Text(L10n.t("settings.destinations.same_as_image")).tag("")
                         ForEach(uploaders, id: \.self) { name in
                             Text(name).tag(name)
                         }
                     }
                 }
                 if task.fileDestination == "CustomFileUploader" {
-                    Picker("File uploader", selection: uploaderBinding(\.activeFileCustomUploader)) {
-                        Text("Same as image").tag("")
+                    Picker(L10n.t("settings.destinations.file_uploader"), selection: SettingsBinding.onDisk(\UploadersConfig.activeFileCustomUploader)) {
+                        Text(L10n.t("settings.destinations.same_as_image")).tag("")
                         ForEach(uploaders, id: \.self) { name in
                             Text(name).tag(name)
                         }
@@ -1346,29 +1366,32 @@ struct SettingsView: View {
 
             if configured {
                 HStack {
-                    Button(connected ? "Reconnect \(id.displayName)…" : "Connect \(id.displayName)…") {
+                    Button(connected
+                           ? L10n.t("settings.destinations.reconnect", id.displayName)
+                           : L10n.t("settings.destinations.connect", id.displayName)) {
                         Task {
                             await OAuthConnectCoordinator.shared.connect(id)
                             oauthRefresh &+= 1
                         }
                     }
                     if connected {
-                        Label("Connected", systemImage: "checkmark.seal.fill")
+                        Label(L10n.t("settings.destinations.connected"), systemImage: "checkmark.seal.fill")
                             .foregroundStyle(.green)
                             .font(.caption)
-                        Button("Disconnect") {
+                        Button(L10n.t("settings.destinations.disconnect")) {
                             OAuthTokenStore.delete(for: id)
                             oauthRefresh &+= 1
                         }
                     }
                 }
                 Text(connected
-                     ? "SwiftX is authorized to upload to your \(id.displayName) account."
-                     : "Sign in with your \(id.displayName) account to authorize SwiftX.")
+                     ? L10n.t("settings.destinations.oauth_connected_hint", id.displayName)
+                     : L10n.t("settings.destinations.oauth_signin_hint", id.displayName))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             } else {
-                Text("\(id.displayName) uploads are unavailable in this build, which ships without \(id.displayName) app credentials. Official releases include them.")
+                Text(L10n.t("settings.destinations.oauth_unavailable_hint",
+                            id.displayName, id.displayName))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -1380,39 +1403,39 @@ struct SettingsView: View {
     private func cloudHostFields(for destination: String) -> some View {
         switch destination {
         case "AmazonS3":
-            TextField("Access key ID", text: s3Binding(\.accessKeyID))
-            SecureField("Secret access key", text: s3Binding(\.secretAccessKey))
-            TextField("Region", text: s3Binding(\.region))
-            TextField("Bucket", text: s3Binding(\.bucket))
-            TextField("Object prefix", text: s3Binding(\.objectPrefix))
-            TextField("Custom endpoint (optional, for S3-compatible hosts)", text: s3Binding(\.endpoint))
+            TextField(L10n.t("settings.destinations.s3_access_key"), text: SettingsBinding.onDisk(\UploadersConfig.amazonS3.accessKeyID))
+            SecureField(L10n.t("settings.destinations.s3_secret_key"), text: SettingsBinding.onDisk(\UploadersConfig.amazonS3.secretAccessKey))
+            TextField(L10n.t("settings.destinations.s3_region"), text: SettingsBinding.onDisk(\UploadersConfig.amazonS3.region))
+            TextField(L10n.t("settings.destinations.s3_bucket"), text: SettingsBinding.onDisk(\UploadersConfig.amazonS3.bucket))
+            TextField(L10n.t("settings.destinations.s3_object_prefix"), text: SettingsBinding.onDisk(\UploadersConfig.amazonS3.objectPrefix))
+            TextField(L10n.t("settings.destinations.s3_endpoint"), text: SettingsBinding.onDisk(\UploadersConfig.amazonS3.endpoint))
         case "BackblazeB2":
-            TextField("B2 application key ID", text: uploadersBinding(\.b2ApplicationKeyId))
-            SecureField("B2 application key", text: uploadersBinding(\.b2ApplicationKey))
-            TextField("B2 bucket", text: uploadersBinding(\.b2BucketName))
-            TextField("Upload path (name patterns allowed)", text: uploadersBinding(\.b2UploadPath))
-            Toggle("Use custom URL", isOn: uploadersBinding(\.b2UseCustomUrl))
-            TextField("Custom URL (e.g. https://cdn.example.com)", text: uploadersBinding(\.b2CustomUrl))
+            TextField(L10n.t("settings.destinations.b2_key_id"), text: SettingsBinding.onDisk(\UploadersConfig.b2ApplicationKeyId))
+            SecureField(L10n.t("settings.destinations.b2_key"), text: SettingsBinding.onDisk(\UploadersConfig.b2ApplicationKey))
+            TextField(L10n.t("settings.destinations.b2_bucket"), text: SettingsBinding.onDisk(\UploadersConfig.b2BucketName))
+            TextField(L10n.t("settings.destinations.upload_path"), text: SettingsBinding.onDisk(\UploadersConfig.b2UploadPath))
+            Toggle(L10n.t("settings.destinations.b2_use_custom_url"), isOn: SettingsBinding.onDisk(\UploadersConfig.b2UseCustomUrl))
+            TextField(L10n.t("settings.destinations.b2_custom_url"), text: SettingsBinding.onDisk(\UploadersConfig.b2CustomUrl))
         case "AzureStorage":
-            TextField("Azure account name", text: uploadersBinding(\.azureStorageAccountName))
-            SecureField("Azure access key", text: uploadersBinding(\.azureStorageAccountAccessKey))
-            TextField("Container", text: uploadersBinding(\.azureStorageContainer))
-            TextField("Environment", text: uploadersBinding(\.azureStorageEnvironment))
-            TextField("Custom domain (optional)", text: uploadersBinding(\.azureStorageCustomDomain))
-            TextField("Upload path (name patterns allowed)", text: uploadersBinding(\.azureStorageUploadPath))
+            TextField(L10n.t("settings.destinations.azure_account"), text: SettingsBinding.onDisk(\UploadersConfig.azureStorageAccountName))
+            SecureField(L10n.t("settings.destinations.azure_key"), text: SettingsBinding.onDisk(\UploadersConfig.azureStorageAccountAccessKey))
+            TextField(L10n.t("settings.destinations.azure_container"), text: SettingsBinding.onDisk(\UploadersConfig.azureStorageContainer))
+            TextField(L10n.t("settings.destinations.azure_environment"), text: SettingsBinding.onDisk(\UploadersConfig.azureStorageEnvironment))
+            TextField(L10n.t("settings.destinations.azure_custom_domain"), text: SettingsBinding.onDisk(\UploadersConfig.azureStorageCustomDomain))
+            TextField(L10n.t("settings.destinations.upload_path"), text: SettingsBinding.onDisk(\UploadersConfig.azureStorageUploadPath))
         case "OwnCloud":
-            TextField("Server URL (https://cloud.example.com)", text: uploadersBinding(\.ownCloudHost))
-            TextField("Username", text: uploadersBinding(\.ownCloudUsername))
-            SecureField("Password (use an app password)", text: uploadersBinding(\.ownCloudPassword))
-            TextField("Remote folder", text: uploadersBinding(\.ownCloudPath))
+            TextField(L10n.t("settings.destinations.owncloud_server"), text: SettingsBinding.onDisk(\UploadersConfig.ownCloudHost))
+            TextField(L10n.t("settings.destinations.owncloud_username"), text: SettingsBinding.onDisk(\UploadersConfig.ownCloudUsername))
+            SecureField(L10n.t("settings.destinations.owncloud_password"), text: SettingsBinding.onDisk(\UploadersConfig.ownCloudPassword))
+            TextField(L10n.t("settings.destinations.remote_folder"), text: SettingsBinding.onDisk(\UploadersConfig.ownCloudPath))
         case "Seafile":
-            TextField("Seafile API URL (https://seafile.example.com/api2)", text: uploadersBinding(\.seafileAPIURL))
-            SecureField("Auth token", text: uploadersBinding(\.seafileAuthToken))
-            TextField("Library (repo) ID", text: uploadersBinding(\.seafileRepoID))
-            TextField("Remote folder", text: uploadersBinding(\.seafilePath))
+            TextField(L10n.t("settings.destinations.seafile_api_url"), text: SettingsBinding.onDisk(\UploadersConfig.seafileAPIURL))
+            SecureField(L10n.t("settings.destinations.seafile_token"), text: SettingsBinding.onDisk(\UploadersConfig.seafileAuthToken))
+            TextField(L10n.t("settings.destinations.seafile_repo_id"), text: SettingsBinding.onDisk(\UploadersConfig.seafileRepoID))
+            TextField(L10n.t("settings.destinations.remote_folder"), text: SettingsBinding.onDisk(\UploadersConfig.seafilePath))
         case "Pushbullet":
-            SecureField("Pushbullet access token", text: uploadersBinding(\.pushbulletAPIKey))
-            Text("Pushes the file to all devices on the account.")
+            SecureField(L10n.t("settings.destinations.pushbullet_token"), text: SettingsBinding.onDisk(\UploadersConfig.pushbulletAPIKey))
+            Text(L10n.t("settings.destinations.pushbullet_hint"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
         default:
@@ -1425,54 +1448,27 @@ struct SettingsView: View {
     private func simpleHostFields(for destination: String) -> some View {
         switch SimpleHostDestination(rawValue: destination) {
         case .pomf:
-            TextField("Pomf upload URL (https://yourhost/upload.php)", text: uploadersBinding(\.pomf.uploadURL))
-            TextField("Pomf result URL (prepended to relative file names)", text: uploadersBinding(\.pomf.resultURL))
+            TextField(L10n.t("settings.destinations.pomf_upload_url"), text: SettingsBinding.onDisk(\UploadersConfig.pomf.uploadURL))
+            TextField(L10n.t("settings.destinations.pomf_result_url"), text: SettingsBinding.onDisk(\UploadersConfig.pomf.resultURL))
         case .vgyme:
-            SecureField("vgy.me user key (optional, links uploads to your account)", text: uploadersBinding(\.vgymeUserKey))
+            SecureField(L10n.t("settings.destinations.vgyme_user_key"), text: SettingsBinding.onDisk(\UploadersConfig.vgymeUserKey))
         case .sul:
-            SecureField("s-ul API key", text: uploadersBinding(\.sulAPIKey))
+            SecureField(L10n.t("settings.destinations.sul_api_key"), text: SettingsBinding.onDisk(\UploadersConfig.sulAPIKey))
         case .lobfile:
-            SecureField("LobFile API key", text: uploadersBinding(\.lithiio.userAPIKey))
+            SecureField(L10n.t("settings.destinations.lobfile_api_key"), text: SettingsBinding.onDisk(\UploadersConfig.lithiio.userAPIKey))
         case .puush:
-            SecureField("Puush API key (puush.me → Account → Settings)", text: uploadersBinding(\.puushAPIKey))
+            SecureField(L10n.t("settings.destinations.puush_api_key"), text: SettingsBinding.onDisk(\UploadersConfig.puushAPIKey))
         case .chevereto:
-            TextField("Chevereto upload URL (https://yoursite/api/1/upload)", text: uploadersBinding(\.chevereto.uploadURL))
-            SecureField("Chevereto API key", text: uploadersBinding(\.chevereto.apiKey))
-            Toggle("Use direct image URL", isOn: uploadersBinding(\.cheveretoDirectURL))
+            TextField(L10n.t("settings.destinations.chevereto_upload_url"), text: SettingsBinding.onDisk(\UploadersConfig.chevereto.uploadURL))
+            SecureField(L10n.t("settings.destinations.chevereto_api_key"), text: SettingsBinding.onDisk(\UploadersConfig.chevereto.apiKey))
+            Toggle(L10n.t("settings.destinations.chevereto_direct_url"), isOn: SettingsBinding.onDisk(\UploadersConfig.cheveretoDirectURL))
         case .streamable:
-            TextField("Streamable email", text: uploadersBinding(\.streamableUsername))
-            SecureField("Streamable password", text: uploadersBinding(\.streamablePassword))
+            TextField(L10n.t("settings.destinations.streamable_email"), text: SettingsBinding.onDisk(\UploadersConfig.streamableUsername))
+            SecureField(L10n.t("settings.destinations.streamable_password"), text: SettingsBinding.onDisk(\UploadersConfig.streamablePassword))
         case .uguu:
-            Text("No configuration needed — files are temporary (up to 48 hours).")
+            Text(L10n.t("settings.destinations.uguu_hint"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
-        default:
-            EmptyView()
-        }
-    }
-
-    /// Credential fields for the selected shortener; keyless services need none.
-    @ViewBuilder
-    private var shortenerFields: some View {
-        switch URLShortenerType(rawValue: task.urlShortenerDestination) {
-        case .bitly:
-            SecureField("bit.ly access token", text: uploadersBinding(\.bitlyAccessToken))
-            TextField("bit.ly custom domain (optional)", text: uploadersBinding(\.bitlyDomain))
-            Text("Generate a token at bitly.com → Settings → Developer settings → API.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        case .polr:
-            TextField("Polr API URL (https://yoursite/api/v2/action/shorten)", text: uploadersBinding(\.polrAPIHostname))
-            SecureField("Polr API key", text: uploadersBinding(\.polrAPIKey))
-        case .kutt:
-            TextField("Kutt host", text: uploadersBinding(\.kutt.host))
-            SecureField("Kutt API key", text: uploadersBinding(\.kutt.apiKey))
-        case .yourls:
-            TextField("YOURLS API URL (https://yoursite/yourls-api.php)", text: uploadersBinding(\.yourlsAPIURL))
-            SecureField("YOURLS signature", text: uploadersBinding(\.yourlsSignature))
-        case .zws:
-            TextField("ZWS API URL (empty = api.zws.im)", text: uploadersBinding(\.zeroWidthShortenerURL))
-            SecureField("ZWS token (optional)", text: uploadersBinding(\.zeroWidthShortenerToken))
         default:
             EmptyView()
         }
@@ -1502,19 +1498,20 @@ struct FFmpegStatusView: View {
     var body: some View {
         HStack {
             VStack(alignment: .leading) {
-                Label(ffmpegPath != nil ? "ffmpeg installed" : "ffmpeg not installed",
+                Label(ffmpegPath != nil ? L10n.t("settings.recording.ffmpeg_installed")
+                                        : L10n.t("settings.recording.ffmpeg_not_installed"),
                       systemImage: ffmpegPath != nil ? "checkmark.circle.fill" : "xmark.circle.fill")
                     .foregroundStyle(ffmpegPath != nil ? .green : .red)
-                Text(ffmpegPath ?? "Required for WebM/WebP/APNG export. Without it, those recordings fall back to H.264.")
+                Text(ffmpegPath ?? L10n.t("settings.recording.ffmpeg_hint"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
             Spacer()
             if ffmpegPath == nil {
                 if FFmpeg.homebrewPath != nil {
-                    Button("Install via Homebrew") { installViaHomebrew() }
+                    Button(L10n.t("settings.recording.install_homebrew")) { installViaHomebrew() }
                 } else {
-                    Button("Get Homebrew") {
+                    Button(L10n.t("settings.recording.get_homebrew")) {
                         NSWorkspace.shared.open(URL(string: "https://brew.sh")!)
                     }
                 }
@@ -1546,15 +1543,15 @@ struct PermissionsView: View {
 
     var body: some View {
         permissionRow(
-            name: "Screen Recording",
-            detail: "Required for all capture and recording features.",
+            name: L10n.t("settings.general.permission.screen_recording"),
+            detail: L10n.t("settings.general.permission.screen_recording_detail"),
             granted: screenRecording,
             request: { CGRequestScreenCaptureAccess() },
             settingsAnchor: "Privacy_ScreenCapture"
         )
         permissionRow(
-            name: "Accessibility",
-            detail: "Required for window snapping, scrolling capture and window tools.",
+            name: L10n.t("settings.general.permission.accessibility"),
+            detail: L10n.t("settings.general.permission.accessibility_detail"),
             granted: accessibility,
             request: {
                 let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
@@ -1580,8 +1577,8 @@ struct PermissionsView: View {
             }
             Spacer()
             if !granted {
-                Button("Request") { request() }
-                Button("Open System Settings") {
+                Button(L10n.t("settings.general.permission.request")) { request() }
+                Button(L10n.t("settings.general.permission.open_system_settings")) {
                     let url = "x-apple.systempreferences:com.apple.preference.security?\(settingsAnchor)"
                     NSWorkspace.shared.open(URL(string: url)!)
                 }

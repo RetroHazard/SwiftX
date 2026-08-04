@@ -55,17 +55,17 @@ enum Notifier {
             UNNotificationCategory(
                 identifier: urlCategory,
                 actions: [
-                    UNNotificationAction(identifier: copyURLAction, title: "Copy URL"),
-                    UNNotificationAction(identifier: openURLAction, title: "Open")
+                    UNNotificationAction(identifier: copyURLAction, title: L10n.t("notification.action.copy_url")),
+                    UNNotificationAction(identifier: openURLAction, title: L10n.t("notification.action.open"))
                 ],
                 intentIdentifiers: []
             ),
             UNNotificationCategory(
                 identifier: fileCategory,
                 actions: [
-                    UNNotificationAction(identifier: showFileAction, title: "Show in Finder"),
-                    UNNotificationAction(identifier: annotateFileAction, title: "Annotate"),
-                    UNNotificationAction(identifier: deleteFileAction, title: "Delete",
+                    UNNotificationAction(identifier: showFileAction, title: L10n.t("notification.action.show_in_finder")),
+                    UNNotificationAction(identifier: annotateFileAction, title: L10n.t("notification.action.annotate")),
+                    UNNotificationAction(identifier: deleteFileAction, title: L10n.t("notification.action.delete"),
                                          options: [.destructive])
                 ],
                 intentIdentifiers: []
@@ -73,16 +73,16 @@ enum Notifier {
             UNNotificationCategory(
                 identifier: updateCategory,
                 actions: [
-                    UNNotificationAction(identifier: installUpdateAction, title: "Install Update"),
-                    UNNotificationAction(identifier: viewReleaseAction, title: "View Release"),
-                    UNNotificationAction(identifier: skipUpdateAction, title: "Skip This Version")
+                    UNNotificationAction(identifier: installUpdateAction, title: L10n.t("notification.action.install_update")),
+                    UNNotificationAction(identifier: viewReleaseAction, title: L10n.t("notification.action.view_release")),
+                    UNNotificationAction(identifier: skipUpdateAction, title: L10n.t("notification.action.skip_version"))
                 ],
                 intentIdentifiers: []
             ),
             UNNotificationCategory(
                 identifier: updateInstalledCategory,
                 actions: [
-                    UNNotificationAction(identifier: relaunchAction, title: "Relaunch")
+                    UNNotificationAction(identifier: relaunchAction, title: L10n.t("notification.action.relaunch"))
                 ],
                 intentIdentifiers: []
             )
@@ -101,7 +101,7 @@ enum Notifier {
     }
 
     static func captureSaved(_ url: URL) {
-        notify(title: "Screenshot captured", body: url.lastPathComponent,
+        notify(title: L10n.t("notification.capture.screenshot_captured"), body: url.lastPathComponent,
                sound: TaskSettings.load().playSoundAfterCapture, filePath: url.path, event: .capture)
     }
 

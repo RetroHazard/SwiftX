@@ -16,7 +16,7 @@ public enum SettingsBackupError: LocalizedError {
 
     public var errorDescription: String? {
         switch self {
-        case .toolFailed(let status): return "The archive tool exited with status \(status)."
+        case .toolFailed(let status): return L10n.t("backup.tool_failed", status)
         }
     }
 }

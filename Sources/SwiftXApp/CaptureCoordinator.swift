@@ -92,8 +92,8 @@ final class CaptureCoordinator {
     func captureCustomWindow() {
         let needle = TaskSettings.load().captureCustomWindow
         guard !needle.isEmpty else {
-            Notifier.notify(title: "Custom window capture",
-                            body: "Set CaptureCustomWindow in TaskSettings.json first.")
+            Notifier.notify(title: L10n.t("notification.capture.custom_window_title"),
+                            body: L10n.t("notification.capture.custom_window_unset"))
             return
         }
         let match = WindowLister.onScreenWindows(excludingPID: ProcessInfo.processInfo.processIdentifier)
@@ -102,7 +102,8 @@ final class CaptureCoordinator {
                     || $0.ownerName.localizedCaseInsensitiveContains(needle)
             }
         guard let match else {
-            Notifier.notify(title: "Custom window capture", body: "No window matching \"\(needle)\".")
+            Notifier.notify(title: L10n.t("notification.capture.custom_window_title"),
+                            body: L10n.t("notification.capture.custom_window_no_match", needle))
             return
         }
         captureWindow(match)
@@ -152,9 +153,8 @@ final class CaptureCoordinator {
 
     private func presentError(_ error: Error) {
         let alert = NSAlert()
-        alert.messageText = "Capture failed"
-        alert.informativeText = error.localizedDescription
-            + "\n\nIf this is a permission problem, grant Screen Recording access in SwiftX Settings."
+        alert.messageText = L10n.t("alert.capture.failed")
+        alert.informativeText = L10n.t("alert.capture.failed_info", error.localizedDescription)
         alert.alertStyle = .warning
         NSApp.activate(ignoringOtherApps: true)
         alert.runModal()

@@ -36,22 +36,22 @@ enum TrayMenuItemID: String, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .captureRegion: return "Capture Region"
-        case .captureFullScreen: return "Capture Full Screen"
-        case .captureActiveWindow: return "Capture Active Window"
-        case .captureScreen: return "Capture Screen…"
-        case .captureWindow: return "Capture Window…"
-        case .captureLastRegion: return "Capture Last Region"
-        case .scrollingCapture: return "Scrolling Capture…"
-        case .autoCapture: return "Auto Capture…"
-        case .screenshotDelay: return "Screenshot Delay"
-        case .recording: return "Recording"
-        case .upload: return "Upload"
-        case .tools: return "Tools"
-        case .recent: return "Recent"
-        case .mainWindow: return "Main Window…"
-        case .log: return "Show Log…"
-        case .checkForUpdates: return "Check for Updates…"
+        case .captureRegion: return L10n.t("menu.capture_region")
+        case .captureFullScreen: return L10n.t("menu.capture_full_screen")
+        case .captureActiveWindow: return L10n.t("menu.capture_active_window")
+        case .captureScreen: return L10n.t("menu.capture_screen")
+        case .captureWindow: return L10n.t("menu.capture_window")
+        case .captureLastRegion: return L10n.t("menu.capture_last_region")
+        case .scrollingCapture: return L10n.t("menu.scrolling_capture")
+        case .autoCapture: return L10n.t("menu.auto_capture")
+        case .screenshotDelay: return L10n.t("menu.screenshot_delay")
+        case .recording: return L10n.t("menu.recording")
+        case .upload: return L10n.t("menu.upload")
+        case .tools: return L10n.t("menu.tools")
+        case .recent: return L10n.t("menu.recent")
+        case .mainWindow: return L10n.t("menu.main_window")
+        case .log: return L10n.t("menu.show_log")
+        case .checkForUpdates: return L10n.t("menu.check_for_updates")
         }
     }
 }
@@ -77,6 +77,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let servicesProvider = ServicesProvider()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Language override must land before any menu, window, or notification
+        // category is built; changes apply on relaunch.
+        let language = ApplicationConfig.loadRaw().interfaceLanguage
+        L10n.shared.apply(languageCode: language.isEmpty ? nil : language)
+
         NSAppleEventManager.shared().setEventHandler(
             self,
             andSelector: #selector(handleURLEvent(_:with:)),
@@ -122,7 +127,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         WatchFolderCenter.shared.applySettings()
         CLIRelay.startListening()
         NameParser.onError = { message in
-            Task { @MainActor in Notifier.notify(title: "Name parser", body: message) }
+            Task { @MainActor in Notifier.notify(title: L10n.t("notification.name_parser.title"), body: message) }
         }
         let launchArgs = CLI.relevantArguments()
         if !launchArgs.isEmpty {
@@ -177,41 +182,41 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         func visible(_ id: TrayMenuItemID) -> Bool { !hidden.contains(id.rawValue) }
 
         if visible(.captureRegion) {
-            menu.addItem(NSMenuItem(title: "Capture Region", action: #selector(captureRegion), keyEquivalent: ""))
+            menu.addItem(NSMenuItem(title: L10n.t("menu.capture_region"), action: #selector(captureRegion), keyEquivalent: ""))
         }
         if visible(.captureFullScreen) {
-            menu.addItem(NSMenuItem(title: "Capture Full Screen", action: #selector(captureFullScreen), keyEquivalent: ""))
+            menu.addItem(NSMenuItem(title: L10n.t("menu.capture_full_screen"), action: #selector(captureFullScreen), keyEquivalent: ""))
         }
         if visible(.captureActiveWindow) {
-            menu.addItem(NSMenuItem(title: "Capture Active Window", action: #selector(captureActiveWindow), keyEquivalent: ""))
+            menu.addItem(NSMenuItem(title: L10n.t("menu.capture_active_window"), action: #selector(captureActiveWindow), keyEquivalent: ""))
         }
 
         // pickers populate on open: displays and windows change constantly
         screensSubmenu.delegate = self
         windowsSubmenu.delegate = self
         if visible(.captureScreen) {
-            let screenPicker = NSMenuItem(title: "Capture Screen…", action: nil, keyEquivalent: "")
+            let screenPicker = NSMenuItem(title: L10n.t("menu.capture_screen"), action: nil, keyEquivalent: "")
             screenPicker.submenu = screensSubmenu
             menu.addItem(screenPicker)
         }
         if visible(.captureWindow) {
-            let windowPicker = NSMenuItem(title: "Capture Window…", action: nil, keyEquivalent: "")
+            let windowPicker = NSMenuItem(title: L10n.t("menu.capture_window"), action: nil, keyEquivalent: "")
             windowPicker.submenu = windowsSubmenu
             menu.addItem(windowPicker)
         }
         if visible(.captureLastRegion) {
-            menu.addItem(NSMenuItem(title: "Capture Last Region", action: #selector(captureLastRegion), keyEquivalent: ""))
+            menu.addItem(NSMenuItem(title: L10n.t("menu.capture_last_region"), action: #selector(captureLastRegion), keyEquivalent: ""))
         }
         if visible(.scrollingCapture) {
-            menu.addItem(NSMenuItem(title: "Scrolling Capture…", action: #selector(showScrollingCapture), keyEquivalent: ""))
+            menu.addItem(NSMenuItem(title: L10n.t("menu.scrolling_capture"), action: #selector(showScrollingCapture), keyEquivalent: ""))
         }
         if visible(.autoCapture) {
-            menu.addItem(NSMenuItem(title: "Auto Capture…", action: #selector(showAutoCapture), keyEquivalent: ""))
+            menu.addItem(NSMenuItem(title: L10n.t("menu.auto_capture"), action: #selector(showAutoCapture), keyEquivalent: ""))
         }
         // C# tray "screenshot delay" selector; applies to every capture verb
         delaySubmenu.delegate = self
         if visible(.screenshotDelay) {
-            let delayPicker = NSMenuItem(title: "Screenshot Delay", action: nil, keyEquivalent: "")
+            let delayPicker = NSMenuItem(title: L10n.t("menu.screenshot_delay"), action: nil, keyEquivalent: "")
             delayPicker.submenu = delaySubmenu
             menu.addItem(delayPicker)
         }
@@ -219,14 +224,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // hiding "Recording" hides the start verbs, never the live recording
         // controls — a running recording must stay stoppable from the menu
         menu.addItem(.separator())
-        let record = NSMenuItem(title: "Record Screen (Region)…", action: #selector(toggleRecording), keyEquivalent: "")
-        let recordGIF = NSMenuItem(title: "Record GIF (Region)…", action: #selector(toggleGIFRecording), keyEquivalent: "")
+        let record = NSMenuItem(title: L10n.t("menu.record_screen_region"), action: #selector(toggleRecording), keyEquivalent: "")
+        let recordGIF = NSMenuItem(title: L10n.t("menu.record_gif_region"), action: #selector(toggleGIFRecording), keyEquivalent: "")
         let recording = RecordingCoordinator.shared.isRecording
         record.isHidden = !visible(.recording) && !recording
         recordGIF.isHidden = !visible(.recording)
-        let pause = NSMenuItem(title: "Pause Recording", action: #selector(togglePauseRecording), keyEquivalent: "")
+        let pause = NSMenuItem(title: L10n.t("menu.pause_recording"), action: #selector(togglePauseRecording), keyEquivalent: "")
         pause.isHidden = true
-        let abort = NSMenuItem(title: "Abort Recording", action: #selector(abortRecording), keyEquivalent: "")
+        let abort = NSMenuItem(title: L10n.t("menu.abort_recording"), action: #selector(abortRecording), keyEquivalent: "")
         abort.isHidden = true
         recordItem = record
         recordGIFItem = recordGIF
@@ -241,13 +246,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // C# tray Upload section; populated on open so the Disable checkmark is live
         uploadSubmenu.delegate = self
         if visible(.upload) {
-            let upload = NSMenuItem(title: "Upload", action: nil, keyEquivalent: "")
+            let upload = NSMenuItem(title: L10n.t("menu.upload"), action: nil, keyEquivalent: "")
             upload.submenu = uploadSubmenu
             menu.addItem(upload)
         }
 
         if visible(.tools) {
-            let tools = NSMenuItem(title: "Tools", action: nil, keyEquivalent: "")
+            let tools = NSMenuItem(title: L10n.t("menu.tools"), action: nil, keyEquivalent: "")
             tools.submenu = buildToolsMenu()
             menu.addItem(tools)
         }
@@ -255,25 +260,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // C# RecentTasksShowInTrayMenu: last N history entries
         recentSubmenu.delegate = self
         if visible(.recent) {
-            let recent = NSMenuItem(title: "Recent", action: nil, keyEquivalent: "")
+            let recent = NSMenuItem(title: L10n.t("menu.recent"), action: nil, keyEquivalent: "")
             recent.submenu = recentSubmenu
             menu.addItem(recent)
         }
 
         menu.addItem(.separator())
         if visible(.mainWindow) {
-            menu.addItem(NSMenuItem(title: "Main Window…", action: #selector(showMainWindow), keyEquivalent: ""))
+            menu.addItem(NSMenuItem(title: L10n.t("menu.main_window"), action: #selector(showMainWindow), keyEquivalent: ""))
         }
         if visible(.log) {
-            menu.addItem(NSMenuItem(title: "Show Log…", action: #selector(showLog), keyEquivalent: ""))
+            menu.addItem(NSMenuItem(title: L10n.t("menu.show_log"), action: #selector(showLog), keyEquivalent: ""))
         }
         if visible(.checkForUpdates) {
-            menu.addItem(NSMenuItem(title: "Check for Updates…", action: #selector(checkForUpdates), keyEquivalent: ""))
+            menu.addItem(NSMenuItem(title: L10n.t("menu.check_for_updates"), action: #selector(checkForUpdates), keyEquivalent: ""))
         }
-        let settings = NSMenuItem(title: "Settings…", action: #selector(showSettingsWindow), keyEquivalent: ",")
+        let settings = NSMenuItem(title: L10n.t("menu.settings"), action: #selector(showSettingsWindow), keyEquivalent: ",")
         menu.addItem(settings)
         menu.addItem(.separator())
-        menu.addItem(NSMenuItem(title: "Quit SwiftX", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+        menu.addItem(NSMenuItem(title: L10n.t("menu.quit"), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
 
         // only claim selectors we implement; the rest (e.g. terminate) stay
         // targetless so the responder chain delivers them to NSApp
@@ -313,33 +318,33 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// so the menu and hotkeys always agree on behavior.
     private func buildToolsMenu() -> NSMenu {
         let entries: [(String, HotkeyType)?] = [
-            ("Color Picker…", .colorPicker),
-            ("Screen Color Picker", .screenColorPicker),
-            ("Ruler", .ruler),
-            ("Pin Image File to Screen…", .pinToScreenFromFile),
+            (L10n.t("tools.color_picker"), .colorPicker),
+            (L10n.t("tools.screen_color_picker"), .screenColorPicker),
+            (L10n.t("tools.ruler"), .ruler),
+            (L10n.t("tools.pin_image_file"), .pinToScreenFromFile),
             nil,
-            ("Image Viewer…", .imageViewer),
-            ("Image Combiner…", .imageCombiner),
-            ("Image Splitter…", .imageSplitter),
-            ("Image Thumbnailer…", .imageThumbnailer),
-            ("Image Effects…", .imageEffects),
-            ("Image Beautifier…", .imageBeautifier),
-            ("Background Remover…", .backgroundRemover),
-            ("Image Comparer…", .imageComparer),
+            (L10n.t("tools.image_viewer"), .imageViewer),
+            (L10n.t("tools.image_combiner"), .imageCombiner),
+            (L10n.t("tools.image_splitter"), .imageSplitter),
+            (L10n.t("tools.image_thumbnailer"), .imageThumbnailer),
+            (L10n.t("tools.image_effects"), .imageEffects),
+            (L10n.t("tools.image_beautifier"), .imageBeautifier),
+            (L10n.t("tools.background_remover"), .backgroundRemover),
+            (L10n.t("tools.image_comparer"), .imageComparer),
             nil,
-            ("Video Converter…", .videoConverter),
-            ("Video Thumbnailer…", .videoThumbnailer),
+            (L10n.t("tools.video_converter"), .videoConverter),
+            (L10n.t("tools.video_thumbnailer"), .videoThumbnailer),
             nil,
-            ("AI Image Analysis…", .analyzeImage),
-            ("OCR…", .ocr),
-            ("QR Code…", .qrCode),
-            ("Hash Checker…", .hashCheck),
-            ("Image Metadata…", .metadata),
-            ("Index Folder…", .indexFolder),
+            (L10n.t("tools.ai_image_analysis"), .analyzeImage),
+            (L10n.t("tools.ocr"), .ocr),
+            (L10n.t("tools.qr_code"), .qrCode),
+            (L10n.t("tools.hash_checker"), .hashCheck),
+            (L10n.t("tools.image_metadata"), .metadata),
+            (L10n.t("tools.index_folder"), .indexFolder),
             nil,
-            ("Clipboard Viewer…", .clipboardViewer),
-            ("Inspect Window…", .inspectWindow),
-            ("Monitor Test", .monitorTest)
+            (L10n.t("tools.clipboard_viewer"), .clipboardViewer),
+            (L10n.t("tools.inspect_window"), .inspectWindow),
+            (L10n.t("tools.monitor_test"), .monitorTest)
         ]
         let toolsMenu = NSMenu()
         for entry in entries {
@@ -419,14 +424,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let recording = RecordingCoordinator.shared.isRecording
         let startVerbsVisible = !ApplicationConfig.load().trayMenuHiddenItems
             .contains(TrayMenuItemID.recording.rawValue)
-        recordItem?.title = recording ? "Stop Recording" : "Record Screen (Region)…"
+        recordItem?.title = recording ? L10n.t("menu.stop_recording") : L10n.t("menu.record_screen_region")
         recordItem?.isHidden = !startVerbsVisible && !recording
         recordGIFItem?.isHidden = recording || !startVerbsVisible
         pauseRecordingItem?.isHidden = !recording
-        pauseRecordingItem?.title = RecordingCoordinator.shared.isPaused ? "Resume Recording" : "Pause Recording"
+        pauseRecordingItem?.title = RecordingCoordinator.shared.isPaused
+            ? L10n.t("menu.resume_recording") : L10n.t("menu.pause_recording")
         abortRecordingItem?.isHidden = !recording
         statusItem?.button?.image = recording
-            ? NSImage(systemSymbolName: "record.circle", accessibilityDescription: "SwiftX recording")
+            ? NSImage(systemSymbolName: "record.circle", accessibilityDescription: L10n.t("accessibility.recording"))
             : StatusIcon.idle
         statusItem?.button?.contentTintColor = recording ? .systemRed : nil
     }
@@ -498,14 +504,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc func showMainWindow() {
         if mainWindow == nil {
-            mainWindow = makeWindow(title: "SwiftX", size: NSSize(width: 640, height: 420), view: AnyView(MainWindowView()))
+            mainWindow = makeWindow(title: L10n.t("window.main"), size: NSSize(width: 640, height: 420), view: AnyView(MainWindowView()))
         }
         present(mainWindow)
     }
 
     @objc func showSettingsWindow() {
         if settingsWindow == nil {
-            settingsWindow = makeWindow(title: "SwiftX Settings", size: NSSize(width: 700, height: 460), view: AnyView(SettingsView()))
+            // Fixed height like System Settings: pin the whole frame (title
+            // bar included), leave the width user-resizable. The content
+            // height passed here is a placeholder - the pin below replaces it.
+            let height: CGFloat = 635
+            let window = makeWindow(title: L10n.t("window.settings"), size: NSSize(width: 700, height: height), view: AnyView(SettingsView()))
+            var frame = window.frame
+            frame.size.height = height
+            window.setFrame(frame, display: false)
+            window.minSize = NSSize(width: 0, height: height)
+            window.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: height)
+            // re-center: makeWindow centered the shorter frame, and growing it
+            // keeps the bottom edge, pushing the title bar up off centre
+            window.center()
+            settingsWindow = window
         }
         present(settingsWindow)
     }
@@ -559,13 +578,13 @@ extension AppDelegate: NSMenuDelegate {
             }
         } else if menu == uploadSubmenu {
             let verbs: [(String, HotkeyType)] = [
-                ("Upload File…", .fileUpload),
-                ("Upload Folder…", .folderUpload),
-                ("Upload from Clipboard", .clipboardUpload),
-                ("Upload Text…", .uploadText),
-                ("Upload URL…", .uploadURL),
-                ("Shorten URL…", .shortenURL),
-                ("Drop Window", .dragDropUpload)
+                (L10n.t("menu.upload_file"), .fileUpload),
+                (L10n.t("menu.upload_folder"), .folderUpload),
+                (L10n.t("menu.upload_clipboard"), .clipboardUpload),
+                (L10n.t("menu.upload_text"), .uploadText),
+                (L10n.t("menu.upload_url"), .uploadURL),
+                (L10n.t("menu.shorten_url"), .shortenURL),
+                (L10n.t("menu.drop_window"), .dragDropUpload)
             ]
             for (title, type) in verbs {
                 let item = NSMenuItem(title: title, action: #selector(toolMenuAction(_:)), keyEquivalent: "")
@@ -574,24 +593,24 @@ extension AppDelegate: NSMenuDelegate {
                 menu.addItem(item)
             }
             menu.addItem(.separator())
-            let stop = NSMenuItem(title: "Stop All Uploads", action: #selector(toolMenuAction(_:)), keyEquivalent: "")
+            let stop = NSMenuItem(title: L10n.t("menu.stop_all_uploads"), action: #selector(toolMenuAction(_:)), keyEquivalent: "")
             stop.representedObject = HotkeyType.stopUploads.rawValue
             stop.target = self
             menu.addItem(stop)
             menu.addItem(.separator())
-            let disable = NSMenuItem(title: "Disable Uploads", action: #selector(toggleDisableUploads), keyEquivalent: "")
+            let disable = NSMenuItem(title: L10n.t("menu.disable_uploads"), action: #selector(toggleDisableUploads), keyEquivalent: "")
             disable.target = self
             disable.state = ApplicationConfig.load().disableUpload ? .on : .off
             menu.addItem(disable)
         } else if menu == recentSubmenu {
             let config = ApplicationConfig.load()
             guard config.recentTasksShowInTrayMenu else {
-                menu.addItem(NSMenuItem(title: "Disabled in Settings", action: nil, keyEquivalent: ""))
+                menu.addItem(NSMenuItem(title: L10n.t("menu.recent_disabled"), action: nil, keyEquivalent: ""))
                 return
             }
             let items = HistoryStore.shared.recent(limit: max(1, config.recentTasksMaxCount))
             if items.isEmpty {
-                menu.addItem(NSMenuItem(title: "No recent tasks", action: nil, keyEquivalent: ""))
+                menu.addItem(NSMenuItem(title: L10n.t("menu.recent_empty"), action: nil, keyEquivalent: ""))
             }
             for entry in items {
                 let name = entry.fileName.isEmpty
@@ -601,17 +620,20 @@ extension AppDelegate: NSMenuDelegate {
                 item.target = self
                 if !entry.url.isEmpty {
                     item.representedObject = entry.url
-                    item.toolTip = "Copy \(entry.url)"
+                    item.toolTip = L10n.t("menu.recent_copy_tooltip", entry.url)
                 } else if !entry.filePath.isEmpty {
                     item.representedObject = URL(fileURLWithPath: entry.filePath)
-                    item.toolTip = "Show in Finder"
+                    item.toolTip = L10n.t("common.show_in_finder")
                 }
                 menu.addItem(item)
             }
         } else if menu == delaySubmenu {
             let current = TaskSettings.load().screenshotDelay
             for seconds in [0.0, 1, 2, 3, 4, 5] {
-                let title = seconds == 0 ? "Off" : "\(Int(seconds)) Second\(seconds == 1 ? "" : "s")"
+                let title = seconds == 0
+                    ? L10n.t("menu.delay_off")
+                    : (seconds == 1 ? L10n.t("menu.delay_second", Int(seconds))
+                                    : L10n.t("menu.delay_seconds", Int(seconds)))
                 let item = NSMenuItem(title: title, action: #selector(setScreenshotDelay(_:)), keyEquivalent: "")
                 item.target = self
                 item.representedObject = seconds
@@ -621,7 +643,7 @@ extension AppDelegate: NSMenuDelegate {
         } else if menu == windowsSubmenu {
             let windows = WindowLister.onScreenWindows(excludingPID: ProcessInfo.processInfo.processIdentifier)
             if windows.isEmpty {
-                menu.addItem(NSMenuItem(title: "No capturable windows", action: nil, keyEquivalent: ""))
+                menu.addItem(NSMenuItem(title: L10n.t("menu.no_capturable_windows"), action: nil, keyEquivalent: ""))
             }
             for window in windows {
                 let item = NSMenuItem(title: String(window.menuTitle.prefix(60)),

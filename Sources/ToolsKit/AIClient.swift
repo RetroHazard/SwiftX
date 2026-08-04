@@ -10,6 +10,7 @@
 import CoreGraphics
 import Foundation
 import ImageIO
+import SharedKit
 import UniformTypeIdentifiers
 
 public struct AIConfiguration: Sendable {
@@ -32,11 +33,11 @@ public enum AIClient {
 
         public var errorDescription: String? {
             switch self {
-            case .missingKey: return "Set an API key in the AI analysis window first."
-            case .badURL: return "The AI base URL is not a valid URL."
-            case .encodingFailed: return "The image could not be encoded."
-            case .http(let status, let body): return "The AI service returned HTTP \(status): \(body)"
-            case .emptyResponse: return "The AI service returned no content."
+            case .missingKey: return L10n.t("toolskit.error.ai.missing_key")
+            case .badURL: return L10n.t("toolskit.error.ai.bad_url")
+            case .encodingFailed: return L10n.t("toolskit.error.ai.encoding_failed")
+            case .http(let status, let body): return L10n.t("toolskit.error.ai.http", status, body)
+            case .emptyResponse: return L10n.t("toolskit.error.ai.empty_response")
             }
         }
     }

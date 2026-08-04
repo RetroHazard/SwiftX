@@ -112,7 +112,7 @@ public enum BackblazeB2Uploader {
         request.httpBody = try JSONSerialization.data(withJSONObject: ["accountId": auth.accountId, "bucketName": name])
         let response = try await send(request, as: Response.self, step: "B2 list buckets")
         guard let bucket = response.buckets.first(where: { $0.bucketName == name }) else {
-            throw UploadError.httpError(statusCode: 0, message: "B2 bucket \"\(name)\" not found.")
+            throw UploadError.httpError(statusCode: 0, message: L10n.t("upload.error.b2.bucket_not_found", name))
         }
         return bucket.bucketId
     }

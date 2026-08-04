@@ -43,7 +43,7 @@ enum CLI {
                 // A bare URL means "download this and upload it" — never on
                 // behalf of an untrusted caller (SSRF / exfil relay).
                 guard source == .trusted else {
-                    denied("download and upload \(url.absoluteString)")
+                    denied(L10n.t("notification.cli.action_download_and_upload", url.absoluteString))
                     continue
                 }
                 await UploadCoordinator.downloadAndUpload(url)
@@ -51,7 +51,7 @@ enum CLI {
                 // A bare path means "upload this local file" — the classic
                 // exfil primitive; only our own launch argv may do it.
                 guard source == .trusted else {
-                    denied("upload the local file \(command.command)")
+                    denied(L10n.t("notification.cli.action_upload_local_file", command.command))
                     continue
                 }
                 let path = absolutePath(command.command)
@@ -67,13 +67,13 @@ enum CLI {
             guard let parameter = command.parameter, parameter.lowercased().hasSuffix(".sxcu") else { return }
             let url = URL(fileURLWithPath: absolutePath(parameter))
             guard await confirmIfUntrusted(source,
-                action: "Import the custom uploader configuration at \(url.path)") else { return }
+                action: L10n.t("alert.cli.action_import_custom_uploader", url.path)) else { return }
             _ = try? CustomUploaderStore.importFile(from: url)
         } else if command.matches("ImageEffect") {
             guard let parameter = command.parameter, parameter.lowercased().hasSuffix(".sxie") else { return }
             let url = URL(fileURLWithPath: absolutePath(parameter))
             guard await confirmIfUntrusted(source,
-                action: "Import the image-effect preset at \(url.path)") else { return }
+                action: L10n.t("alert.cli.action_import_image_effect", url.path)) else { return }
             if let data = try? Data(contentsOf: url),
                let preset = try? ImageEffectPreset.fromConfigJSON(data) {
                 ImageEffectsStore.shared.presets.append(preset)
@@ -122,10 +122,10 @@ enum CLI {
     private static func executeGated(_ type: HotkeyType, filePath: String?, source: CLISource) async {
         if let filePath {
             guard await confirmIfUntrusted(source,
-                action: "Run \(type.rawValue) on the local file \(filePath)") else { return }
+                action: L10n.t("alert.cli.action_run_on_file", type.rawValue, filePath)) else { return }
         } else if silentExfilVerbs.contains(type) {
             guard await confirmIfUntrusted(source,
-                action: "Run \(type.rawValue), which uploads your current clipboard contents") else { return }
+                action: L10n.t("alert.cli.action_run_clipboard_upload", type.rawValue)) else { return }
         }
         execute(type, filePath: filePath)
     }
@@ -136,21 +136,20 @@ enum CLI {
         guard source == .untrusted else { return true }
         let alert = NSAlert()
         alert.alertStyle = .warning
-        alert.messageText = "Allow this SwiftX action?"
-        alert.informativeText = "Another app or a web page asked SwiftX to:\n\n\(action)\n\n"
-            + "Only continue if you started this yourself."
+        alert.messageText = L10n.t("alert.cli.allow_action_question")
+        alert.informativeText = L10n.t("alert.cli.allow_action_info", action)
         // First button is the default; make Cancel the default so a stray
         // Return keypress denies rather than approves.
-        alert.addButton(withTitle: "Cancel")
-        alert.addButton(withTitle: "Continue")
+        alert.addButton(withTitle: L10n.t("common.cancel"))
+        alert.addButton(withTitle: L10n.t("common.continue"))
         NSApp.activate(ignoringOtherApps: true)
         return alert.runModal() == .alertSecondButtonReturn
     }
 
     private static func denied(_ action: String) {
         AppLog.app.warning("Ignored an untrusted request to \(action, privacy: .public)")
-        Notifier.notify(title: "SwiftX blocked a request",
-                        body: "Ignored a request from another app or web page to \(action).")
+        Notifier.notify(title: L10n.t("notification.cli.blocked_request"),
+                        body: L10n.t("notification.cli.blocked_request_body", action))
     }
 
     private static func execute(_ type: HotkeyType, filePath: String?) {
@@ -180,11 +179,11 @@ enum CLI {
         if let link = input.URL, let remote = Foundation.URL(string: link),
            ["http", "https"].contains(remote.scheme?.lowercased()) {
             guard await confirmIfUntrusted(source,
-                action: "Download and upload from the browser extension:\n\(remote.absoluteString)") else { return }
+                action: L10n.t("alert.cli.action_browser_download_upload", remote.absoluteString)) else { return }
             await UploadCoordinator.downloadAndUpload(remote)
         } else if let text = input.Text, !text.isEmpty {
             guard await confirmIfUntrusted(source,
-                action: "Upload text sent from the browser extension") else { return }
+                action: L10n.t("alert.cli.action_browser_upload_text")) else { return }
             UploadCoordinator.uploadText(text)
         }
     }

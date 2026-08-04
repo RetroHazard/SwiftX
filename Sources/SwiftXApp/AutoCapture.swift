@@ -64,7 +64,7 @@ final class AutoCaptureController: ObservableObject {
     }
 
     static func show() {
-        ToolWindows.present(title: "Auto Capture", content: AutoCaptureView())
+        ToolWindows.present(title: L10n.t("capture.auto.window_title"), content: AutoCaptureView())
     }
 }
 
@@ -74,42 +74,45 @@ struct AutoCaptureView: View {
 
     var body: some View {
         Form {
-            LabeledContent("Region") {
-                Text(config.autoCaptureRegion.isEmpty ? "Not set" : config.autoCaptureRegion)
+            LabeledContent(L10n.t("capture.auto.region")) {
+                Text(config.autoCaptureRegion.isEmpty ? L10n.t("capture.auto.not_set") : config.autoCaptureRegion)
                     .foregroundStyle(config.autoCaptureRegion.isEmpty ? .secondary : .primary)
             }
             HStack {
-                Button("Select Region…") {
+                Button(L10n.t("capture.auto.select_region")) {
                     Task {
                         guard let rect = await RegionSelectController().selectRegion() else { return }
                         setRegion(rect)
                     }
                 }
-                Button("Full Screen") {
+                Button(L10n.t("capture.auto.full_screen")) {
                     if let frame = NSScreen.main?.frame { setRegion(frame) }
                 }
             }
             .disabled(controller.isRunning)
 
-            TextField("Repeat every (seconds)", value: $config.autoCaptureRepeatTime, format: .number)
+            TextField(L10n.t("capture.auto.repeat_every"), value: $config.autoCaptureRepeatTime, format: .number)
                 .frame(maxWidth: 220)
                 .onChange(of: config.autoCaptureRepeatTime) { try? config.save() }
                 .disabled(controller.isRunning)
-            Toggle("Wait until uploads finish before capturing", isOn: $config.autoCaptureWaitUpload)
+            Toggle(L10n.t("capture.auto.wait_uploads"), isOn: $config.autoCaptureWaitUpload)
                 .onChange(of: config.autoCaptureWaitUpload) { try? config.save() }
                 .disabled(controller.isRunning)
 
             Divider()
 
             HStack {
-                Button(controller.isRunning ? "Stop" : "Start") { controller.toggle() }
-                    .keyboardShortcut(.defaultAction)
-                    .disabled(!controller.isRunning && CSharpRect.parse(config.autoCaptureRegion) == nil)
+                Button(controller.isRunning ? L10n.t("capture.auto.stop") : L10n.t("capture.auto.start")) {
+                    controller.toggle()
+                }
+                .keyboardShortcut(.defaultAction)
+                .disabled(!controller.isRunning && CSharpRect.parse(config.autoCaptureRegion) == nil)
                 if controller.isRunning {
-                    Text("Time left \(Int(controller.secondsLeft.rounded()))s • \(controller.captureCount) captured")
+                    Text(L10n.t("capture.auto.status",
+                                Int(controller.secondsLeft.rounded()), controller.captureCount))
                         .foregroundStyle(.secondary)
                 } else if controller.captureCount > 0 {
-                    Text("\(controller.captureCount) captured")
+                    Text(L10n.t("capture.auto.captured", controller.captureCount))
                         .foregroundStyle(.secondary)
                 }
             }

@@ -28,9 +28,9 @@ public enum URLShortenerType: String, Codable, CaseIterable {
         case .vgd: return "v.gd"
         case .tinyURL: return "TinyURL"
         case .vurl: return "vurl.com"
-        case .polr: return "Polr (self-hosted)"
+        case .polr: return L10n.t("upload.service.polr_self_hosted")
         case .kutt: return "Kutt"
-        case .yourls: return "YOURLS (self-hosted)"
+        case .yourls: return L10n.t("upload.service.yourls_self_hosted")
         case .zws: return "Zero Width Shortener"
         }
     }
@@ -43,9 +43,9 @@ public enum URLShortenerError: LocalizedError {
 
     public var errorDescription: String? {
         switch self {
-        case .requestFailed(let message): return "URL shortener failed: \(message)"
-        case .emptyResponse: return "URL shortener returned an empty response."
-        case .missingConfig(let what): return "URL shortener is not configured: \(what). See Settings → Destinations."
+        case .requestFailed(let message): return L10n.t("upload.error.shortener_failed", message)
+        case .emptyResponse: return L10n.t("upload.error.shortener_empty_response")
+        case .missingConfig(let what): return L10n.t("upload.error.shortener_not_configured", what)
         }
     }
 }
@@ -90,14 +90,14 @@ public enum URLShortener {
         switch type {
         case .isgd, .vgd, .tinyURL, .vurl:
             guard let url = apiURL(for: longURL, type: type) else {
-                throw URLShortenerError.requestFailed("invalid URL")
+                throw URLShortenerError.requestFailed(L10n.t("upload.error.invalid_url"))
             }
             return URLRequest(url: url)
 
         case .bitly:
             // ponytail: C# runs a full OAuth2 flow with registered app keys we don't
             // have; bit.ly issues personal access tokens directly (Settings → API)
-            guard !config.bitlyAccessToken.isEmpty else { throw URLShortenerError.missingConfig("bit.ly access token") }
+            guard !config.bitlyAccessToken.isEmpty else { throw URLShortenerError.missingConfig(L10n.t("upload.error.config.bitly_token")) }
             var body: [String: Any] = ["long_url": longURL]
             if !config.bitlyDomain.isEmpty { body["domain"] = config.bitlyDomain }
             return try jsonPost(URL(string: "https://api-ssl.bitly.com/v4/shorten")!,
@@ -105,7 +105,7 @@ public enum URLShortener {
 
         case .polr:
             guard !config.polrAPIHostname.isEmpty, !config.polrAPIKey.isEmpty else {
-                throw URLShortenerError.missingConfig("Polr API URL and key")
+                throw URLShortenerError.missingConfig(L10n.t("upload.error.config.polr"))
             }
             let host = fixPrefix(config.polrAPIHostname)
             var query = config.polrUseAPIv1
@@ -113,12 +113,12 @@ public enum URLShortener {
                 : "key=\(queryEncode(config.polrAPIKey))&url=\(queryEncode(longURL))"
             if config.polrIsSecret && !config.polrUseAPIv1 { query += "&is_secret=true" }
             guard let url = URL(string: "\(host)?\(query)") else {
-                throw URLShortenerError.requestFailed("invalid Polr URL")
+                throw URLShortenerError.requestFailed(L10n.t("upload.error.invalid_service_url", "Polr"))
             }
             return URLRequest(url: url)
 
         case .kutt:
-            guard !config.kutt.apiKey.isEmpty else { throw URLShortenerError.missingConfig("Kutt API key") }
+            guard !config.kutt.apiKey.isEmpty else { throw URLShortenerError.missingConfig(L10n.t("upload.error.config.kutt")) }
             let host = config.kutt.host.isEmpty ? "https://kutt.it" : fixPrefix(config.kutt.host)
             var body: [String: Any] = ["target": longURL, "reuse": config.kutt.reuse]
             if !config.kutt.password.isEmpty { body["password"] = config.kutt.password }
@@ -128,17 +128,17 @@ public enum URLShortener {
             return request
 
         case .yourls:
-            guard !config.yourlsAPIURL.isEmpty else { throw URLShortenerError.missingConfig("YOURLS API URL") }
+            guard !config.yourlsAPIURL.isEmpty else { throw URLShortenerError.missingConfig(L10n.t("upload.error.config.yourls_url")) }
             var params = "action=shorturl&format=simple&url=\(queryEncode(longURL))"
             if !config.yourlsSignature.isEmpty {
                 params += "&signature=\(queryEncode(config.yourlsSignature))"
             } else if !config.yourlsUsername.isEmpty, !config.yourlsPassword.isEmpty {
                 params += "&username=\(queryEncode(config.yourlsUsername))&password=\(queryEncode(config.yourlsPassword))"
             } else {
-                throw URLShortenerError.missingConfig("YOURLS signature or username/password")
+                throw URLShortenerError.missingConfig(L10n.t("upload.error.config.yourls_credentials"))
             }
             guard let url = URL(string: fixPrefix(config.yourlsAPIURL)) else {
-                throw URLShortenerError.requestFailed("invalid YOURLS URL")
+                throw URLShortenerError.requestFailed(L10n.t("upload.error.invalid_service_url", "YOURLS"))
             }
             var request = URLRequest(url: url)
             request.httpMethod = "POST"
@@ -149,7 +149,7 @@ public enum URLShortener {
         case .zws:
             let endpoint = config.zeroWidthShortenerURL.isEmpty ? "https://api.zws.im" : fixPrefix(config.zeroWidthShortenerURL)
             guard let url = URL(string: endpoint) else {
-                throw URLShortenerError.requestFailed("invalid ZWS URL")
+                throw URLShortenerError.requestFailed(L10n.t("upload.error.invalid_service_url", "ZWS"))
             }
             let token = config.zeroWidthShortenerToken
             return try jsonPost(url, body: ["url": longURL], bearer: token.isEmpty ? nil : token)

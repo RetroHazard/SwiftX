@@ -9,6 +9,7 @@
 // with their destinations.
 
 import Foundation
+import SharedKit
 
 public enum URLSharingService: String, Codable, CaseIterable {
     case email = "Email"
@@ -23,7 +24,7 @@ public enum URLSharingService: String, Codable, CaseIterable {
 
     public var displayName: String {
         switch self {
-        case .email: return "Email"
+        case .email: return L10n.t("upload.service.email")
         case .facebook: return "Facebook"
         case .reddit: return "Reddit"
         case .pinterest: return "Pinterest"

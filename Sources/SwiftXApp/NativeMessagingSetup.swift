@@ -8,6 +8,7 @@
 // The manifests point at the SwiftXHost binary inside the app bundle.
 
 import Foundation
+import SharedKit
 import SwiftUI
 
 enum NativeMessagingSetup {
@@ -84,7 +85,7 @@ struct NativeMessagingSection: View {
     @State private var hostMissing = false
 
     var body: some View {
-        Toggle("Accept uploads from the ShareX browser extension", isOn: Binding(
+        Toggle(L10n.t("settings.browser.accept_uploads"), isOn: Binding(
             get: { installed },
             set: { enable in
                 if enable {
@@ -98,8 +99,8 @@ struct NativeMessagingSection: View {
             }
         ))
         Text(hostMissing
-             ? "Host binary not found — run the bundled SwiftX.app (Scripts/make-app.sh)."
-             : "Registers native messaging manifests for Chrome, Edge and Firefox. Restart the browser afterwards.")
+             ? L10n.t("settings.browser.host_missing")
+             : L10n.t("settings.browser.manifests_help"))
             .font(.caption)
             .foregroundStyle(hostMissing ? .red : .secondary)
     }

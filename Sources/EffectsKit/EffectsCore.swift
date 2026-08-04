@@ -9,12 +9,23 @@
 
 import CoreGraphics
 import Foundation
+import SharedKit
 
 public enum EffectCategory: String, CaseIterable, Sendable {
     case drawings = "Drawings"
     case manipulations = "Manipulations"
     case adjustments = "Adjustments"
     case filters = "Filters"
+
+    /// Localized display label; the rawValue stays the stable identifier.
+    public var localizedName: String {
+        switch self {
+        case .drawings: return L10n.t("effects.core.category.drawings")
+        case .manipulations: return L10n.t("effects.core.category.manipulations")
+        case .adjustments: return L10n.t("effects.core.category.adjustments")
+        case .filters: return L10n.t("effects.core.category.filters")
+        }
+    }
 }
 
 public protocol ImageEffecting: Codable {
@@ -28,7 +39,81 @@ public protocol ImageEffecting: Codable {
 }
 
 public extension ImageEffecting {
-    var displayName: String { name.isEmpty ? Self.typeName : name }
+    /// The user-set name wins; otherwise the localized effect-type name.
+    /// Presets persist `name` and the "$type" discriminator, never this value.
+    var displayName: String { name.isEmpty ? Self.localizedTypeName : name }
+
+    /// Localized display name for the effect type. `typeName` itself is the
+    /// persisted JSON "$type" discriminator and must never be localized.
+    static var localizedTypeName: String {
+        L10n.t(EffectTypeL10n.key(for: typeName))
+    }
+}
+
+/// Maps the persisted C# "$type" names to localization keys. Unknown type
+/// names fall through L10n as themselves, so the raw name still shows.
+enum EffectTypeL10n {
+    private static let keys: [String: String] = [
+        // Adjustments
+        "Alpha": "effects.filter.alpha",
+        "BlackWhite": "effects.filter.black_white",
+        "Brightness": "effects.filter.brightness",
+        "Colorize": "effects.filter.colorize",
+        "Contrast": "effects.filter.contrast",
+        "Gamma": "effects.filter.gamma",
+        "Grayscale": "effects.filter.grayscale",
+        "Hue": "effects.filter.hue",
+        "Inverse": "effects.filter.inverse",
+        "MatrixColor": "effects.filter.matrix_color",
+        "Polaroid": "effects.filter.polaroid",
+        "ReplaceColor": "effects.filter.replace_color",
+        "Saturation": "effects.filter.saturation",
+        "SelectiveColor": "effects.filter.selective_color",
+        "Sepia": "effects.filter.sepia",
+        // Filters
+        "Blur": "effects.filter.blur",
+        "ColorDepth": "effects.filter.color_depth",
+        "EdgeDetect": "effects.filter.edge_detect",
+        "Emboss": "effects.filter.emboss",
+        "GaussianBlur": "effects.filter.gaussian_blur",
+        "Glow": "effects.filter.glow",
+        "MatrixConvolution": "effects.filter.matrix_convolution",
+        "MeanRemoval": "effects.filter.mean_removal",
+        "Outline": "effects.filter.outline",
+        "Pixelate": "effects.filter.pixelate",
+        "Reflection": "effects.filter.reflection",
+        "RGBSplit": "effects.filter.rgb_split",
+        "Shadow": "effects.filter.shadow",
+        "Sharpen": "effects.filter.sharpen",
+        "Slice": "effects.filter.slice",
+        "Smooth": "effects.filter.smooth",
+        "TornEdge": "effects.filter.torn_edge",
+        "WaveEdge": "effects.filter.wave_edge",
+        // Manipulations
+        "AutoCrop": "effects.filter.auto_crop",
+        "Canvas": "effects.filter.canvas",
+        "Crop": "effects.filter.crop",
+        "Flip": "effects.filter.flip",
+        "ForceProportions": "effects.filter.force_proportions",
+        "Resize": "effects.filter.resize",
+        "Rotate": "effects.filter.rotate",
+        "RoundedCorners": "effects.filter.rounded_corners",
+        "Scale": "effects.filter.scale",
+        "Skew": "effects.filter.skew",
+        // Drawings
+        "DrawBackground": "effects.filter.draw_background",
+        "DrawBackgroundImage": "effects.filter.draw_background_image",
+        "DrawBorder": "effects.filter.draw_border",
+        "DrawCheckerboard": "effects.filter.draw_checkerboard",
+        "DrawImage": "effects.filter.draw_image",
+        "DrawParticles": "effects.filter.draw_particles",
+        "DrawText": "effects.filter.draw_text",
+        "DrawTextEx": "effects.filter.draw_text_ex"
+    ]
+
+    static func key(for typeName: String) -> String {
+        keys[typeName] ?? typeName
+    }
 }
 
 // MARK: - JSON plumbing
@@ -211,8 +296,8 @@ public enum EffectsError: LocalizedError {
 
     public var errorDescription: String? {
         switch self {
-        case .invalidConfig: return "The file does not contain a valid image effects preset."
-        case .packagingFailed: return "Failed to package the image effects preset."
+        case .invalidConfig: return L10n.t("effects.core.error.invalid_config")
+        case .packagingFailed: return L10n.t("effects.core.error.packaging_failed")
         }
     }
 }

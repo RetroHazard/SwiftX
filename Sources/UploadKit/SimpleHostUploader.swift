@@ -23,12 +23,12 @@ public enum SimpleHostDestination: String, Codable, CaseIterable {
     public var displayName: String {
         switch self {
         case .uguu: return "Uguu"
-        case .pomf: return "Pomf clone"
+        case .pomf: return L10n.t("upload.service.pomf_clone")
         case .vgyme: return "vgy.me"
         case .sul: return "s-ul"
         case .lobfile: return "LobFile"
         case .puush: return "Puush"
-        case .chevereto: return "Chevereto (self-hosted)"
+        case .chevereto: return L10n.t("upload.service.chevereto_self_hosted")
         case .streamable: return "Streamable"
         }
     }
@@ -149,7 +149,7 @@ public enum SimpleHostUploader {
             guard let proto = json?["protocol"] as? String,
                   let domain = json?["domain"] as? String,
                   let name = json?["filename"] as? String else {
-                throw UploadError.httpError(statusCode: 0, message: json?["error"] as? String ?? "s-ul error")
+                throw UploadError.httpError(statusCode: 0, message: json?["error"] as? String ?? L10n.t("upload.error.host_generic", "s-ul"))
             }
             let ext = json?["extension"] as? String ?? ""
             return UploadResult(url: proto + domain + "/" + name + ext,
@@ -157,7 +157,7 @@ public enum SimpleHostUploader {
 
         case .lobfile:
             guard json?["success"] as? Bool == true, let url = json?["url"] as? String else {
-                throw UploadError.httpError(statusCode: 0, message: json?["error"] as? String ?? "LobFile error")
+                throw UploadError.httpError(statusCode: 0, message: json?["error"] as? String ?? L10n.t("upload.error.host_generic", "LobFile"))
             }
             return UploadResult(url: url)
 
@@ -167,10 +167,10 @@ public enum SimpleHostUploader {
             guard let status = values.first.flatMap(Int.init), status >= 0, values.count > 1 else {
                 let message: String
                 switch values.first.flatMap(Int.init) ?? -2 {
-                case -1: message = "Authentication failure."
-                case -3: message = "Checksum error."
-                case -4: message = "Insufficient account storage remaining."
-                default: message = "Connection error."
+                case -1: message = L10n.t("upload.error.puush.auth_failure")
+                case -3: message = L10n.t("upload.error.puush.checksum")
+                case -4: message = L10n.t("upload.error.puush.storage_full")
+                default: message = L10n.t("upload.error.puush.connection")
                 }
                 throw UploadError.httpError(statusCode: 0, message: "Puush: \(message)")
             }
