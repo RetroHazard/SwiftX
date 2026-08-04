@@ -18,7 +18,14 @@ extension Binding where Value: SettingsFile {
                 var updated = self.wrappedValue
                 updated[keyPath: keyPath] = newValue
                 self.wrappedValue = updated
-                try? updated.save()
+                // Persist against a fresh load, not the view's copy: the copy
+                // can be stale (the cached settings window outlives it, and
+                // sibling panes and the after-capture window write the same
+                // file), and saving it whole would revert every field this
+                // control doesn't own.
+                var onDisk = Value.load()
+                onDisk[keyPath: keyPath] = newValue
+                try? onDisk.save()
             }
         )
     }

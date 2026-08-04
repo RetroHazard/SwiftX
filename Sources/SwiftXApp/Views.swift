@@ -635,6 +635,10 @@ struct SettingsView: View {
     @State private var config = ApplicationConfig.load()
     @State private var task = TaskSettings.load()
     @ObservedObject private var nav = SettingsNavigator.shared
+    // The settings window is cached (AppDelegate keeps it alive), so these
+    // @State copies would otherwise outlive every other writer of the same
+    // files. Used below to re-sync them whenever the window regains key.
+    @Environment(\.controlActiveState) private var activeState
     // UploadersConfig/OAuthTokenStore are read straight from disk/Keychain on
     // every body evaluation, so nothing marks the view dirty when they change
     // out from under it (connecting, disconnecting). Bumping this forces
@@ -886,6 +890,19 @@ struct SettingsView: View {
         .onChange(of: columnVisibility) {
             if columnVisibility != .all { columnVisibility = .all }
         }
+        // Re-sync the long-lived copies whenever another surface may have
+        // written the files: entering a pane (the Uploads/Hotkeys/Watch
+        // Folders panes hold their own copies), or the window regaining key
+        // (after-capture window, panels, or reopening the cached window).
+        .onChange(of: nav.pane) { reloadSettingsFiles() }
+        .onChange(of: activeState) {
+            if activeState == .key { reloadSettingsFiles() }
+        }
+    }
+
+    private func reloadSettingsFiles() {
+        config = ApplicationConfig.load()
+        task = TaskSettings.load()
     }
 
     @ViewBuilder

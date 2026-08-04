@@ -570,7 +570,7 @@
 "settings.general.subfolder_pattern" = "Subfolder pattern (empty = no subfolder)";
 "settings.general.name_pattern" = "File name pattern";
 "settings.general.name_pattern_active_window" = "File name pattern (active window)";
-"settings.general.name_pattern_hint" = "Placeholders: %y year, %mo month, %d day, %h hour, %mi minute, %s second, %pn app name, %t window title, %width, %height, %rn random. Example: %y-%mo-%d_%h-%mi-%s";
+"settings.general.name_pattern_hint" = "Placeholders: %y year, %mo month, %d day, %h hour, %mi minute, %s second, %pn app name, %t window title, %width, %height, %rn{6} random digits. Example: %y-%mo-%d_%h-%mi-%s";
 "settings.general.file_exist_action" = "When the file name exists";
 "settings.general.exist_unique" = "Add a number (name_1)";
 "settings.general.exist_ask" = "Ask";

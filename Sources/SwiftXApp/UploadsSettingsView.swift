@@ -15,16 +15,20 @@ struct UploadsSettingsView: View {
     @State private var config = ApplicationConfig.load()
     @State private var task = TaskSettings.load()
 
+    /// Routed through `field` so a toggle merge-writes just this flag set
+    /// instead of saving the whole (possibly stale) TaskSettings copy.
     private func afterUploadBinding(_ flag: AfterUploadTasks) -> Binding<Bool> {
-        Binding(
-            get: { task.afterUploadJob.contains(flag) },
+        let job = $task.field(\.afterUploadJob)
+        return Binding(
+            get: { job.wrappedValue.contains(flag) },
             set: { enabled in
+                var value = job.wrappedValue
                 if enabled {
-                    task.afterUploadJob.insert(flag)
+                    value.insert(flag)
                 } else {
-                    task.afterUploadJob.remove(flag)
+                    value.remove(flag)
                 }
-                try? task.save()
+                job.wrappedValue = value
             }
         )
     }
