@@ -576,6 +576,10 @@ struct SettingsView: View {
     // out from under it (connecting, disconnecting). Bumping this forces
     // SwiftUI to re-evaluate oauthFields.
     @State private var oauthRefresh = 0
+    // Dragging the divider past the sidebar's minimum collapses the column,
+    // and with the sidebar toggle removed there is no way back. Track
+    // visibility so a collapse can be snapped back open (see body).
+    @State private var columnVisibility = NavigationSplitViewVisibility.all
 
     private static let afterCaptureToggles: [(AfterCaptureTasks, String)] = [
         (.annotateImage, L10n.t("aftercapture.annotate_image")),
@@ -914,7 +918,7 @@ struct SettingsView: View {
     }()
 
     var body: some View {
-        NavigationSplitView {
+        NavigationSplitView(columnVisibility: $columnVisibility) {
             List(SettingsPane.allCases, selection: $nav.pane) { pane in
                 // explicit tag: List's implicit selection value is the String id,
                 // which never matches our SettingsPane? binding
@@ -953,6 +957,10 @@ struct SettingsView: View {
             .navigationTitle((nav.pane ?? .general).title)
         }
         .frame(minWidth: Self.sidebarWidth + 480, minHeight: 420)
+        // a divider drag past the minimum collapses the sidebar; reopen it
+        .onChange(of: columnVisibility) {
+            if columnVisibility != .all { columnVisibility = .all }
+        }
     }
 
     @ViewBuilder
