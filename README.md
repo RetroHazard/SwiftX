@@ -71,6 +71,9 @@ Keychain, with no SwiftX server in the path. Every other destination is unaffect
 - **Tools** — color/screen color picker, ruler, OCR (Vision), QR generate/decode/scan, hash
   checker, metadata viewer/stripper, image and video converters, background remover, image
   comparer, folder indexer, and AI-assisted image analysis (OpenAI-compatible providers)
+- **Localization** — English, French, German, Italian, Japanese, Portuguese and Spanish, with an
+  in-app language picker (Settings → General); see [`docs/LOCALIZATION.md`](docs/LOCALIZATION.md)
+  to contribute a translation
 
 The full breakdown, including what's intentionally left out (Windows-only features, dead upstream
 services) lives in [`docs/macos-swift-port/PARITY.md`](docs/macos-swift-port/PARITY.md).

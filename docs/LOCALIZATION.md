@@ -3,6 +3,18 @@
 SwiftX ships one translation file per language. Adding or improving a language
 needs **no code changes** — copy a file, translate the values, open a PR.
 
+## Shipped languages
+
+| Code | Language |
+|---|---|
+| `en` | English (base/reference table) |
+| `fr` | French |
+| `de` | German |
+| `it` | Italian |
+| `ja` | Japanese |
+| `pt` | Portuguese (European) |
+| `es` | Spanish |
+
 ## Adding a language
 
 1. Copy the English table to your language's [BCP-47 code](https://www.loc.gov/standards/iso639-2/php/code_list.php)
@@ -85,8 +97,9 @@ change. The patterns:
 - `Info.plist` strings (the microphone permission prompt, the Services menu
   entry, copyright). These need per-locale `InfoPlist.strings` files copied
   into `Contents/Resources/<code>.lproj/` by `Scripts/make-app.sh` — **before
-  its `codesign` step**, or the seal breaks. Wire this up when the first
-  non-English language lands.
+  its `codesign` step**, or the seal breaks. Non-English languages have now
+  shipped, so this is an open follow-up rather than a future hypothetical —
+  `Info.plist`-sourced UI text stays English-only until it's wired up.
 - Pluralization uses simple `%d` format keys, not `.stringsdict`. If a
   language needs real plural rules, add `.stringsdict` support to `L10n`
   then.
