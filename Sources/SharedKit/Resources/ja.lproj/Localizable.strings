@@ -1232,6 +1232,7 @@
 /* Sources/SwiftXApp/Views.swift — Updates pane */
 "settings.updates.status" = "ステータス";
 "settings.updates.not_checked" = "まだ確認していません";
+"settings.updates.last_checked" = "前回の確認：%@";
 "settings.updates.checking" = "確認中…";
 "settings.updates.up_to_date" = "最新の状態です（確認日時：%@）";
 "settings.updates.version_available" = "バージョン%@が利用可能です";
