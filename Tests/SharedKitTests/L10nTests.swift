@@ -42,8 +42,10 @@ struct L10nTests {
 
     @Test func systemDefaultResolvesToAShippedLanguage() {
         L10n.shared.apply(languageCode: nil)
-        // Only English ships today, so system-default must resolve to it.
-        #expect(L10n.t("common.quit") == "Quit")
+        // 7 languages now compete for system-preference resolution, so which
+        // one wins depends on the runner's own locale - only assert the key
+        // resolved to a real translation, not a specific one.
+        #expect(L10n.t("common.quit") != "common.quit")
     }
 
     @Test func displayNameIncludesNativeName() {

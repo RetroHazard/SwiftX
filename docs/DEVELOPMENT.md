@@ -70,7 +70,7 @@ and gates the heavy jobs:
 | Job | Runs when | Does |
 | --- | --- | --- |
 | `changes` | always | resolves the diff range and sets the `swift` / `site` / `version` flags |
-| `swift` | `Sources/`, `Tests/`, `Package.swift`, `Scripts/`, `Resources/` | `swift build --build-tests`, `swift test`, bundle from debug products, assert the bundle |
+| `swift` | `Sources/`, `Tests/`, `Package.swift`, `Scripts/`, `Resources/` | `check-localizations.sh`, `swift build --build-tests`, `swift test`, bundle from debug products, assert the bundle |
 | `site` | `site/`, the shared build action | `.github/actions/build-site` with eslint on |
 | `version` | `VERSION`, cask, site version strings, `Scripts/version.sh` | `version.sh check` plus the hand-edit guard |
 | `release-build` | weekly schedule only | universal release build — covers the release-mode compile and macos-15 image drift |
