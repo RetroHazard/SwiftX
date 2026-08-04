@@ -14,7 +14,7 @@ import {
   Download,
   type LucideIcon,
 } from "lucide-react";
-import { destinations, effectSwatches, hotkeys } from "@/lib/content";
+import { destinations, effectSwatches, hotkeys, languages } from "@/lib/content";
 import { Panel } from "@/components/panel";
 import { SectionHead } from "@/components/section-head";
 import { ShotSample } from "@/components/shot-sample";
@@ -290,6 +290,28 @@ function OcrVisual() {
 }
 
 /* ------------------------------------------------------------------ */
+/* Localization                                                        */
+/* ------------------------------------------------------------------ */
+
+function LocalizationVisual() {
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3">
+      {languages.map((l) => (
+        <div
+          key={l.code}
+          className="flex items-center gap-2 rounded-lg border border-line bg-panel px-3.5 py-2.5"
+        >
+          <span className="readout rounded bg-accent/12 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-accent">
+            {l.code}
+          </span>
+          <span className="text-[13px] text-ink-soft">{l.name}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /* Updates — the About pane offering the version that just shipped     */
 /* ------------------------------------------------------------------ */
 
@@ -417,6 +439,14 @@ export function Features() {
             delay={0.06}
           >
             <OcrVisual />
+          </Panel>
+
+          <Panel
+            className="lg:col-span-3"
+            title="Speaks your language"
+            description="English, French, German, Italian, Japanese, Portuguese and Spanish ship today, following your Mac's system language by default or picked directly in Settings → General. The non-English tables are currently machine-translated — spot something off? Native-speaker corrections are welcome, no code involved."
+          >
+            <LocalizationVisual />
           </Panel>
 
           <Panel

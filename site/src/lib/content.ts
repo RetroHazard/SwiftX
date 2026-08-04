@@ -123,6 +123,25 @@ export const destinations: Destination[] = [
   { name: "Custom", kind: ".sxcu" },
 ];
 
+export type Language = {
+  code: string;
+  name: string;
+};
+
+/* Every code here must have a real Localizable.strings table in
+   Sources/SharedKit/Resources — keep this list in step with
+   docs/LOCALIZATION.md's "Shipped languages" table. English is the base/
+   reference table; the rest are community-contributed. */
+export const languages: Language[] = [
+  { code: "en", name: "English" },
+  { code: "fr", name: "Français" },
+  { code: "de", name: "Deutsch" },
+  { code: "it", name: "Italiano" },
+  { code: "ja", name: "日本語" },
+  { code: "pt", name: "Português" },
+  { code: "es", name: "Español" },
+];
+
 export type Hotkey = {
   keys: string[];
   action: string;
@@ -159,6 +178,11 @@ export const faqs: FaqItem[] = [
     question: "What does it need to run?",
     answer:
       "macOS 14 Sonoma or later, on Apple silicon or Intel. That is the baseline for the ScreenCaptureKit APIs the capture and recording pipeline is built on.",
+  },
+  {
+    question: "Does SwiftX support languages other than English?",
+    answer:
+      "Yes — SwiftX ships in English, French, German, Italian, Japanese, Portuguese and Spanish. It follows your Mac's system language by default, or you can pick one directly in Settings → General; changing it prompts for a quick relaunch to apply. The non-English tables are currently machine-translated rather than reviewed by a native speaker, so if something reads wrong, please open an issue or a PR — translations are plain text files with no code changes involved, and native-speaker corrections are very welcome. See docs/LOCALIZATION.md in the repo for how to add or fix one.",
   },
   {
     question: "Do my screenshots pass through your servers?",

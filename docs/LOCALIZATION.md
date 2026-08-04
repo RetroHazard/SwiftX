@@ -3,6 +3,30 @@
 SwiftX ships one translation file per language. Adding or improving a language
 needs **no code changes** — copy a file, translate the values, open a PR.
 
+## Shipped languages
+
+| Code | Language | Source |
+|---|---|---|
+| `en` | English | Base/reference table |
+| `fr` | French | Machine-translated |
+| `de` | German | Machine-translated |
+| `it` | Italian | Machine-translated |
+| `ja` | Japanese | Machine-translated |
+| `pt` | Portuguese (European) | Machine-translated |
+| `es` | Spanish | Machine-translated |
+
+**The non-English tables above are machine-translated**, not reviewed
+string-by-string by a native speaker. They pass the structural checks in
+`Scripts/check-localizations.sh` (every key present, placeholders intact),
+but that doesn't catch an unnatural phrasing, a wrong register, or a term a
+native speaker would render differently. If something reads wrong, please
+[open an issue](https://github.com/RetroHazard/SwiftX/issues/new) or send a
+PR with the fix — edit the value in the existing `<code>.lproj/Localizable.strings`
+(step 1 below doesn't apply; you're correcting a file that already exists,
+not creating one), then validate and open a PR as in steps 2–4. Community-
+sourced, native-speaker translations are very welcome and will supersede
+the machine-translated baseline as they land, language by language.
+
 ## Adding a language
 
 1. Copy the English table to your language's [BCP-47 code](https://www.loc.gov/standards/iso639-2/php/code_list.php)
@@ -85,8 +109,9 @@ change. The patterns:
 - `Info.plist` strings (the microphone permission prompt, the Services menu
   entry, copyright). These need per-locale `InfoPlist.strings` files copied
   into `Contents/Resources/<code>.lproj/` by `Scripts/make-app.sh` — **before
-  its `codesign` step**, or the seal breaks. Wire this up when the first
-  non-English language lands.
+  its `codesign` step**, or the seal breaks. Non-English languages have now
+  shipped, so this is an open follow-up rather than a future hypothetical —
+  `Info.plist`-sourced UI text stays English-only until it's wired up.
 - Pluralization uses simple `%d` format keys, not `.stringsdict`. If a
   language needs real plural rules, add `.stringsdict` support to `L10n`
   then.
