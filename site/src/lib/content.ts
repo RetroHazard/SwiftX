@@ -182,7 +182,7 @@ export const faqs: FaqItem[] = [
   {
     question: "Does SwiftX support languages other than English?",
     answer:
-      "Yes — SwiftX ships in English, French, German, Italian, Japanese, Portuguese and Spanish. It follows your Mac's system language by default, or you can pick one directly in Settings → General; changing it prompts for a quick relaunch to apply. Translations are plain text files with no code changes involved, so community contributions are welcome — see docs/LOCALIZATION.md in the repo for how to add or improve one.",
+      "Yes — SwiftX ships in English, French, German, Italian, Japanese, Portuguese and Spanish. It follows your Mac's system language by default, or you can pick one directly in Settings → General; changing it prompts for a quick relaunch to apply. The non-English tables are currently machine-translated rather than reviewed by a native speaker, so if something reads wrong, please open an issue or a PR — translations are plain text files with no code changes involved, and native-speaker corrections are very welcome. See docs/LOCALIZATION.md in the repo for how to add or fix one.",
   },
   {
     question: "Do my screenshots pass through your servers?",

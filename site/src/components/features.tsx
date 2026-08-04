@@ -444,7 +444,7 @@ export function Features() {
           <Panel
             className="lg:col-span-3"
             title="Speaks your language"
-            description="English, French, German, Italian, Japanese, Portuguese and Spanish ship today, following your Mac's system language by default or picked directly in Settings → General. Community translations are welcome — it's a text file, no code involved."
+            description="English, French, German, Italian, Japanese, Portuguese and Spanish ship today, following your Mac's system language by default or picked directly in Settings → General. The non-English tables are currently machine-translated — spot something off? Native-speaker corrections are welcome, no code involved."
           >
             <LocalizationVisual />
           </Panel>
