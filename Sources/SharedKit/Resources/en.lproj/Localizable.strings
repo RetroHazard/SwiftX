@@ -948,7 +948,7 @@
 "tasks.copy_file_to_clipboard" = "Copy file to clipboard";
 "tasks.copy_file_path_to_clipboard" = "Copy file path to clipboard";
 "tasks.copy_folder_path_to_clipboard" = "Copy folder path to clipboard";
-"tasks.show_in_explorer" = "Show in explorer";
+"tasks.show_in_explorer" = "Show in Finder";
 "tasks.analyze_image" = "Analyze image";
 "tasks.scan_qr_code" = "Scan QR code";
 "tasks.do_ocr" = "Do OCR";
