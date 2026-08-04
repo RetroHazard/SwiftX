@@ -32,6 +32,7 @@ enum TrayMenuItemID: String, CaseIterable {
     case recent = "Recent"
     case mainWindow = "MainWindow"
     case log = "Log"
+    case checkForUpdates = "CheckForUpdates"
 
     var displayName: String {
         switch self {
@@ -50,6 +51,7 @@ enum TrayMenuItemID: String, CaseIterable {
         case .recent: return "Recent"
         case .mainWindow: return "Main Window…"
         case .log: return "Show Log…"
+        case .checkForUpdates: return "Check for Updates…"
         }
     }
 }
@@ -116,6 +118,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         setupHotkeys()
         Notifier.setup()
+        UpdateManager.shared.startBackgroundChecks()
         WatchFolderCenter.shared.applySettings()
         CLIRelay.startListening()
         NameParser.onError = { message in
@@ -263,6 +266,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         if visible(.log) {
             menu.addItem(NSMenuItem(title: "Show Log…", action: #selector(showLog), keyEquivalent: ""))
+        }
+        if visible(.checkForUpdates) {
+            menu.addItem(NSMenuItem(title: "Check for Updates…", action: #selector(checkForUpdates), keyEquivalent: ""))
         }
         let settings = NSMenuItem(title: "Settings…", action: #selector(showSettingsWindow), keyEquivalent: ",")
         menu.addItem(settings)
@@ -484,6 +490,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func showLog() {
         ToolWindows.showLog()
+    }
+
+    @objc private func checkForUpdates() {
+        UpdateManager.shared.checkFromMenu()
     }
 
     @objc func showMainWindow() {

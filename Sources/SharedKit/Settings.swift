@@ -234,6 +234,17 @@ public struct ApplicationConfig: SettingsFile {
     /// Skip the timer tick while uploads are in flight (C# AutoCaptureWaitUpload).
     public var autoCaptureWaitUpload = true
 
+    // In-app updates (macOS-only keys).
+    /// UpdateCheckFrequency raw value: "Off", "Daily", "Weekly" or "Monthly".
+    public var updateCheckFrequency = "Daily"
+    /// Download, verify and install updates without asking (relaunch still prompts).
+    public var updateAutoInstall = false
+    /// CalVer string the user chose to skip ("" = none); a newer release
+    /// surfaces again regardless.
+    public var updateSkippedVersion = ""
+    /// Unix timestamp of the last completed background check (0 = never).
+    public var updateLastCheckTime: Double = 0
+
     public var screenshotsFolder: URL {
         if useCustomScreenshotsPath, !customScreenshotsPath.isEmpty {
             return URL(fileURLWithPath: (customScreenshotsPath as NSString).expandingTildeInPath, isDirectory: true)
@@ -272,6 +283,10 @@ public struct ApplicationConfig: SettingsFile {
         case autoCaptureRegion = "AutoCaptureRegion"
         case autoCaptureRepeatTime = "AutoCaptureRepeatTime"
         case autoCaptureWaitUpload = "AutoCaptureWaitUpload"
+        case updateCheckFrequency = "UpdateCheckFrequency"
+        case updateAutoInstall = "UpdateAutoInstall"
+        case updateSkippedVersion = "UpdateSkippedVersion"
+        case updateLastCheckTime = "UpdateLastCheckTime"
     }
 
     public init(from decoder: Decoder) throws {
@@ -306,6 +321,10 @@ public struct ApplicationConfig: SettingsFile {
         autoCaptureRegion = try c.decodeIfPresent(String.self, forKey: .autoCaptureRegion) ?? ""
         autoCaptureRepeatTime = try c.decodeIfPresent(Double.self, forKey: .autoCaptureRepeatTime) ?? 60
         autoCaptureWaitUpload = try c.decodeIfPresent(Bool.self, forKey: .autoCaptureWaitUpload) ?? true
+        updateCheckFrequency = try c.decodeIfPresent(String.self, forKey: .updateCheckFrequency) ?? "Daily"
+        updateAutoInstall = try c.decodeIfPresent(Bool.self, forKey: .updateAutoInstall) ?? false
+        updateSkippedVersion = try c.decodeIfPresent(String.self, forKey: .updateSkippedVersion) ?? ""
+        updateLastCheckTime = try c.decodeIfPresent(Double.self, forKey: .updateLastCheckTime) ?? 0
     }
 }
 

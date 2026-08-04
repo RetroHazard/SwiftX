@@ -26,8 +26,9 @@ preserved alongside the SwiftX copyright — see [License &amp; credits](#licens
 ## Status
 
 SwiftX is under active development, with [signed, notarized releases](https://github.com/RetroHazard/SwiftX/releases)
-built by the [release pipeline](.github/workflows/release.yml) and available via Homebrew. Most of
-the ShareX feature set already runs on macOS; see the
+built by the [release pipeline](.github/workflows/release.yml) and available via Homebrew. Installed
+copies keep themselves current — SwiftX checks for its own releases and can install them in place.
+Most of the ShareX feature set already runs on macOS; see the
 [feature parity tracker](docs/macos-swift-port/PARITY.md) for what's ported, partial, or still
 planned. To build a development copy from source instead, see below.
 
@@ -64,6 +65,10 @@ Keychain, with no SwiftX server in the path. Every other destination is unaffect
 - **System integration** — SwiftX in the macOS **Share…** menu / share sheet (files, images, movies,
   text and links) via an embedded share extension, plus an "Upload with SwiftX" right-click
   Services entry
+- **In-app updates** — Check for Updates… from the menu bar, or an automatic check on a cadence you
+  pick (daily/weekly/monthly/off); updates are verified against the release's published SHA-256 and
+  Developer ID team before replacing the app in place, and Homebrew installs are deferred to
+  `brew upgrade --cask swiftx`
 - **Tools** — color/screen color picker, ruler, OCR (Vision), QR generate/decode/scan, hash
   checker, metadata viewer/stripper, image and video converters, background remover, image
   comparer, folder indexer, and AI-assisted image analysis (OpenAI-compatible providers)
@@ -114,6 +119,7 @@ this and other gotchas discovered while porting.
 | `EffectsKit` | Image effects and beautifier |
 | `HistoryKit` | SQLite history store |
 | `ToolsKit` | Color picker, ruler, OCR/QR, hash checker, converters, indexer |
+| `UpdateKit` | Release check, download verification, in-place bundle update |
 | `SwiftXApp` | The app itself — menu bar shell, settings, CLI |
 | `NativeMessagingHost` | `swiftx-host` — browser native messaging binary |
 | `ShareExtension` | `SwiftXShare.appex` — the macOS Share menu entry |

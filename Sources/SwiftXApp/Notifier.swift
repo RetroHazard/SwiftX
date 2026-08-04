@@ -38,6 +38,12 @@ enum Notifier {
     static let showFileAction = "swiftx.showFile"
     static let deleteFileAction = "swiftx.deleteFile"
     static let annotateFileAction = "swiftx.annotateFile"
+    static let updateCategory = "swiftx.update"
+    static let updateInstalledCategory = "swiftx.update.installed"
+    static let installUpdateAction = "swiftx.installUpdate"
+    static let viewReleaseAction = "swiftx.viewRelease"
+    static let skipUpdateAction = "swiftx.skipUpdate"
+    static let relaunchAction = "swiftx.relaunch"
 
     /// Call once at app launch: registers with Notification Center before any
     /// notification is posted, so nothing races the authorization prompt.
@@ -61,6 +67,22 @@ enum Notifier {
                     UNNotificationAction(identifier: annotateFileAction, title: "Annotate"),
                     UNNotificationAction(identifier: deleteFileAction, title: "Delete",
                                          options: [.destructive])
+                ],
+                intentIdentifiers: []
+            ),
+            UNNotificationCategory(
+                identifier: updateCategory,
+                actions: [
+                    UNNotificationAction(identifier: installUpdateAction, title: "Install Update"),
+                    UNNotificationAction(identifier: viewReleaseAction, title: "View Release"),
+                    UNNotificationAction(identifier: skipUpdateAction, title: "Skip This Version")
+                ],
+                intentIdentifiers: []
+            ),
+            UNNotificationCategory(
+                identifier: updateInstalledCategory,
+                actions: [
+                    UNNotificationAction(identifier: relaunchAction, title: "Relaunch")
                 ],
                 intentIdentifiers: []
             )
@@ -129,6 +151,39 @@ enum Notifier {
             post(request)
         case .some(false):
             AppLog.notifications.info("Suppressed (not authorized): \(title, privacy: .public) - \(body, privacy: .public)")
+        }
+    }
+
+    /// App-lifecycle notice, not a task banner: skips the C#
+    /// ShowToastNotificationAfterTaskCompleted master switch (fullscreen
+    /// suppression still applies - an update can wait out a presentation).
+    static func notifyUpdate(title: String, body: String, version: String, url: String,
+                             installed: Bool) {
+        guard Bundle.main.bundleIdentifier != nil else {
+            AppLog.updates.info("\(title, privacy: .public): \(body, privacy: .public)")
+            return
+        }
+        let settings = TaskSettings.load()
+        if settings.disableNotificationsOnFullscreen, FullscreenDetector.frontmostAppIsFullscreen() {
+            AppLog.updates.info("update banner suppressed (fullscreen): \(title, privacy: .public)")
+            return
+        }
+
+        let content = UNMutableNotificationContent()
+        content.title = title
+        content.body = body
+        content.categoryIdentifier = installed ? updateInstalledCategory : updateCategory
+        content.userInfo["url"] = url
+        content.userInfo["updateVersion"] = version
+        let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
+
+        switch authorized {
+        case .none:
+            pending.append(request)
+        case .some(true):
+            post(request)
+        case .some(false):
+            AppLog.updates.info("update banner suppressed (not authorized): \(title, privacy: .public)")
         }
     }
 
@@ -202,6 +257,7 @@ final class NotifierDelegate: NSObject, UNUserNotificationCenterDelegate {
         let info = response.notification.request.content.userInfo
         let urlString = info["url"] as? String
         let path = info["filePath"] as? String
+        let updateVersion = info["updateVersion"] as? String
         let action = response.actionIdentifier
         await MainActor.run {
             switch action {
@@ -225,6 +281,14 @@ final class NotifierDelegate: NSObject, UNUserNotificationCenterDelegate {
                 }
             case Notifier.annotateFileAction:
                 if let path { Self.annotate(path: path) }
+            case Notifier.installUpdateAction:
+                UpdateManager.shared.installCurrentUpdate(versionHint: updateVersion)
+            case Notifier.viewReleaseAction:
+                UpdateManager.shared.openReleasePage(urlHint: urlString)
+            case Notifier.skipUpdateAction:
+                UpdateManager.shared.skipVersion(updateVersion)
+            case Notifier.relaunchAction:
+                UpdateManager.shared.relaunchNow()
             default:
                 // banner tap: open URL, else reveal the file (original behavior)
                 if let urlString, let url = URL(string: urlString) {
