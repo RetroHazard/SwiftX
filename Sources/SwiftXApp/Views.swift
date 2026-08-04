@@ -949,7 +949,12 @@ struct SettingsView: View {
                     Text(L10n.displayName(for: code)).tag(code)
                 }
             }
-            .onChange(of: config.interfaceLanguage) { promptRelaunch() }
+            // Deferred: onChange runs inside the picker's update transaction,
+            // where runModal cannot start its modal session and the alert
+            // silently never appears.
+            .onChange(of: config.interfaceLanguage) {
+                DispatchQueue.main.async { promptRelaunch() }
+            }
         }
         // where captures land and what they are called, together: the folder
         // alone left the name and subfolder patterns editable only in JSON
