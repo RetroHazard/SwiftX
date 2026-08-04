@@ -114,6 +114,12 @@ func englishTaskFlagTitle(_ pascal: String) -> String {
 }
 
 public extension NamedOptionSet {
+    /// Every named flag, so callers can express "all of them except…" without
+    /// hand-listing the set.
+    static var all: Self {
+        flagNames.reduce(into: Self()) { $0.formUnion($1.0) }
+    }
+
     /// Human-readable flag list ("Save image to file, Upload image to host").
     var friendlyString: String {
         Self.flagNames.filter { contains($0.0) }.map { taskFlagTitle($0.1) }.joined(separator: ", ")

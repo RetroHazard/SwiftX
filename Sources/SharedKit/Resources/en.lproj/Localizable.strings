@@ -141,7 +141,6 @@
 "settings.general.language.later" = "Later";
 
 /* ActionsSettingsView.swift */
-"settings.actions.title" = "Actions";
 "settings.actions.help" = "Programs run on the saved file, in order, when “Perform actions” is enabled in Capture. Placeholders: $input, $output (%input/%output add quotes).";
 "settings.actions.program_path" = "Program path (/usr/local/bin/…)";
 "settings.actions.arguments" = "Arguments (empty = the file path)";
@@ -152,8 +151,7 @@
 "settings.actions.add_action" = "Add Action";
 
 /* HotkeysSettingsView.swift */
-"settings.hotkeys.title" = "Hotkeys";
-"settings.hotkeys.section.guards" = "Hotkey guards";
+"settings.hotkeys.section.behavior" = "Hotkey behavior";
 "settings.hotkeys.disable_on_fullscreen" = "Disable hotkeys while a fullscreen app is active";
 "settings.hotkeys.repeat_limit" = "Ignore hotkey repeats within (ms, 0 = off)";
 "settings.hotkeys.add_hotkey" = "Add Hotkey";
@@ -237,7 +235,6 @@
 "hotkey.ExitShareX" = "Exit Share X";
 
 /* WatchFolders.swift */
-"settings.watchfolders.title" = "Watch folders";
 "settings.watchfolders.enable" = "Watch folders and upload new files";
 "settings.watchfolders.filter" = "File name filter (e.g. *.png, empty = all):";
 "settings.watchfolders.include_subdirectories" = "Include subdirectories";
@@ -245,7 +242,6 @@
 "settings.watchfolders.add_folder" = "Add Folder…";
 
 /* CustomUploaderEditorView.swift */
-"settings.customuploader.uploaders" = "Uploaders";
 "settings.customuploader.empty_hint" = "No custom uploaders yet. Create one, or import a community .sxcu file.";
 "settings.customuploader.uploader" = "Uploader";
 "settings.customuploader.active_suffix" = "  (active)";
@@ -410,7 +406,7 @@
 "alert.upload.upload_all_button" = "Upload All";
 "notification.upload.download_too_large" = "Download too large";
 "notification.upload.download_too_large_body" = "%@ exceeds the %d MB limit.";
-"notification.upload.error_no_custom_uploader" = "No custom uploader configured. Import a .sxcu in Settings → Custom Uploader.";
+"notification.upload.error_no_custom_uploader" = "No custom uploader configured. Import a .sxcu in Settings → Custom Uploaders.";
 "notification.upload.error_not_implemented" = "Destination \"%@\" is not implemented yet.";
 "notification.upload.skipped" = "Upload skipped";
 "notification.upload.disabled_in_tray" = "Uploads are disabled in the tray menu.";
@@ -528,16 +524,24 @@
 "main.import_history_failed" = "History import failed";
 "main.history_stats_title" = "History Stats";
 
+/* Sources/SwiftXApp/Views.swift — settings sidebar groups */
+"settings.group.app" = "App";
+"settings.group.capture" = "Capture";
+"settings.group.sharing" = "Sharing";
+"settings.group.automation" = "Automation";
+"settings.group.about" = "About";
+
 /* Sources/SwiftXApp/Views.swift — settings panes (sidebar / navigation titles) */
 "settings.pane.general" = "General";
 "settings.pane.menu_bar" = "Menu Bar";
 "settings.pane.notifications" = "Notifications";
 "settings.pane.capture" = "Capture";
 "settings.pane.recording" = "Recording";
-"settings.pane.actions" = "Actions";
+"settings.pane.actions" = "External Programs";
 "settings.pane.watch_folders" = "Watch Folders";
 "settings.pane.destinations" = "Destinations";
-"settings.pane.custom_uploader" = "Custom Uploader";
+"settings.pane.uploads" = "Uploads";
+"settings.pane.custom_uploader" = "Custom Uploaders";
 "settings.pane.hotkeys" = "Hotkeys";
 "settings.pane.updates" = "Updates";
 "settings.pane.about" = "About";
@@ -554,35 +558,24 @@
 "settings.about.license_body" = "SwiftX is free software: you may redistribute it and/or modify it under the terms of the GNU General Public License v3. It comes with ABSOLUTELY NO WARRANTY.";
 "settings.about.view_license" = "View the full license";
 
-/* Sources/SwiftXApp/Views.swift — after-capture task toggles */
-"aftercapture.annotate_image" = "Annotate image (editor)";
-"aftercapture.copy_image_to_clipboard" = "Copy image to clipboard";
-"aftercapture.pin_to_screen" = "Pin to screen";
-"aftercapture.send_image_to_printer" = "Send image to printer";
-"aftercapture.save_image_to_file" = "Save image to file";
-"aftercapture.save_image_with_dialog" = "Save image with dialog";
-"aftercapture.save_thumbnail_to_file" = "Save thumbnail image to file";
-"aftercapture.perform_actions" = "Perform actions (external programs)";
-"aftercapture.copy_file_to_clipboard" = "Copy file to clipboard";
-"aftercapture.copy_file_path_to_clipboard" = "Copy file path to clipboard";
-"aftercapture.copy_folder_path_to_clipboard" = "Copy folder path to clipboard";
-"aftercapture.upload_image_to_host" = "Upload image to host";
-"aftercapture.delete_file" = "Delete file locally (moves to Trash)";
-
 /* Sources/SwiftXApp/Views.swift — General pane (incl. backup import/export and permissions) */
 "settings.general.section.permissions" = "Permissions";
-"settings.general.section.actions_toolbar" = "Actions toolbar";
-"settings.general.add_button" = "Add Button";
-"settings.general.lock_toolbar" = "Lock toolbar position";
-"settings.general.toolbar_at_launch" = "Open toolbar at launch";
-"settings.general.toolbar_reopen_hint" = "Reopen the toolbar to apply button and lock changes.";
 "settings.general.section.browser_extension" = "Browser extension";
 "settings.general.section.backup" = "Backup";
 "settings.general.export_settings" = "Export Settings…";
 "settings.general.import_settings" = "Import Settings…";
 "settings.general.backup_hint" = "Backups contain settings, hotkeys, effects presets and custom uploaders. API keys and OAuth tokens live in the Keychain and are never exported — re-enter or reconnect them after restoring on another Mac. History is not included; use the main window's import tools for it. Import also accepts Windows ShareX .sxb backups, including their upload history.";
-"settings.general.section.paths" = "Paths";
+"settings.general.section.saved_files" = "Saved files";
 "settings.general.screenshots_folder" = "Screenshots folder";
+"settings.general.subfolder_pattern" = "Subfolder pattern (empty = no subfolder)";
+"settings.general.name_pattern" = "File name pattern";
+"settings.general.name_pattern_active_window" = "File name pattern (active window)";
+"settings.general.name_pattern_hint" = "Placeholders: %y year, %mo month, %d day, %h hour, %mi minute, %s second, %pn app name, %t window title, %width, %height, %rn random. Example: %y-%mo-%d_%h-%mi-%s";
+"settings.general.file_exist_action" = "When the file name exists";
+"settings.general.exist_unique" = "Add a number (name_1)";
+"settings.general.exist_ask" = "Ask";
+"settings.general.exist_overwrite" = "Overwrite";
+"settings.general.exist_skip" = "Skip saving";
 "settings.general.export_failed" = "Settings export failed";
 "settings.general.import_panel_message" = "Choose a SwiftX settings backup or a Windows ShareX .sxb backup";
 "settings.general.import_failed" = "Settings import failed";
@@ -609,7 +602,7 @@
 "settings.general.permission.open_system_settings" = "Open System Settings";
 
 /* Sources/SwiftXApp/Views.swift — Menu Bar pane */
-"settings.menubar.section.menu_bar" = "Menu bar";
+"settings.menubar.section.icon" = "Menu bar icon";
 "settings.menubar.left_click" = "Left click";
 "settings.menubar.action.open_menu" = "Open the menu";
 "settings.menubar.action.open_main_window" = "Open main window";
@@ -624,11 +617,18 @@
 "settings.menubar.show_progress" = "Show upload progress in the icon";
 "settings.menubar.show_recent" = "Show Recent submenu";
 "settings.menubar.recent_count" = "Recent entries shown (1–30)";
+"settings.menubar.section.menu_items" = "Menu contents";
 "settings.menubar.menu_items" = "Menu items";
 "settings.menubar.menu_items_hint" = "Unchecked items are hidden from the menu bar menu. Settings and Quit always stay, and a running recording keeps its stop controls visible.";
+"settings.menubar.section.actions_toolbar" = "Actions toolbar";
+"settings.menubar.add_button" = "Add Button";
+"settings.menubar.lock_toolbar" = "Lock toolbar position";
+"settings.menubar.toolbar_at_launch" = "Open toolbar at launch";
+"settings.menubar.toolbar_reopen_hint" = "A floating bar of capture buttons, separate from the menu bar icon. Reopen it to apply button and lock changes.";
 
 /* Sources/SwiftXApp/Views.swift — Notifications pane */
-"settings.notifications.section.notifications" = "Notifications";
+"settings.notifications.section.banners" = "Banners";
+"settings.notifications.section.sounds" = "Sounds";
 "settings.notifications.show_banners" = "Show notification banners";
 "settings.notifications.suppress_fullscreen" = "Suppress while a fullscreen app is active";
 "settings.notifications.sound_after_capture" = "Play sound after capture";
@@ -640,10 +640,10 @@
 "settings.notifications.banner_hint" = "Upload banners offer Copy URL / Open buttons; file banners offer Show in Finder / Annotate / Delete. Clicking the banner itself opens the URL or reveals the file.";
 
 /* Sources/SwiftXApp/Views.swift — Capture pane */
-"settings.capture.section.capture" = "Capture";
 "settings.capture.screenshot_delay" = "Screenshot delay (seconds, 0 = off)";
 "settings.capture.show_cursor" = "Show cursor in screenshots";
 "settings.capture.section.after_capture" = "After capture";
+"settings.capture.after_capture_hint" = "Tasks run top to bottom on every capture. The same list appears in the after-capture window and in quick task presets.";
 "settings.capture.section.effects" = "Image effects pipeline";
 "settings.capture.effects_window" = "Open the effects window after capture";
 "settings.capture.effects_region_only" = "Apply effects to region captures only";
@@ -663,16 +663,12 @@
 "settings.capture.auto_jpeg" = "Use JPEG for large captures";
 "settings.capture.auto_jpeg_size" = "JPEG when width or height exceeds (px)";
 "settings.capture.auto_jpeg_quality" = "Auto-JPEG quality (1–100)";
-"settings.capture.file_exist_action" = "When the file name exists";
-"settings.capture.exist_unique" = "Add a number (name_1)";
-"settings.capture.exist_ask" = "Ask";
-"settings.capture.exist_overwrite" = "Overwrite";
-"settings.capture.exist_skip" = "Skip saving";
 "settings.capture.section.thumbnail" = "Thumbnail";
 "settings.capture.thumbnail_width" = "Thumbnail width (0 = derive from height)";
 "settings.capture.thumbnail_height" = "Thumbnail height (0 = derive from width)";
+"settings.capture.thumbnail_name" = "Name suffix";
 "settings.capture.thumbnail_check_size" = "Only if image is larger than the thumbnail";
-"settings.capture.thumbnail_hint" = "Saved next to the screenshot as “name%@” when “Save thumbnail image to file” is on.";
+"settings.capture.thumbnail_hint" = "Saved next to the screenshot, with the suffix above appended to its name, when “Save thumbnail image to file” is on.";
 
 /* Sources/SwiftXApp/Views.swift — Recording pane (incl. ffmpeg status) */
 "settings.recording.section.video" = "Video";
@@ -713,45 +709,8 @@
 "settings.destinations.destinations_hint" = "Screenshots use the image destination; recordings and other files the file destination. Until a separate custom uploader is chosen below, text and file uploads follow the image destination.";
 "settings.destinations.not_valid_for" = "%@ — not valid for %@ uploads";
 "settings.destinations.unavailable_suffix" = "%@ — unavailable";
-"settings.destinations.section.upload_behavior" = "Upload behavior";
-"settings.destinations.disable_uploads" = "Disable all uploads";
-"settings.destinations.upload_limit" = "Maximum simultaneous uploads (1–25)";
-"settings.destinations.retry_uploads" = "Retry failed uploads";
-"settings.destinations.retry_attempts" = "Retry attempts (1–10)";
-"settings.destinations.multi_upload_warning" = "Warn before uploading more than 10 files";
-"settings.destinations.large_file_warning" = "Warn before uploading files over 100 MB";
-"settings.destinations.section.file_naming" = "File upload naming";
-"settings.destinations.use_name_pattern" = "Rename uploads with the name pattern";
-"settings.destinations.replace_problematic" = "Replace problematic characters (spaces → underscores)";
-"settings.destinations.custom_timezone" = "Use custom time zone in name patterns";
-"settings.destinations.timezone_identifier" = "Time zone identifier";
-"settings.destinations.timezone_hint" = "Examples: UTC, America/New_York, Asia/Tokyo. Unknown identifiers fall back to local time.";
-"settings.destinations.section.clipboard_upload" = "Clipboard upload";
-"settings.destinations.clipboard_url_contents" = "Copied URL: upload its contents";
-"settings.destinations.clipboard_shorten" = "Copied URL: shorten instead of uploading";
-"settings.destinations.clipboard_share" = "Copied URL: share instead of uploading";
-"settings.destinations.clipboard_index_folder" = "Copied folder: upload an HTML index";
-"settings.destinations.clear_clipboard" = "Clear clipboard after clipboard upload";
-"settings.destinations.section.after_upload" = "After upload";
-"settings.destinations.copy_url" = "Copy URL to clipboard";
-"settings.destinations.open_url" = "Open URL in browser";
-"settings.destinations.shorten_url" = "Shorten URL after upload";
-"settings.destinations.url_shortener" = "URL shortener";
-"settings.destinations.share_url" = "Share URL after upload (opens browser)";
-"settings.destinations.sharing_service" = "Sharing service";
-"settings.destinations.section.url_processing" = "URL processing";
-"settings.destinations.clipboard_format" = "Clipboard format";
-"settings.destinations.open_url_format" = "Open-URL format";
-"settings.destinations.notification_format" = "Notification format";
-"settings.destinations.result_hint" = "$result is replaced with the final URL — e.g. ![]($result) for Markdown.";
-"settings.destinations.early_copy" = "Copy URL early (before shortening and formatting)";
-"settings.destinations.force_https" = "Force HTTPS in result URLs";
-"settings.destinations.regex_replace" = "Regex-replace result URLs";
-"settings.destinations.regex_pattern" = "Pattern";
-"settings.destinations.regex_replacement" = "Replacement ($1 for groups)";
-"settings.destinations.auto_shorten_length" = "Auto-shorten URLs longer than (characters, 0 = off)";
 "settings.destinations.section.custom_uploaders" = "Custom uploaders";
-"settings.destinations.no_custom_uploaders" = "No custom uploaders imported. Use Import… in Settings → Custom Uploader — any community .sxcu file works.";
+"settings.destinations.no_custom_uploaders" = "No custom uploaders imported. Use Import… in Settings → Custom Uploaders — any community .sxcu file works.";
 "settings.destinations.image_uploader" = "Image uploader";
 "settings.destinations.text_uploader" = "Text uploader";
 "settings.destinations.file_uploader" = "File uploader";
@@ -801,17 +760,59 @@
 "settings.destinations.streamable_email" = "Streamable email";
 "settings.destinations.streamable_password" = "Streamable password";
 "settings.destinations.uguu_hint" = "No configuration needed — files are temporary (up to 48 hours).";
-"settings.destinations.bitly_token" = "bit.ly access token";
-"settings.destinations.bitly_domain" = "bit.ly custom domain (optional)";
-"settings.destinations.bitly_hint" = "Generate a token at bitly.com → Settings → Developer settings → API.";
-"settings.destinations.polr_api_url" = "Polr API URL (https://yoursite/api/v2/action/shorten)";
-"settings.destinations.polr_api_key" = "Polr API key";
-"settings.destinations.kutt_host" = "Kutt host";
-"settings.destinations.kutt_api_key" = "Kutt API key";
-"settings.destinations.yourls_api_url" = "YOURLS API URL (https://yoursite/yourls-api.php)";
-"settings.destinations.yourls_signature" = "YOURLS signature";
-"settings.destinations.zws_api_url" = "ZWS API URL (empty = api.zws.im)";
-"settings.destinations.zws_token" = "ZWS token (optional)";
+
+/* Sources/SwiftXApp/UploadsSettingsView.swift — Uploads pane */
+"settings.uploads.section.upload_behavior" = "Upload behavior";
+"settings.uploads.disable_uploads" = "Disable all uploads";
+"settings.uploads.upload_limit" = "Maximum simultaneous uploads (1–25)";
+"settings.uploads.retry_uploads" = "Retry failed uploads";
+"settings.uploads.retry_attempts" = "Retry attempts (1–10)";
+"settings.uploads.multi_upload_warning" = "Warn before uploading more than 10 files";
+"settings.uploads.large_file_warning" = "Warn before uploading files over 100 MB";
+"settings.uploads.section.file_naming" = "File upload naming";
+"settings.uploads.use_name_pattern" = "Rename uploads with the name pattern";
+"settings.uploads.name_pattern_hint" = "Uploads are renamed with the pattern from Settings → General → Saved files. Off, the original file name is kept.";
+"settings.uploads.replace_problematic" = "Replace problematic characters (spaces → underscores)";
+"settings.uploads.custom_timezone" = "Use custom time zone in name patterns";
+"settings.uploads.timezone_identifier" = "Time zone identifier";
+"settings.uploads.timezone_hint" = "Examples: UTC, America/New_York, Asia/Tokyo. Unknown identifiers fall back to local time.";
+"settings.uploads.section.clipboard_upload" = "Clipboard upload";
+"settings.uploads.clipboard_url_contents" = "Copied URL: upload its contents";
+"settings.uploads.clipboard_shorten" = "Copied URL: shorten instead of uploading";
+"settings.uploads.clipboard_share" = "Copied URL: share instead of uploading";
+"settings.uploads.clipboard_index_folder" = "Copied folder: upload an HTML index";
+"settings.uploads.clear_clipboard" = "Clear clipboard after clipboard upload";
+"settings.uploads.section.after_upload" = "After upload";
+"settings.uploads.copy_url" = "Copy URL to clipboard";
+"settings.uploads.open_url" = "Open URL in browser";
+"settings.uploads.shorten_url" = "Shorten URL after upload";
+"settings.uploads.url_shortener" = "URL shortener";
+"settings.uploads.bitly_token" = "bit.ly access token";
+"settings.uploads.bitly_domain" = "bit.ly custom domain (optional)";
+"settings.uploads.bitly_hint" = "Generate a token at bitly.com → Settings → Developer settings → API.";
+"settings.uploads.polr_api_url" = "Polr API URL (https://yoursite/api/v2/action/shorten)";
+"settings.uploads.polr_api_key" = "Polr API key";
+"settings.uploads.kutt_host" = "Kutt host";
+"settings.uploads.kutt_api_key" = "Kutt API key";
+"settings.uploads.yourls_api_url" = "YOURLS API URL (https://yoursite/yourls-api.php)";
+"settings.uploads.yourls_signature" = "YOURLS signature";
+"settings.uploads.zws_api_url" = "ZWS API URL (empty = api.zws.im)";
+"settings.uploads.zws_token" = "ZWS token (optional)";
+"settings.uploads.share_url" = "Share URL after upload (opens browser)";
+"settings.uploads.sharing_service" = "Sharing service";
+"settings.uploads.show_qr_code" = "Show a QR code for the URL";
+"settings.uploads.show_after_upload_window" = "Show the after-upload window";
+"settings.uploads.section.url_processing" = "URL processing";
+"settings.uploads.clipboard_format" = "Clipboard format";
+"settings.uploads.open_url_format" = "Open-URL format";
+"settings.uploads.notification_format" = "Notification format";
+"settings.uploads.result_hint" = "$result is replaced with the final URL — e.g. ![]($result) for Markdown.";
+"settings.uploads.early_copy" = "Copy URL early (before shortening and formatting)";
+"settings.uploads.force_https" = "Force HTTPS in result URLs";
+"settings.uploads.regex_replace" = "Regex-replace result URLs";
+"settings.uploads.regex_pattern" = "Pattern";
+"settings.uploads.regex_replacement" = "Replacement ($1 for groups)";
+"settings.uploads.auto_shorten_length" = "Auto-shorten URLs longer than (characters, 0 = off)";
 
 /* Sources/UploadKit/DestinationCatalog.swift */
 "destination.kind.image" = "image";
@@ -824,7 +825,7 @@
 "upload.service.yourls_self_hosted" = "YOURLS (self-hosted)";
 "upload.error.shortener_failed" = "URL shortener failed: %@";
 "upload.error.shortener_empty_response" = "URL shortener returned an empty response.";
-"upload.error.shortener_not_configured" = "URL shortener is not configured: %@. See Settings → Destinations.";
+"upload.error.shortener_not_configured" = "URL shortener is not configured: %@. See Settings → Uploads.";
 "upload.error.invalid_url" = "invalid URL";
 "upload.error.invalid_service_url" = "invalid %@ URL";
 "upload.error.config.bitly_token" = "bit.ly access token";
@@ -853,8 +854,8 @@
 "upload.error.syntax.no_response_available" = "Function \"%@\" requires a response and cannot be used in a request.";
 
 /* Sources/UploadKit/OAuth/OAuthCore.swift */
-"upload.error.oauth.not_configured" = "%@ needs OAuth app credentials. Add a client ID in Settings → Upload destination.";
-"upload.error.oauth.not_authenticated" = "Not connected to %@. Click Connect in Settings → Upload destination.";
+"upload.error.oauth.not_configured" = "%@ needs OAuth app credentials. Add a client ID in Settings → Destinations.";
+"upload.error.oauth.not_authenticated" = "Not connected to %@. Click Connect in Settings → Destinations.";
 "upload.error.oauth.token_refresh_failed" = "Could not refresh the %@ session. Reconnect in Settings.";
 "upload.error.oauth.invalid_token_response" = "The authorization server returned an unexpected response.";
 "upload.error.oauth.authorization_failed" = "Authorization failed: %@";

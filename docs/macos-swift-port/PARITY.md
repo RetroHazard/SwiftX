@@ -43,7 +43,7 @@ audit are tracked below as Phases 12–15.
 | Global hotkey engine (Carbon), defaults ⌃⇧3/4/5, DisableHotkeys toggle | Ported — recorder UI in Settings, live re-registration |
 | HotkeyType vocabulary (C#-compatible raw values) | Ported — every verb dispatches: upload sources (file/folder/clipboard/text/URL/drag-drop), custom region/window, stop uploads, standalone image editor, actions toolbar, tray menu toggle |
 | Capture notifications | Ported — banner + optional sound (C# PlaySound keys); app-level off-switch, fullscreen suppression, custom per-event sounds and action buttons shipped (14); toast geometry is N/A under Notification Center |
-| Actions (external commands) | Ported — C# ExternalProgram JSON, $input/$output placeholders, output-extension chaining, Settings pane |
+| Actions (external commands) | Ported — C# ExternalProgram JSON, $input/$output placeholders, output-extension chaining, Settings → External Programs pane |
 
 ## Phase 3 — Upload engine & core destinations
 
@@ -53,7 +53,7 @@ audit are tracked below as Phases 12–15.
 | Upload core — progress UI, retry | Ported — live rows in main window (bar, retry state, URL/error); configurable retry count (RetryUpload × MaxUploadFailRetry), UploadLimit concurrency cap, DisableUpload switch and batch/size warnings shipped (14) |
 | Upload core — chunked/resumable, secondary fallback | Planned — chunked only serves the benched OAuth hosts; fallback needs multi-destination config |
 | Custom uploader engine (.sxcu) — syntax parser (json/xml/regex/base64/random/select/filename/header/response), import, destination picker | Ported — legacy pre-13.7.1 `$var$` files migrate at load; interactive select takes first option |
-| Custom uploader editor (create/edit/duplicate/delete/export in settings) | Ported — Settings → Custom Uploader pane; edits write Windows-compatible .sxcu files; export copies the stored file verbatim |
+| Custom uploader editor (create/edit/duplicate/delete/export in settings) | Ported — Settings → Custom Uploaders pane; edits write Windows-compatible .sxcu files; export copies the stored file verbatim |
 | OAuth2 infrastructure (authorize-code + PKCE, refresh, Keychain tokens, loopback redirect) | Ported — reusable OAuth2Flow/OAuthSession/OAuthTokenStore + loopback listener. App credentials are baked in from a git-ignored OAuthApps.plist (developer registers once); end-user setup is one-click Connect → browser sign-in → approve, with nothing to fill in. Hosts without baked-in keys show "unavailable" |
 | OAuth1 infrastructure | Deferred — no kept host needs it (Photobucket dropped, Flickr deferred); add an OAuth1Flow layer only if Flickr is wanted |
 | Amazon S3 (+ S3-compatible via custom endpoint) — SigV4, prefix patterns | Ported |
@@ -146,7 +146,7 @@ audit are tracked below as Phases 12–15.
 
 | Feature | Status |
 |---|---|
-| Watch folders | Ported — FSEvents watcher with glob filter, subdirectories, move-to-screenshots, C# size-stability gate; Settings pane |
+| Watch folders | Ported — FSEvents watcher with glob filter, subdirectories, move-to-screenshots, C# size-stability gate; Settings → Watch Folders pane |
 | Auto capture | Ported — region/full-screen repeat timer, wait-for-uploads, C# AutoCapture* keys; annotate/menus stripped per shot like C# |
 | Scrolling capture | Ported — synthetic scroll-wheel events + C# CombineImages row-matching stitcher (side margins, auto bottom-edge trim, best-guess fallback); Windows-message scroll methods N/A |
 | Quick task menu (ShowQuickTaskMenu) + editor | Ported — C# QuickTaskPresets JSON incl. separators; menu at cursor |
@@ -202,7 +202,7 @@ audit are tracked below as Phases 12–15.
 | Notification granularity (off-switch, fullscreen suppression, custom per-event sounds, action buttons) | Ported — ShowToastNotificationAfterTaskCompleted, DisableNotificationsOnFullscreen (CGWindowList fullscreen heuristic); custom capture/completion/error sounds play via NSSound (banner goes silent to avoid doubling); banner buttons: Copy URL/Open for uploads, Show in Finder/Annotate/Delete for files |
 | Toast geometry (duration, placement, size, fade) | N/A — Notification Center owns presentation |
 | Recent-links tray submenu + main-window recent strip (RecentTasks*) | Ported — Recent submenu reads the last N history entries (click copies the URL, or reveals the file); the main window's live task rows + searchable history already serve as the recent strip |
-| Tray Upload section, configurable left-click action, status-icon upload progress | Ported — Upload submenu (file/folder/clipboard/text/URL/shorten/drop window/stop/disable); TrayLeftClickAction picker (right click always menus); TrayIconProgressEnabled draws a progress ring on the status icon. macOS extras: a "Check for Updates…" entry, Settings → General → Menu bar → Menu items hides individual entries (TrayMenuHiddenItems; Settings/Quit and live recording controls stay), an "Upload with SwiftX" Services entry puts SwiftX in the system-wide right-click Services menu for files and selected text, and an embedded `SwiftXShare.appex` (`com.apple.share-services`) puts SwiftX in the system "Share…" menu / share sheet for files, images, movies, text and links |
+| Tray Upload section, configurable left-click action, status-icon upload progress | Ported — Upload submenu (file/folder/clipboard/text/URL/shorten/drop window/stop/disable); TrayLeftClickAction picker (right click always menus); TrayIconProgressEnabled draws a progress ring on the status icon. macOS extras: a "Check for Updates…" entry, Settings → Menu Bar → Menu contents hides individual entries (TrayMenuHiddenItems; Settings/Quit and live recording controls stay), an "Upload with SwiftX" Services entry puts SwiftX in the system-wide right-click Services menu for files and selected text, and an embedded `SwiftXShare.appex` (`com.apple.share-services`) puts SwiftX in the system "Share…" menu / share sheet for files, images, movies, text and links |
 | DisableHotkeysOnFullscreen, HotkeyRepeatLimit | Ported — both enforced in HotkeyCenter.fire; the DisableHotkeys toggle hotkey stays live |
 | Configurable actions toolbar (button list, position lock, run at startup) | Ported — ActionsToolbarList (HotkeyType names) with add/remove/reorder editor, ActionsToolbarLockPosition, ActionsToolbarRunAtStartup |
 

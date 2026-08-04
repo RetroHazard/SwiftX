@@ -12,7 +12,9 @@ struct ActionsSettingsView: View {
     @State private var programs = TaskSettings.load().externalPrograms
 
     var body: some View {
-        Section(L10n.t("settings.actions.title")) {
+        // no section header: the navigation title above already says "External
+        // Programs", and repeating it just spends a row
+        Section {
             Text(L10n.t("settings.actions.help"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
