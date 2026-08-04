@@ -567,6 +567,39 @@ struct AboutView: View {
     }
 }
 
+/// Hard-locks the settings sidebar at a fixed width: no divider drag, no
+/// collapse. NavigationSplitView's width modifiers are advisory in a
+/// hand-hosted NSWindow, so climb from inside the sidebar column to the
+/// underlying NSSplitViewItem and pin its thickness directly. If SwiftUI's
+/// internal hierarchy ever stops matching, the walk finds nothing and the
+/// sidebar just stays SwiftUI-managed.
+private struct SidebarLock: NSViewRepresentable {
+    let width: CGFloat
+
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        // defer until the view is parented into the split view hierarchy
+        DispatchQueue.main.async { lock(from: view) }
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        DispatchQueue.main.async { lock(from: nsView) } // SwiftUI may reconfigure items
+    }
+
+    private func lock(from view: NSView) {
+        var ancestor = view.superview
+        while let current = ancestor, !(current is NSSplitView) { ancestor = current.superview }
+        guard let splitView = ancestor as? NSSplitView,
+              let controller = splitView.delegate as? NSSplitViewController,
+              let sidebar = controller.splitViewItems.first
+        else { return }
+        sidebar.minimumThickness = width
+        sidebar.maximumThickness = width
+        sidebar.canCollapse = false
+    }
+}
+
 struct SettingsView: View {
     @State private var config = ApplicationConfig.load()
     @State private var task = TaskSettings.load()
@@ -922,6 +955,7 @@ struct SettingsView: View {
             .frame(width: Self.sidebarWidth)
             .navigationSplitViewColumnWidth(min: Self.sidebarWidth, ideal: Self.sidebarWidth,
                                             max: Self.sidebarWidth)
+            .background(SidebarLock(width: Self.sidebarWidth))
             // the toggle floats misaligned in a hand-made NSWindow's title bar;
             // a fixed settings sidebar doesn't need collapsing anyway
             .toolbar(removing: .sidebarToggle)
