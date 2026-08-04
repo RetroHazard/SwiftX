@@ -898,6 +898,19 @@ struct SettingsView: View {
         )
     }
 
+    /// Sidebar column sized to the widest localized pane title so no tab
+    /// truncates. The allowance covers the Label icon column, icon-text
+    /// spacing and the List/sidebar row insets; the clamp keeps a runaway
+    /// translation from eating the window. Measured once - pane titles are
+    /// fixed for the process lifetime because language changes relaunch.
+    private static let sidebarWidth: CGFloat = {
+        let font = NSFont.preferredFont(forTextStyle: .body)
+        let widest = SettingsPane.allCases
+            .map { ($0.title as NSString).size(withAttributes: [.font: font]).width }
+            .max() ?? 0
+        return min(max(widest + 70, 160), 280)
+    }()
+
     var body: some View {
         NavigationSplitView {
             List(SettingsPane.allCases, selection: $nav.pane) { pane in
@@ -906,7 +919,7 @@ struct SettingsView: View {
                 Label(pane.title, systemImage: pane.icon)
                     .tag(pane)
             }
-            .navigationSplitViewColumnWidth(min: 150, ideal: 170)
+            .navigationSplitViewColumnWidth(min: Self.sidebarWidth, ideal: Self.sidebarWidth)
             // the toggle floats misaligned in a hand-made NSWindow's title bar;
             // a fixed settings sidebar doesn't need collapsing anyway
             .toolbar(removing: .sidebarToggle)
@@ -930,7 +943,7 @@ struct SettingsView: View {
             .formStyle(.grouped)
             .navigationTitle((nav.pane ?? .general).title)
         }
-        .frame(minWidth: 640, minHeight: 420)
+        .frame(minWidth: Self.sidebarWidth + 480, minHeight: 420)
     }
 
     @ViewBuilder
