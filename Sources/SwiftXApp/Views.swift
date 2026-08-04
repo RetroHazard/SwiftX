@@ -607,27 +607,61 @@ struct AboutView: View {
 private struct SidebarLock: NSViewRepresentable {
     let width: CGFloat
 
-    func makeNSView(context: Context) -> NSView {
-        let view = NSView()
-        // defer until the view is parented into the split view hierarchy
-        DispatchQueue.main.async { lock(from: view) }
+    func makeNSView(context: Context) -> LockView {
+        let view = LockView()
+        view.width = width
         return view
     }
 
-    func updateNSView(_ nsView: NSView, context: Context) {
-        DispatchQueue.main.async { lock(from: nsView) } // SwiftUI may reconfigure items
+    func updateNSView(_ nsView: LockView, context: Context) {
+        nsView.width = width
+        nsView.lock()
     }
 
-    private func lock(from view: NSView) {
-        var ancestor = view.superview
-        while let current = ancestor, !(current is NSSplitView) { ancestor = current.superview }
-        guard let splitView = ancestor as? NSSplitView,
-              let controller = splitView.delegate as? NSSplitViewController,
-              let sidebar = controller.splitViewItems.first
-        else { return }
-        sidebar.minimumThickness = width
-        sidebar.maximumThickness = width
-        sidebar.canCollapse = false
+    final class LockView: NSView {
+        var width: CGFloat = 0
+        private var observer: NSObjectProtocol?
+        // setPosition posts didResizeSubviews synchronously, which calls
+        // lock() again before the frame reflects the move - unguarded, that
+        // recurses until the stack overflows
+        private var relocking = false
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            // defer until the split view hierarchy above us has settled
+            DispatchQueue.main.async { self.lock() }
+        }
+
+        func lock() {
+            var ancestor = superview
+            while let current = ancestor, !(current is NSSplitView) { ancestor = current.superview }
+            guard let splitView = ancestor as? NSSplitView,
+                  let controller = splitView.delegate as? NSSplitViewController,
+                  let sidebar = controller.splitViewItems.first
+            else { return }
+            sidebar.minimumThickness = width
+            sidebar.maximumThickness = width
+            sidebar.canCollapse = false
+            // A one-shot lock is not enough: SwiftUI rebuilds and re-bounds
+            // its split view items behind our back (state restoration, pane
+            // switches), which un-pins the thickness. Re-assert after every
+            // divider move so a drag snaps straight back.
+            if observer == nil {
+                observer = NotificationCenter.default.addObserver(
+                    forName: NSSplitView.didResizeSubviewsNotification,
+                    object: splitView, queue: .main
+                ) { [weak self] _ in self?.lock() }
+            }
+            if !relocking, let pane = splitView.arrangedSubviews.first, abs(pane.frame.width - width) > 0.5 {
+                relocking = true
+                defer { relocking = false }
+                splitView.setPosition(width, ofDividerAt: 0)
+            }
+        }
+
+        deinit {
+            if let observer { NotificationCenter.default.removeObserver(observer) }
+        }
     }
 }
 
@@ -836,7 +870,7 @@ struct SettingsView: View {
 
     /// Fixed sidebar width, like System Settings. Wide enough for the longest
     /// English pane title; revisit if a translation needs more room.
-    private static let sidebarWidth: CGFloat = 175
+    private static let sidebarWidth: CGFloat = 185
 
     var body: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
