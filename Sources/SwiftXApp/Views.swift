@@ -432,21 +432,6 @@ struct UpdatesView: View {
     var body: some View {
         Section {
             updateStatusRow
-            HStack {
-                Spacer()
-                Button("Check for Updates") { updater.checkFromMenu() }
-                    .disabled(updateActionInFlight)
-                if case .available = updater.state, !updater.isHomebrewManaged {
-                    Button(updater.canSelfInstall ? "Install Update" : "Open Release Page") {
-                        if updater.canSelfInstall {
-                            updater.installCurrentUpdate()
-                        } else {
-                            updater.openReleasePage()
-                        }
-                    }
-                    Button("Skip This Version") { updater.skipCurrentUpdate() }
-                }
-            }
             Picker("Check automatically", selection: updateBinding(\.updateCheckFrequency)) {
                 ForEach(UpdateCheckFrequency.allCases, id: \.rawValue) { frequency in
                     Text(frequency.displayName).tag(frequency.rawValue)
@@ -467,6 +452,24 @@ struct UpdatesView: View {
                        isOn: updateBinding(\.updateAutoInstall))
             }
         }
+        // below the grouped box, not a row in it
+        HStack {
+            Spacer()
+            Button("Check for Updates") { updater.checkFromMenu() }
+                .disabled(updateActionInFlight)
+            if case .available = updater.state, !updater.isHomebrewManaged {
+                Button(updater.canSelfInstall ? "Install Update" : "Open Release Page") {
+                    if updater.canSelfInstall {
+                        updater.installCurrentUpdate()
+                    } else {
+                        updater.openReleasePage()
+                    }
+                }
+                Button("Skip This Version") { updater.skipCurrentUpdate() }
+            }
+        }
+        .listRowBackground(Color.clear)
+        .listRowInsets(EdgeInsets())
     }
 }
 
