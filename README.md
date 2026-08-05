@@ -65,9 +65,9 @@ Keychain, with no SwiftX server in the path. Every other destination is unaffect
   text and links) via an embedded share extension, plus an "Upload with SwiftX" right-click
   Services entry
 - **In-app updates** — Check for Updates… from the menu bar, or an automatic check on a cadence you
-  pick (daily/weekly/monthly/off); updates are verified against the release's published SHA-256 and
-  Developer ID team before replacing the app in place, and Homebrew installs are deferred to
-  `brew upgrade --cask swiftx`
+  pick (daily/weekly/monthly/off); the update dialog shows the full release notes rendered in
+  place, updates are verified against the release's published SHA-256 and Developer ID team before
+  replacing the app in place, and Homebrew installs are deferred to `brew upgrade --cask swiftx`
 - **Tools** — color/screen color picker, ruler, OCR (Vision), QR generate/decode/scan, hash
   checker, metadata viewer/stripper, image and video converters, background remover, image
   comparer, folder indexer, and AI-assisted image analysis (OpenAI-compatible providers)

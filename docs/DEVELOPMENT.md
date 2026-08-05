@@ -122,7 +122,7 @@ Cutting a release, in order of preference:
 ### The release format is a compatibility contract
 
 Shipped copies of SwiftX read `releases/latest` from the GitHub API to find and install updates
-(`Sources/UpdateKit/`), so three properties of a published release are consumed by software already
+(`Sources/UpdateKit/`), so four properties of a published release are consumed by software already
 on users' machines, not just by this repository:
 
 - **Asset names.** `UpdateKit` looks up `SwiftX-<version>.dmg` and `SwiftX-<version>.dmg.sha256`
@@ -133,6 +133,11 @@ on users' machines, not just by this repository:
   self-update rather than weakening it.
 - **Tag shape.** Tags are parsed as CalVer with an optional `v` prefix. A tag that doesn't parse
   (`nightly`, `2026.8`) is treated as "no update available".
+- **The release notes body is rendered in-app.** The update alert shows the body as formatted
+  markdown (`Sources/UpdateKit/ReleaseNotesFormatter.swift`): headings, bold/italic, lists, and
+  code render; GitHub-only constructs (tables, task-list checkboxes) degrade to plain paragraphs.
+  Write release notes in plain markdown and lead with what users should read first — the full
+  body is shown, in a scrollable view.
 
 Drafts and prereleases are never offered — `releases/latest` excludes them, and `UpdateKit` skips
 them again on its own side. Changing any of the above is a breaking change for every installed
