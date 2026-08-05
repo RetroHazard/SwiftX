@@ -16,7 +16,7 @@ export type Release = {
   brewCommand: string;
 };
 
-const version = "2026.8.1";
+const version = "2026.8.2";
 
 export const release: Release = {
   version,
