@@ -310,11 +310,10 @@ final class UpdateManager: ObservableObject {
     private func presentUpdateAlert(_ update: UpdateChecker.AvailableUpdate, current: CalVer) {
         let alert = NSAlert()
         alert.messageText = L10n.t("update.alert.available_title", "\(update.version)")
-        var detail = L10n.t("update.alert.you_have", "\(current)")
+        alert.informativeText = L10n.t("update.alert.you_have", "\(current)")
         if let notes = update.release.body, !notes.isEmpty {
-            detail += "\n\n" + String(notes.prefix(500))
+            alert.accessoryView = Self.releaseNotesAccessoryView(markdown: notes)
         }
-        alert.informativeText = detail
         if isHomebrewManaged {
             alert.addButton(withTitle: L10n.t("update.alert.copy_brew_command"))
             alert.informativeText += "\n\n" + L10n.t("update.alert.brew_managed_suffix", Self.brewUpgradeCommand)
@@ -343,6 +342,31 @@ final class UpdateManager: ObservableObject {
         default:
             break
         }
+    }
+
+    /// Scrollable, rendered release notes. Unlike the fixed-size text views in
+    /// HotkeyActions, the document view must be allowed to grow vertically for
+    /// programmatically-set content to engage the scroller.
+    private static func releaseNotesAccessoryView(markdown: String) -> NSScrollView {
+        let scroll = NSScrollView(frame: NSRect(x: 0, y: 0, width: 460, height: 200))
+        let textView = NSTextView(frame: NSRect(origin: .zero, size: scroll.contentSize))
+        textView.isEditable = false
+        textView.isSelectable = true
+        textView.drawsBackground = true
+        textView.backgroundColor = .textBackgroundColor
+        textView.textContainerInset = NSSize(width: 6, height: 8)
+        textView.autoresizingMask = [.width]
+        textView.isVerticallyResizable = true
+        textView.isHorizontallyResizable = false
+        textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude,
+                                  height: CGFloat.greatestFiniteMagnitude)
+        textView.textContainer?.widthTracksTextView = true
+        textView.textStorage?.setAttributedString(
+            ReleaseNotesFormatter.attributedString(fromMarkdown: markdown))
+        scroll.documentView = textView
+        scroll.hasVerticalScroller = true
+        scroll.borderType = .bezelBorder
+        return scroll
     }
 
     private func presentBrewAlert(_ update: UpdateChecker.AvailableUpdate) {
