@@ -323,10 +323,17 @@ final class UpdateManager: ObservableObject {
             alert.addButton(withTitle: L10n.t("update.alert.open_release_page"))
         }
         alert.addButton(withTitle: L10n.t("update.alert.view_release_page"))
-        alert.addButton(withTitle: L10n.t("update.alert.skip_version"))
         alert.addButton(withTitle: L10n.t("common.cancel"))
+        // A checkbox instead of a fourth button keeps the row from wrapping
+        // into a vertical stack in the wider locales.
+        alert.showsSuppressionButton = true
+        alert.suppressionButton?.title = L10n.t("update.alert.skip_version")
         NSApp.activate(ignoringOtherApps: true)
-        switch alert.runModal() {
+        let response = alert.runModal()
+        // Recording the skip before an install is harmless: the marker only
+        // quiets future notifications for a version that gets installed anyway.
+        if alert.suppressionButton?.state == .on { skipCurrentUpdate() }
+        switch response {
         case .alertFirstButtonReturn:
             if isHomebrewManaged {
                 copyBrewCommand()
@@ -337,8 +344,6 @@ final class UpdateManager: ObservableObject {
             }
         case .alertSecondButtonReturn:
             openReleasePage()
-        case .alertThirdButtonReturn:
-            skipCurrentUpdate()
         default:
             break
         }
@@ -346,10 +351,11 @@ final class UpdateManager: ObservableObject {
 
     /// Scrollable, rendered release notes. Unlike the fixed-size text views in
     /// HotkeyActions, the document view must be allowed to grow vertically for
-    /// programmatically-set content to engage the scroller.
+    /// programmatically-set content to engage the scroller. The width also
+    /// sets the alert window's width, sized so the button row fits one line.
     private static func releaseNotesAccessoryView(markdown: String) -> NSScrollView {
-        let scroll = NSScrollView(frame: NSRect(x: 0, y: 0, width: 460, height: 200))
-        let textView = NSTextView(frame: NSRect(origin: .zero, size: scroll.contentSize))
+        let scroll = NSScrollView(frame: NSRect(x: 0, y: 0, width: 560, height: 220))
+        let textView = ModalFriendlyTextView(frame: NSRect(origin: .zero, size: scroll.contentSize))
         textView.isEditable = false
         textView.isSelectable = true
         textView.drawsBackground = true
@@ -363,6 +369,11 @@ final class UpdateManager: ObservableObject {
         textView.textContainer?.widthTracksTextView = true
         textView.textStorage?.setAttributedString(
             ReleaseNotesFormatter.attributedString(fromMarkdown: markdown))
+        // Lay out everything up front so modal-mode scrolling never waits on
+        // lazy layout.
+        if let layoutManager = textView.layoutManager, let container = textView.textContainer {
+            layoutManager.ensureLayout(for: container)
+        }
         scroll.documentView = textView
         scroll.hasVerticalScroller = true
         scroll.borderType = .bezelBorder
@@ -412,4 +423,12 @@ final class UpdateManager: ObservableObject {
             NSWorkspace.shared.open(Self.releasesFallbackURL)
         }
     }
+}
+
+/// Responsive scrolling stalls in NSAlert's modal run loop - wheel and
+/// touchpad events commit asynchronously and only land once inertia ends -
+/// so opt out and take the synchronous path, the same one scrollbar
+/// dragging uses.
+private final class ModalFriendlyTextView: NSTextView {
+    override class var isCompatibleWithResponsiveScrolling: Bool { false }
 }
