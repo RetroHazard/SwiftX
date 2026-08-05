@@ -31,7 +31,15 @@ final class UpdateManager: ObservableObject {
     }
 
     @Published private(set) var state: State = .idle
+    /// Completion time of the most recent check, any outcome. Backed by
+    /// ApplicationConfig so "Last checked" survives a relaunch, unlike `state`.
+    @Published private(set) var lastCheckDate: Date?
     let isHomebrewManaged = HomebrewDetector.isHomebrewManaged()
+
+    private init() {
+        let stored = ApplicationConfig.load().updateLastCheckTime
+        if stored > 0 { lastCheckDate = Date(timeIntervalSince1970: stored) }
+    }
 
     private var loop: Task<Void, Never>?
     private var installInFlight = false
@@ -84,16 +92,22 @@ final class UpdateManager: ObservableObject {
         await backgroundCheck()
     }
 
+    private func recordCheckTime() {
+        let now = Date()
+        lastCheckDate = now
+        var config = ApplicationConfig.load()
+        config.updateLastCheckTime = now.timeIntervalSince1970
+        try? config.save()
+    }
+
     private func backgroundCheck() async {
         guard let current = Self.currentVersion() else { return }
         let outcome: UpdateChecker.Outcome
         do {
             let release = try await UpdateChecker.fetchLatestRelease()
-            var config = ApplicationConfig.load()
-            config.updateLastCheckTime = Date().timeIntervalSince1970
-            try? config.save()
+            recordCheckTime()
             outcome = try UpdateChecker.evaluate(current: current, release: release,
-                                                 skippedVersion: config.updateSkippedVersion)
+                                                 skippedVersion: ApplicationConfig.load().updateSkippedVersion)
         } catch {
             AppLog.updates.error("background check failed: \(error.localizedDescription, privacy: .public)")
             return
@@ -114,16 +128,16 @@ final class UpdateManager: ObservableObject {
             AppLog.updates.info("update available: \(update.version, privacy: .public)")
             if isHomebrewManaged {
                 Notifier.notifyUpdate(
-                    title: "SwiftX \(update.version) is available",
-                    body: "Update with \(Self.brewUpgradeCommand)",
+                    title: L10n.t("update.notify.available_title", "\(update.version)"),
+                    body: L10n.t("update.notify.available_body_brew", Self.brewUpgradeCommand),
                     version: "\(update.version)", url: update.release.htmlURL.absoluteString,
                     installed: false)
             } else if ApplicationConfig.load().updateAutoInstall {
                 await autoInstall(update)
             } else {
                 Notifier.notifyUpdate(
-                    title: "SwiftX \(update.version) is available",
-                    body: "You have \(current). Install now or view the release notes.",
+                    title: L10n.t("update.notify.available_title", "\(update.version)"),
+                    body: L10n.t("update.notify.available_body", "\(current)"),
                     version: "\(update.version)", url: update.release.htmlURL.absoluteString,
                     installed: false)
             }
@@ -155,15 +169,14 @@ final class UpdateManager: ObservableObject {
 
     private func manualCheck() async {
         guard let current = Self.currentVersion() else {
-            state = .failed("This build has no version, so updates cannot be compared.")
-            presentFailureAlert("This build has no version, so updates cannot be compared.")
+            let message = L10n.t("update.alert.no_version")
+            state = .failed(message)
+            presentFailureAlert(message)
             return
         }
         do {
             let release = try await UpdateChecker.fetchLatestRelease()
-            var config = ApplicationConfig.load()
-            config.updateLastCheckTime = Date().timeIntervalSince1970
-            try? config.save()
+            recordCheckTime()
             let outcome = try UpdateChecker.evaluate(current: current, release: release,
                                                      skippedVersion: "")
             switch outcome {
@@ -264,8 +277,8 @@ final class UpdateManager: ObservableObject {
                 presentRelaunchAlert(update.version)
             } else {
                 Notifier.notifyUpdate(
-                    title: "SwiftX \(update.version) installed",
-                    body: "Relaunch to finish updating.",
+                    title: L10n.t("update.notify.installed_title", "\(update.version)"),
+                    body: L10n.t("update.notify.installed_body"),
                     version: "\(update.version)", url: update.release.htmlURL.absoluteString,
                     installed: true)
             }
@@ -276,7 +289,7 @@ final class UpdateManager: ObservableObject {
                 presentInstallFailedAlert(error.localizedDescription, update: update)
             } else {
                 Notifier.notifyUpdate(
-                    title: "SwiftX update failed",
+                    title: L10n.t("update.notify.failed_title"),
                     body: error.localizedDescription,
                     version: "\(update.version)", url: update.release.htmlURL.absoluteString,
                     installed: false)
@@ -288,31 +301,31 @@ final class UpdateManager: ObservableObject {
 
     private func presentUpToDateAlert(current: CalVer) {
         let alert = NSAlert()
-        alert.messageText = "SwiftX is up to date"
-        alert.informativeText = "Version \(current) is the latest release."
+        alert.messageText = L10n.t("update.alert.up_to_date_title")
+        alert.informativeText = L10n.t("update.alert.up_to_date_body", "\(current)")
         NSApp.activate(ignoringOtherApps: true)
         alert.runModal()
     }
 
     private func presentUpdateAlert(_ update: UpdateChecker.AvailableUpdate, current: CalVer) {
         let alert = NSAlert()
-        alert.messageText = "SwiftX \(update.version) is available"
-        var detail = "You have \(current)."
+        alert.messageText = L10n.t("update.alert.available_title", "\(update.version)")
+        var detail = L10n.t("update.alert.you_have", "\(current)")
         if let notes = update.release.body, !notes.isEmpty {
             detail += "\n\n" + String(notes.prefix(500))
         }
         alert.informativeText = detail
         if isHomebrewManaged {
-            alert.addButton(withTitle: "Copy brew Command")
-            alert.informativeText += "\n\nThis copy is managed by Homebrew; update with \(Self.brewUpgradeCommand)."
+            alert.addButton(withTitle: L10n.t("update.alert.copy_brew_command"))
+            alert.informativeText += "\n\n" + L10n.t("update.alert.brew_managed_suffix", Self.brewUpgradeCommand)
         } else if canSelfInstall {
-            alert.addButton(withTitle: "Install Update")
+            alert.addButton(withTitle: L10n.t("update.alert.install_update"))
         } else {
-            alert.addButton(withTitle: "Open Release Page")
+            alert.addButton(withTitle: L10n.t("update.alert.open_release_page"))
         }
-        alert.addButton(withTitle: "View Release Page")
-        alert.addButton(withTitle: "Skip This Version")
-        alert.addButton(withTitle: "Cancel")
+        alert.addButton(withTitle: L10n.t("update.alert.view_release_page"))
+        alert.addButton(withTitle: L10n.t("update.alert.skip_version"))
+        alert.addButton(withTitle: L10n.t("common.cancel"))
         NSApp.activate(ignoringOtherApps: true)
         switch alert.runModal() {
         case .alertFirstButtonReturn:
@@ -334,31 +347,30 @@ final class UpdateManager: ObservableObject {
 
     private func presentBrewAlert(_ update: UpdateChecker.AvailableUpdate) {
         let alert = NSAlert()
-        alert.messageText = "Update with Homebrew"
-        alert.informativeText = "This copy of SwiftX is managed by Homebrew. "
-            + "Update it with:\n\n\(Self.brewUpgradeCommand)"
-        alert.addButton(withTitle: "Copy Command")
-        alert.addButton(withTitle: "Cancel")
+        alert.messageText = L10n.t("update.alert.brew_title")
+        alert.informativeText = L10n.t("update.alert.brew_body", Self.brewUpgradeCommand)
+        alert.addButton(withTitle: L10n.t("update.alert.copy_command"))
+        alert.addButton(withTitle: L10n.t("common.cancel"))
         NSApp.activate(ignoringOtherApps: true)
         if alert.runModal() == .alertFirstButtonReturn { copyBrewCommand() }
     }
 
     private func presentRelaunchAlert(_ version: CalVer) {
         let alert = NSAlert()
-        alert.messageText = "SwiftX \(version) installed"
-        alert.informativeText = "The update takes effect after a relaunch."
-        alert.addButton(withTitle: "Relaunch Now")
-        alert.addButton(withTitle: "Later")
+        alert.messageText = L10n.t("update.alert.installed_title", "\(version)")
+        alert.informativeText = L10n.t("update.alert.installed_body")
+        alert.addButton(withTitle: L10n.t("update.alert.relaunch_now"))
+        alert.addButton(withTitle: L10n.t("update.alert.later"))
         NSApp.activate(ignoringOtherApps: true)
         if alert.runModal() == .alertFirstButtonReturn { relaunchNow() }
     }
 
     private func presentInstallFailedAlert(_ message: String, update: UpdateChecker.AvailableUpdate) {
         let alert = NSAlert()
-        alert.messageText = "Update could not be installed"
-        alert.informativeText = message + "\n\nYou can download the update from the release page instead."
-        alert.addButton(withTitle: "Open Release Page")
-        alert.addButton(withTitle: "Cancel")
+        alert.messageText = L10n.t("update.alert.install_failed_title")
+        alert.informativeText = message + "\n\n" + L10n.t("update.alert.install_failed_suffix")
+        alert.addButton(withTitle: L10n.t("update.alert.open_release_page"))
+        alert.addButton(withTitle: L10n.t("common.cancel"))
         NSApp.activate(ignoringOtherApps: true)
         if alert.runModal() == .alertFirstButtonReturn {
             NSWorkspace.shared.open(update.release.htmlURL)
@@ -367,10 +379,10 @@ final class UpdateManager: ObservableObject {
 
     private func presentFailureAlert(_ message: String) {
         let alert = NSAlert()
-        alert.messageText = "Update check failed"
+        alert.messageText = L10n.t("update.alert.check_failed_title")
         alert.informativeText = message
-        alert.addButton(withTitle: "Open Releases Page")
-        alert.addButton(withTitle: "Cancel")
+        alert.addButton(withTitle: L10n.t("update.alert.open_releases_page"))
+        alert.addButton(withTitle: L10n.t("common.cancel"))
         NSApp.activate(ignoringOtherApps: true)
         if alert.runModal() == .alertFirstButtonReturn {
             NSWorkspace.shared.open(Self.releasesFallbackURL)

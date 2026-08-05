@@ -34,6 +34,10 @@ something else lands first. See [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md#ci).
 - [`docs/solutions/`](docs/solutions/) — a knowledge base of non-obvious patterns and gotchas found
   while porting (SPM app-bundle packaging, `swift test` requiring full Xcode, TCC quirks, etc.).
   Add an entry here when you hit something similarly non-obvious.
+- [`docs/LOCALIZATION.md`](docs/LOCALIZATION.md) — how translations work and how to add a
+  language (one `Localizable.strings` file per language, no code changes needed). User-facing
+  strings in code go through `L10n.t("namespace.key")`, never as bare literals;
+  `./Scripts/check-localizations.sh` validates the tables.
 
 ## Coding conventions
 
@@ -69,6 +73,16 @@ something else lands first. See [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md#ci).
   hotkey verb names, history schema), match it exactly so files and configs stay portable between
   Windows ShareX and SwiftX. Deviating from that shape needs a good reason, called out in the PR
   description.
+
+- Settings panes get one file each (`UploadsSettingsView.swift`, `HotkeysSettingsView.swift`, …) and
+  their controls write through the shared bindings in `Sources/SwiftXApp/SettingsBindings.swift` —
+  `$state.field(\.keyPath)`, or `SettingsBinding.onDisk` for config no view holds in `@State`. Don't
+  re-roll a per-pane write-through binding; the shared one also merges its write against a fresh
+  load, so one pane can't revert another's changes. Likewise, a list of after-capture/after-upload
+  task flags comes from `TaskFlagToggles` driven by `AfterCapturePipeline.implemented`, never a
+  hand-kept array — hand-kept ones drift out of sync with the pipeline and silently hide working
+  features.
+
 - Keep `docs/macos-swift-port/PARITY.md` truthful — mark a row `Ported` only once it's wired end to
   end, not just scaffolded.
 

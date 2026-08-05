@@ -59,11 +59,13 @@ final class ScrollingCaptureController: ObservableObject {
 
             if let image = stitcher.makeImage() {
                 if stitcher.status == .partiallySuccessful {
-                    Notifier.notify(title: "Scrolling Capture", body: "Some frames did not align cleanly; the result may have seams.")
+                    Notifier.notify(title: L10n.t("capture.scrolling.window_title"),
+                                    body: L10n.t("capture.scrolling.seams_warning"))
                 }
                 await AfterCapturePipeline.run(image: image)
             } else {
-                Notifier.notify(title: "Scrolling Capture", body: "Could not stitch any frames.")
+                Notifier.notify(title: L10n.t("capture.scrolling.window_title"),
+                                body: L10n.t("capture.scrolling.stitch_failed"))
             }
         }
     }
@@ -91,7 +93,7 @@ final class ScrollingCaptureController: ObservableObject {
     }
 
     static func show() {
-        ToolWindows.present(title: "Scrolling Capture", content: ScrollingCaptureView())
+        ToolWindows.present(title: L10n.t("capture.scrolling.window_title"), content: ScrollingCaptureView())
     }
 }
 
@@ -101,22 +103,22 @@ struct ScrollingCaptureView: View {
 
     var body: some View {
         Form {
-            TextField("Start delay (ms)", value: $options.startDelay, format: .number)
-            TextField("Scroll delay (ms)", value: $options.scrollDelay, format: .number)
-            TextField("Scroll amount (lines)", value: $options.scrollAmount, format: .number)
-            Toggle("Scroll to top before capturing", isOn: $options.autoScrollTop)
-            Toggle("Auto ignore fixed bottom edge", isOn: $options.autoIgnoreBottomEdge)
+            TextField(L10n.t("capture.scrolling.start_delay"), value: $options.startDelay, format: .number)
+            TextField(L10n.t("capture.scrolling.scroll_delay"), value: $options.scrollDelay, format: .number)
+            TextField(L10n.t("capture.scrolling.scroll_amount"), value: $options.scrollAmount, format: .number)
+            Toggle(L10n.t("capture.scrolling.scroll_to_top"), isOn: $options.autoScrollTop)
+            Toggle(L10n.t("capture.scrolling.ignore_bottom_edge"), isOn: $options.autoIgnoreBottomEdge)
 
             Divider()
 
             HStack {
                 if controller.isCapturing {
-                    Button("Stop") { controller.stop() }
+                    Button(L10n.t("capture.scrolling.stop")) { controller.stop() }
                         .keyboardShortcut(.defaultAction)
-                    Text("\(controller.frameCount) frames")
+                    Text(L10n.t("capture.scrolling.frames", controller.frameCount))
                         .foregroundStyle(.secondary)
                 } else {
-                    Button("Select Region & Start") {
+                    Button(L10n.t("capture.scrolling.select_start")) {
                         save()
                         controller.start()
                     }

@@ -23,15 +23,15 @@ public enum OAuthError: LocalizedError, Equatable {
     public var errorDescription: String? {
         switch self {
         case .notConfigured(let name):
-            return "\(name) needs OAuth app credentials. Add a client ID in Settings → Upload destination."
+            return L10n.t("upload.error.oauth.not_configured", name)
         case .notAuthenticated(let name):
-            return "Not connected to \(name). Click Connect in Settings → Upload destination."
+            return L10n.t("upload.error.oauth.not_authenticated", name)
         case .tokenRefreshFailed(let name):
-            return "Could not refresh the \(name) session. Reconnect in Settings."
+            return L10n.t("upload.error.oauth.token_refresh_failed", name)
         case .invalidTokenResponse:
-            return "The authorization server returned an unexpected response."
+            return L10n.t("upload.error.oauth.invalid_token_response")
         case .authorizationFailed(let reason):
-            return "Authorization failed: \(reason)"
+            return L10n.t("upload.error.oauth.authorization_failed", reason)
         }
     }
 }

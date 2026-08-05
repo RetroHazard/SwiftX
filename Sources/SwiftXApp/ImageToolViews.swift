@@ -8,6 +8,7 @@
 
 import AppKit
 import CaptureKit
+import SharedKit
 import SwiftUI
 import ToolsKit
 
@@ -18,19 +19,20 @@ extension ToolWindows {
         panel.allowsMultipleSelection = true
         NSApp.activate(ignoringOtherApps: true)
         guard panel.runModal() == .OK, !panel.urls.isEmpty else { return }
-        present(title: "Image Viewer", resizable: true, content: ImageViewerView(files: panel.urls))
+        present(title: L10n.t("toolui.window.image_viewer"), resizable: true,
+                content: ImageViewerView(files: panel.urls))
     }
 
     static func showImageCombiner() {
-        present(title: "Image Combiner", resizable: true, content: ImageCombinerView())
+        present(title: L10n.t("toolui.window.image_combiner"), resizable: true, content: ImageCombinerView())
     }
 
     static func showImageSplitter() {
-        present(title: "Image Splitter", content: ImageSplitterView())
+        present(title: L10n.t("toolui.window.image_splitter"), content: ImageSplitterView())
     }
 
     static func showImageThumbnailer() {
-        present(title: "Image Thumbnailer", resizable: true, content: ImageThumbnailerView())
+        present(title: L10n.t("toolui.window.image_thumbnailer"), resizable: true, content: ImageThumbnailerView())
     }
 
     /// Upstream v21 background remover (Vision subject lifting here).
@@ -41,13 +43,13 @@ extension ToolWindows {
         guard panel.runModal() == .OK, let url = panel.url,
               let image = NSImage(contentsOf: url)?.cgImage(forProposedRect: nil, context: nil, hints: nil)
         else { return }
-        present(title: "Background Remover — \(url.lastPathComponent)", resizable: true,
+        present(title: L10n.t("toolui.window.background_remover", url.lastPathComponent), resizable: true,
                 content: BackgroundRemoverView(source: image))
     }
 
     /// Upstream v21 image comparer (side-by-side / slider diff).
     static func showImageComparer() {
-        present(title: "Image Comparer", resizable: true, content: ImageComparerView())
+        present(title: L10n.t("toolui.window.image_comparer"), resizable: true, content: ImageComparerView())
     }
 
     static func savePanel(suggestedName: String) -> URL? {
@@ -76,7 +78,7 @@ private struct ImageViewerView: View {
                 if let image = NSImage(contentsOf: files[index]) {
                     Image(nsImage: image).resizable().scaledToFit()
                 } else {
-                    Text("Could not load \(files[index].lastPathComponent)")
+                    Text(L10n.t("toolui.viewer.load_failed", files[index].lastPathComponent))
                         .foregroundStyle(.secondary)
                 }
             }
@@ -88,7 +90,7 @@ private struct ImageViewerView: View {
                     Image(systemName: "chevron.left")
                 }
                 .keyboardShortcut(.leftArrow, modifiers: [])
-                Text("\(files[index].lastPathComponent) (\(index + 1) of \(files.count))")
+                Text(L10n.t("toolui.viewer.position", files[index].lastPathComponent, index + 1, files.count))
                     .font(.caption)
                 Button {
                     index = (index + 1) % files.count
@@ -114,7 +116,7 @@ private struct FileListPicker: View {
             }
             .frame(minHeight: 120)
             HStack {
-                Button("Add Images…") {
+                Button(L10n.t("toolui.filelist.add_images")) {
                     let panel = NSOpenPanel()
                     panel.allowedContentTypes = [.image]
                     panel.allowsMultipleSelection = true
@@ -122,9 +124,9 @@ private struct FileListPicker: View {
                         files.append(contentsOf: panel.urls)
                     }
                 }
-                Button("Clear") { files.removeAll() }.disabled(files.isEmpty)
+                Button(L10n.t("toolui.filelist.clear")) { files.removeAll() }.disabled(files.isEmpty)
                 Spacer()
-                Text("\(files.count) images").foregroundStyle(.secondary).font(.caption)
+                Text(L10n.t("toolui.filelist.count", files.count)).foregroundStyle(.secondary).font(.caption)
             }
         }
     }
@@ -142,23 +144,23 @@ private struct ImageCombinerView: View {
         VStack(alignment: .leading, spacing: 12) {
             FileListPicker(files: $files)
             HStack {
-                Picker("Orientation", selection: $orientation) {
-                    ForEach(ImageCombineOrientation.allCases, id: \.self) { Text($0.rawValue) }
+                Picker(L10n.t("toolui.combiner.orientation"), selection: $orientation) {
+                    ForEach(ImageCombineOrientation.allCases, id: \.self) { Text($0.localizedName) }
                 }
                 .fixedSize()
-                Picker("Alignment", selection: $alignment) {
-                    ForEach(ImageCombineAlignment.allCases, id: \.self) { Text($0.rawValue) }
+                Picker(L10n.t("toolui.combiner.alignment"), selection: $alignment) {
+                    ForEach(ImageCombineAlignment.allCases, id: \.self) { Text($0.localizedName) }
                 }
                 .fixedSize()
             }
             HStack {
-                Stepper("Spacing: \(spacing) px", value: $spacing, in: 0...100)
-                Stepper("Wrap after: \(wrapAfter)", value: $wrapAfter, in: 0...50)
-                    .help("0 = single row/column")
+                Stepper(L10n.t("toolui.combiner.spacing", spacing), value: $spacing, in: 0...100)
+                Stepper(L10n.t("toolui.combiner.wrap_after", wrapAfter), value: $wrapAfter, in: 0...50)
+                    .help(L10n.t("toolui.combiner.wrap_help"))
             }
             HStack {
                 Spacer()
-                Button("Combine & Save…") { combine() }
+                Button(L10n.t("toolui.combiner.combine_save")) { combine() }
                     .keyboardShortcut(.defaultAction)
                     .disabled(files.count < 2)
             }
@@ -170,7 +172,8 @@ private struct ImageCombinerView: View {
     private func combine() {
         let images = files.compactMap { ImageLoader.load(url: $0) }
         guard images.count == files.count else {
-            Notifier.notify(title: "Image combiner", body: "Some files could not be read.")
+            Notifier.notify(title: L10n.t("toolui.combiner.notify_title"),
+                            body: L10n.t("toolui.combiner.read_failed"))
             return
         }
         guard let combined = ImageTools.combine(images, orientation: orientation,
@@ -181,7 +184,7 @@ private struct ImageCombinerView: View {
             try ImageWriter.writePNG(combined, to: url)
             NSWorkspace.shared.activateFileViewerSelecting([url])
         } catch {
-            Notifier.notify(title: "Image combiner", body: error.localizedDescription)
+            Notifier.notify(title: L10n.t("toolui.combiner.notify_title"), body: error.localizedDescription)
         }
     }
 }
@@ -193,23 +196,23 @@ private struct ImageSplitterView: View {
 
     var body: some View {
         Form {
-            LabeledContent("Image") {
+            LabeledContent(L10n.t("toolui.splitter.image")) {
                 HStack {
-                    Text(file?.lastPathComponent ?? "No file selected")
+                    Text(file?.lastPathComponent ?? L10n.t("toolui.no_file_selected"))
                         .foregroundStyle(file == nil ? .secondary : .primary)
                         .lineLimit(1).truncationMode(.middle)
-                    Button("Browse…") {
+                    Button(L10n.t("common.browse")) {
                         let panel = NSOpenPanel()
                         panel.allowedContentTypes = [.image]
                         if panel.runModal() == .OK { file = panel.url }
                     }
                 }
             }
-            Stepper("Rows: \(rows)", value: $rows, in: 1...20)
-            Stepper("Columns: \(columns)", value: $columns, in: 1...20)
+            Stepper(L10n.t("toolui.splitter.rows", rows), value: $rows, in: 1...20)
+            Stepper(L10n.t("toolui.splitter.columns", columns), value: $columns, in: 1...20)
             HStack {
                 Spacer()
-                Button("Split & Save…") { split() }
+                Button(L10n.t("toolui.splitter.split_save")) { split() }
                     .keyboardShortcut(.defaultAction)
                     .disabled(file == nil || rows * columns < 2)
             }
@@ -221,10 +224,11 @@ private struct ImageSplitterView: View {
 
     private func split() {
         guard let file, let image = ImageLoader.load(url: file),
-              let folder = ToolWindows.folderPanel(message: "Choose where to save the tiles") else { return }
+              let folder = ToolWindows.folderPanel(message: L10n.t("toolui.splitter.choose_folder")) else { return }
         let tiles = ImageTools.split(image, rows: rows, columns: columns)
         guard !tiles.isEmpty else {
-            Notifier.notify(title: "Image splitter", body: "The grid is larger than the image.")
+            Notifier.notify(title: L10n.t("toolui.splitter.notify_title"),
+                            body: L10n.t("toolui.splitter.grid_too_large"))
             return
         }
         let base = file.deletingPathExtension().lastPathComponent
@@ -235,7 +239,7 @@ private struct ImageSplitterView: View {
             }
             NSWorkspace.shared.open(folder)
         } catch {
-            Notifier.notify(title: "Image splitter", body: error.localizedDescription)
+            Notifier.notify(title: L10n.t("toolui.splitter.notify_title"), body: error.localizedDescription)
         }
     }
 }
@@ -249,12 +253,12 @@ private struct ImageThumbnailerView: View {
         VStack(alignment: .leading, spacing: 12) {
             FileListPicker(files: $files)
             HStack {
-                Stepper("Max width: \(maxWidth) px", value: $maxWidth, in: 16...2048, step: 16)
-                Stepper("Max height: \(maxHeight) px", value: $maxHeight, in: 16...2048, step: 16)
+                Stepper(L10n.t("toolui.thumbnailer.max_width", maxWidth), value: $maxWidth, in: 16...2048, step: 16)
+                Stepper(L10n.t("toolui.thumbnailer.max_height", maxHeight), value: $maxHeight, in: 16...2048, step: 16)
             }
             HStack {
                 Spacer()
-                Button("Generate…") { generate() }
+                Button(L10n.t("toolui.generate")) { generate() }
                     .keyboardShortcut(.defaultAction)
                     .disabled(files.isEmpty)
             }
@@ -264,7 +268,7 @@ private struct ImageThumbnailerView: View {
     }
 
     private func generate() {
-        guard let folder = ToolWindows.folderPanel(message: "Choose where to save the thumbnails") else { return }
+        guard let folder = ToolWindows.folderPanel(message: L10n.t("toolui.thumbnailer.choose_folder")) else { return }
         var written = 0
         for file in files {
             guard let image = ImageLoader.load(url: file),
@@ -274,7 +278,8 @@ private struct ImageThumbnailerView: View {
                 written += 1
             }
         }
-        Notifier.notify(title: "Image thumbnailer", body: "\(written) of \(files.count) thumbnails saved.")
+        Notifier.notify(title: L10n.t("toolui.thumbnailer.notify_title"),
+                        body: L10n.t("toolui.thumbnailer.saved", written, files.count))
         NSWorkspace.shared.open(folder)
     }
 }
@@ -295,7 +300,7 @@ private struct BackgroundRemoverView: View {
                 } else if let errorMessage {
                     Text(errorMessage).foregroundStyle(.secondary)
                 } else {
-                    ProgressView("Isolating subject…")
+                    ProgressView(L10n.t("toolui.bgremover.isolating"))
                 }
             }
             .frame(minWidth: 480, maxWidth: .infinity, minHeight: 360, maxHeight: .infinity)
@@ -303,11 +308,11 @@ private struct BackgroundRemoverView: View {
 
             HStack {
                 Spacer()
-                Button("Copy") {
+                Button(L10n.t("common.copy")) {
                     if let result { ImageWriter.copyToClipboard(result) }
                 }
                 .disabled(result == nil)
-                Button("Save As…") {
+                Button(L10n.t("toolui.bgremover.save_as")) {
                     guard let result,
                           let url = ToolWindows.savePanel(suggestedName: "subject.png") else { return }
                     try? ImageWriter.writePNG(result, to: url)
@@ -340,12 +345,16 @@ private struct ImageComparerView: View {
     var body: some View {
         VStack(spacing: 8) {
             HStack {
-                Button(first == nil ? "First Image…" : "First Image ✓") { pick { first = $0 } }
-                Button(second == nil ? "Second Image…" : "Second Image ✓") { pick { second = $0 } }
+                Button(first == nil ? L10n.t("toolui.comparer.first") : L10n.t("toolui.comparer.first_done")) {
+                    pick { first = $0 }
+                }
+                Button(second == nil ? L10n.t("toolui.comparer.second") : L10n.t("toolui.comparer.second_done")) {
+                    pick { second = $0 }
+                }
                 Spacer()
                 Picker("", selection: $mode) {
-                    Text("Slider").tag("Slider")
-                    Text("Side by Side").tag("SideBySide")
+                    Text(L10n.t("toolui.comparer.slider")).tag("Slider")
+                    Text(L10n.t("toolui.comparer.side_by_side")).tag("SideBySide")
                 }
                 .pickerStyle(.segmented)
                 .fixedSize()
@@ -376,7 +385,7 @@ private struct ImageComparerView: View {
                     Slider(value: $split)
                 }
             } else {
-                Text("Choose two images to compare.")
+                Text(L10n.t("toolui.comparer.choose_two"))
                     .foregroundStyle(.secondary)
                     .frame(minWidth: 640, maxWidth: .infinity, minHeight: 400, maxHeight: .infinity)
             }
@@ -398,6 +407,27 @@ private struct ImageComparerView: View {
         guard panel.runModal() == .OK, let url = panel.url,
               let image = NSImage(contentsOf: url) else { return }
         assign(image)
+    }
+}
+
+/// Display names for the combiner enums; the rawValues stay untouched as
+/// the persisted/identity values.
+extension ImageCombineOrientation {
+    var localizedName: String {
+        switch self {
+        case .horizontal: return L10n.t("toolui.combiner.orientation.horizontal")
+        case .vertical: return L10n.t("toolui.combiner.orientation.vertical")
+        }
+    }
+}
+
+extension ImageCombineAlignment {
+    var localizedName: String {
+        switch self {
+        case .leadingOrTop: return L10n.t("toolui.combiner.alignment.leading_or_top")
+        case .center: return L10n.t("toolui.combiner.alignment.center")
+        case .trailingOrBottom: return L10n.t("toolui.combiner.alignment.trailing_or_bottom")
+        }
     }
 }
 

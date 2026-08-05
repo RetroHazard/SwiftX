@@ -13,12 +13,12 @@ import SwiftUI
 
 extension ToolWindows {
     static func showLog() {
-        present(title: "SwiftX Log", resizable: true, content: LogViewerView())
+        present(title: L10n.t("log.window_title"), resizable: true, content: LogViewerView())
     }
 }
 
 private struct LogViewerView: View {
-    @State private var text = "Loading…"
+    @State private var text = L10n.t("log.loading")
 
     var body: some View {
         VStack(spacing: 8) {
@@ -33,17 +33,16 @@ private struct LogViewerView: View {
             .background(Color(nsColor: .textBackgroundColor))
 
             HStack {
-                Text("This session's log (subsystem \(AppLog.subsystem)); "
-                     + "the unified log owns storage, so there is nothing to clean up.")
+                Text(L10n.t("log.footer", AppLog.subsystem))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Spacer()
-                Button("Copy") {
+                Button(L10n.t("common.copy")) {
                     let pasteboard = NSPasteboard.general
                     pasteboard.clearContents()
                     pasteboard.setString(text, forType: .string)
                 }
-                Button("Refresh") { load() }
+                Button(L10n.t("log.refresh")) { load() }
             }
         }
         .padding(12)
@@ -51,6 +50,8 @@ private struct LogViewerView: View {
     }
 
     private func load() {
+        let emptyMessage = L10n.t("log.empty")
+        let readFailedFormat = L10n.t("log.read_failed")
         Task.detached(priority: .userInitiated) {
             let content: String
             do {
@@ -62,9 +63,9 @@ private struct LogViewerView: View {
                     .compactMap { $0 as? OSLogEntryLog }
                     .filter { $0.subsystem == AppLog.subsystem }
                     .map { "\(formatter.string(from: $0.date)) [\($0.category)] \($0.composedMessage)" }
-                content = lines.isEmpty ? "No log entries this session." : lines.joined(separator: "\n")
+                content = lines.isEmpty ? emptyMessage : lines.joined(separator: "\n")
             } catch {
-                content = "Could not read the log: \(error.localizedDescription)"
+                content = String(format: readFailedFormat, error.localizedDescription)
             }
             await MainActor.run { text = content }
         }

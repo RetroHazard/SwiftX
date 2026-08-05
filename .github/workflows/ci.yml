@@ -164,6 +164,11 @@ jobs:
         with:
           persist-credentials: false
 
+      # Cheap and fails fast: every language file parses, carries exactly the
+      # en.lproj key set, and every L10n.t("...") literal in code resolves.
+      - name: Localizations are consistent
+        run: ./Scripts/check-localizations.sh
+
       # --build-tests builds the executable products AND the test bundle in one
       # pass. Bare `swift test` builds only test targets and their dependencies,
       # which would leave swiftx/swiftx-host/swiftx-share for make-app.sh to
@@ -199,6 +204,13 @@ jobs:
           test -x "$APPEX/Contents/MacOS/SwiftXShare"
           test -f "$APP/Contents/Resources/SwiftX.icns"
           test -f "$APP/Contents/Resources/LICENSE"
+          # Localized tables must ship inside the SharedKit resource bundle in
+          # BOTH the app and the appex — a missing copy in make-app.sh would
+          # otherwise fail silently at runtime (English keys shown raw).
+          # find, not a hard-coded path: SwiftPM's bundle layout may be flat or
+          # Contents/Resources-shaped depending on toolchain.
+          test -n "$(find "$APP/Contents/Resources/SwiftX_SharedKit.bundle" -path '*en.lproj/Localizable.strings')"
+          test -n "$(find "$APPEX/Contents/Resources/SwiftX_SharedKit.bundle" -path '*en.lproj/Localizable.strings')"
           plutil -lint "$APP/Contents/Info.plist"
           plutil -lint "$APPEX/Contents/Info.plist"
           codesign --verify --deep --strict "$APP"

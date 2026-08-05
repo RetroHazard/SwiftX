@@ -1,0 +1,1303 @@
+/* SwiftX - English (base) strings.
+   One file per language: copy this file to <code>.lproj/Localizable.strings,
+   translate the values (never the keys), and run Scripts/check-localizations.sh.
+   See /docs/LOCALIZATION.md for the contributor guide. */
+
+/* Common - shared buttons and labels */
+"common.ok" = "OK";
+"common.cancel" = "キャンセル";
+"common.save" = "保存";
+"common.close" = "閉じる";
+"common.delete" = "削除";
+"common.remove" = "削除";
+"common.add" = "追加";
+"common.edit" = "編集";
+"common.done" = "完了";
+"common.open" = "開く";
+"common.copy" = "コピー";
+"common.reset" = "リセット";
+"common.choose" = "選択…";
+"common.browse" = "参照…";
+"common.none" = "なし";
+"common.none_chosen" = "未選択";
+"common.name" = "名前";
+"common.enabled" = "有効";
+"common.continue" = "続ける";
+"common.quit" = "終了";
+"common.show_in_finder" = "Finderで表示";
+
+/* Status-bar menu (AppDelegate) */
+"menu.capture_region" = "領域をキャプチャ";
+"menu.capture_full_screen" = "画面全体をキャプチャ";
+"menu.capture_active_window" = "アクティブウインドウをキャプチャ";
+"menu.capture_screen" = "画面をキャプチャ…";
+"menu.capture_window" = "ウインドウをキャプチャ…";
+"menu.capture_last_region" = "前回の領域をキャプチャ";
+"menu.scrolling_capture" = "スクロールキャプチャ…";
+"menu.auto_capture" = "自動キャプチャ…";
+"menu.screenshot_delay" = "スクリーンショットの遅延";
+"menu.recording" = "録画";
+"menu.record_screen_region" = "画面を録画（領域）…";
+"menu.record_gif_region" = "GIFを録画（領域）…";
+"menu.stop_recording" = "録画を停止";
+"menu.pause_recording" = "録画を一時停止";
+"menu.resume_recording" = "録画を再開";
+"menu.abort_recording" = "録画を中止";
+"menu.upload" = "アップロード";
+"menu.tools" = "ツール";
+"menu.recent" = "最近の項目";
+"menu.main_window" = "メインウインドウ…";
+"menu.show_log" = "ログを表示…";
+"menu.check_for_updates" = "アップデートを確認…";
+"menu.settings" = "環境設定…";
+"menu.quit" = "SwiftXを終了";
+"menu.upload_file" = "ファイルをアップロード…";
+"menu.upload_folder" = "フォルダをアップロード…";
+"menu.upload_clipboard" = "クリップボードからアップロード";
+"menu.upload_text" = "テキストをアップロード…";
+"menu.upload_url" = "URLをアップロード…";
+"menu.shorten_url" = "URLを短縮…";
+"menu.drop_window" = "ドロップウインドウ";
+"menu.stop_all_uploads" = "すべてのアップロードを停止";
+"menu.disable_uploads" = "アップロードを無効にする";
+"menu.recent_disabled" = "環境設定で無効になっています";
+"menu.recent_empty" = "最近のタスクはありません";
+"menu.recent_copy_tooltip" = "%@をコピー";
+"menu.delay_off" = "オフ";
+"menu.delay_second" = "%d秒";
+"menu.delay_seconds" = "%d秒";
+"menu.no_capturable_windows" = "キャプチャ可能なウインドウがありません";
+
+/* Tools menu */
+"tools.color_picker" = "カラーピッカー…";
+"tools.screen_color_picker" = "画面カラーピッカー";
+"tools.ruler" = "定規";
+"tools.pin_image_file" = "画像ファイルを画面にピン留め…";
+"tools.image_viewer" = "画像ビューア…";
+"tools.image_combiner" = "画像結合…";
+"tools.image_splitter" = "画像分割…";
+"tools.image_thumbnailer" = "画像サムネイル作成…";
+"tools.image_effects" = "画像エフェクト…";
+"tools.image_beautifier" = "画像装飾…";
+"tools.background_remover" = "背景除去…";
+"tools.image_comparer" = "画像比較…";
+"tools.video_converter" = "動画コンバータ…";
+"tools.video_thumbnailer" = "動画サムネイル作成…";
+"tools.ai_image_analysis" = "AI画像解析…";
+"tools.ocr" = "OCR…";
+"tools.qr_code" = "QRコード…";
+"tools.hash_checker" = "ハッシュチェッカー…";
+"tools.image_metadata" = "画像メタデータ…";
+"tools.index_folder" = "フォルダをインデックス…";
+"tools.clipboard_viewer" = "クリップボードビューア…";
+"tools.inspect_window" = "ウインドウを検査…";
+"tools.monitor_test" = "モニターテスト";
+
+/* Window titles */
+"window.main" = "SwiftX";
+"window.settings" = "SwiftX環境設定";
+
+/* Notifications */
+"notification.name_parser.title" = "名前パーサー";
+"notification.action.copy_url" = "URLをコピー";
+"notification.action.open" = "開く";
+"notification.action.show_in_finder" = "Finderで表示";
+"notification.action.annotate" = "注釈を付ける";
+"notification.action.delete" = "削除";
+"notification.action.install_update" = "アップデートをインストール";
+"notification.action.view_release" = "リリースを表示";
+"notification.action.skip_version" = "このバージョンをスキップ";
+"notification.action.relaunch" = "再起動";
+
+/* Accessibility */
+"accessibility.recording" = "SwiftX録画";
+
+/* Quick task presets (stored names stay English in the user's config;
+   these translate the built-in defaults at display time only) */
+"quicktask.save_upload_copy_url" = "保存、アップロード、URLをコピー";
+"quicktask.save_copy_image" = "保存、画像をコピー";
+"quicktask.save_copy_image_file" = "保存、画像ファイルをコピー";
+"quicktask.annotate_save_upload_copy_url" = "注釈、保存、アップロード、URLをコピー";
+"quicktask.upload_copy_url" = "アップロード、URLをコピー";
+"quicktask.save" = "保存";
+"quicktask.copy_image" = "画像をコピー";
+"quicktask.annotate" = "注釈";
+
+/* Share extension */
+"share.title" = "SwiftXでアップロード";
+"share.collecting" = "収集中…";
+"share.upload" = "アップロード";
+"share.nothing_to_upload" = "SwiftXでアップロードできる項目がありません。";
+"share.and_more" = "他%d件…";
+"share.error.unreachable" = "SwiftXを開けませんでした — SwiftX.appがインストールされているか確認してください。";
+
+/* Settings > General - language picker */
+"settings.general.section.language" = "言語";
+"settings.general.language.picker" = "アプリの言語";
+"settings.general.language.system_default" = "システム設定に従う";
+"settings.general.language.restart_title" = "言語を適用するには再起動してください";
+"settings.general.language.restart_body" = "新しい言語を適用するには、SwiftXを再起動する必要があります。";
+"settings.general.language.relaunch_now" = "今すぐ再起動";
+"settings.general.language.later" = "後で";
+
+/* ActionsSettingsView.swift */
+"settings.actions.help" = "「アクションを実行」がキャプチャで有効な場合、保存されたファイルに対してプログラムが順番に実行されます。プレースホルダ：$input、$output（%input/%outputは引用符付き）。";
+"settings.actions.program_path" = "プログラムのパス（/usr/local/bin/…）";
+"settings.actions.arguments" = "引数（空の場合はファイルパス）";
+"settings.actions.output_extension" = "出力の拡張子（タスクは出力ファイルで続行されます）";
+"settings.actions.only_for_extensions" = "対象の拡張子のみ（例：png、jpg — 空の場合はすべて）";
+"settings.actions.move_input_to_trash" = "変換成功後、入力ファイルをゴミ箱に移動";
+"settings.actions.unnamed_action" = "（名前のないアクション）";
+"settings.actions.add_action" = "アクションを追加";
+
+/* HotkeysSettingsView.swift */
+"settings.hotkeys.section.behavior" = "ホットキーの動作";
+"settings.hotkeys.disable_on_fullscreen" = "フルスクリーンアプリの使用中はホットキーを無効にする";
+"settings.hotkeys.repeat_limit" = "この時間内のホットキーの繰り返しを無視（ミリ秒、0でオフ）";
+"settings.hotkeys.add_hotkey" = "ホットキーを追加";
+"settings.hotkeys.recording_hint" = "新しいショートカットを押してください（修飾キーを1つ以上使用）。キャンセルするにはEscを押します。";
+"settings.hotkeys.press_keys" = "キーを押してください…";
+"settings.hotkeys.record" = "記録";
+
+/* HotkeysSettingsView.swift — HotkeyType labels (keys keep the rawValue's PascalCase; documented exception). Values are exactly what the previous camelCase-splitting derivation produced. */
+"hotkey.None" = "なし";
+"hotkey.FileUpload" = "ファイルアップロード";
+"hotkey.FolderUpload" = "フォルダアップロード";
+"hotkey.ClipboardUpload" = "クリップボードアップロード";
+"hotkey.ClipboardUploadWithContentViewer" = "コンテンツビューア付きクリップボードアップロード";
+"hotkey.UploadText" = "テキストをアップロード";
+"hotkey.UploadURL" = "URLをアップロード";
+"hotkey.DragDropUpload" = "ドラッグ＆ドロップアップロード";
+"hotkey.ShortenURL" = "URLを短縮";
+"hotkey.StopUploads" = "アップロードを停止";
+"hotkey.PrintScreen" = "画面全体をキャプチャ";
+"hotkey.ActiveWindow" = "アクティブウインドウ";
+"hotkey.CustomWindow" = "カスタムウインドウ";
+"hotkey.ActiveMonitor" = "アクティブモニター";
+"hotkey.RectangleRegion" = "矩形領域";
+"hotkey.RectangleLight" = "矩形（ライト）";
+"hotkey.RectangleTransparent" = "矩形（透明）";
+"hotkey.CustomRegion" = "カスタム領域";
+"hotkey.LastRegion" = "前回の領域";
+"hotkey.ScrollingCapture" = "スクロールキャプチャ";
+"hotkey.AutoCapture" = "自動キャプチャ";
+"hotkey.StartAutoCapture" = "自動キャプチャを開始";
+"hotkey.StopAutoCapture" = "自動キャプチャを停止";
+"hotkey.ScreenRecorder" = "画面録画";
+"hotkey.ScreenRecorderActiveWindow" = "画面録画（アクティブウインドウ）";
+"hotkey.ScreenRecorderCustomRegion" = "画面録画（カスタム領域）";
+"hotkey.StartScreenRecorder" = "画面録画を開始";
+"hotkey.ScreenRecorderGIF" = "画面録画（GIF）";
+"hotkey.ScreenRecorderGIFActiveWindow" = "画面録画（GIF、アクティブウインドウ）";
+"hotkey.ScreenRecorderGIFCustomRegion" = "画面録画（GIF、カスタム領域）";
+"hotkey.StartScreenRecorderGIF" = "GIF画面録画を開始";
+"hotkey.StopScreenRecording" = "画面録画を停止";
+"hotkey.PauseScreenRecording" = "画面録画を一時停止";
+"hotkey.AbortScreenRecording" = "画面録画を中止";
+"hotkey.ColorPicker" = "カラーピッカー";
+"hotkey.ScreenColorPicker" = "画面カラーピッカー";
+"hotkey.Ruler" = "定規";
+"hotkey.PinToScreen" = "画面にピン留め";
+"hotkey.PinToScreenFromScreen" = "画面から画面にピン留め";
+"hotkey.PinToScreenFromClipboard" = "クリップボードから画面にピン留め";
+"hotkey.PinToScreenFromFile" = "ファイルから画面にピン留め";
+"hotkey.PinToScreenCloseAll" = "画面ピン留めをすべて閉じる";
+"hotkey.ImageEditor" = "画像エディタ";
+"hotkey.ImageBeautifier" = "画像装飾";
+"hotkey.ImageEffects" = "画像エフェクト";
+"hotkey.ImageViewer" = "画像ビューア";
+"hotkey.BackgroundRemover" = "背景除去";
+"hotkey.ImageComparer" = "画像比較";
+"hotkey.ImageCombiner" = "画像結合";
+"hotkey.ImageSplitter" = "画像分割";
+"hotkey.ImageThumbnailer" = "画像サムネイル作成";
+"hotkey.VideoConverter" = "動画コンバータ";
+"hotkey.VideoThumbnailer" = "動画サムネイル作成";
+"hotkey.AnalyzeImage" = "画像を解析";
+"hotkey.OCR" = "OCR";
+"hotkey.QRCode" = "QRコード";
+"hotkey.QRCodeDecodeFromScreen" = "画面からQRコードをデコード";
+"hotkey.QRCodeScanRegion" = "領域のQRコードをスキャン";
+"hotkey.HashCheck" = "ハッシュチェック";
+"hotkey.Metadata" = "メタデータ";
+"hotkey.StripMetadata" = "メタデータを削除";
+"hotkey.IndexFolder" = "フォルダをインデックス";
+"hotkey.ClipboardViewer" = "クリップボードビューア";
+"hotkey.InspectWindow" = "ウインドウを検査";
+"hotkey.MonitorTest" = "モニターテスト";
+"hotkey.DisableHotkeys" = "ホットキーを無効にする";
+"hotkey.OpenMainWindow" = "メインウインドウを開く";
+"hotkey.OpenScreenshotsFolder" = "スクリーンショットフォルダを開く";
+"hotkey.OpenHistory" = "履歴を開く";
+"hotkey.OpenImageHistory" = "画像履歴を開く";
+"hotkey.ToggleActionsToolbar" = "アクションツールバーの表示切り替え";
+"hotkey.ToggleTrayMenu" = "トレイメニューの表示切り替え";
+"hotkey.ExitShareX" = "ShareXを終了";
+
+/* WatchFolders.swift */
+"settings.watchfolders.enable" = "フォルダを監視し、新しいファイルをアップロードする";
+"settings.watchfolders.filter" = "ファイル名フィルタ（例：*.png、空の場合はすべて）：";
+"settings.watchfolders.include_subdirectories" = "サブディレクトリを含める";
+"settings.watchfolders.move_to_screenshots" = "アップロード前にファイルをスクリーンショットフォルダに移動する";
+"settings.watchfolders.add_folder" = "フォルダを追加…";
+
+/* CustomUploaderEditorView.swift */
+"settings.customuploader.empty_hint" = "カスタムアップローダーがまだありません。新規作成するか、コミュニティの.sxcuファイルをインポートしてください。";
+"settings.customuploader.uploader" = "アップローダー";
+"settings.customuploader.active_suffix" = "　（有効）";
+"settings.customuploader.new" = "新規";
+"settings.customuploader.duplicate" = "複製";
+"settings.customuploader.delete" = "削除…";
+"settings.customuploader.import" = "インポート…";
+"settings.customuploader.export" = "エクスポート…";
+"settings.customuploader.set_active" = "有効に設定";
+"settings.customuploader.confirm_delete" = "%@を削除しますか？";
+"settings.customuploader.request" = "リクエスト";
+"settings.customuploader.method" = "メソッド";
+"settings.customuploader.request_url" = "リクエストURL";
+"settings.customuploader.body" = "本文";
+"settings.customuploader.file_form_name" = "ファイルのフォーム名";
+"settings.customuploader.body_data" = "本文データ（{input}、{filename}などに対応）";
+"settings.customuploader.url_parameters" = "URLパラメータ";
+"settings.customuploader.headers" = "ヘッダー";
+"settings.customuploader.body_arguments" = "本文の引数";
+"settings.customuploader.response" = "レスポンス";
+"settings.customuploader.response_url" = "URL（例：{json:url}）";
+"settings.customuploader.thumbnail_url" = "サムネイルURL";
+"settings.customuploader.deletion_url" = "削除用URL";
+"settings.customuploader.error_message" = "エラーメッセージ";
+"settings.customuploader.syntax_help" = "構文：{json:path}、{regex:pattern|group}、{response}、{filename}、{random:a|b}、{base64:text} — Windows版ShareXと同じです。";
+"settings.customuploader.value" = "値";
+"settings.customuploader.export_failed" = "エクスポートに失敗しました";
+
+/* NativeMessagingSetup.swift */
+"settings.browser.accept_uploads" = "ShareXブラウザ拡張機能からのアップロードを受け入れる";
+"settings.browser.host_missing" = "ホストバイナリが見つかりません — 同梱のSwiftX.appを実行してください（Scripts/make-app.sh）。";
+"settings.browser.manifests_help" = "Chrome、Edge、Firefox用のネイティブメッセージングマニフェストを登録します。登録後はブラウザを再起動してください。";
+
+/* Sources/EditorKit/EditorView.swift */
+"editor.window_title" = "SwiftX画像エディタ";
+"editor.stroke_color" = "線の色";
+"editor.fill_color_help" = "矩形／楕円の塗りつぶし色（透明の場合は塗りつぶしなし）";
+"editor.drop_shadow" = "ドロップシャドウ";
+"editor.line_width" = "線の太さ";
+"editor.arrow_head_style" = "矢印の先端スタイル";
+"editor.system_font" = "システムフォント";
+"editor.font_family" = "フォントファミリー";
+"editor.zoom_out" = "縮小";
+"editor.zoom_in" = "拡大";
+"editor.zoom_percent" = "%d%%";
+"editor.expand_canvas" = "キャンバスを拡張";
+"editor.expand_canvas_points" = "キャンバスを拡張（ポイント）";
+"editor.edge_top" = "上";
+"editor.edge_bottom" = "下";
+"editor.edge_left" = "左";
+"editor.edge_right" = "右";
+"editor.fill_color" = "塗りつぶしの色";
+"editor.expand" = "拡張";
+
+/* Sources/EditorKit/AnnotationModel.swift */
+"editor.tool.select" = "選択";
+"editor.tool.rectangle" = "矩形";
+"editor.tool.ellipse" = "楕円";
+"editor.tool.line" = "直線";
+"editor.tool.arrow" = "矢印";
+"editor.tool.freehand" = "フリーハンド";
+"editor.tool.text" = "テキスト";
+"editor.tool.speech_balloon" = "吹き出し";
+"editor.tool.step" = "ステップ番号";
+"editor.tool.magnify" = "拡大鏡";
+"editor.tool.blur" = "ぼかし";
+"editor.tool.pixelate" = "モザイク";
+"editor.tool.highlight" = "ハイライト";
+"editor.tool.smart_eraser" = "スマート消しゴム";
+"editor.tool.spotlight" = "スポットライト";
+"editor.tool.image" = "画像スタンプ";
+"editor.tool.crop" = "切り抜き";
+"editor.tool.cut_out" = "くり抜き";
+"editor.arrow_style.classic" = "クラシック";
+"editor.arrow_style.modern" = "モダン";
+
+/* Sources/EffectsKit/EffectsCore.swift — effect-type display names (values are the original C# class names shown in the UI today) */
+"effects.filter.alpha" = "Alpha";
+"effects.filter.black_white" = "BlackWhite";
+"effects.filter.brightness" = "Brightness";
+"effects.filter.colorize" = "Colorize";
+"effects.filter.contrast" = "Contrast";
+"effects.filter.gamma" = "Gamma";
+"effects.filter.grayscale" = "Grayscale";
+"effects.filter.hue" = "Hue";
+"effects.filter.inverse" = "Inverse";
+"effects.filter.matrix_color" = "MatrixColor";
+"effects.filter.polaroid" = "Polaroid";
+"effects.filter.replace_color" = "ReplaceColor";
+"effects.filter.saturation" = "Saturation";
+"effects.filter.selective_color" = "SelectiveColor";
+"effects.filter.sepia" = "Sepia";
+"effects.filter.blur" = "Blur";
+"effects.filter.color_depth" = "ColorDepth";
+"effects.filter.edge_detect" = "EdgeDetect";
+"effects.filter.emboss" = "Emboss";
+"effects.filter.gaussian_blur" = "GaussianBlur";
+"effects.filter.glow" = "Glow";
+"effects.filter.matrix_convolution" = "MatrixConvolution";
+"effects.filter.mean_removal" = "MeanRemoval";
+"effects.filter.outline" = "Outline";
+"effects.filter.pixelate" = "Pixelate";
+"effects.filter.reflection" = "Reflection";
+"effects.filter.rgb_split" = "RGBSplit";
+"effects.filter.shadow" = "Shadow";
+"effects.filter.sharpen" = "Sharpen";
+"effects.filter.slice" = "Slice";
+"effects.filter.smooth" = "Smooth";
+"effects.filter.torn_edge" = "TornEdge";
+"effects.filter.wave_edge" = "WaveEdge";
+"effects.filter.auto_crop" = "AutoCrop";
+"effects.filter.canvas" = "Canvas";
+"effects.filter.crop" = "Crop";
+"effects.filter.flip" = "Flip";
+"effects.filter.force_proportions" = "ForceProportions";
+"effects.filter.resize" = "Resize";
+"effects.filter.rotate" = "Rotate";
+"effects.filter.rounded_corners" = "RoundedCorners";
+"effects.filter.scale" = "Scale";
+"effects.filter.skew" = "Skew";
+"effects.filter.draw_background" = "DrawBackground";
+"effects.filter.draw_background_image" = "DrawBackgroundImage";
+"effects.filter.draw_border" = "DrawBorder";
+"effects.filter.draw_checkerboard" = "DrawCheckerboard";
+"effects.filter.draw_image" = "DrawImage";
+"effects.filter.draw_particles" = "DrawParticles";
+"effects.filter.draw_text" = "DrawText";
+"effects.filter.draw_text_ex" = "DrawTextEx";
+
+/* Sources/EffectsKit/EffectsCore.swift — categories and errors */
+"effects.core.category.drawings" = "描画";
+"effects.core.category.manipulations" = "変形";
+"effects.core.category.adjustments" = "調整";
+"effects.core.category.filters" = "フィルタ";
+"effects.core.error.invalid_config" = "このファイルには有効な画像エフェクトプリセットが含まれていません。";
+"effects.core.error.packaging_failed" = "画像エフェクトプリセットのパッケージ化に失敗しました。";
+
+/* HotkeyActions.swift */
+"notification.upload.folder_index_failed" = "フォルダのインデックス作成に失敗しました";
+"notification.url_shortener.title" = "URL短縮";
+"notification.url_shortener.could_not_shorten" = "%@を短縮できませんでした。";
+"notification.url_shortener.shortened" = "URLを短縮しました";
+"alert.clipboard.image_summary" = "画像 %d × %d";
+"notification.clipboard.upload_title" = "クリップボードアップロード";
+"notification.clipboard.empty" = "クリップボードは空です。";
+"alert.clipboard.upload_content_question" = "クリップボードの内容をアップロードしますか？";
+"alert.upload.upload_button" = "アップロード";
+"alert.upload.text_title" = "テキストをアップロード";
+"alert.upload.url_prompt" = "ダウンロードしてアップロードするURL";
+"alert.upload.shorten_url_prompt" = "短縮するURL";
+"pipeline.window.drop_to_upload" = "ドロップしてアップロード";
+"pipeline.drop_files_here" = "ここにファイルをドロップ";
+
+/* UploadCoordinator.swift */
+"notification.upload.failed" = "アップロードに失敗しました";
+"notification.upload.could_not_encode_image" = "画像をエンコードできませんでした。";
+"notification.upload.could_not_read" = "%@を読み込めませんでした。";
+"alert.upload.large_file_question" = "大きなファイルをアップロードしますか？";
+"alert.upload.large_file_info" = "%@は%@です。";
+"alert.upload.multi_question" = "%d個のファイルをアップロードしますか？";
+"alert.upload.multi_info" = "%d件のアップロードタスクが開始されます。";
+"alert.upload.upload_all_button" = "すべてアップロード";
+"notification.upload.download_too_large" = "ダウンロードサイズが大きすぎます";
+"notification.upload.download_too_large_body" = "%@は%dMBの制限を超えています。";
+"notification.upload.error_no_custom_uploader" = "カスタムアップローダーが設定されていません。環境設定→カスタムアップローダーで.sxcuをインポートしてください。";
+"notification.upload.error_not_implemented" = "アップロード先「%@」はまだ実装されていません。";
+"notification.upload.skipped" = "アップロードをスキップしました";
+"notification.upload.disabled_in_tray" = "トレイメニューでアップロードが無効になっています。";
+"notification.upload.stopped" = "停止しました";
+"notification.url_shortener.failed" = "URL短縮に失敗しました";
+"notification.upload.complete" = "アップロード完了";
+
+/* AfterCapturePipeline.swift */
+"notification.capture.action_failed" = "アクションに失敗しました";
+"alert.capture.file_exists" = "「%@」はすでに存在します";
+"alert.capture.file_exists_info" = "新しいキャプチャの処理方法を選択してください。";
+"alert.capture.keep_both" = "両方を保持";
+"alert.capture.overwrite" = "上書き";
+"alert.capture.task_failed" = "キャプチャ後タスクに失敗しました";
+"notification.pin.title" = "画面にピン留め";
+"notification.pin.no_image" = "クリップボードに画像がありません。";
+"pipeline.pin.copy_image" = "画像をコピー";
+"pipeline.pin.save_as" = "名前を付けて保存…";
+"pipeline.pin.close_all" = "すべてのピンを閉じる";
+
+/* RecordingCoordinator.swift */
+"notification.recording.converting" = "%@に変換中…";
+"notification.recording.conversion_failed_kept_mp4" = "%@への変換に失敗しました — MP4のまま保持します";
+"notification.recording.failed" = "録画に失敗しました";
+"alert.recording.abort_question" = "録画を中止しますか？";
+"alert.recording.abort_info" = "録画は破棄されます。";
+"alert.recording.abort_button" = "中止";
+"alert.recording.keep_recording" = "録画を続ける";
+"notification.recording.ffmpeg_not_found" = "ffmpegが見つかりません — 代わりにH.264で録画します";
+"notification.recording.install_ffmpeg" = "WebM/WebP/APNGを有効にするには、SwiftX環境設定からffmpegをインストールしてください。";
+"alert.recording.failed" = "録画に失敗しました";
+"notification.recording.saved" = "録画を保存しました";
+
+/* CaptureCoordinator.swift */
+"notification.capture.custom_window_title" = "カスタムウインドウキャプチャ";
+"notification.capture.custom_window_unset" = "まずTaskSettings.jsonでCaptureCustomWindowを設定してください。";
+"notification.capture.custom_window_no_match" = "「%@」に一致するウインドウがありません。";
+"alert.capture.failed" = "キャプチャに失敗しました";
+"alert.capture.failed_info" = "%@\n\n権限の問題である場合は、SwiftX環境設定で画面収録のアクセスを許可してください。";
+
+/* CLI.swift */
+"notification.cli.action_download_and_upload" = "%@をダウンロードしてアップロードする";
+"notification.cli.action_upload_local_file" = "ローカルファイル%@をアップロードする";
+"alert.cli.action_import_custom_uploader" = "%@のカスタムアップローダー設定をインポートする";
+"alert.cli.action_import_image_effect" = "%@の画像エフェクトプリセットをインポートする";
+"alert.cli.action_run_on_file" = "%@をローカルファイル%@に対して実行する";
+"alert.cli.action_run_clipboard_upload" = "現在のクリップボードの内容をアップロードする%@を実行する";
+"alert.cli.allow_action_question" = "このSwiftXのアクションを許可しますか？";
+"alert.cli.allow_action_info" = "別のアプリまたはWebページがSwiftXに次の操作を要求しました：\n\n%@\n\nご自身で開始した場合のみ続行してください。";
+"notification.cli.blocked_request" = "SwiftXがリクエストをブロックしました";
+"notification.cli.blocked_request_body" = "別のアプリまたはWebページからの「%@」というリクエストを無視しました。";
+"alert.cli.action_browser_download_upload" = "ブラウザ拡張機能からダウンロードしてアップロードする：\n%@";
+"alert.cli.action_browser_upload_text" = "ブラウザ拡張機能から送信されたテキストをアップロードする";
+
+/* OAuthConnect.swift */
+"oauth.no_credentials" = "このビルドのSwiftXには%@のアプリ認証情報が含まれていないため、接続できません。";
+"oauth.error.browser_open_failed" = "サインインページをブラウザで開けませんでした";
+"oauth.error.unexpected_response" = "ブラウザから予期しない応答が返されました";
+"oauth.error.token_exchange_failed" = "トークン交換に失敗しました：%@";
+"oauth.connected" = "接続しました。%@が使用可能になりました。";
+"oauth.connection_failed" = "%@への接続に失敗しました";
+
+/* PipelineWindows.swift */
+"pipeline.window.after_capture_tasks" = "キャプチャ後のタスク";
+"pipeline.file_name_label" = "ファイル名：";
+"pipeline.section.after_capture" = "キャプチャ後";
+"pipeline.section.after_upload" = "アップロード後";
+"pipeline.window.before_upload" = "アップロード前";
+"pipeline.before_upload_message" = "%@は%@にアップロードされようとしています。別のアップロード先を選択することもできます。";
+"pipeline.destination_label" = "アップロード先：";
+"pipeline.destination.custom_uploader" = "カスタムアップローダー";
+"pipeline.window.upload_complete" = "アップロード完了";
+"pipeline.link.url" = "URL";
+"pipeline.link.original_url" = "元のURL";
+"pipeline.link.thumbnail_url" = "サムネイルURL";
+"pipeline.link.deletion_url" = "削除用URL";
+"pipeline.link.forum_bbcode" = "フォーラム（BBCode）";
+"pipeline.link.html" = "HTML";
+"pipeline.link.markdown" = "Markdown";
+"pipeline.link.wiki" = "Wiki";
+
+/* QuickTaskMenu.swift */
+"quicktaskmenu.edit_this_menu" = "このメニューを編集…";
+"quicktaskmenu.window_title" = "クイックタスクメニュー";
+"quicktaskmenu.separator" = "— 区切り線 —";
+"quicktaskmenu.separator_button" = "区切り線";
+"quicktaskmenu.name_label" = "名前：";
+"quicktaskmenu.select_preset_hint" = "編集するプリセットを選択してください。";
+
+/* Notifier.swift */
+"notification.capture.screenshot_captured" = "スクリーンショットをキャプチャしました";
+
+/* Sources/SwiftXApp/Views.swift — main window */
+"main.timerange.any" = "すべての期間";
+"main.timerange.today" = "今日";
+"main.timerange.week" = "過去7日間";
+"main.timerange.month" = "過去30日間";
+"main.search_placeholder" = "履歴を検索";
+"main.show_favorites_only" = "お気に入りのみ表示";
+"main.import_history" = "履歴をインポート…";
+"main.import_folder" = "フォルダをインポート…";
+"main.statistics" = "統計…";
+"main.settings" = "環境設定";
+"main.empty_placeholder" = "キャプチャがここに表示されます";
+"main.no_matches" = "一致する項目がありません";
+"main.remove_favorite" = "お気に入りから削除";
+"main.add_favorite" = "お気に入りに追加";
+"main.open_url" = "URLを開く";
+"main.copy_file_path" = "ファイルパスをコピー";
+"main.import_folder_message" = "履歴に追加する画像または録画のフォルダを選択してください";
+"main.import_folder_title" = "フォルダのインポート";
+"main.import_items_body" = "%d件のアイテムをインポートしました。";
+"main.import_history_message" = "Windows版ShareXのHistory.jsonまたはHistory.xmlを選択してください";
+"main.import_history_title" = "履歴のインポート";
+"main.import_history_failed" = "履歴のインポートに失敗しました";
+"main.history_stats_title" = "履歴統計";
+
+/* Sources/SwiftXApp/Views.swift — settings sidebar groups */
+"settings.group.app" = "アプリ";
+"settings.group.capture" = "キャプチャ";
+"settings.group.sharing" = "共有";
+"settings.group.automation" = "自動化";
+"settings.group.about" = "情報";
+
+/* Sources/SwiftXApp/Views.swift — settings panes (sidebar / navigation titles) */
+"settings.pane.general" = "一般";
+"settings.pane.menu_bar" = "メニューバー";
+"settings.pane.notifications" = "通知";
+"settings.pane.capture" = "キャプチャ";
+"settings.pane.recording" = "録画";
+"settings.pane.actions" = "外部プログラム";
+"settings.pane.watch_folders" = "監視フォルダ";
+"settings.pane.destinations" = "アップロード先";
+"settings.pane.uploads" = "アップロード";
+"settings.pane.custom_uploader" = "カスタムアップローダー";
+"settings.pane.hotkeys" = "ホットキー";
+"settings.pane.updates" = "アップデート";
+"settings.pane.about" = "情報";
+
+/* Sources/SwiftXApp/Views.swift — About pane */
+"settings.about.version" = "バージョン%@";
+"settings.about.project_page" = "プロジェクトページ";
+"settings.about.report_issue" = "問題を報告";
+"settings.about.section.credits" = "クレジット";
+"settings.about.developed_by" = "開発";
+"settings.about.derived_from" = "派生元";
+"settings.about.not_affiliated" = "SwiftXはShareXチームと提携または承認された製品ではありません。";
+"settings.about.section.license" = "ライセンス";
+"settings.about.license_body" = "SwiftXはフリーソフトウェアです。GNU General Public License v3の条件の下で再配布および改変が可能です。本ソフトウェアには一切の保証がありません。";
+"settings.about.view_license" = "ライセンス全文を表示";
+
+/* Sources/SwiftXApp/Views.swift — General pane (incl. backup import/export and permissions) */
+"settings.general.section.permissions" = "権限";
+"settings.general.section.browser_extension" = "ブラウザ拡張機能";
+"settings.general.section.backup" = "バックアップ";
+"settings.general.export_settings" = "設定をエクスポート…";
+"settings.general.import_settings" = "設定をインポート…";
+"settings.general.backup_hint" = "バックアップには設定、ホットキー、エフェクトプリセット、カスタムアップローダーが含まれます。APIキーとOAuthトークンはキーチェーンに保存され、エクスポートされることはありません — 別のMacで復元した後は、再入力または再接続してください。履歴は含まれません。履歴にはメインウインドウのインポートツールを使用してください。インポートはWindows版ShareXの.sxbバックアップ（アップロード履歴を含む）にも対応しています。";
+"settings.general.section.saved_files" = "保存ファイル";
+"settings.general.screenshots_folder" = "スクリーンショットフォルダ";
+"settings.general.subfolder_pattern" = "サブフォルダのパターン（空の場合はサブフォルダなし）";
+"settings.general.name_pattern" = "ファイル名パターン";
+"settings.general.name_pattern_active_window" = "ファイル名パターン（アクティブウインドウ）";
+"settings.general.name_pattern_hint" = "プレースホルダ：%y年、%mo月、%d日、%h時、%mi分、%s秒、%pnアプリ名、%tウインドウタイトル、%width、%height、%rn{6}ランダムな数字。例：%y-%mo-%d_%h-%mi-%s";
+"settings.general.file_exist_action" = "同名のファイルが存在する場合";
+"settings.general.exist_unique" = "番号を追加（name_1）";
+"settings.general.exist_ask" = "確認する";
+"settings.general.exist_overwrite" = "上書きする";
+"settings.general.exist_skip" = "保存をスキップ";
+"settings.general.export_failed" = "設定のエクスポートに失敗しました";
+"settings.general.import_panel_message" = "SwiftXの設定バックアップ、またはWindows版ShareXの.sxbバックアップを選択してください";
+"settings.general.import_failed" = "設定のインポートに失敗しました";
+"settings.general.replace_title" = "現在の設定を置き換えますか？";
+"settings.general.replace_body" = "設定、ホットキー、カスタムアップローダーがバックアップの内容に置き換えられます。キーチェーンのシークレット情報はバックアップに含まれないため、再入力が必要です。";
+"settings.general.replace" = "置き換える";
+"settings.general.restored_title" = "設定を復元しました";
+"settings.general.sharex_import_title" = "Windows版ShareXのバックアップをインポートしますか？";
+"settings.general.sharex_import_body" = "%@の設定、ホットキー、カスタムアップローダーが現在の構成にマージされます。macOSに相当する項目がない値（Windowsのパス、OAuthアカウント、Windows専用ホットキーなど）はスキップされます。アップロード履歴もインポートできますが、後で再度インポートすると重複します。";
+"settings.general.import" = "インポート";
+"settings.general.import_without_history" = "履歴なしでインポート";
+"settings.general.summary.settings_imported" = "設定をインポートしました。";
+"settings.general.summary.uploaders" = "カスタムアップローダー%d件。";
+"settings.general.summary.hotkeys" = "ホットキー%d件。";
+"settings.general.summary.hotkeys_skipped" = "ホットキー%d件、うちmacOSキーがない%d件をスキップしました。";
+"settings.general.summary.history" = "履歴%d件。";
+"settings.general.sharex_imported_title" = "ShareXバックアップをインポートしました";
+"settings.general.sharex_import_failed" = "ShareXのインポートに失敗しました";
+"settings.general.permission.screen_recording" = "画面収録";
+"settings.general.permission.screen_recording_detail" = "すべてのキャプチャおよび録画機能に必要です。";
+"settings.general.permission.accessibility" = "アクセシビリティ";
+"settings.general.permission.accessibility_detail" = "ウインドウスナップ、スクロールキャプチャ、ウインドウツールに必要です。";
+"settings.general.permission.request" = "リクエスト";
+"settings.general.permission.open_system_settings" = "システム設定を開く";
+
+/* Sources/SwiftXApp/Views.swift — Menu Bar pane */
+"settings.menubar.section.icon" = "メニューバーアイコン";
+"settings.menubar.left_click" = "左クリック";
+"settings.menubar.action.open_menu" = "メニューを開く";
+"settings.menubar.action.open_main_window" = "メインウインドウを開く";
+"settings.menubar.action.capture_region" = "領域をキャプチャ";
+"settings.menubar.action.capture_fullscreen" = "画面全体をキャプチャ";
+"settings.menubar.action.capture_active_window" = "アクティブウインドウをキャプチャ";
+"settings.menubar.action.upload_clipboard" = "クリップボードからアップロード";
+"settings.menubar.action.upload_file" = "ファイルをアップロード…";
+"settings.menubar.action.image_editor" = "画像エディタ";
+"settings.menubar.action.open_screenshots_folder" = "スクリーンショットフォルダを開く";
+"settings.menubar.right_click_hint" = "右クリックでは常にメニューが開きます。";
+"settings.menubar.show_progress" = "アイコンにアップロードの進行状況を表示";
+"settings.menubar.show_recent" = "「最近の項目」サブメニューを表示";
+"settings.menubar.recent_count" = "表示する最近の項目数（1〜30）";
+"settings.menubar.section.menu_items" = "メニューの内容";
+"settings.menubar.menu_items" = "メニュー項目";
+"settings.menubar.menu_items_hint" = "チェックを外した項目はメニューバーメニューから非表示になります。「環境設定」と「終了」は常に表示され、録画中は停止コントロールが表示されたままになります。";
+"settings.menubar.section.actions_toolbar" = "アクションツールバー";
+"settings.menubar.add_button" = "ボタンを追加";
+"settings.menubar.lock_toolbar" = "ツールバーの位置を固定";
+"settings.menubar.toolbar_at_launch" = "起動時にツールバーを開く";
+"settings.menubar.toolbar_reopen_hint" = "メニューバーアイコンとは別に表示される、キャプチャボタンのフローティングバーです。ボタンやロックの変更を反映するには開き直してください。";
+
+/* Sources/SwiftXApp/Views.swift — Notifications pane */
+"settings.notifications.section.banners" = "バナー";
+"settings.notifications.section.sounds" = "サウンド";
+"settings.notifications.show_banners" = "通知バナーを表示";
+"settings.notifications.suppress_fullscreen" = "フルスクリーンアプリの使用中は表示しない";
+"settings.notifications.sound_after_capture" = "キャプチャ後にサウンドを再生";
+"settings.notifications.custom_capture_sound" = "カスタムキャプチャサウンド";
+"settings.notifications.sound_after_upload" = "アップロード後にサウンドを再生";
+"settings.notifications.custom_completion_sound" = "カスタム完了サウンド";
+"settings.notifications.custom_error_sound" = "カスタムエラーサウンド";
+"settings.notifications.sound_file" = "サウンドファイル";
+"settings.notifications.banner_hint" = "アップロードバナーには「URLをコピー」「開く」ボタンが、ファイルバナーには「Finderで表示」「注釈を付ける」「削除」ボタンがあります。バナー自体をクリックすると、URLが開くかファイルが表示されます。";
+
+/* Sources/SwiftXApp/Views.swift — Capture pane */
+"settings.capture.screenshot_delay" = "スクリーンショットの遅延（秒、0でオフ）";
+"settings.capture.show_cursor" = "スクリーンショットにカーソルを表示";
+"settings.capture.section.after_capture" = "キャプチャ後";
+"settings.capture.after_capture_hint" = "タスクはキャプチャのたびに上から順に実行されます。同じリストがキャプチャ後ウインドウとクイックタスクプリセットにも表示されます。";
+"settings.capture.section.effects" = "画像エフェクトパイプライン";
+"settings.capture.effects_window" = "キャプチャ後にエフェクトウインドウを開く";
+"settings.capture.effects_region_only" = "領域キャプチャのみにエフェクトを適用";
+"settings.capture.effects_random" = "キャプチャごとにランダムなプリセットを使用";
+"settings.capture.effects_hint" = "「画像エフェクトを追加」タスクの実行時（クイックタスク、キャプチャ後ウインドウ）に適用されます。プリセットはツール→画像エフェクトで管理します。";
+"settings.capture.section.image_format" = "画像フォーマット";
+"settings.capture.format" = "フォーマット";
+"settings.capture.jpeg_quality" = "JPEG品質（1〜100）";
+"settings.capture.png_bit_depth" = "PNGビット深度";
+"settings.capture.automatic" = "自動";
+"settings.capture.png_32bit" = "32ビット（透明度を保持）";
+"settings.capture.png_24bit" = "24ビット（透明度をフラット化）";
+"settings.capture.gif_palette" = "GIFパレット";
+"settings.capture.gif_256" = "256色";
+"settings.capture.gif_16" = "16色（macOSでは256色でエンコード）";
+"settings.capture.gif_grayscale" = "グレースケール";
+"settings.capture.auto_jpeg" = "大きなキャプチャにはJPEGを使用";
+"settings.capture.auto_jpeg_size" = "幅または高さが超えたらJPEGにする（px）";
+"settings.capture.auto_jpeg_quality" = "自動JPEG品質（1〜100）";
+"settings.capture.section.thumbnail" = "サムネイル";
+"settings.capture.thumbnail_width" = "サムネイル幅（0で高さから自動算出）";
+"settings.capture.thumbnail_height" = "サムネイル高さ（0で幅から自動算出）";
+"settings.capture.thumbnail_name" = "名前の接尾辞";
+"settings.capture.thumbnail_check_size" = "画像がサムネイルより大きい場合のみ";
+"settings.capture.thumbnail_hint" = "「サムネイル画像をファイルに保存」がオンの場合、上記の接尾辞が付いた名前でスクリーンショットの隣に保存されます。";
+
+/* Sources/SwiftXApp/Views.swift — Recording pane (incl. ffmpeg status) */
+"settings.recording.section.video" = "動画";
+"settings.recording.video_codec" = "動画コーデック";
+"settings.recording.codec_h264" = "H.264（互換性が高い）";
+"settings.recording.codec_hevc" = "HEVC（ファイルサイズが小さい）";
+"settings.recording.codec_vp9" = "WebM / VP9（ffmpegが必要）";
+"settings.recording.codec_vp8" = "WebM / VP8（ffmpegが必要）";
+"settings.recording.codec_webp" = "WebPアニメーション（ffmpegが必要）";
+"settings.recording.codec_apng" = "APNGアニメーション（ffmpegが必要）";
+"settings.recording.video_fps" = "動画のフレームレート（1〜60 fps）";
+"settings.recording.gif_fps" = "GIFのフレームレート（1〜30 fps）";
+"settings.recording.two_pass" = "2パスエンコード（VP9/VP8、ffmpegが必要）";
+"settings.recording.section.session" = "セッション";
+"settings.recording.start_delay" = "開始までのカウントダウン（秒、0で即時開始）";
+"settings.recording.fixed_duration" = "固定時間";
+"settings.recording.stop_after" = "停止までの時間（秒）";
+"settings.recording.confirm_abort" = "録画を中止する前に確認する";
+"settings.recording.show_cursor" = "録画にカーソルを表示";
+"settings.recording.section.audio" = "オーディオ";
+"settings.recording.system_audio" = "システムオーディオを録音";
+"settings.recording.microphone" = "マイクを録音";
+"settings.recording.audio_hint" = "オーディオは動画録画にのみ適用されます。GIFは常に無音です。マイクの録音にはmacOS 15とマイクの権限（初回使用時に確認されます）が必要です。";
+"settings.recording.section.external_tools" = "外部ツール";
+"settings.recording.custom_ffmpeg_args" = "カスタムffmpeg引数";
+"settings.recording.ffmpeg_args_hint" = "組み込みプリセットの代わりに、トランスコードされるフォーマット（VP9/VP8/WebP/APNG）に適用されます。例：-c:v libvpx-vp9 -crf 24 -b:v 0";
+"settings.recording.ffmpeg_installed" = "ffmpegがインストールされています";
+"settings.recording.ffmpeg_not_installed" = "ffmpegがインストールされていません";
+"settings.recording.ffmpeg_hint" = "WebM/WebP/APNGの書き出しに必要です。ない場合、それらの録画はH.264にフォールバックします。";
+"settings.recording.install_homebrew" = "Homebrewでインストール";
+"settings.recording.get_homebrew" = "Homebrewを入手";
+
+/* Sources/SwiftXApp/Views.swift — Destinations pane */
+"settings.destinations.section.upload_destinations" = "アップロード先";
+"settings.destinations.image_uploads" = "画像アップロード";
+"settings.destinations.text_uploads" = "テキストアップロード";
+"settings.destinations.file_uploads" = "ファイル・動画アップロード";
+"settings.destinations.destinations_hint" = "スクリーンショットには画像用アップロード先が、録画などのファイルにはファイル用アップロード先が使用されます。以下で別のカスタムアップローダーを選択するまで、テキストとファイルのアップロードは画像用アップロード先に従います。";
+"settings.destinations.not_valid_for" = "%@ — %@のアップロードには使用できません";
+"settings.destinations.unavailable_suffix" = "%@ — 利用不可";
+"settings.destinations.section.custom_uploaders" = "カスタムアップローダー";
+"settings.destinations.no_custom_uploaders" = "カスタムアップローダーがインポートされていません。環境設定→カスタムアップローダーの「インポート…」を使用してください。コミュニティの.sxcuファイルであれば利用できます。";
+"settings.destinations.image_uploader" = "画像アップローダー";
+"settings.destinations.text_uploader" = "テキストアップローダー";
+"settings.destinations.file_uploader" = "ファイルアップローダー";
+"settings.destinations.same_as_image" = "画像と同じ";
+"settings.destinations.reconnect" = "%@に再接続…";
+"settings.destinations.connect" = "%@に接続…";
+"settings.destinations.connected" = "接続済み";
+"settings.destinations.disconnect" = "切断";
+"settings.destinations.oauth_connected_hint" = "SwiftXは%@アカウントへのアップロードを許可されています。";
+"settings.destinations.oauth_signin_hint" = "%@アカウントでサインインしてSwiftXを許可してください。";
+"settings.destinations.oauth_unavailable_hint" = "%@のアップロードはこのビルドでは利用できません（%@のアプリ認証情報が含まれていないため）。公式リリースには含まれています。";
+"settings.destinations.s3_access_key" = "アクセスキーID";
+"settings.destinations.s3_secret_key" = "シークレットアクセスキー";
+"settings.destinations.s3_region" = "リージョン";
+"settings.destinations.s3_bucket" = "バケット";
+"settings.destinations.s3_object_prefix" = "オブジェクトのプレフィックス";
+"settings.destinations.s3_endpoint" = "カスタムエンドポイント（任意、S3互換ホスト用）";
+"settings.destinations.b2_key_id" = "B2アプリケーションキーID";
+"settings.destinations.b2_key" = "B2アプリケーションキー";
+"settings.destinations.b2_bucket" = "B2バケット";
+"settings.destinations.upload_path" = "アップロードパス（名前パターン使用可）";
+"settings.destinations.b2_use_custom_url" = "カスタムURLを使用";
+"settings.destinations.b2_custom_url" = "カスタムURL（例：https://cdn.example.com）";
+"settings.destinations.azure_account" = "Azureアカウント名";
+"settings.destinations.azure_key" = "Azureアクセスキー";
+"settings.destinations.azure_container" = "コンテナー";
+"settings.destinations.azure_environment" = "環境";
+"settings.destinations.azure_custom_domain" = "カスタムドメイン（任意）";
+"settings.destinations.owncloud_server" = "サーバーURL（https://cloud.example.com）";
+"settings.destinations.owncloud_username" = "ユーザー名";
+"settings.destinations.owncloud_password" = "パスワード（アプリ用パスワードを使用）";
+"settings.destinations.remote_folder" = "リモートフォルダ";
+"settings.destinations.seafile_api_url" = "Seafile APIのURL（https://seafile.example.com/api2）";
+"settings.destinations.seafile_token" = "認証トークン";
+"settings.destinations.seafile_repo_id" = "ライブラリ（リポジトリ）ID";
+"settings.destinations.pushbullet_token" = "Pushbulletアクセストークン";
+"settings.destinations.pushbullet_hint" = "アカウント上のすべてのデバイスにファイルをプッシュします。";
+"settings.destinations.pomf_upload_url" = "PomfアップロードURL（https://yourhost/upload.php）";
+"settings.destinations.pomf_result_url" = "Pomf結果URL（相対ファイル名の前に付加）";
+"settings.destinations.vgyme_user_key" = "vgy.meユーザーキー（任意、アップロードをアカウントに紐付け）";
+"settings.destinations.sul_api_key" = "s-ul APIキー";
+"settings.destinations.lobfile_api_key" = "LobFile APIキー";
+"settings.destinations.puush_api_key" = "Puush APIキー（puush.me → Account → Settings）";
+"settings.destinations.chevereto_upload_url" = "CheveretoアップロードURL（https://yoursite/api/1/upload）";
+"settings.destinations.chevereto_api_key" = "Chevereto APIキー";
+"settings.destinations.chevereto_direct_url" = "直接画像URLを使用";
+"settings.destinations.streamable_email" = "Streamableのメールアドレス";
+"settings.destinations.streamable_password" = "Streamableのパスワード";
+"settings.destinations.uguu_hint" = "設定不要 — ファイルは一時的なもので、最長48時間保存されます。";
+
+/* Sources/SwiftXApp/UploadsSettingsView.swift — Uploads pane */
+"settings.uploads.section.upload_behavior" = "アップロードの動作";
+"settings.uploads.disable_uploads" = "すべてのアップロードを無効にする";
+"settings.uploads.upload_limit" = "同時アップロードの最大数（1〜25）";
+"settings.uploads.retry_uploads" = "失敗したアップロードを再試行";
+"settings.uploads.retry_attempts" = "再試行回数（1〜10）";
+"settings.uploads.multi_upload_warning" = "10個を超えるファイルをアップロードする前に警告";
+"settings.uploads.large_file_warning" = "100 MBを超えるファイルをアップロードする前に警告";
+"settings.uploads.section.file_naming" = "アップロードファイルの命名";
+"settings.uploads.use_name_pattern" = "名前パターンでアップロードファイルの名前を変更";
+"settings.uploads.name_pattern_hint" = "アップロードは環境設定→一般→保存ファイルのパターンで名前が変更されます。オフの場合、元のファイル名が保持されます。";
+"settings.uploads.replace_problematic" = "問題のある文字を置き換える（スペース→アンダースコア）";
+"settings.uploads.custom_timezone" = "名前パターンでカスタムタイムゾーンを使用";
+"settings.uploads.timezone_identifier" = "タイムゾーン識別子";
+"settings.uploads.timezone_hint" = "例：UTC、America/New_York、Asia/Tokyo。不明な識別子の場合はローカル時間にフォールバックします。";
+"settings.uploads.section.clipboard_upload" = "クリップボードアップロード";
+"settings.uploads.clipboard_url_contents" = "コピーしたURL：その内容をアップロード";
+"settings.uploads.clipboard_shorten" = "コピーしたURL：アップロードの代わりに短縮";
+"settings.uploads.clipboard_share" = "コピーしたURL：アップロードの代わりに共有";
+"settings.uploads.clipboard_index_folder" = "コピーしたフォルダ：HTMLインデックスをアップロード";
+"settings.uploads.clear_clipboard" = "クリップボードアップロード後にクリップボードをクリア";
+"settings.uploads.section.after_upload" = "アップロード後";
+"settings.uploads.copy_url" = "URLをクリップボードにコピー";
+"settings.uploads.open_url" = "URLをブラウザで開く";
+"settings.uploads.shorten_url" = "アップロード後にURLを短縮";
+"settings.uploads.url_shortener" = "URL短縮";
+"settings.uploads.bitly_token" = "bit.lyアクセストークン";
+"settings.uploads.bitly_domain" = "bit.lyカスタムドメイン（任意）";
+"settings.uploads.bitly_hint" = "bitly.com→Settings→Developer settings→APIでトークンを生成してください。";
+"settings.uploads.polr_api_url" = "Polr APIのURL（https://yoursite/api/v2/action/shorten）";
+"settings.uploads.polr_api_key" = "Polr APIキー";
+"settings.uploads.kutt_host" = "Kuttホスト";
+"settings.uploads.kutt_api_key" = "Kutt APIキー";
+"settings.uploads.yourls_api_url" = "YOURLS APIのURL（https://yoursite/yourls-api.php）";
+"settings.uploads.yourls_signature" = "YOURLS署名";
+"settings.uploads.zws_api_url" = "ZWS APIのURL（空の場合はapi.zws.im）";
+"settings.uploads.zws_token" = "ZWSトークン（任意）";
+"settings.uploads.share_url" = "アップロード後にURLを共有（ブラウザを開く）";
+"settings.uploads.sharing_service" = "共有サービス";
+"settings.uploads.show_qr_code" = "URLのQRコードを表示";
+"settings.uploads.show_after_upload_window" = "アップロード後ウインドウを表示";
+"settings.uploads.section.url_processing" = "URL処理";
+"settings.uploads.clipboard_format" = "クリップボードのフォーマット";
+"settings.uploads.open_url_format" = "URLを開く際のフォーマット";
+"settings.uploads.notification_format" = "通知のフォーマット";
+"settings.uploads.result_hint" = "$resultは最終的なURLに置き換えられます — 例：Markdownの場合は![]($result)。";
+"settings.uploads.early_copy" = "URLを早めにコピー（短縮とフォーマットの前）";
+"settings.uploads.force_https" = "結果のURLでHTTPSを強制";
+"settings.uploads.regex_replace" = "結果のURLを正規表現で置換";
+"settings.uploads.regex_pattern" = "パターン";
+"settings.uploads.regex_replacement" = "置換文字列（グループは$1）";
+"settings.uploads.auto_shorten_length" = "この長さを超えるURLを自動短縮（文字数、0でオフ）";
+
+/* Sources/UploadKit/DestinationCatalog.swift */
+"destination.kind.image" = "画像";
+"destination.kind.text" = "テキスト";
+"destination.kind.file" = "ファイル";
+"destination.custom_uploader" = "カスタムアップローダー";
+
+/* Sources/UploadKit/URLShortener.swift */
+"upload.service.polr_self_hosted" = "Polr（セルフホスト）";
+"upload.service.yourls_self_hosted" = "YOURLS（セルフホスト）";
+"upload.error.shortener_failed" = "URL短縮に失敗しました：%@";
+"upload.error.shortener_empty_response" = "URL短縮サービスから空の応答が返されました。";
+"upload.error.shortener_not_configured" = "URL短縮が設定されていません：%@。環境設定→アップロードを確認してください。";
+"upload.error.invalid_url" = "無効なURL";
+"upload.error.invalid_service_url" = "無効な%@のURL";
+"upload.error.config.bitly_token" = "bit.lyアクセストークン";
+"upload.error.config.polr" = "Polr APIのURLとキー";
+"upload.error.config.kutt" = "Kutt APIキー";
+"upload.error.config.yourls_url" = "YOURLS APIのURL";
+"upload.error.config.yourls_credentials" = "YOURLSの署名またはユーザー名／パスワード";
+
+/* Sources/UploadKit/URLSharingService.swift */
+"upload.service.email" = "メール";
+
+/* Sources/UploadKit/SimpleHostUploader.swift */
+"upload.service.pomf_clone" = "Pomf clone";
+"upload.service.chevereto_self_hosted" = "Chevereto（セルフホスト）";
+"upload.error.host_generic" = "%@エラー";
+"upload.error.puush.auth_failure" = "認証に失敗しました。";
+"upload.error.puush.checksum" = "チェックサムエラーです。";
+"upload.error.puush.storage_full" = "アカウントの残りストレージが不足しています。";
+"upload.error.puush.connection" = "接続エラーです。";
+
+/* Sources/UploadKit/SyntaxParser.swift */
+"upload.error.syntax.empty_function_name" = "関数名を空にすることはできません。";
+"upload.error.syntax.unknown_function" = "無効な関数名です：%@";
+"upload.error.syntax.missing_parameters" = "関数「%@」の最小パラメータ数は%dです。";
+"upload.error.syntax.unsupported_function" = "関数「%@」はまだmacOSでサポートされていません。";
+"upload.error.syntax.no_response_available" = "関数「%@」にはレスポンスが必要なため、リクエストでは使用できません。";
+
+/* Sources/UploadKit/OAuth/OAuthCore.swift */
+"upload.error.oauth.not_configured" = "%@にはOAuthアプリ認証情報が必要です。環境設定→アップロード先でクライアントIDを追加してください。";
+"upload.error.oauth.not_authenticated" = "%@に接続されていません。環境設定→アップロード先で「接続」をクリックしてください。";
+"upload.error.oauth.token_refresh_failed" = "%@のセッションを更新できませんでした。環境設定で再接続してください。";
+"upload.error.oauth.invalid_token_response" = "認証サーバーから予期しない応答が返されました。";
+"upload.error.oauth.authorization_failed" = "認証に失敗しました：%@";
+
+/* Sources/UploadKit/OAuth/LoopbackRedirect.swift */
+"upload.error.oauth.loopback_port_failed" = "ループバックポートを開けませんでした：%@";
+"upload.error.oauth.loopback_port_timeout" = "ループバックポートを開けませんでした（タイムアウト）";
+"upload.error.oauth.browser_timeout" = "ブラウザの応答待ちでタイムアウトしました";
+"upload.service.oauth_close_page" = "このウインドウを閉じてSwiftXに戻ることができます。";
+
+/* Sources/UploadKit/AmazonS3.swift */
+"upload.error.s3.incomplete_settings" = "Amazon S3にはアクセスキー、シークレットキー、リージョン、バケットが必要です。";
+"upload.error.s3.invalid_endpoint" = "無効なS3エンドポイントです：%@";
+
+/* Sources/UploadKit/AzureStorage.swift */
+"upload.error.azure.invalid_key" = "Azureアクセスキーが有効なbase64形式ではありません。";
+
+/* Sources/UploadKit/BackblazeB2.swift */
+"upload.error.b2.bucket_not_found" = "B2バケット「%@」が見つかりません。";
+
+/* Sources/UploadKit/CustomUploaderService.swift */
+"upload.error.missing_request_url" = "カスタムアップローダーにリクエストURLがありません。";
+"upload.error.invalid_request_url" = "無効なリクエストURLです：%@";
+"upload.error.http_failed" = "アップロードに失敗しました（HTTP %d）：%@";
+"upload.error.empty_result" = "アップローダーからURLが返されませんでした。";
+
+/* Sources/UploadKit/TokenHostUploaders.swift */
+"upload.service.pushbullet_body" = "SwiftX経由で送信";
+
+/* Sources/CaptureKit/FFmpeg.swift */
+"capture.format.h264_videotoolbox" = "H.264（VideoToolboxハードウェア）";
+"capture.format.hevc_videotoolbox" = "HEVC（VideoToolboxハードウェア）";
+"capture.format.webp_animation" = "WebPアニメーション";
+"capturekit.error.ffmpeg_not_installed" = "ffmpegがインストールされていません";
+"capturekit.error.ffmpeg_exit_status" = "ffmpegがステータス%dで終了しました";
+
+/* Sources/CaptureKit/ScreenCapture.swift */
+"capturekit.error.capture.no_display" = "キャプチャ領域に対応するディスプレイが見つかりません。";
+"capturekit.error.capture.no_window" = "最前面のアプリにキャプチャ可能なウインドウが見つかりません。";
+"capturekit.error.capture.crop_failed" = "キャプチャした画像のトリミングに失敗しました。";
+
+/* Sources/CaptureKit/ScreenRecorder.swift */
+"capturekit.error.recording.no_display" = "録画領域に対応するディスプレイが見つかりません。";
+"capturekit.error.recording.no_window" = "最前面のアプリに録画可能なウインドウが見つかりません。";
+"capturekit.error.recording.no_frames" = "録画でフレームがキャプチャされませんでした。";
+"capturekit.error.recording.writer_failed" = "録画を書き込めませんでした：%@";
+"capturekit.error.recording.gif_destination" = "GIFの出力先を作成できませんでした";
+"capturekit.error.recording.gif_finalize" = "GIFを完了できませんでした";
+
+/* Sources/CaptureKit/ImageWriter.swift */
+"capturekit.error.image_encoding_failed" = "画像のエンコードに失敗しました。";
+
+/* Sources/ToolsKit/AIClient.swift */
+"toolskit.error.ai.missing_key" = "先にAI解析ウインドウでAPIキーを設定してください。";
+"toolskit.error.ai.bad_url" = "AIのベースURLが有効なURLではありません。";
+"toolskit.error.ai.encoding_failed" = "画像をエンコードできませんでした。";
+"toolskit.error.ai.http" = "AIサービスがHTTP %dを返しました：%@";
+"toolskit.error.ai.empty_response" = "AIサービスからコンテンツが返されませんでした。";
+
+/* Sources/ToolsKit/BackgroundRemover.swift */
+"toolskit.error.background.no_subject" = "画像内に前景の被写体が検出されませんでした。";
+"toolskit.error.background.render_failed" = "マスクされた画像を描画できませんでした。";
+
+/* Sources/ToolsKit/ImageMetadata.swift */
+"toolskit.error.metadata.unreadable" = "ファイルを画像として読み込めませんでした。";
+"toolskit.error.metadata.unwritable" = "画像を書き換えることができませんでした。";
+
+/* Sources/HistoryKit/HistoryStats.swift */
+"history.stats.item_counts" = "履歴項目数：";
+"history.stats.total" = "合計：%d";
+"history.stats.yearly_usages" = "年間利用状況：";
+"history.stats.file_extensions" = "ファイル拡張子：";
+"history.stats.hosts" = "ホスト：";
+"history.stats.process_names" = "プロセス名：";
+"history.stats.empty" = "（空）";
+
+/* Sources/SharedKit/TaskFlags.swift */
+"tasks.show_quick_task_menu" = "クイックタスクメニューを表示";
+"tasks.show_after_capture_window" = "キャプチャ後ウインドウを表示";
+"tasks.beautify_image" = "画像を装飾";
+"tasks.add_image_effects" = "画像エフェクトを追加";
+"tasks.annotate_image" = "画像に注釈を付ける";
+"tasks.copy_image_to_clipboard" = "画像をクリップボードにコピー";
+"tasks.pin_to_screen" = "画面にピン留め";
+"tasks.send_image_to_printer" = "画像をプリンタに送信";
+"tasks.save_image_to_file" = "画像をファイルに保存";
+"tasks.save_image_to_file_with_dialog" = "ダイアログを表示して画像をファイルに保存";
+"tasks.save_thumbnail_image_to_file" = "サムネイル画像をファイルに保存";
+"tasks.perform_actions" = "アクションを実行";
+"tasks.copy_file_to_clipboard" = "ファイルをクリップボードにコピー";
+"tasks.copy_file_path_to_clipboard" = "ファイルパスをクリップボードにコピー";
+"tasks.copy_folder_path_to_clipboard" = "フォルダパスをクリップボードにコピー";
+"tasks.show_in_explorer" = "Finderで表示";
+"tasks.analyze_image" = "画像を解析";
+"tasks.scan_qr_code" = "QRコードをスキャン";
+"tasks.do_ocr" = "OCRを実行";
+"tasks.show_before_upload_window" = "アップロード前ウインドウを表示";
+"tasks.upload_image_to_host" = "画像をホストにアップロード";
+"tasks.delete_file" = "ファイルを削除";
+"tasks.show_after_upload_window" = "アップロード後ウインドウを表示";
+"tasks.use_url_shortener" = "URL短縮を使用";
+"tasks.share_url" = "URLを共有";
+"tasks.copy_url_to_clipboard" = "URLをクリップボードにコピー";
+"tasks.open_url" = "URLを開く";
+"tasks.show_qr_code" = "QRコードを表示";
+
+/* Sources/SharedKit/SettingsBackup.swift */
+"backup.tool_failed" = "アーカイブツールがステータス%dで終了しました。";
+
+/* Sources/SwiftXApp/ToolWindows.swift */
+"toolui.window.ocr" = "OCR";
+"toolui.ocr.failed_title" = "OCRに失敗しました";
+"toolui.ruler.title" = "定規 — %d × %d";
+"toolui.ruler.body" = "対角線 %.1f px、角度 %.1f° — サイズをクリップボードにコピーしました";
+"toolui.window.metadata" = "メタデータ — %@";
+"toolui.metadata.strip_panel_message" = "選択した画像はメタデータなしで書き換えられます。";
+"toolui.metadata.stripped_title" = "メタデータを削除しました";
+"toolui.metadata.strip_failed_title" = "メタデータの削除に失敗しました";
+"toolui.metadata.strip_button" = "メタデータを削除";
+"toolui.metadata.read_failed" = "メタデータを読み込めませんでした。";
+"toolui.window.hash_checker" = "ハッシュチェッカー";
+"toolui.window.qr_code" = "QRコード";
+"toolui.window.qr_decoded" = "QRコード — デコード結果";
+"toolui.window.color_picker" = "カラーピッカー";
+"toolui.qr.notify_title" = "QRコード";
+"toolui.qr.none_found" = "QRコードが見つかりませんでした。";
+"toolui.qr.content" = "内容";
+"toolui.qr.image_label" = "QRコード";
+"toolui.qr.enter_content" = "エンコードする内容を入力";
+"toolui.qr.copy_image" = "画像をコピー";
+"toolui.qr.save" = "保存…";
+"toolui.qr.decode_file" = "ファイルをデコード…";
+"toolui.qr.scan_region" = "領域をスキャン…";
+"toolui.color.screen_picker_title" = "画面カラーピッカー";
+"toolui.color.copied_body" = "%@ — RGB %@をコピーしました";
+"toolui.color.color" = "色";
+"toolui.color.pick_from_screen" = "画面から選択…";
+"toolui.color.copy_as" = "コピー形式";
+"toolui.color.hex" = "Hex";
+"toolui.color.rgb" = "RGB";
+"toolui.color.hsb" = "HSB";
+"toolui.color.cmyk" = "CMYK";
+"toolui.color.decimal" = "10進数";
+"toolui.color.copy_help" = "%@をコピー";
+"toolui.hash.file" = "ファイル";
+"toolui.hash.algorithm" = "アルゴリズム";
+"toolui.hash.result" = "結果";
+"toolui.hash.target" = "比較対象（貼り付けて比較）";
+"toolui.hash.match" = "ハッシュが一致しました";
+"toolui.hash.mismatch" = "ハッシュが一致しません";
+"toolui.hash.read_failed" = "ファイルを読み込めませんでした";
+"toolui.text_result.characters" = "%d文字";
+"toolui.copy_all" = "すべてコピー";
+"toolui.no_file_selected" = "ファイルが選択されていません";
+
+/* Sources/SwiftXApp/ImageToolViews.swift */
+"toolui.window.image_viewer" = "画像ビューア";
+"toolui.window.image_combiner" = "画像結合";
+"toolui.window.image_splitter" = "画像分割";
+"toolui.window.image_thumbnailer" = "画像サムネイル作成";
+"toolui.window.background_remover" = "背景除去 — %@";
+"toolui.window.image_comparer" = "画像比較";
+"toolui.viewer.load_failed" = "%@を読み込めませんでした";
+"toolui.viewer.position" = "%@（%d / %d）";
+"toolui.filelist.add_images" = "画像を追加…";
+"toolui.filelist.clear" = "クリア";
+"toolui.filelist.count" = "%d枚の画像";
+"toolui.combiner.orientation" = "方向";
+"toolui.combiner.alignment" = "配置";
+"toolui.combiner.orientation.horizontal" = "水平";
+"toolui.combiner.orientation.vertical" = "垂直";
+"toolui.combiner.alignment.leading_or_top" = "左／上";
+"toolui.combiner.alignment.center" = "中央";
+"toolui.combiner.alignment.trailing_or_bottom" = "右／下";
+"toolui.combiner.spacing" = "間隔：%d px";
+"toolui.combiner.wrap_after" = "折り返し：%d";
+"toolui.combiner.wrap_help" = "0で1行／1列";
+"toolui.combiner.combine_save" = "結合して保存…";
+"toolui.combiner.notify_title" = "画像結合";
+"toolui.combiner.read_failed" = "一部のファイルを読み込めませんでした。";
+"toolui.splitter.image" = "画像";
+"toolui.splitter.rows" = "行数：%d";
+"toolui.splitter.columns" = "列数：%d";
+"toolui.splitter.split_save" = "分割して保存…";
+"toolui.splitter.choose_folder" = "タイルの保存先を選択";
+"toolui.splitter.notify_title" = "画像分割";
+"toolui.splitter.grid_too_large" = "グリッドが画像より大きくなっています。";
+"toolui.thumbnailer.max_width" = "最大幅：%d px";
+"toolui.thumbnailer.max_height" = "最大高さ：%d px";
+"toolui.thumbnailer.choose_folder" = "サムネイルの保存先を選択";
+"toolui.thumbnailer.notify_title" = "画像サムネイル作成";
+"toolui.thumbnailer.saved" = "%d / %d件のサムネイルを保存しました。";
+"toolui.generate" = "生成…";
+"toolui.bgremover.isolating" = "被写体を分離中…";
+"toolui.bgremover.save_as" = "名前を付けて保存…";
+"toolui.comparer.first" = "1枚目の画像…";
+"toolui.comparer.first_done" = "1枚目の画像 ✓";
+"toolui.comparer.second" = "2枚目の画像…";
+"toolui.comparer.second_done" = "2枚目の画像 ✓";
+"toolui.comparer.slider" = "スライダー";
+"toolui.comparer.side_by_side" = "左右比較";
+"toolui.comparer.choose_two" = "比較する2枚の画像を選択してください。";
+
+/* Sources/SwiftXApp/UtilityToolViews.swift */
+"toolui.window.index_folder" = "フォルダをインデックス";
+"toolui.window.clipboard_viewer" = "クリップボードビューア";
+"toolui.window.inspect_window" = "ウインドウを検査";
+"toolui.indexer.folder" = "フォルダ";
+"toolui.indexer.no_folder" = "フォルダが選択されていません";
+"toolui.indexer.choose_folder" = "インデックスするフォルダを選択";
+"toolui.indexer.format" = "フォーマット";
+"toolui.indexer.format.text" = "テキスト";
+"toolui.indexer.format.html" = "HTML";
+"toolui.indexer.skip_hidden" = "隠しファイルをスキップ";
+"toolui.indexer.show_sizes" = "サイズを表示";
+"toolui.indexer.depth_unlimited" = "深さ：無制限";
+"toolui.indexer.depth" = "深さ：%d";
+"toolui.indexer.failed_title" = "フォルダのインデックス作成に失敗しました";
+"toolui.refresh" = "更新";
+"toolui.clipboard.binary" = "%dバイトのバイナリデータ";
+"toolui.clipboard.select_format" = "クリップボードのフォーマットを選択";
+"toolui.monitor.pattern.white" = "白";
+"toolui.monitor.pattern.black" = "黒";
+"toolui.monitor.pattern.red" = "赤";
+"toolui.monitor.pattern.green" = "緑";
+"toolui.monitor.pattern.blue" = "青";
+"toolui.monitor.pattern.grayscale_gradient" = "グレースケールグラデーション";
+"toolui.monitor.pattern.color_gradient" = "カラーグラデーション";
+"toolui.monitor.hint" = "%@ — 矢印キーまたはクリックで切り替え、Escで終了";
+"toolui.inspect.window" = "ウインドウ";
+"toolui.inspect.title" = "タイトル";
+"toolui.inspect.application" = "アプリケーション";
+"toolui.inspect.process_id" = "プロセスID";
+"toolui.inspect.window_id" = "ウインドウID";
+"toolui.inspect.position" = "位置";
+"toolui.inspect.size" = "サイズ";
+"toolui.inspect.layer" = "レイヤー";
+"toolui.inspect.opacity" = "不透明度";
+"toolui.inspect.copy_info" = "情報をコピー";
+"toolui.inspect.copy_template" = "タイトル：%@\nアプリケーション：%@（pid %d）\nウインドウID：%d\n境界：%d, %d, %d × %d\nレイヤー：%d、不透明度：%d%%";
+
+/* Sources/SwiftXApp/VideoToolViews.swift */
+"toolui.window.video_converter" = "動画コンバータ";
+"toolui.window.video_thumbnailer" = "動画サムネイル作成";
+"toolui.video.video" = "動画";
+"toolui.video.codec" = "コーデック";
+"toolui.video.quality_crf" = "品質（CRF %d）";
+"toolui.video.crf_help" = "値が小さいほど高品質でファイルサイズが大きくなります";
+"toolui.video.bitrate" = "ビットレート（kbps）";
+"toolui.video.custom_args" = "カスタムffmpeg引数（プリセットを置き換え）";
+"toolui.video.ffmpeg_missing" = "ffmpegがインストールされていません — 環境設定→録画からインストールしてください。";
+"toolui.video.convert" = "変換…";
+"toolui.video.converted_title" = "動画を変換しました";
+"toolui.video.convert_failed_title" = "動画の変換に失敗しました";
+"toolui.video.thumbnails_count" = "サムネイル数：%d";
+"toolui.video.thumb_columns" = "列数：%d";
+"toolui.video.add_timestamps" = "タイムスタンプを追加";
+"toolui.video.thumbs_saved_title" = "動画サムネイルを保存しました";
+"toolui.video.thumbs_failed_title" = "動画サムネイル作成に失敗しました";
+
+/* Sources/SwiftXApp/ImageEffectsViews.swift */
+"effects.ui.window.title" = "画像エフェクト";
+"effects.ui.window.beautifier" = "画像装飾 — %@";
+"effects.ui.preset_n" = "プリセット%d";
+"effects.ui.preset_name_placeholder" = "プリセット名";
+"effects.ui.import" = "インポート…";
+"effects.ui.export" = "エクスポート…";
+"effects.ui.select_effect" = "パラメータを編集するエフェクトを選択してください。";
+"effects.ui.preview" = "プレビュー";
+"effects.ui.import_failed" = "インポートに失敗しました";
+"effects.ui.export_failed" = "エクスポートに失敗しました";
+"effects.ui.continue_without" = "エフェクトなしで続行";
+"effects.ui.apply" = "適用";
+"effects.ui.dash.solid" = "実線";
+"effects.ui.dash.dash" = "破線";
+"effects.ui.dash.dot" = "点線";
+"effects.ui.dash.dash_dot" = "一点鎖線";
+"effects.ui.dash.dash_dot_dot" = "二点鎖線";
+"effects.ui.font.family" = "ファミリー";
+"effects.ui.font.size" = "サイズ";
+"effects.ui.anchor.top" = "上";
+"effects.ui.anchor.bottom" = "下";
+"effects.ui.anchor.left" = "左";
+"effects.ui.anchor.right" = "右";
+"effects.ui.gradient.type" = "種類";
+"effects.ui.gradient.horizontal" = "水平";
+"effects.ui.gradient.vertical" = "垂直";
+"effects.ui.gradient.forward_diagonal" = "斜め（右下がり）";
+"effects.ui.gradient.backward_diagonal" = "斜め（右上がり）";
+"effects.ui.gradient.location" = "位置 %%";
+"effects.ui.gradient.add_stop" = "ストップを追加";
+"effects.ui.beautifier.layout" = "レイアウト";
+"effects.ui.beautifier.margin" = "マージン";
+"effects.ui.beautifier.padding" = "パディング";
+"effects.ui.beautifier.smart_padding" = "スマートパディング";
+"effects.ui.beautifier.rounded_corner" = "角丸";
+"effects.ui.beautifier.shadow" = "シャドウ";
+"effects.ui.beautifier.radius" = "半径";
+"effects.ui.beautifier.opacity" = "不透明度";
+"effects.ui.beautifier.distance" = "距離";
+"effects.ui.beautifier.angle" = "角度";
+"effects.ui.beautifier.background" = "背景";
+"effects.ui.beautifier.type" = "種類";
+"effects.ui.beautifier.gradient" = "グラデーション";
+"effects.ui.beautifier.color" = "色";
+"effects.ui.beautifier.image" = "画像";
+"effects.ui.beautifier.transparent" = "透明";
+"effects.ui.beautifier.save" = "保存…";
+
+/* Sources/SwiftXApp/AIAnalysisView.swift */
+"toolui.ai.window_title" = "AI画像解析";
+"toolui.ai.image_label" = "解析する画像";
+"toolui.ai.prompt" = "プロンプト";
+"toolui.ai.analyzing" = "解析中…";
+"toolui.ai.analyze" = "解析";
+"toolui.ai.provider" = "プロバイダー…";
+"toolui.ai.copy_response" = "レスポンスをコピー";
+"toolui.ai.base_url" = "ベースURL";
+"toolui.ai.api_key" = "APIキー";
+"toolui.ai.model" = "モデル";
+
+/* Sources/SwiftXApp/LogViewer.swift */
+"log.window_title" = "SwiftXログ";
+"log.loading" = "読み込み中…";
+"log.footer" = "このセッションのログ（サブシステム%@）。統合ログがストレージを管理しているため、削除の必要はありません。";
+"log.refresh" = "更新";
+"log.empty" = "このセッションにはログ項目がありません。";
+"log.read_failed" = "ログを読み込めませんでした：%@";
+
+/* Sources/SwiftXApp/ScrollingCapture.swift */
+"capture.scrolling.window_title" = "スクロールキャプチャ";
+"capture.scrolling.seams_warning" = "一部のフレームがうまく整列しませんでした。結果に継ぎ目が生じる場合があります。";
+"capture.scrolling.stitch_failed" = "フレームを結合できませんでした。";
+"capture.scrolling.start_delay" = "開始までの遅延（ミリ秒）";
+"capture.scrolling.scroll_delay" = "スクロールの遅延（ミリ秒）";
+"capture.scrolling.scroll_amount" = "スクロール量（行）";
+"capture.scrolling.scroll_to_top" = "キャプチャ前に一番上までスクロール";
+"capture.scrolling.ignore_bottom_edge" = "固定された下端を自動的に無視";
+"capture.scrolling.stop" = "停止";
+"capture.scrolling.frames" = "%dフレーム";
+"capture.scrolling.select_start" = "領域を選択して開始";
+
+/* Sources/SwiftXApp/AutoCapture.swift */
+"capture.auto.window_title" = "自動キャプチャ";
+"capture.auto.region" = "領域";
+"capture.auto.not_set" = "未設定";
+"capture.auto.select_region" = "領域を選択…";
+"capture.auto.full_screen" = "画面全体";
+"capture.auto.repeat_every" = "繰り返し間隔（秒）";
+"capture.auto.wait_uploads" = "キャプチャ前にアップロードの完了を待つ";
+"capture.auto.stop" = "停止";
+"capture.auto.start" = "開始";
+"capture.auto.status" = "残り%d秒 • %d件キャプチャ済み";
+"capture.auto.captured" = "%d件キャプチャ済み";
+
+/* Sources/SwiftXApp/RecordingHUD.swift */
+"recording.hud.countdown" = "%d秒後に録画開始…";
+"recording.hud.resume" = "再開";
+"recording.hud.pause" = "一時停止";
+"recording.hud.stop_save" = "停止して保存";
+"recording.hud.abort_discard" = "中止して破棄";
+
+/* Sources/CaptureKit/RegionSelect.swift */
+"capture.region.shape.rectangle" = "矩形";
+"capture.region.shape.ellipse" = "楕円";
+"capture.region.shape.freehand" = "フリーハンド";
+"capture.region.hint.shape" = "⇥ 形状：%@";
+"capture.region.hint.magnifier_on" = "M 拡大鏡オン";
+"capture.region.hint.magnifier_off" = "M 拡大鏡オフ";
+"capture.region.hint.fixed_on" = "F 固定サイズオン（%d×%d）";
+"capture.region.hint.fixed_off" = "F 固定サイズオフ";
+"capture.region.hint.esc" = "esc キャンセル";
+
+/* Sources/SwiftXApp/Views.swift — Updates pane */
+"settings.updates.status" = "ステータス";
+"settings.updates.not_checked" = "まだ確認していません";
+"settings.updates.last_checked" = "前回の確認：%@";
+"settings.updates.checking" = "確認中…";
+"settings.updates.up_to_date" = "最新の状態です（確認日時：%@）";
+"settings.updates.version_available" = "バージョン%@が利用可能です";
+"settings.updates.release_notes" = "リリースノート";
+"settings.updates.downloading" = "ダウンロードしてインストール中…";
+"settings.updates.installed_relaunch" = "バージョン%@をインストールしました — 完了するには再起動してください";
+"settings.updates.relaunch_now" = "今すぐ再起動";
+"settings.updates.check_automatically" = "自動的に確認";
+"settings.updates.managed_by_homebrew" = "Homebrewで管理されています";
+"settings.updates.copy_command" = "コマンドをコピー";
+"settings.updates.auto_install" = "アップデートを自動的にダウンロードしてインストール";
+"settings.updates.check_for_updates" = "アップデートを確認";
+"settings.updates.install_update" = "アップデートをインストール";
+"settings.updates.open_release_page" = "リリースページを開く";
+"settings.updates.skip_version" = "このバージョンをスキップ";
+/* UpdateCheckFrequency raw values (looked up dynamically; PascalCase keys on purpose) */
+"settings.updates.frequency.Off" = "オフ";
+"settings.updates.frequency.Daily" = "毎日";
+"settings.updates.frequency.Weekly" = "毎週";
+"settings.updates.frequency.Monthly" = "毎月";
+
+/* Sources/SwiftXApp/UpdateManager.swift — update notifications and alerts */
+"update.notify.available_title" = "SwiftX %@が利用可能です";
+"update.notify.available_body_brew" = "%@でアップデート";
+"update.notify.available_body" = "現在のバージョンは%@です。今すぐインストールするか、リリースノートを確認してください。";
+"update.notify.installed_title" = "SwiftX %@をインストールしました";
+"update.notify.installed_body" = "アップデートを完了するには再起動してください。";
+"update.notify.failed_title" = "SwiftXのアップデートに失敗しました";
+"update.alert.no_version" = "このビルドにはバージョン情報がないため、アップデートを比較できません。";
+"update.alert.up_to_date_title" = "SwiftXは最新の状態です";
+"update.alert.up_to_date_body" = "バージョン%@が最新のリリースです。";
+"update.alert.available_title" = "SwiftX %@が利用可能です";
+"update.alert.you_have" = "現在のバージョンは%@です。";
+"update.alert.copy_brew_command" = "brewコマンドをコピー";
+"update.alert.brew_managed_suffix" = "このコピーはHomebrewで管理されています。%@でアップデートしてください。";
+"update.alert.install_update" = "アップデートをインストール";
+"update.alert.open_release_page" = "リリースページを開く";
+"update.alert.view_release_page" = "リリースページを表示";
+"update.alert.skip_version" = "このバージョンをスキップ";
+"update.alert.brew_title" = "Homebrewでアップデート";
+"update.alert.brew_body" = "このSwiftXのコピーはHomebrewで管理されています。以下でアップデートしてください：\n\n%@";
+"update.alert.copy_command" = "コマンドをコピー";
+"update.alert.installed_title" = "SwiftX %@をインストールしました";
+"update.alert.installed_body" = "アップデートは再起動後に適用されます。";
+"update.alert.relaunch_now" = "今すぐ再起動";
+"update.alert.later" = "後で";
+"update.alert.install_failed_title" = "アップデートをインストールできませんでした";
+"update.alert.install_failed_suffix" = "代わりにリリースページからアップデートをダウンロードできます。";
+"update.alert.check_failed_title" = "アップデートの確認に失敗しました";
+"update.alert.open_releases_page" = "リリースページを開く";
+
+/* Sources/UpdateKit — update check/install errors */
+"update.error.http" = "GitHubがHTTP %@を返しました：%@";
+"update.error.bad_version" = "リリースタグ「%@」はSwiftXのバージョンではありません。";
+"update.error.no_dmg_asset" = "リリース%@にはダウンロード可能なディスクイメージがありません。";
+"update.error.not_app_bundle" = "SwiftXがアプリバンドルから実行されていないため、自己アップデートできません。";
+"update.error.translocated" = "SwiftXがディスクイメージまたは隔離された場所から実行されています。先に/Applicationsに移動してください。";
+"update.error.dev_signed" = "このビルドはDeveloper ID署名がされていないため、自己アップデートできません。";
+"update.error.not_writable" = "場所%@に書き込みできません。";
+"update.error.download_failed" = "ダウンロードがHTTP %@で失敗しました。";
+"update.error.checksum_unavailable" = "このリリースはチェックサムを公開していないため、ダウンロードを検証できません。";
+"update.error.checksum_mismatch" = "ダウンロードしたディスクイメージがチェックサム検証に失敗しました。";
+"update.error.mount_failed" = "ディスクイメージをマウントできませんでした：%@";
+"update.error.app_missing_in_dmg" = "ディスクイメージにSwiftX.appが含まれていません。";
+"update.error.signature_invalid" = "ダウンロードしたアプリがコード署名検証に失敗しました：%@";
+"update.error.team_id_mismatch" = "ダウンロードしたアプリは%@によって署名されており、%@ではありません。";
+"update.error.unknown_team" = "不明なチーム";
+"update.error.swap_failed" = "インストール済みのアプリを置き換えられませんでした：%@";

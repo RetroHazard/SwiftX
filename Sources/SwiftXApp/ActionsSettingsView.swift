@@ -12,27 +12,29 @@ struct ActionsSettingsView: View {
     @State private var programs = TaskSettings.load().externalPrograms
 
     var body: some View {
-        Section("Actions") {
-            Text("Programs run on the saved file, in order, when “Perform actions” is enabled in Capture. Placeholders: $input, $output (%input/%output add quotes).")
+        // no section header: the navigation title above already says "External
+        // Programs", and repeating it just spends a row
+        Section {
+            Text(L10n.t("settings.actions.help"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
             ForEach(programs.indices, id: \.self) { index in
                 DisclosureGroup {
-                    TextField("Name", text: binding(index, \.name))
+                    TextField(L10n.t("common.name"), text: binding(index, \.name))
                     HStack {
-                        TextField("Program path (/usr/local/bin/…)", text: binding(index, \.path))
-                        Button("Choose…") { choosePath(index) }
+                        TextField(L10n.t("settings.actions.program_path"), text: binding(index, \.path))
+                        Button(L10n.t("common.choose")) { choosePath(index) }
                     }
-                    TextField("Arguments (empty = the file path)", text: binding(index, \.args))
+                    TextField(L10n.t("settings.actions.arguments"), text: binding(index, \.args))
                         .font(.body.monospaced())
-                    TextField("Output extension (task continues with the output file)", text: binding(index, \.outputExtension))
-                    TextField("Only for extensions (e.g. png, jpg — empty = all)", text: binding(index, \.extensions))
-                    Toggle("Move input file to Trash after a successful conversion", isOn: binding(index, \.deleteInputFile))
-                    Button("Remove", role: .destructive) { remove(index) }
+                    TextField(L10n.t("settings.actions.output_extension"), text: binding(index, \.outputExtension))
+                    TextField(L10n.t("settings.actions.only_for_extensions"), text: binding(index, \.extensions))
+                    Toggle(L10n.t("settings.actions.move_input_to_trash"), isOn: binding(index, \.deleteInputFile))
+                    Button(L10n.t("common.remove"), role: .destructive) { remove(index) }
                 } label: {
                     Toggle(isOn: binding(index, \.isActive)) {
-                        Text(programs[index].name.isEmpty ? "(unnamed action)" : programs[index].name)
+                        Text(programs[index].name.isEmpty ? L10n.t("settings.actions.unnamed_action") : programs[index].name)
                     }
                 }
             }
@@ -44,7 +46,7 @@ struct ActionsSettingsView: View {
                 programs.append(program)
                 persist()
             } label: {
-                Label("Add Action", systemImage: "plus.circle.fill")
+                Label(L10n.t("settings.actions.add_action"), systemImage: "plus.circle.fill")
             }
             .buttonStyle(.borderless)
         }

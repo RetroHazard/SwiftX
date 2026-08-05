@@ -8,6 +8,7 @@
 // existing install, which the Settings window can kick off via Homebrew.
 
 import Foundation
+import SharedKit
 
 public enum FFmpeg {
     /// Homebrew (Apple Silicon + Intel) and MacPorts locations. PATH lookup is
@@ -159,6 +160,18 @@ public enum FFmpeg {
             }
         }
 
+        /// Picker label. Pure codec/format names pass through untranslated;
+        /// only the descriptive parts ("hardware", "animation") localize.
+        /// Raw values stay untouched as identity.
+        public var displayName: String {
+            switch self {
+            case .h264VideoToolbox: return L10n.t("capture.format.h264_videotoolbox")
+            case .hevcVideoToolbox: return L10n.t("capture.format.hevc_videotoolbox")
+            case .webp: return L10n.t("capture.format.webp_animation")
+            default: return rawValue
+            }
+        }
+
         /// CRF-style quality codecs show a quality slider; VideoToolbox is
         /// bitrate-driven; the animation formats have fixed presets.
         public var usesCRF: Bool {
@@ -235,7 +248,7 @@ public enum FFmpeg {
 
     private static func run(arguments: [String]) async throws {
         guard let path = installedPath else {
-            throw RecordingError.writerFailed("ffmpeg is not installed")
+            throw RecordingError.writerFailed(L10n.t("capturekit.error.ffmpeg_not_installed"))
         }
         let process = Process()
         process.executableURL = URL(fileURLWithPath: path)
@@ -247,7 +260,7 @@ public enum FFmpeg {
             process.terminationHandler = { _ in continuation.resume() }
         }
         guard process.terminationStatus == 0 else {
-            throw RecordingError.writerFailed("ffmpeg exited with status \(process.terminationStatus)")
+            throw RecordingError.writerFailed(L10n.t("capturekit.error.ffmpeg_exit_status", process.terminationStatus))
         }
     }
 }

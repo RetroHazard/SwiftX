@@ -9,6 +9,7 @@
 // legacy $var$ syntax is migrated at load time (CustomUploaderItem), as in C#.
 
 import Foundation
+import SharedKit
 
 public enum SyntaxError: LocalizedError {
     case emptyFunctionName
@@ -20,15 +21,15 @@ public enum SyntaxError: LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .emptyFunctionName:
-            return "Function name cannot be empty."
+            return L10n.t("upload.error.syntax.empty_function_name")
         case .unknownFunction(let name):
-            return "Invalid function name: \(name)"
+            return L10n.t("upload.error.syntax.unknown_function", name)
         case .missingParameters(let function, let minimum):
-            return "Minimum parameter count for function \"\(function)\" is \(minimum)."
+            return L10n.t("upload.error.syntax.missing_parameters", function, minimum)
         case .unsupportedFunction(let name):
-            return "Function \"\(name)\" is not supported on macOS yet."
+            return L10n.t("upload.error.syntax.unsupported_function", name)
         case .noResponseAvailable(let function):
-            return "Function \"\(function)\" requires a response and cannot be used in a request."
+            return L10n.t("upload.error.syntax.no_response_available", function)
         }
     }
 }

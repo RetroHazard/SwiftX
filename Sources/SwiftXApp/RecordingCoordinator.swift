@@ -91,7 +91,8 @@ final class RecordingCoordinator {
                 var url = try await recorder.stop()
                 if let target {
                     let settings = TaskSettings.load()
-                    Notifier.notify(title: "Converting to \(target.displayName)…", body: url.lastPathComponent)
+                    Notifier.notify(title: L10n.t("notification.recording.converting", target.displayName),
+                                    body: url.lastPathComponent)
                     let converted = url.deletingPathExtension().appendingPathExtension(target.fileExtension)
                     do {
                         try await FFmpeg.transcode(
@@ -103,13 +104,14 @@ final class RecordingCoordinator {
                         url = converted
                     } catch {
                         // keep the MP4 so the recording isn't lost
-                        Notifier.notify(title: "\(target.displayName) conversion failed — kept MP4",
+                        Notifier.notify(title: L10n.t("notification.recording.conversion_failed_kept_mp4",
+                                                      target.displayName),
                                         body: error.localizedDescription)
                     }
                 }
                 finish(url: url, format: format)
             } catch {
-                Notifier.notify(title: "Recording failed", body: error.localizedDescription)
+                Notifier.notify(title: L10n.t("notification.recording.failed"), body: error.localizedDescription)
             }
         }
     }
@@ -138,10 +140,10 @@ final class RecordingCoordinator {
         guard isRecording else { return }
         if TaskSettings.load().screenRecordAskConfirmationOnAbort {
             let alert = NSAlert()
-            alert.messageText = "Abort recording?"
-            alert.informativeText = "The recording will be discarded."
-            alert.addButton(withTitle: "Abort")
-            alert.addButton(withTitle: "Keep Recording")
+            alert.messageText = L10n.t("alert.recording.abort_question")
+            alert.informativeText = L10n.t("alert.recording.abort_info")
+            alert.addButton(withTitle: L10n.t("alert.recording.abort_button"))
+            alert.addButton(withTitle: L10n.t("alert.recording.keep_recording"))
             NSApp.activate(ignoringOtherApps: true)
             guard alert.runModal() == .alertFirstButtonReturn else { return }
         }
@@ -154,8 +156,8 @@ final class RecordingCoordinator {
         let codec = settings.screenRecordCodec.uppercased()
         var transcode = FFmpeg.TranscodeFormat(rawValue: codec)
         if transcode != nil, FFmpeg.installedPath == nil {
-            Notifier.notify(title: "ffmpeg not found — recording H.264 instead",
-                            body: "Install ffmpeg from SwiftX Settings to enable WebM/WebP/APNG.")
+            Notifier.notify(title: L10n.t("notification.recording.ffmpeg_not_found"),
+                            body: L10n.t("notification.recording.install_ffmpeg"))
             transcode = nil
         }
         let format: RecordingFormat = gif ? .gif : .movie(hevc: codec == "HEVC")
@@ -217,9 +219,8 @@ final class RecordingCoordinator {
         } catch {
             closeHUD()
             let alert = NSAlert()
-            alert.messageText = "Recording failed"
-            alert.informativeText = error.localizedDescription
-                + "\n\nIf this is a permission problem, grant Screen Recording access in SwiftX Settings."
+            alert.messageText = L10n.t("alert.recording.failed")
+            alert.informativeText = L10n.t("alert.capture.failed_info", error.localizedDescription)
             alert.alertStyle = .warning
             NSApp.activate(ignoringOtherApps: true)
             alert.runModal()
@@ -263,7 +264,7 @@ final class RecordingCoordinator {
         item.type = format == .gif ? "Image" : "File"
         item.host = "File"
         HistoryStore.shared.append(item)
-        Notifier.notify(title: "Recording saved", body: url.lastPathComponent)
+        Notifier.notify(title: L10n.t("notification.recording.saved"), body: url.lastPathComponent)
 
         let tasks = TaskSettings.load().afterCaptureJob
         if tasks.contains(.copyFilePathToClipboard) {

@@ -9,6 +9,7 @@
 
 import Foundation
 import Network
+import SharedKit
 
 /// Starts a one-shot HTTP listener on a random loopback port, hands back its
 /// redirect URI, and resolves once the browser hits it with `?code=...`.
@@ -59,8 +60,9 @@ public final class LoopbackRedirect: @unchecked Sendable {
         _ = ready.wait(timeout: .now() + 5)
         guard assigned != 0 else {
             listener.cancel()
-            let detail = failure.map { ": \($0.localizedDescription)" } ?? " (timed out)"
-            throw OAuthError.authorizationFailed("could not open a loopback port\(detail)")
+            let reason = failure.map { L10n.t("upload.error.oauth.loopback_port_failed", $0.localizedDescription) }
+                ?? L10n.t("upload.error.oauth.loopback_port_timeout")
+            throw OAuthError.authorizationFailed(reason)
         }
         self.port = assigned
     }
@@ -80,7 +82,7 @@ public final class LoopbackRedirect: @unchecked Sendable {
                     }
                     self.continuation = cont
                     self.queue.asyncAfter(deadline: .now() + 300) { [weak self] in
-                        self?.finish(.failure(OAuthError.authorizationFailed("timed out waiting for the browser")))
+                        self?.finish(.failure(OAuthError.authorizationFailed(L10n.t("upload.error.oauth.browser_timeout"))))
                     }
                 }
             }
@@ -96,7 +98,7 @@ public final class LoopbackRedirect: @unchecked Sendable {
                 conn.cancel(); return
             }
             let params = Self.queryParams(fromRequestLine: request)
-            let body = "<html><body style='font-family:-apple-system'>You can close this window and return to SwiftX.</body></html>"
+            let body = "<html><body style='font-family:-apple-system'>\(L10n.t("upload.service.oauth_close_page"))</body></html>"
             let http = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: \(body.utf8.count)\r\nConnection: close\r\n\r\n\(body)"
             conn.send(content: Data(http.utf8), completion: .contentProcessed { _ in conn.cancel() })
             self.finish(.success(params))

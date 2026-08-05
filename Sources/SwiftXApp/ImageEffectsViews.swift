@@ -19,7 +19,7 @@ import UniformTypeIdentifiers
 @MainActor
 enum ImageEffectsWindows {
     static func showEditor() {
-        ToolWindows.present(title: "Image Effects", resizable: true,
+        ToolWindows.present(title: L10n.t("effects.ui.window.title"), resizable: true,
                             content: ImageEffectsEditorView(store: ImageEffectsStore.shared))
     }
 
@@ -30,7 +30,7 @@ enum ImageEffectsWindows {
         NSApp.activate(ignoringOtherApps: true)
         guard panel.runModal() == .OK, let url = panel.url,
               let image = ImageLoader.load(url: url) else { return }
-        ToolWindows.present(title: "Image Beautifier — \(url.lastPathComponent)", resizable: true,
+        ToolWindows.present(title: L10n.t("effects.ui.window.beautifier", url.lastPathComponent), resizable: true,
                             content: ImageBeautifierView(store: ImageEffectsStore.shared, source: image))
     }
 }
@@ -67,12 +67,13 @@ struct ImageEffectsEditorView: View {
                 }
             )) {
                 ForEach(store.presets.indices, id: \.self) { index in
-                    Text(store.presets[index].name.isEmpty ? "Preset \(index + 1)" : store.presets[index].name)
+                    Text(store.presets[index].name.isEmpty
+                         ? L10n.t("effects.ui.preset_n", index + 1) : store.presets[index].name)
                         .tag(index)
                 }
             }
             if store.presets.indices.contains(store.selectedIndex) {
-                TextField("Preset name", text: Binding(
+                TextField(L10n.t("effects.ui.preset_name_placeholder"), text: Binding(
                     get: { store.presets[store.selectedIndex].name },
                     set: { name in mutatePreset { $0.name = name } }
                 ))
@@ -95,8 +96,8 @@ struct ImageEffectsEditorView: View {
                     refreshPreview()
                 } label: { Image(systemName: "minus") }
                 Spacer()
-                Button("Import…") { importPreset() }
-                Button("Export…") { exportPreset() }
+                Button(L10n.t("effects.ui.import")) { importPreset() }
+                Button(L10n.t("effects.ui.export")) { exportPreset() }
                     .disabled(!store.presets.indices.contains(store.selectedIndex))
             }
             .controlSize(.small)
@@ -124,9 +125,12 @@ struct ImageEffectsEditorView: View {
             HStack {
                 Menu {
                     ForEach(EffectCategory.allCases, id: \.rawValue) { category in
-                        Section(category.rawValue) {
-                            ForEach(EffectRegistry.types(in: category).map { $0.typeName }, id: \.self) { name in
-                                Button(name) { addEffect(named: name) }
+                        Section(category.localizedName) {
+                            // typeName is the persisted identity; the label is
+                            // the localized display name from EffectsKit
+                            ForEach(EffectRegistry.types(in: category)
+                                .map { ($0.typeName, $0.localizedTypeName) }, id: \.0) { entry in
+                                Button(entry.1) { addEffect(named: entry.0) }
                             }
                         }
                     }
@@ -161,7 +165,7 @@ struct ImageEffectsEditorView: View {
                     // the form rebuilds whenever another effect row is picked
                     .id(index)
                 } else {
-                    Text("Select an effect to edit its parameters.")
+                    Text(L10n.t("effects.ui.select_effect"))
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
@@ -173,7 +177,7 @@ struct ImageEffectsEditorView: View {
 
     private var previewPane: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("Preview").font(.caption).foregroundStyle(.secondary)
+            Text(L10n.t("effects.ui.preview")).font(.caption).foregroundStyle(.secondary)
             Group {
                 if let preview {
                     Image(decorative: preview, scale: 2)
@@ -229,7 +233,7 @@ struct ImageEffectsEditorView: View {
             store.save()
             refreshPreview()
         } catch {
-            Notifier.notify(title: "Import failed", body: error.localizedDescription)
+            Notifier.notify(title: L10n.t("effects.ui.import_failed"), body: error.localizedDescription)
         }
     }
 
@@ -241,7 +245,7 @@ struct ImageEffectsEditorView: View {
         do {
             try preset.exportSXIE(to: url)
         } catch {
-            Notifier.notify(title: "Export failed", body: error.localizedDescription)
+            Notifier.notify(title: L10n.t("effects.ui.export_failed"), body: error.localizedDescription)
         }
     }
 
@@ -280,7 +284,7 @@ enum ImageEffectsPickerWindow {
             let window = NSWindow(contentRect: .zero,
                                   styleMask: [.titled, .closable, .resizable],
                                   backing: .buffered, defer: false)
-            window.title = "Image Effects"
+            window.title = L10n.t("effects.ui.window.title")
             window.isReleasedWhenClosed = false
             window.delegate = delegate
 
@@ -321,9 +325,9 @@ private struct ImageEffectsPickerView: View {
             Divider()
             HStack {
                 Spacer()
-                Button("Continue Without Effects") { onFinish(nil) }
+                Button(L10n.t("effects.ui.continue_without")) { onFinish(nil) }
                     .keyboardShortcut(.cancelAction)
-                Button("Apply") { onFinish(store.selectedPreset?.apply(image) ?? image) }
+                Button(L10n.t("effects.ui.apply")) { onFinish(store.selectedPreset?.apply(image) ?? image) }
                     .keyboardShortcut(.defaultAction)
             }
             .padding(10)
@@ -477,11 +481,11 @@ struct EffectParameterForm: View {
             }
         case let value as DashStyle:
             Picker(title, selection: binding(field.key, value) { $0.rawValue }) {
-                Text("Solid").tag(DashStyle.solid)
-                Text("Dash").tag(DashStyle.dash)
-                Text("Dot").tag(DashStyle.dot)
-                Text("Dash Dot").tag(DashStyle.dashDot)
-                Text("Dash Dot Dot").tag(DashStyle.dashDotDot)
+                Text(L10n.t("effects.ui.dash.solid")).tag(DashStyle.solid)
+                Text(L10n.t("effects.ui.dash.dash")).tag(DashStyle.dash)
+                Text(L10n.t("effects.ui.dash.dot")).tag(DashStyle.dot)
+                Text(L10n.t("effects.ui.dash.dash_dot")).tag(DashStyle.dashDot)
+                Text(L10n.t("effects.ui.dash.dash_dot_dot")).tag(DashStyle.dashDotDot)
             }
         case let value as GradientType:
             gradientTypePicker(title, selection: binding(field.key, value) { $0.rawValue })
@@ -524,12 +528,12 @@ struct EffectParameterForm: View {
 
     private func fontRow(_ title: String, key: String, font: CSFont) -> some View {
         LabeledContent(title) {
-            TextField("Family", text: Binding(
+            TextField(L10n.t("effects.ui.font.family"), text: Binding(
                 get: { font.family },
                 set: { var f = font; f.family = $0; update(key, to: fontString(f)) }
             ))
             .frame(width: 120)
-            TextField("Size", value: Binding(
+            TextField(L10n.t("effects.ui.font.size"), value: Binding(
                 get: { font.size },
                 set: { var f = font; f.size = $0; update(key, to: fontString(f)) }
             ), format: .number)
@@ -547,7 +551,10 @@ struct EffectParameterForm: View {
 
     private func anchorRow(_ title: String, key: String, sides: AnchorSides) -> some View {
         LabeledContent(title) {
-            ForEach([("Top", AnchorSides.top), ("Bottom", .bottom), ("Left", .left), ("Right", .right)],
+            ForEach([(L10n.t("effects.ui.anchor.top"), AnchorSides.top),
+                     (L10n.t("effects.ui.anchor.bottom"), .bottom),
+                     (L10n.t("effects.ui.anchor.left"), .left),
+                     (L10n.t("effects.ui.anchor.right"), .right)],
                     id: \.0) { name, side in
                 Toggle(name, isOn: Binding(
                     get: { sides.contains(side) },
@@ -563,10 +570,10 @@ struct EffectParameterForm: View {
 
     private func gradientTypePicker(_ title: String, selection: Binding<GradientType>) -> some View {
         Picker(title, selection: selection) {
-            Text("Horizontal").tag(GradientType.horizontal)
-            Text("Vertical").tag(GradientType.vertical)
-            Text("Forward Diagonal").tag(GradientType.forwardDiagonal)
-            Text("Backward Diagonal").tag(GradientType.backwardDiagonal)
+            Text(L10n.t("effects.ui.gradient.horizontal")).tag(GradientType.horizontal)
+            Text(L10n.t("effects.ui.gradient.vertical")).tag(GradientType.vertical)
+            Text(L10n.t("effects.ui.gradient.forward_diagonal")).tag(GradientType.forwardDiagonal)
+            Text(L10n.t("effects.ui.gradient.backward_diagonal")).tag(GradientType.backwardDiagonal)
         }
     }
 
@@ -579,7 +586,7 @@ struct EffectParameterForm: View {
 
     private func gradientRow(_ title: String, key: String, gradient: GradientInfo) -> some View {
         DisclosureGroup(title) {
-            gradientTypePicker("Type", selection: Binding(
+            gradientTypePicker(L10n.t("effects.ui.gradient.type"), selection: Binding(
                 get: { gradient.type },
                 set: { var g = gradient; g.type = $0; update(key, to: gradientJSON(g)) }
             ))
@@ -594,7 +601,7 @@ struct EffectParameterForm: View {
                         }
                     ), supportsOpacity: true)
                     .labelsHidden()
-                    TextField("Location %", value: Binding(
+                    TextField(L10n.t("effects.ui.gradient.location"), value: Binding(
                         get: { gradient.colors[index].location },
                         set: {
                             var g = gradient
@@ -611,7 +618,7 @@ struct EffectParameterForm: View {
                     .buttonStyle(.borderless)
                 }
             }
-            Button("Add Stop") {
+            Button(L10n.t("effects.ui.gradient.add_stop")) {
                 var g = gradient
                 g.colors.append(GradientStop(color: .black, location: 100))
                 update(key, to: gradientJSON(g))
@@ -647,27 +654,27 @@ struct ImageBeautifierView: View {
 
     private var controls: some View {
         Form {
-            Section("Layout") {
-                intSlider("Margin", value: \.margin, range: 0...300)
-                intSlider("Padding", value: \.padding, range: 0...200)
-                Toggle("Smart padding", isOn: bound(\.smartPadding))
-                intSlider("Rounded corner", value: \.roundedCorner, range: 0...100)
+            Section(L10n.t("effects.ui.beautifier.layout")) {
+                intSlider(L10n.t("effects.ui.beautifier.margin"), value: \.margin, range: 0...300)
+                intSlider(L10n.t("effects.ui.beautifier.padding"), value: \.padding, range: 0...200)
+                Toggle(L10n.t("effects.ui.beautifier.smart_padding"), isOn: bound(\.smartPadding))
+                intSlider(L10n.t("effects.ui.beautifier.rounded_corner"), value: \.roundedCorner, range: 0...100)
             }
-            Section("Shadow") {
-                intSlider("Radius", value: \.shadowRadius, range: 0...100)
-                intSlider("Opacity", value: \.shadowOpacity, range: 0...100)
-                intSlider("Distance", value: \.shadowDistance, range: 0...100)
-                intSlider("Angle", value: \.shadowAngle, range: 0...360)
+            Section(L10n.t("effects.ui.beautifier.shadow")) {
+                intSlider(L10n.t("effects.ui.beautifier.radius"), value: \.shadowRadius, range: 0...100)
+                intSlider(L10n.t("effects.ui.beautifier.opacity"), value: \.shadowOpacity, range: 0...100)
+                intSlider(L10n.t("effects.ui.beautifier.distance"), value: \.shadowDistance, range: 0...100)
+                intSlider(L10n.t("effects.ui.beautifier.angle"), value: \.shadowAngle, range: 0...360)
             }
-            Section("Background") {
-                Picker("Type", selection: bound(\.backgroundType)) {
-                    Text("Gradient").tag(0)
-                    Text("Color").tag(1)
-                    Text("Image").tag(2)
-                    Text("Transparent").tag(4)
+            Section(L10n.t("effects.ui.beautifier.background")) {
+                Picker(L10n.t("effects.ui.beautifier.type"), selection: bound(\.backgroundType)) {
+                    Text(L10n.t("effects.ui.beautifier.gradient")).tag(0)
+                    Text(L10n.t("effects.ui.beautifier.color")).tag(1)
+                    Text(L10n.t("effects.ui.beautifier.image")).tag(2)
+                    Text(L10n.t("effects.ui.beautifier.transparent")).tag(4)
                 }
                 if store.beautifier.backgroundType == 1 {
-                    ColorPicker("Color", selection: Binding(
+                    ColorPicker(L10n.t("effects.ui.beautifier.color"), selection: Binding(
                         get: { Color(nsColor: store.beautifier.backgroundColor.nsColor) },
                         set: { color in
                             guard let srgb = NSColor(color).usingColorSpace(.sRGB) else { return }
@@ -680,11 +687,12 @@ struct ImageBeautifierView: View {
                     ))
                 }
                 if store.beautifier.backgroundType == 2 {
-                    LabeledContent("Image") {
+                    LabeledContent(L10n.t("effects.ui.beautifier.image")) {
                         Text(store.beautifier.backgroundImageFilePath.isEmpty
-                             ? "None" : (store.beautifier.backgroundImageFilePath as NSString).lastPathComponent)
+                             ? L10n.t("common.none")
+                             : (store.beautifier.backgroundImageFilePath as NSString).lastPathComponent)
                             .foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
-                        Button("Browse…") {
+                        Button(L10n.t("common.browse")) {
                             let panel = NSOpenPanel()
                             panel.allowedContentTypes = [.image]
                             if panel.runModal() == .OK, let url = panel.url {
@@ -697,15 +705,15 @@ struct ImageBeautifierView: View {
             }
             Section {
                 HStack {
-                    Button("Copy") { ImageWriter.copyToClipboard(rendered()) }
-                    Button("Save…") {
+                    Button(L10n.t("common.copy")) { ImageWriter.copyToClipboard(rendered()) }
+                    Button(L10n.t("effects.ui.beautifier.save")) {
                         let panel = NSSavePanel()
                         panel.nameFieldStringValue = "beautified.png"
                         if panel.runModal() == .OK, let url = panel.url {
                             try? ImageWriter.writePNG(rendered(), to: url)
                         }
                     }
-                    Button("Reset") {
+                    Button(L10n.t("common.reset")) {
                         store.beautifier = ImageBeautifierOptions()
                         changed()
                     }

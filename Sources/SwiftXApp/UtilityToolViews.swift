@@ -8,21 +8,22 @@
 // MonitorTestForm / InspectWindowForm).
 
 import AppKit
+import SharedKit
 import SwiftUI
 import ToolsKit
 import UniformTypeIdentifiers
 
 extension ToolWindows {
     static func showFolderIndexer() {
-        present(title: "Index Folder", content: FolderIndexerView())
+        present(title: L10n.t("toolui.window.index_folder"), content: FolderIndexerView())
     }
 
     static func showClipboardViewer() {
-        present(title: "Clipboard Viewer", resizable: true, content: ClipboardViewerView())
+        present(title: L10n.t("toolui.window.clipboard_viewer"), resizable: true, content: ClipboardViewerView())
     }
 
     static func showWindowInspector() {
-        present(title: "Inspect Window", content: InspectWindowView())
+        present(title: L10n.t("toolui.window.inspect_window"), content: InspectWindowView())
     }
 
     static func showMonitorTest() {
@@ -54,26 +55,27 @@ private struct FolderIndexerView: View {
 
     var body: some View {
         Form {
-            LabeledContent("Folder") {
+            LabeledContent(L10n.t("toolui.indexer.folder")) {
                 HStack {
-                    Text(folder?.lastPathComponent ?? "No folder selected")
+                    Text(folder?.lastPathComponent ?? L10n.t("toolui.indexer.no_folder"))
                         .foregroundStyle(folder == nil ? .secondary : .primary)
                         .lineLimit(1).truncationMode(.middle)
-                    Button("Browse…") {
-                        folder = ToolWindows.folderPanel(message: "Choose the folder to index")
+                    Button(L10n.t("common.browse")) {
+                        folder = ToolWindows.folderPanel(message: L10n.t("toolui.indexer.choose_folder"))
                     }
                 }
             }
-            Picker("Format", selection: $options.format) {
-                ForEach(IndexerOptions.Format.allCases, id: \.self) { Text($0.rawValue) }
+            Picker(L10n.t("toolui.indexer.format"), selection: $options.format) {
+                ForEach(IndexerOptions.Format.allCases, id: \.self) { Text($0.localizedName) }
             }
-            Toggle("Skip hidden files", isOn: $options.skipHidden)
-            Toggle("Show sizes", isOn: $options.showSizes)
-            Stepper(options.maxDepth == 0 ? "Depth: unlimited" : "Depth: \(options.maxDepth)",
+            Toggle(L10n.t("toolui.indexer.skip_hidden"), isOn: $options.skipHidden)
+            Toggle(L10n.t("toolui.indexer.show_sizes"), isOn: $options.showSizes)
+            Stepper(options.maxDepth == 0 ? L10n.t("toolui.indexer.depth_unlimited")
+                                          : L10n.t("toolui.indexer.depth", options.maxDepth),
                     value: $options.maxDepth, in: 0...20)
             HStack {
                 Spacer()
-                Button("Generate…") { generate() }
+                Button(L10n.t("toolui.generate")) { generate() }
                     .keyboardShortcut(.defaultAction)
                     .disabled(folder == nil)
             }
@@ -93,7 +95,18 @@ private struct FolderIndexerView: View {
             try index.write(to: output, atomically: true, encoding: .utf8)
             NSWorkspace.shared.activateFileViewerSelecting([output])
         } catch {
-            Notifier.notify(title: "Index folder failed", body: error.localizedDescription)
+            Notifier.notify(title: L10n.t("toolui.indexer.failed_title"), body: error.localizedDescription)
+        }
+    }
+}
+
+/// Display names for the indexer output formats; rawValues stay the
+/// persisted/identity values.
+extension IndexerOptions.Format {
+    var localizedName: String {
+        switch self {
+        case .text: return L10n.t("toolui.indexer.format.text")
+        case .html: return L10n.t("toolui.indexer.format.html")
         }
     }
 }
@@ -115,7 +128,7 @@ private struct ClipboardViewerView: View {
         }
         .frame(minWidth: 560, minHeight: 300)
         .toolbar {
-            Button("Refresh", systemImage: "arrow.clockwise") { refresh() }
+            Button(L10n.t("toolui.refresh"), systemImage: "arrow.clockwise") { refresh() }
         }
         .onAppear { refresh() }
     }
@@ -131,10 +144,10 @@ private struct ClipboardViewerView: View {
                         .frame(maxWidth: .infinity, alignment: .leading).padding()
                 }
             } else {
-                Text("\(data.count) bytes of binary data").foregroundStyle(.secondary)
+                Text(L10n.t("toolui.clipboard.binary", data.count)).foregroundStyle(.secondary)
             }
         } else {
-            Text("Select a clipboard format").foregroundStyle(.secondary)
+            Text(L10n.t("toolui.clipboard.select_format")).foregroundStyle(.secondary)
         }
     }
 
@@ -173,14 +186,14 @@ final class MonitorTestWindow: NSWindow {
 
 struct MonitorTestView: View {
     static let patterns: [(name: String, style: AnyShapeStyle)] = [
-        ("White", AnyShapeStyle(Color.white)),
-        ("Black", AnyShapeStyle(Color.black)),
-        ("Red", AnyShapeStyle(Color(red: 1, green: 0, blue: 0))),
-        ("Green", AnyShapeStyle(Color(red: 0, green: 1, blue: 0))),
-        ("Blue", AnyShapeStyle(Color(red: 0, green: 0, blue: 1))),
-        ("Grayscale gradient", AnyShapeStyle(
+        (L10n.t("toolui.monitor.pattern.white"), AnyShapeStyle(Color.white)),
+        (L10n.t("toolui.monitor.pattern.black"), AnyShapeStyle(Color.black)),
+        (L10n.t("toolui.monitor.pattern.red"), AnyShapeStyle(Color(red: 1, green: 0, blue: 0))),
+        (L10n.t("toolui.monitor.pattern.green"), AnyShapeStyle(Color(red: 0, green: 1, blue: 0))),
+        (L10n.t("toolui.monitor.pattern.blue"), AnyShapeStyle(Color(red: 0, green: 0, blue: 1))),
+        (L10n.t("toolui.monitor.pattern.grayscale_gradient"), AnyShapeStyle(
             LinearGradient(colors: [.black, .white], startPoint: .leading, endPoint: .trailing))),
-        ("Color gradient", AnyShapeStyle(
+        (L10n.t("toolui.monitor.pattern.color_gradient"), AnyShapeStyle(
             LinearGradient(colors: [.red, .yellow, .green, .cyan, .blue, .purple],
                            startPoint: .leading, endPoint: .trailing)))
     ]
@@ -192,7 +205,7 @@ struct MonitorTestView: View {
             .fill(Self.patterns[model.index].style)
             .ignoresSafeArea()
             .overlay(alignment: .bottom) {
-                Text("\(Self.patterns[model.index].name) — arrows or click to cycle, Esc to exit")
+                Text(L10n.t("toolui.monitor.hint", Self.patterns[model.index].name))
                     .font(.callout)
                     .padding(8)
                     .background(.black.opacity(0.55), in: Capsule())
@@ -225,36 +238,35 @@ private struct InspectWindowView: View {
     var body: some View {
         Form {
             HStack {
-                Picker("Window", selection: $selectedID) {
+                Picker(L10n.t("toolui.inspect.window"), selection: $selectedID) {
                     ForEach(windows) { entry in
                         Text(entry.label).lineLimit(1).tag(Optional(entry.id))
                     }
                 }
-                Button("Refresh", systemImage: "arrow.clockwise") { refresh() }
+                Button(L10n.t("toolui.refresh"), systemImage: "arrow.clockwise") { refresh() }
                     .labelStyle(.iconOnly)
             }
             if let entry = selected {
-                LabeledContent("Title", value: entry.title.isEmpty ? "—" : entry.title)
-                LabeledContent("Application", value: entry.app)
-                LabeledContent("Process ID", value: String(entry.pid))
-                LabeledContent("Window ID", value: String(entry.id))
-                LabeledContent("Position", value: String(format: "%.0f, %.0f",
-                                                         entry.bounds.origin.x, entry.bounds.origin.y))
-                LabeledContent("Size", value: String(format: "%.0f × %.0f",
-                                                     entry.bounds.width, entry.bounds.height))
-                LabeledContent("Layer", value: String(entry.layer))
-                LabeledContent("Opacity", value: String(format: "%.0f%%", entry.alpha * 100))
+                LabeledContent(L10n.t("toolui.inspect.title"), value: entry.title.isEmpty ? "—" : entry.title)
+                LabeledContent(L10n.t("toolui.inspect.application"), value: entry.app)
+                LabeledContent(L10n.t("toolui.inspect.process_id"), value: String(entry.pid))
+                LabeledContent(L10n.t("toolui.inspect.window_id"), value: String(entry.id))
+                LabeledContent(L10n.t("toolui.inspect.position"), value: String(format: "%.0f, %.0f",
+                                                                                entry.bounds.origin.x, entry.bounds.origin.y))
+                LabeledContent(L10n.t("toolui.inspect.size"), value: String(format: "%.0f × %.0f",
+                                                                            entry.bounds.width, entry.bounds.height))
+                LabeledContent(L10n.t("toolui.inspect.layer"), value: String(entry.layer))
+                LabeledContent(L10n.t("toolui.inspect.opacity"), value: String(format: "%.0f%%", entry.alpha * 100))
                 HStack {
                     Spacer()
-                    Button("Copy Info") {
-                        ToolWindows.copyToClipboard("""
-                        Title: \(entry.title)
-                        Application: \(entry.app) (pid \(entry.pid))
-                        Window ID: \(entry.id)
-                        Bounds: \(Int(entry.bounds.origin.x)), \(Int(entry.bounds.origin.y)), \
-                        \(Int(entry.bounds.width)) × \(Int(entry.bounds.height))
-                        Layer: \(entry.layer), Opacity: \(Int(entry.alpha * 100))%
-                        """)
+                    Button(L10n.t("toolui.inspect.copy_info")) {
+                        ToolWindows.copyToClipboard(L10n.t(
+                            "toolui.inspect.copy_template",
+                            entry.title, entry.app, Int(entry.pid), Int(entry.id),
+                            Int(entry.bounds.origin.x), Int(entry.bounds.origin.y),
+                            Int(entry.bounds.width), Int(entry.bounds.height),
+                            entry.layer, Int(entry.alpha * 100)
+                        ))
                     }
                 }
             }

@@ -33,19 +33,21 @@ enum QuickTaskMenu {
             menu.addItem(item)
         }
 
-        add("Continue") { choice = .continueChain }
+        add(L10n.t("common.continue")) { choice = .continueChain }
         menu.addItem(.separator())
         for preset in ApplicationConfig.load().quickTaskPresets {
             if preset.isValid {
-                add(preset.displayName) { choice = .preset(preset) }
+                add(preset.localizedDisplayName) { choice = .preset(preset) }
             } else {
                 menu.addItem(.separator())
             }
         }
         menu.addItem(.separator())
-        add("Edit This Menu…") { ToolWindows.present(title: "Quick Task Menu", content: QuickTaskEditorView()) }
+        add(L10n.t("quicktaskmenu.edit_this_menu")) {
+            ToolWindows.present(title: L10n.t("quicktaskmenu.window_title"), content: QuickTaskEditorView())
+        }
         menu.addItem(.separator())
-        add("Cancel") {}
+        add(L10n.t("common.cancel")) {}
 
         NSApp.activate(ignoringOtherApps: true)
         menu.popUp(positioning: menu.items.first, at: NSEvent.mouseLocation, in: nil)
@@ -91,7 +93,8 @@ struct QuickTaskEditorView: View {
             VStack(alignment: .leading, spacing: 6) {
                 List(selection: $selection) {
                     ForEach(Array(presets.enumerated()), id: \.offset) { index, preset in
-                        (preset.isValid ? Text(preset.displayName) : Text("— separator —").foregroundStyle(.secondary))
+                        (preset.isValid ? Text(preset.localizedDisplayName)
+                            : Text(L10n.t("quicktaskmenu.separator")).foregroundStyle(.secondary))
                             .tag(index)
                     }
                 }
@@ -99,7 +102,7 @@ struct QuickTaskEditorView: View {
                 HStack(spacing: 6) {
                     Button("+") { mutate { $0.append(QuickTaskPreset(afterCaptureTasks: [.saveImageToFile])) }
                         selection = presets.count - 1 }
-                    Button("Separator") { mutate { $0.append(QuickTaskPreset()) } }
+                    Button(L10n.t("quicktaskmenu.separator_button")) { mutate { $0.append(QuickTaskPreset()) } }
                     Button("−") {
                         guard let index = selection, presets.indices.contains(index) else { return }
                         mutate { $0.remove(at: index) }
@@ -108,7 +111,7 @@ struct QuickTaskEditorView: View {
                     Button("↑") { move(-1) }
                     Button("↓") { move(1) }
                     Spacer()
-                    Button("Reset") {
+                    Button(L10n.t("common.reset")) {
                         mutate { $0 = QuickTaskPreset.defaultPresets }
                         selection = nil
                     }
@@ -119,19 +122,19 @@ struct QuickTaskEditorView: View {
 
             if let index = selection, presets.indices.contains(index) {
                 Form {
-                    TextField("Name:", text: binding(index).name)
-                    Section("After capture") {
+                    TextField(L10n.t("quicktaskmenu.name_label"), text: binding(index).name)
+                    Section(L10n.t("pipeline.section.after_capture")) {
                         TaskFlagToggles(value: binding(index).afterCaptureTasks,
                                         excluded: [.showQuickTaskMenu])
                     }
-                    Section("After upload") {
+                    Section(L10n.t("pipeline.section.after_upload")) {
                         TaskFlagToggles(value: binding(index).afterUploadTasks)
                     }
                 }
                 .formStyle(.grouped)
                 .frame(minWidth: 320)
             } else {
-                Text("Select a preset to edit it.")
+                Text(L10n.t("quicktaskmenu.select_preset_hint"))
                     .foregroundStyle(.secondary)
                     .frame(minWidth: 320, maxHeight: .infinity)
             }

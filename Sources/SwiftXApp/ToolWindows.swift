@@ -8,6 +8,7 @@
 
 import AppKit
 import CaptureKit
+import SharedKit
 import SwiftUI
 import ToolsKit
 
@@ -62,9 +63,9 @@ enum ToolWindows {
     static func showOCRResult(for image: CGImage) async {
         do {
             let text = try await OCRService.recognizeText(in: image)
-            present(title: "OCR", resizable: true, content: TextResultView(text: text))
+            present(title: L10n.t("toolui.window.ocr"), resizable: true, content: TextResultView(text: text))
         } catch {
-            Notifier.notify(title: "OCR failed", body: error.localizedDescription)
+            Notifier.notify(title: L10n.t("toolui.ocr.failed_title"), body: error.localizedDescription)
         }
     }
 
@@ -81,9 +82,8 @@ enum ToolWindows {
             let angle = atan2(rect.height, rect.width) * 180 / .pi
             copyToClipboard("\(width) x \(height)")
             Notifier.notify(
-                title: "Ruler — \(width) × \(height)",
-                body: String(format: "Diagonal %.1f px, angle %.1f° — size copied to clipboard",
-                             diagonal, angle)
+                title: L10n.t("toolui.ruler.title", width, height),
+                body: L10n.t("toolui.ruler.body", diagonal, angle)
             )
         }
     }
@@ -95,34 +95,34 @@ enum ToolWindows {
         panel.allowedContentTypes = [.image]
         NSApp.activate(ignoringOtherApps: true)
         guard panel.runModal() == .OK, let url = panel.url else { return }
-        present(title: "Metadata — \(url.lastPathComponent)", resizable: true,
+        present(title: L10n.t("toolui.window.metadata", url.lastPathComponent), resizable: true,
                 content: MetadataView(url: url))
     }
 
     static func stripMetadataFromFile() {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [.image]
-        panel.message = "The selected image will be rewritten without metadata."
+        panel.message = L10n.t("toolui.metadata.strip_panel_message")
         NSApp.activate(ignoringOtherApps: true)
         guard panel.runModal() == .OK, let url = panel.url else { return }
         do {
             try ImageMetadata.strip(url: url)
-            Notifier.notify(title: "Metadata stripped", body: url.lastPathComponent)
+            Notifier.notify(title: L10n.t("toolui.metadata.stripped_title"), body: url.lastPathComponent)
         } catch {
-            Notifier.notify(title: "Strip metadata failed", body: error.localizedDescription)
+            Notifier.notify(title: L10n.t("toolui.metadata.strip_failed_title"), body: error.localizedDescription)
         }
     }
 
     // MARK: - Hash checker
 
     static func showHashChecker() {
-        present(title: "Hash Checker", content: HashCheckerView())
+        present(title: L10n.t("toolui.window.hash_checker"), content: HashCheckerView())
     }
 
     // MARK: - QR code
 
     static func showQRCode(text: String = "https://github.com/RetroHazard/SwiftX") {
-        present(title: "QR Code", content: QRCodeToolView(text: text))
+        present(title: L10n.t("toolui.window.qr_code"), content: QRCodeToolView(text: text))
     }
 
     static func scanQRFromRegion() {
@@ -142,17 +142,17 @@ enum ToolWindows {
     static func showQRDecodeResult(for image: CGImage) {
         let payloads = (try? QRCodeTool.decode(image)) ?? []
         guard !payloads.isEmpty else {
-            Notifier.notify(title: "QR code", body: "No QR code found.")
+            Notifier.notify(title: L10n.t("toolui.qr.notify_title"), body: L10n.t("toolui.qr.none_found"))
             return
         }
-        present(title: "QR Code — Decoded", resizable: true,
+        present(title: L10n.t("toolui.window.qr_decoded"), resizable: true,
                 content: TextResultView(text: payloads.joined(separator: "\n")))
     }
 
     // MARK: - Color picker
 
     static func showColorPicker() {
-        present(title: "Color Picker", content: ColorPickerToolView())
+        present(title: L10n.t("toolui.window.color_picker"), content: ColorPickerToolView())
     }
 
     /// C# ScreenColorPicker: pick a pixel, copy it. NSColorSampler is the
@@ -163,8 +163,9 @@ enum ToolWindows {
                 guard let rgb = picked?.rgb255 else { return }
                 let hex = ColorFormatter.hex(r: rgb.r, g: rgb.g, b: rgb.b)
                 copyToClipboard(hex)
-                Notifier.notify(title: "Screen color picker",
-                                body: "\(hex) — RGB \(ColorFormatter.rgb(r: rgb.r, g: rgb.g, b: rgb.b)) copied")
+                Notifier.notify(title: L10n.t("toolui.color.screen_picker_title"),
+                                body: L10n.t("toolui.color.copied_body",
+                                             hex, ColorFormatter.rgb(r: rgb.r, g: rgb.g, b: rgb.b)))
             }
         }
     }
@@ -190,17 +191,17 @@ private struct MetadataView: View {
                 .font(.body.monospaced())
                 .frame(minWidth: 520, minHeight: 300)
             HStack {
-                Button("Strip Metadata") {
+                Button(L10n.t("toolui.metadata.strip_button")) {
                     do {
                         try ImageMetadata.strip(url: url)
                         reload()
-                        Notifier.notify(title: "Metadata stripped", body: url.lastPathComponent)
+                        Notifier.notify(title: L10n.t("toolui.metadata.stripped_title"), body: url.lastPathComponent)
                     } catch {
                         text = error.localizedDescription
                     }
                 }
                 Spacer()
-                Button("Copy All") { ToolWindows.copyToClipboard(text) }
+                Button(L10n.t("toolui.copy_all")) { ToolWindows.copyToClipboard(text) }
             }
         }
         .padding()
@@ -208,7 +209,7 @@ private struct MetadataView: View {
     }
 
     private func reload() {
-        text = (try? ImageMetadata.describe(url: url)) ?? "Could not read metadata."
+        text = (try? ImageMetadata.describe(url: url)) ?? L10n.t("toolui.metadata.read_failed")
     }
 }
 
@@ -227,12 +228,12 @@ private struct HashCheckerView: View {
 
     var body: some View {
         Form {
-            LabeledContent("File") {
+            LabeledContent(L10n.t("toolui.hash.file")) {
                 HStack {
-                    Text(fileURL?.lastPathComponent ?? "No file selected")
+                    Text(fileURL?.lastPathComponent ?? L10n.t("toolui.no_file_selected"))
                         .foregroundStyle(fileURL == nil ? .secondary : .primary)
                         .truncationMode(.middle).lineLimit(1)
-                    Button("Browse…") {
+                    Button(L10n.t("common.browse")) {
                         let panel = NSOpenPanel()
                         if panel.runModal() == .OK, let url = panel.url {
                             fileURL = url
@@ -241,11 +242,11 @@ private struct HashCheckerView: View {
                     }
                 }
             }
-            Picker("Algorithm", selection: $algorithm) {
+            Picker(L10n.t("toolui.hash.algorithm"), selection: $algorithm) {
                 ForEach(HashAlgorithm.allCases) { Text($0.rawValue).tag($0) }
             }
             .onChange(of: algorithm) { rehash() }
-            LabeledContent("Result") {
+            LabeledContent(L10n.t("toolui.hash.result")) {
                 HStack {
                     if isHashing {
                         ProgressView().controlSize(.small)
@@ -263,10 +264,10 @@ private struct HashCheckerView: View {
                     }
                 }
             }
-            TextField("Target (paste to compare)", text: $target)
+            TextField(L10n.t("toolui.hash.target"), text: $target)
                 .monospaced()
             if let matches {
-                Label(matches ? "Hashes match" : "Hashes do not match",
+                Label(matches ? L10n.t("toolui.hash.match") : L10n.t("toolui.hash.mismatch"),
                       systemImage: matches ? "checkmark.circle.fill" : "xmark.circle.fill")
                     .foregroundStyle(matches ? .green : .red)
             }
@@ -291,8 +292,9 @@ private struct HashCheckerView: View {
         isHashing = true
         result = ""
         let algorithm = algorithm
+        let readFailed = L10n.t("toolui.hash.read_failed")
         Task.detached(priority: .userInitiated) {
-            let digest = (try? HashChecker.hashFile(at: fileURL, algorithm: algorithm)) ?? "Could not read file"
+            let digest = (try? HashChecker.hashFile(at: fileURL, algorithm: algorithm)) ?? readFailed
             await MainActor.run {
                 result = digest
                 isHashing = false
@@ -310,24 +312,24 @@ private struct QRCodeToolView: View {
 
     var body: some View {
         VStack(spacing: 12) {
-            TextField("Content", text: $text)
+            TextField(L10n.t("toolui.qr.content"), text: $text)
                 .textFieldStyle(.roundedBorder)
             Group {
                 if let code = QRCodeTool.generate(text) {
-                    Image(code, scale: 2, label: Text("QR code"))
+                    Image(code, scale: 2, label: Text(L10n.t("toolui.qr.image_label")))
                         .resizable()
                         .interpolation(.none)
                 } else {
-                    Text("Enter content to encode").foregroundStyle(.secondary)
+                    Text(L10n.t("toolui.qr.enter_content")).foregroundStyle(.secondary)
                 }
             }
             .frame(width: 256, height: 256)
             HStack {
-                Button("Copy Image") {
+                Button(L10n.t("toolui.qr.copy_image")) {
                     guard let code = QRCodeTool.generate(text) else { return }
                     ImageWriter.copyToClipboard(code)
                 }
-                Button("Save…") {
+                Button(L10n.t("toolui.qr.save")) {
                     guard let code = QRCodeTool.generate(text) else { return }
                     let panel = NSSavePanel()
                     panel.nameFieldStringValue = "qrcode.png"
@@ -336,7 +338,7 @@ private struct QRCodeToolView: View {
                     }
                 }
                 Spacer()
-                Button("Decode File…") {
+                Button(L10n.t("toolui.qr.decode_file")) {
                     let panel = NSOpenPanel()
                     panel.allowedContentTypes = [.image]
                     if panel.runModal() == .OK, let url = panel.url,
@@ -344,7 +346,7 @@ private struct QRCodeToolView: View {
                         ToolWindows.showQRDecodeResult(for: image)
                     }
                 }
-                Button("Scan Region…") { ToolWindows.scanQRFromRegion() }
+                Button(L10n.t("toolui.qr.scan_region")) { ToolWindows.scanQRFromRegion() }
             }
         }
         .padding()
@@ -363,9 +365,10 @@ struct TextResultView: View {
                 .font(.body.monospaced())
                 .frame(minWidth: 420, minHeight: 220)
             HStack {
-                Text("\(text.count) characters").foregroundStyle(.secondary).font(.caption)
+                Text(L10n.t("toolui.text_result.characters", text.count))
+                    .foregroundStyle(.secondary).font(.caption)
                 Spacer()
-                Button("Copy All") { ToolWindows.copyToClipboard(text) }
+                Button(L10n.t("toolui.copy_all")) { ToolWindows.copyToClipboard(text) }
                     .keyboardShortcut("c", modifiers: [.command, .shift])
             }
         }
@@ -378,19 +381,19 @@ private struct ColorPickerToolView: View {
 
     var body: some View {
         Form {
-            ColorPicker("Color", selection: $color, supportsOpacity: false)
-            Button("Pick from Screen…") {
+            ColorPicker(L10n.t("toolui.color.color"), selection: $color, supportsOpacity: false)
+            Button(L10n.t("toolui.color.pick_from_screen")) {
                 NSColorSampler().show { picked in
                     if let picked { color = Color(nsColor: picked) }
                 }
             }
-            Section("Copy as") {
+            Section(L10n.t("toolui.color.copy_as")) {
                 let rgb = NSColor(color).rgb255 ?? (0, 0, 0)
-                copyRow("Hex", ColorFormatter.hex(r: rgb.r, g: rgb.g, b: rgb.b))
-                copyRow("RGB", ColorFormatter.rgb(r: rgb.r, g: rgb.g, b: rgb.b))
-                copyRow("HSB", ColorFormatter.hsb(r: rgb.r, g: rgb.g, b: rgb.b))
-                copyRow("CMYK", ColorFormatter.cmyk(r: rgb.r, g: rgb.g, b: rgb.b))
-                copyRow("Decimal", String(ColorFormatter.decimal(r: rgb.r, g: rgb.g, b: rgb.b)))
+                copyRow(L10n.t("toolui.color.hex"), ColorFormatter.hex(r: rgb.r, g: rgb.g, b: rgb.b))
+                copyRow(L10n.t("toolui.color.rgb"), ColorFormatter.rgb(r: rgb.r, g: rgb.g, b: rgb.b))
+                copyRow(L10n.t("toolui.color.hsb"), ColorFormatter.hsb(r: rgb.r, g: rgb.g, b: rgb.b))
+                copyRow(L10n.t("toolui.color.cmyk"), ColorFormatter.cmyk(r: rgb.r, g: rgb.g, b: rgb.b))
+                copyRow(L10n.t("toolui.color.decimal"), String(ColorFormatter.decimal(r: rgb.r, g: rgb.g, b: rgb.b)))
             }
         }
         .formStyle(.grouped)
@@ -408,7 +411,7 @@ private struct ColorPickerToolView: View {
                     Image(systemName: "doc.on.doc")
                 }
                 .buttonStyle(.borderless)
-                .help("Copy \(label)")
+                .help(L10n.t("toolui.color.copy_help", label))
             }
         }
     }

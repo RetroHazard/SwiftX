@@ -7,6 +7,7 @@ import PackageDescription
 
 let package = Package(
     name: "SwiftX",
+    defaultLocalization: "en",
     platforms: [.macOS(.v14)], // SCScreenshotManager baseline
     products: [
         .executable(name: "swiftx", targets: ["SwiftXApp"]),
@@ -22,7 +23,8 @@ let package = Package(
             resources: [.process("Resources")]
         ),
         .target(
-            name: "CaptureKit"
+            name: "CaptureKit",
+            dependencies: ["SharedKit"]
         ),
         .target(
             name: "UploadKit",
@@ -33,14 +35,16 @@ let package = Package(
             dependencies: ["SharedKit"]
         ),
         .target(
-            name: "EditorKit"
+            name: "EditorKit",
+            dependencies: ["SharedKit"]
         ),
         .target(
-            name: "EffectsKit"
+            name: "EffectsKit",
+            dependencies: ["SharedKit"]
         ),
         .target(
             name: "ToolsKit",
-            dependencies: ["CaptureKit"]
+            dependencies: ["CaptureKit", "SharedKit"]
         ),
         .target(
             name: "UpdateKit",

@@ -27,7 +27,7 @@ audit are tracked below as Phases 12–15.
 | Region select overlay — rectangle, dimming, crosshair, size label, multi-display, Esc cancel | Ported |
 | Region overlay — window snapping (hover highlight, click captures), last region (menu + hotkey) | Ported |
 | Region overlay extras — ellipse/freehand, magnifier, fixed size, snap sizes | Ported — Tab cycles shape, M toggles magnifier, F toggles fixed size, drags auto-snap to presets; ruler and screen color picker shipped as standalone tools (Phase 8) |
-| Save to file + subfolder patterns (name parser), clipboard copy | Ported — FileExistAction honored (Ask/Overwrite/UniqueName/Cancel); default stays UniqueName auto-numbering (C# defaults to Ask) |
+| Save to file + subfolder patterns (name parser), clipboard copy | Ported — file name, active-window name and subfolder patterns are editable in Settings → General → Saved files, with FileExistAction (Ask/Overwrite/UniqueName/Cancel) beside them; default stays UniqueName auto-numbering (C# defaults to Ask) |
 | JPEG/GIF/BMP/TIFF encoders + quality, auto-JPEG for large captures | Ported — C# EImageFormat set; WebP is not a C# image format either; PNG bit depth, GIF palette and auto-JPEG quality knobs shipped (13) |
 | Screenshot delay, cursor-capture toggle | Ported (13) — ScreenshotDelay before every capture verb (incl. region picker) + tray Screenshot Delay submenu; ShowCursor toggle threaded into all capture paths |
 | Cross-display region selection (stitching) | Ported — per-display captures composited at the highest backing scale |
@@ -37,13 +37,13 @@ audit are tracked below as Phases 12–15.
 
 | Feature | Status |
 |---|---|
-| After-capture pipeline (C#-compatible flag serialization) | Ported — all 22 flags: beautify, effects, annotate, image/file/paths to clipboard, pin, print, save, save-dialog, thumbnail, actions, show in Finder, analyze (AI), scan QR, OCR, upload, delete (Trash), quick task menu, after-capture window, before-upload window |
+| After-capture pipeline (C#-compatible flag serialization) | Ported — all 22 flags: beautify, effects, annotate, image/file/paths to clipboard, pin, print, save, save-dialog, thumbnail, actions, show in Finder, analyze (AI), scan QR, OCR, upload, delete (Trash), quick task menu, after-capture window, before-upload window. Settings → Capture → After capture and the after-capture window render the same list from `AfterCapturePipeline.implemented`, so all 22 are reachable from both |
 | Pin to screen (from capture, clipboard, file, screen region, close all) | Ported — drag to move, double-click to close, scroll/± to scale, ⌘-scroll/⌘± for opacity (C# 10% steps), right-click menu (copy, save, close all) |
 | After-upload tasks (6) | Ported — shorten, copy URL, open URL, share URL, QR code window, after-upload window (link formats + copy buttons) |
 | Global hotkey engine (Carbon), defaults ⌃⇧3/4/5, DisableHotkeys toggle | Ported — recorder UI in Settings, live re-registration |
 | HotkeyType vocabulary (C#-compatible raw values) | Ported — every verb dispatches: upload sources (file/folder/clipboard/text/URL/drag-drop), custom region/window, stop uploads, standalone image editor, actions toolbar, tray menu toggle |
 | Capture notifications | Ported — banner + optional sound (C# PlaySound keys); app-level off-switch, fullscreen suppression, custom per-event sounds and action buttons shipped (14); toast geometry is N/A under Notification Center |
-| Actions (external commands) | Ported — C# ExternalProgram JSON, $input/$output placeholders, output-extension chaining, Settings pane |
+| Actions (external commands) | Ported — C# ExternalProgram JSON, $input/$output placeholders, output-extension chaining, Settings → External Programs pane |
 
 ## Phase 3 — Upload engine & core destinations
 
@@ -53,7 +53,7 @@ audit are tracked below as Phases 12–15.
 | Upload core — progress UI, retry | Ported — live rows in main window (bar, retry state, URL/error); configurable retry count (RetryUpload × MaxUploadFailRetry), UploadLimit concurrency cap, DisableUpload switch and batch/size warnings shipped (14) |
 | Upload core — chunked/resumable, secondary fallback | Planned — chunked only serves the benched OAuth hosts; fallback needs multi-destination config |
 | Custom uploader engine (.sxcu) — syntax parser (json/xml/regex/base64/random/select/filename/header/response), import, destination picker | Ported — legacy pre-13.7.1 `$var$` files migrate at load; interactive select takes first option |
-| Custom uploader editor (create/edit/duplicate/delete/export in settings) | Ported — Settings → Custom Uploader pane; edits write Windows-compatible .sxcu files; export copies the stored file verbatim |
+| Custom uploader editor (create/edit/duplicate/delete/export in settings) | Ported — Settings → Custom Uploaders pane; edits write Windows-compatible .sxcu files; export copies the stored file verbatim |
 | OAuth2 infrastructure (authorize-code + PKCE, refresh, Keychain tokens, loopback redirect) | Ported — reusable OAuth2Flow/OAuthSession/OAuthTokenStore + loopback listener. App credentials are baked in from a git-ignored OAuthApps.plist (developer registers once); end-user setup is one-click Connect → browser sign-in → approve, with nothing to fill in. Hosts without baked-in keys show "unavailable" |
 | OAuth1 infrastructure | Deferred — no kept host needs it (Photobucket dropped, Flickr deferred); add an OAuth1Flow layer only if Flickr is wanted |
 | Amazon S3 (+ S3-compatible via custom endpoint) — SigV4, prefix patterns | Ported |
@@ -146,10 +146,10 @@ audit are tracked below as Phases 12–15.
 
 | Feature | Status |
 |---|---|
-| Watch folders | Ported — FSEvents watcher with glob filter, subdirectories, move-to-screenshots, C# size-stability gate; Settings pane |
+| Watch folders | Ported — FSEvents watcher with glob filter, subdirectories, move-to-screenshots, C# size-stability gate; Settings → Watch Folders pane |
 | Auto capture | Ported — region/full-screen repeat timer, wait-for-uploads, C# AutoCapture* keys; annotate/menus stripped per shot like C# |
 | Scrolling capture | Ported — synthetic scroll-wheel events + C# CombineImages row-matching stitcher (side margins, auto bottom-edge trim, best-guess fallback); Windows-message scroll methods N/A |
-| Quick task menu (ShowQuickTaskMenu) + editor | Ported — C# QuickTaskPresets JSON incl. separators; menu at cursor |
+| Quick task menu (ShowQuickTaskMenu) + editor | Ported — C# QuickTaskPresets JSON incl. separators; menu at cursor. Turn it on in Settings → Capture → After capture; the menu's "Edit this menu…" opens the preset editor |
 | After-capture / before-upload windows | Ported — filename + task toggles; destination override before upload (all sources) |
 | CLI verbs, workflows | Partial — -HotkeyTypeName [file], -workflow, -CustomUploader .sxcu, -ImageEffect .sxie, -NativeMessagingInput .json, bare path/URL upload; second instance forwards to primary. Verb dispatch is ported, but hotkeys carry no per-workflow TaskSettings overrides (names, destinations, after-capture chains) — Planned (12) |
 | Native messaging host (Chrome/Edge/Firefox) | Ported — SwiftXHost binary in bundle speaks the Chrome stdio protocol; manifest install toggle in General settings |
@@ -163,7 +163,8 @@ audit are tracked below as Phases 12–15.
 | Developer ID signing, notarization | Ported — the release pipeline (`.github/workflows/release.yml`) signs with a Developer ID Application cert, notarizes and staples the DMG, and runs a Gatekeeper assessment before publishing; v0.1.0 shipped this way |
 | Auto-update (Release channel) | Ported — custom in-app updater, no Sparkle: checks the GitHub `releases/latest` API (manual "Check for Updates…" plus a Daily/Weekly/Monthly/Off background cadence), verifies the published sha256 and that the new bundle's Developer ID Team ID matches the running app, then atomically swaps the bundle and relaunches; opt-in auto-install. Homebrew installs are detected via the Caskroom and deferred to `brew upgrade --cask swiftx`. Keys are macOS-only (no C# counterpart to `UpdateChannel`/`AutoCheckUpdate`): `UpdateCheckFrequency`, `UpdateAutoInstall`, `UpdateSkippedVersion`, `UpdateLastCheckTime`. PreRelease/DevBuilds channels remain N/A |
 | Settings import from Windows backup (.sxb) | Ported — Import Settings… detects a Windows ShareX .sxb (zip with DefaultTaskSettings-nested config), merges the keys with macOS equivalents, imports custom uploaders from CustomUploadersList (with legacy-syntax migration), maps C# Keys hotkey strings to mac combos (unmappable keys like PrintScreen are skipped and counted), and offers to import History.db (same SQLite schema as the native store) |
-| Login item, localization infra | Planned (11) |
+| Login item | Planned (11) |
+| Localization infra | Ported — one `Localizable.strings` per language in SharedKit, `L10n` lookup with English fallback, in-app language picker (Settings → General, `InterfaceLanguage` key, relaunch to apply), `Scripts/check-localizations.sh` + CI key-set validation; see `docs/LOCALIZATION.md`. Ships English plus French, German, Italian, Japanese, Portuguese (European), and Spanish; `InfoPlist.strings` and `.stringsdict` plurals remain deferred to a future pass |
 | Steam build, Windows installer, DevBuilds channel | N/A |
 
 ## Phase 12 — Workflow engine & destination routing
@@ -201,7 +202,7 @@ audit are tracked below as Phases 12–15.
 | Notification granularity (off-switch, fullscreen suppression, custom per-event sounds, action buttons) | Ported — ShowToastNotificationAfterTaskCompleted, DisableNotificationsOnFullscreen (CGWindowList fullscreen heuristic); custom capture/completion/error sounds play via NSSound (banner goes silent to avoid doubling); banner buttons: Copy URL/Open for uploads, Show in Finder/Annotate/Delete for files |
 | Toast geometry (duration, placement, size, fade) | N/A — Notification Center owns presentation |
 | Recent-links tray submenu + main-window recent strip (RecentTasks*) | Ported — Recent submenu reads the last N history entries (click copies the URL, or reveals the file); the main window's live task rows + searchable history already serve as the recent strip |
-| Tray Upload section, configurable left-click action, status-icon upload progress | Ported — Upload submenu (file/folder/clipboard/text/URL/shorten/drop window/stop/disable); TrayLeftClickAction picker (right click always menus); TrayIconProgressEnabled draws a progress ring on the status icon. macOS extras: a "Check for Updates…" entry, Settings → General → Menu bar → Menu items hides individual entries (TrayMenuHiddenItems; Settings/Quit and live recording controls stay), an "Upload with SwiftX" Services entry puts SwiftX in the system-wide right-click Services menu for files and selected text, and an embedded `SwiftXShare.appex` (`com.apple.share-services`) puts SwiftX in the system "Share…" menu / share sheet for files, images, movies, text and links |
+| Tray Upload section, configurable left-click action, status-icon upload progress | Ported — Upload submenu (file/folder/clipboard/text/URL/shorten/drop window/stop/disable); TrayLeftClickAction picker (right click always menus); TrayIconProgressEnabled draws a progress ring on the status icon. macOS extras: a "Check for Updates…" entry, Settings → Menu Bar → Menu contents hides individual entries (TrayMenuHiddenItems; Settings/Quit and live recording controls stay), an "Upload with SwiftX" Services entry puts SwiftX in the system-wide right-click Services menu for files and selected text, and an embedded `SwiftXShare.appex` (`com.apple.share-services`) puts SwiftX in the system "Share…" menu / share sheet for files, images, movies, text and links |
 | DisableHotkeysOnFullscreen, HotkeyRepeatLimit | Ported — both enforced in HotkeyCenter.fire; the DisableHotkeys toggle hotkey stays live |
 | Configurable actions toolbar (button list, position lock, run at startup) | Ported — ActionsToolbarList (HotkeyType names) with add/remove/reorder editor, ActionsToolbarLockPosition, ActionsToolbarRunAtStartup |
 

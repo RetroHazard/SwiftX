@@ -30,7 +30,7 @@ public enum AzureStorageUploader {
             throw UploadError.missingRequestURL
         }
         guard let key = Data(base64Encoded: config.azureStorageAccountAccessKey) else {
-            throw UploadError.httpError(statusCode: 0, message: "Azure access key is not valid base64.")
+            throw UploadError.httpError(statusCode: 0, message: L10n.t("upload.error.azure.invalid_key"))
         }
 
         let dateString = rfc1123Formatter.string(from: date)
