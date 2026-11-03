@@ -348,17 +348,29 @@ jobs:
     timeout-minutes: 5
     permissions: {}
     steps:
-      # needs.*.result is one of success | failure | cancelled | skipped.
+      # ALLOWLIST, not a denylist: only "success" and "skipped" pass. The docs
+      # list success | failure | cancelled | skipped, but GitHub also reports
+      # "abandoned" for a job that never got a runner (run 41477030769: the
+      # macos-15 release-build sat queued ~15 min, was abandoned, and the old
+      # contains('failure') || contains('cancelled') check let ci-ok go green).
+      # Any result we don't recognise must fail closed.
+      #
       # "skipped" passes on purpose: it means the path filter proved this change
       # cannot have broken that area. A job skipped because its dependency
       # failed is also "skipped", but the dependency itself reports "failure",
       # so nothing slips through.
-      - name: Fail if anything failed or was cancelled
-        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+      - name: Every job succeeded or was skipped
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
         run: |
-          echo "::error::CI failed — results: ${{ join(needs.*.result, ', ') }}"
-          exit 1
-
-      - name: Report
-        run: |
-          echo "CI passed (results: ${{ join(needs.*.result, ', ') }})"
+          set -euo pipefail
+          for result in $RESULTS; do
+            case "$result" in
+              success|skipped) ;;
+              *)
+                echo "::error::CI failed — results: $RESULTS"
+                exit 1
+                ;;
+            esac
+          done
+          echo "CI passed (results: $RESULTS)"
